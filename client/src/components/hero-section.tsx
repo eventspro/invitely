@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { Play, Pause } from "lucide-react";
 import { weddingConfig } from "@/config/wedding-config";
-import couplePhoto from "@assets/nkar_1755889622603.jpg";
+import couplePhoto from "@assets/primary_1755896240450.jpg";
 import detailPhoto from "@assets/Blog_Banner_Left_Hand_Story_1755890185205.webp";
 
 export default function HeroSection() {
