@@ -55,10 +55,10 @@ export default function RsvpSection() {
   };
 
   return (
-    <section id="rsvp" className="py-20 bg-gradient-to-r from-lightGold/20 to-warmBeige/30">
-      <div className="max-w-2xl mx-auto px-4">
-        <div className="text-center mb-16">
-          <h2 className="text-5xl md:text-6xl text-charcoal mb-8" 
+    <section id="rsvp" className="py-12 sm:py-20 bg-gradient-to-r from-lightGold/20 to-warmBeige/30">
+      <div className="max-w-2xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="text-center mb-12 sm:mb-16">
+          <h2 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl text-charcoal mb-6 sm:mb-8 leading-tight" 
               style={{ 
                 fontFamily: 'Playfair Display, serif', 
                 fontStyle: 'italic',
@@ -67,16 +67,16 @@ export default function RsvpSection() {
               data-testid="text-rsvp-title">
             {weddingConfig.rsvp.title}
           </h2>
-          <div className="w-24 h-0.5 bg-softGold mx-auto mb-8"></div>
-          <p className="text-charcoal/70 text-lg" data-testid="text-rsvp-description">
+          <div className="w-16 sm:w-24 h-0.5 bg-softGold mx-auto mb-6 sm:mb-8"></div>
+          <p className="text-charcoal/70 text-base sm:text-lg px-4" data-testid="text-rsvp-description">
             {weddingConfig.rsvp.description}
           </p>
         </div>
         
-        <div className="bg-white rounded-xl shadow-xl p-8" data-testid="rsvp-form-container">
+        <div className="bg-white rounded-xl shadow-xl p-4 sm:p-6 lg:p-8" data-testid="rsvp-form-container">
           <Form {...form}>
-            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6" data-testid="rsvp-form">
-              <div className="grid md:grid-cols-2 gap-4">
+            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4 sm:space-y-6" data-testid="rsvp-form">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <FormField
                   control={form.control}
                   name="firstName"
@@ -206,7 +206,7 @@ export default function RsvpSection() {
               
               <Button 
                 type="submit" 
-                className="w-full bg-softGold hover:bg-softGold/90 text-white py-4 font-medium transition-colors duration-300 transform hover:scale-105"
+                className="w-full bg-softGold hover:bg-softGold/90 text-white py-3 sm:py-4 font-medium transition-colors duration-300 transform hover:scale-105 text-sm sm:text-base"
                 disabled={rsvpMutation.isPending}
                 data-testid="button-submit-rsvp"
               >
