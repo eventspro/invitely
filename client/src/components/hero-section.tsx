@@ -26,12 +26,12 @@ export default function HeroSection() {
         <div className="ornament w-full h-8 mb-8"></div>
 
         {/* Overlapping Couple Images */}
-        <div className="relative flex justify-center items-center mb-8 h-96 md:h-[500px]">
+        <div className="relative flex justify-center items-center mb-8 h-96 md:h-[600px]">
           {/* Main larger image */}
           <img
             src={couplePhoto}
             alt="Հարություն և Տաթև"
-            className="w-1/2 h-1/2 object-cover rounded-lg shadow-xl ring-4 ring-softGold/30 transform hover:scale-105 transition-transform duration-300 z-10"
+            className="w-80 h-96 md:w-96 md:h-[500px] object-cover rounded-lg shadow-xl ring-4 ring-softGold/30 transform hover:scale-105 transition-transform duration-300 z-10"
             data-testid="img-main-couple"
           />
           {/* Smaller rotated overlapping image */}
