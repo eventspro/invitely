@@ -55,8 +55,8 @@ export const weddingConfig = {
       mapButton: "Քարտեզ",
     },
     restaurant: {
-      title: "Ռեստորան",
-      name: "Արարատ Ռեստորան",
+      title: "Հարսանյաց սրահ",
+      name: "Բայազետ Հոլլ",
       description: "Ընդունելության և տոնակատարության վայր",
       mapButton: "Քարտեզ",
     },
