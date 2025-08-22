@@ -25,25 +25,25 @@ export async function sendRsvpNotificationEmails(rsvp: Rsvp): Promise<boolean> {
     
     const emailPromises = COUPLE_EMAILS.map(email => 
       resend.emails.send({
-        from: 'onboarding@resend.dev', // Using Resend's verified domain for testing
+        from: 'Հարուտ և Տատև <onboarding@resend.dev>',
         to: email,
-        subject: `🤵👰 Նոր RSVP հաստատում - ${rsvp.firstName} ${rsvp.lastName}`,
+        subject: `Նոր հաստատում հարսանիքի համար - ${rsvp.firstName} ${rsvp.lastName}`,
+        text: `Նոր RSVP հաստատում\n\nԱնուն: ${rsvp.firstName} ${rsvp.lastName}\nԷլ․ հասցե: ${rsvp.email}\nՀյուրերի քանակ: ${rsvp.guestCount}\nՄասնակցություն: ${rsvp.attendance === 'attending' ? 'Կգա' : 'Չի գալիս'}${rsvp.guestNames ? `\nՀյուրեր: ${rsvp.guestNames}` : ''}\n\nՀաստատվել է: ${rsvp.createdAt ? new Date(rsvp.createdAt).toLocaleString('hy-AM') : new Date().toLocaleString('hy-AM')}`,
         html: `
-          <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
-            <h2 style="color: #E4A5B8; text-align: center;">💐 Նոր Հարսանիքի Հաստատում 💐</h2>
+          <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; background-color: white;">
+            <h2 style="color: #333; text-align: center; font-weight: normal;">Նոր հաստատում ձեր հարսանիքի համար</h2>
             
-            <div style="background-color: #f9f9f9; padding: 20px; border-radius: 10px; margin: 20px 0;">
-              <h3 style="color: #333; margin-bottom: 15px;">Հյուրի տվյալներ:</h3>
-              <p><strong>Անուն:</strong> ${rsvp.firstName} ${rsvp.lastName}</p>
-              <p><strong>Էլ․ հասցե:</strong> ${rsvp.email}</p>
-              <p><strong>Հյուրերի քանակ:</strong> ${rsvp.guestCount}</p>
-              <p><strong>Մասնակցություն:</strong> ${attendanceText}</p>
+            <div style="background-color: #f9f9f9; padding: 20px; border-radius: 8px; margin: 20px 0; border: 1px solid #e0e0e0;">
+              <h3 style="color: #333; margin-bottom: 15px; font-weight: normal;">Հյուրի տվյալներ</h3>
+              <p style="margin: 8px 0;"><strong>Անուն:</strong> ${rsvp.firstName} ${rsvp.lastName}</p>
+              <p style="margin: 8px 0;"><strong>Էլ․ հասցե:</strong> ${rsvp.email}</p>
+              <p style="margin: 8px 0;"><strong>Հյուրերի քանակ:</strong> ${rsvp.guestCount}</p>
+              <p style="margin: 8px 0;"><strong>Մասնակցություն:</strong> ${attendanceText}</p>
               ${guestInfo}
             </div>
             
-            <div style="text-align: center; margin-top: 30px; padding-top: 20px; border-top: 1px solid #eee;">
-              <p style="color: #666; font-size: 14px;">Հաստատվել է: ${rsvp.createdAt ? new Date(rsvp.createdAt).toLocaleString('hy-AM') : new Date().toLocaleString('hy-AM')}</p>
-              <p style="color: #E4A5B8; font-weight: bold;">💕 Շնորհակալություն Replit Agent-ից! 💕</p>
+            <div style="text-align: center; margin-top: 30px; padding-top: 20px; border-top: 1px solid #ddd;">
+              <p style="color: #666; font-size: 14px; margin: 0;">Հաստատվել է: ${rsvp.createdAt ? new Date(rsvp.createdAt).toLocaleString('hy-AM') : new Date().toLocaleString('hy-AM')}</p>
             </div>
           </div>
         `
@@ -73,9 +73,10 @@ export async function sendRsvpConfirmationEmail(rsvp: Rsvp): Promise<boolean> {
       : 'Ցավոք, որ չեք կարողանա գալ: Ցանկանում ենք ձեզ բարելավություն: 💙';
 
     await resend.emails.send({
-      from: 'onboarding@resend.dev', // Using Resend's verified domain for testing
+      from: 'Հարություն և Տատև <onboarding@resend.dev>',
       to: rsvp.email,
-      subject: 'Հաստատում - Հարություն և Տատև 10 Հոկտեմբեր 2025',
+      subject: 'Ձեր հաստատումը ստացվել է - Հարսանիք 10 Հոկտեմբեր 2025',
+      text: `Սիրելի ${rsvp.firstName},\n\nՇնորհակալություն ձեր հաստատման համար:\n\n${attendanceText}\n\n${rsvp.attendance === 'attending' ? 'Ծիսակարգություն - Սուրբ Գրիգոր Լուսավորիչ Եկեղեցի, Ժամը 16:00\nՀանդես - BAYAZET HALL, Ժամը 19:00\n\nՄենք շատ ենք սիրում ձեզ և սպասում ենք այս հատուկ օրը ձեզ հետ կիսելուն:' : ''}\n\nՀարցերի դեպքում կապվեք մեզ հետ:\nharutavetisyan0@gmail.com | tatevhovsepyan22@gmail.com\n\nՀարգանքով,\nՀարություն և Տատև`,
       html: `
         <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
           <div style="text-align: center; margin-bottom: 30px;">
