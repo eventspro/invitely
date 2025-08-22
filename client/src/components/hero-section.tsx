@@ -2,7 +2,7 @@ import { useState } from "react";
 import { Play, Pause } from "lucide-react";
 import { weddingConfig } from "@/config/wedding-config";
 import couplePhoto from "@assets/nkar_1755889622603.jpg";
-import detailPhoto from "@assets/image_1755880788893.png";
+import detailPhoto from "@assets/Blog_Banner_Left_Hand_Story_1755890185205.webp";
 
 export default function HeroSection() {
   const [isPlaying, setIsPlaying] = useState(false);
@@ -35,7 +35,12 @@ export default function HeroSection() {
           <img 
             src={detailPhoto} 
             alt="Մանրամասներ" 
-            className="absolute w-32 h-40 md:w-40 md:h-52 object-cover rounded-lg shadow-xl ring-4 ring-lightGold/40 transform rotate-12 -translate-x-6 translate-y-4 md:-translate-x-12 md:translate-y-6 hover:scale-105 transition-transform duration-300 z-20" 
+            className="absolute w-32 h-40 md:w-40 md:h-52 object-cover rounded-lg shadow-xl ring-4 ring-lightGold/40 transform rotate-12 hover:scale-105 transition-transform duration-300 z-20" 
+            style={{
+              opacity: 0.5,
+              marginLeft: '300px',
+              marginTop: '-300px'
+            }}
             data-testid="img-detail-overlay"
           />
         </div>
