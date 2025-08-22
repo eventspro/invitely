@@ -10,7 +10,7 @@ const resend = process.env.RESEND_API_KEY ? new Resend(process.env.RESEND_API_KE
 // Wedding couple's email addresses
 const COUPLE_EMAILS = [
   'harutavetisyan0@gmail.com',
-  'tatebhovsepyann22@gmail.com'
+  'tatevhovsepyan22@gmail.com'
 ];
 
 export async function sendRsvpNotificationEmails(rsvp: Rsvp): Promise<boolean> {
