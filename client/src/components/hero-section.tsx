@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { Play, Pause } from "lucide-react";
+import { weddingConfig } from "@/config/wedding-config";
 
 export default function HeroSection() {
   const [isPlaying, setIsPlaying] = useState(false);
@@ -38,14 +39,13 @@ export default function HeroSection() {
         </div>
         
         <h1 className="text-4xl md:text-6xl font-serif font-bold text-charcoal mb-4" data-testid="text-couple-names">
-          Հարություն & Տաթև
+          {weddingConfig.couple.combinedNames}
         </h1>
         <p className="text-xl md:text-2xl text-charcoal/80 mb-8 font-light" data-testid="text-invitation">
-          Հարսանեկան հրավիրատոմս
+          {weddingConfig.hero.title}
         </p>
         <p className="text-lg md:text-xl text-charcoal/70 max-w-2xl mx-auto leading-relaxed" data-testid="text-welcome-message">
-          Մեզ համար մեծ պատիվ կլինի տեսնել ձեզ մեր կյանքի այս կարևոր օրվա կիսելիս:
-          Գալիս ենք միասին տոնել սերն ու երջանկությունը:
+          {weddingConfig.hero.welcomeMessage}
         </p>
         
         {/* Music Player */}
@@ -56,7 +56,7 @@ export default function HeroSection() {
             data-testid="button-music-toggle"
           >
             {isPlaying ? <Pause className="w-5 h-5" /> : <Play className="w-5 h-5" />}
-            <span>Երաժշտություն</span>
+            <span>{weddingConfig.hero.musicButton}</span>
           </button>
         </div>
         

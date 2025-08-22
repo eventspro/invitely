@@ -12,6 +12,7 @@ import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Label } from "@/components/ui/label";
+import { weddingConfig } from "@/config/wedding-config";
 
 export default function RsvpSection() {
   const { toast } = useToast();
@@ -58,11 +59,11 @@ export default function RsvpSection() {
       <div className="max-w-2xl mx-auto px-4">
         <div className="text-center mb-16">
           <h2 className="text-3xl md:text-4xl font-serif font-bold text-charcoal mb-4" data-testid="text-rsvp-title">
-            Հաստատել մասնակցությունը
+            {weddingConfig.rsvp.title}
           </h2>
           <div className="ornament w-full h-8 mb-6"></div>
           <p className="text-charcoal/70" data-testid="text-rsvp-description">
-            Խնդրում ենք հաստատել ձեր մասնակցությունը մինչև մարտի 1-ը
+            {weddingConfig.rsvp.description}
           </p>
         </div>
         
@@ -75,10 +76,10 @@ export default function RsvpSection() {
                   name="firstName"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Անուն</FormLabel>
+                      <FormLabel>{weddingConfig.rsvp.form.firstName}</FormLabel>
                       <FormControl>
                         <Input 
-                          placeholder="Ձեր անունը" 
+                          placeholder={weddingConfig.rsvp.form.firstNamePlaceholder} 
                           {...field} 
                           data-testid="input-first-name"
                         />
@@ -92,7 +93,7 @@ export default function RsvpSection() {
                   name="lastName"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Ազգանուն</FormLabel>
+                      <FormLabel>{weddingConfig.rsvp.form.lastName}</FormLabel>
                       <FormControl>
                         <Input 
                           placeholder="Ձեր ազգանունը" 

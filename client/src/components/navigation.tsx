@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { weddingConfig } from "@/config/wedding-config";
 
 export default function Navigation() {
   const [isScrolled, setIsScrolled] = useState(false);
@@ -33,42 +34,42 @@ export default function Navigation() {
             className="text-charcoal hover:text-softGold transition-colors duration-300 font-medium"
             data-testid="nav-hero"
           >
-            Գլխավոր
+            {weddingConfig.navigation.home}
           </button>
           <button
             onClick={() => scrollToSection("countdown")}
             className="text-charcoal hover:text-softGold transition-colors duration-300 font-medium"
             data-testid="nav-countdown"
           >
-            Հաշվարկ
+            {weddingConfig.navigation.countdown}
           </button>
           <button
             onClick={() => scrollToSection("calendar")}
             className="text-charcoal hover:text-softGold transition-colors duration-300 font-medium"
             data-testid="nav-calendar"
           >
-            Օրացույց
+            {weddingConfig.navigation.calendar}
           </button>
           <button
             onClick={() => scrollToSection("locations")}
             className="text-charcoal hover:text-softGold transition-colors duration-300 font-medium"
             data-testid="nav-locations"
           >
-            Վայրեր
+            {weddingConfig.navigation.locations}
           </button>
           <button
             onClick={() => scrollToSection("timeline")}
             className="text-charcoal hover:text-softGold transition-colors duration-300 font-medium"
             data-testid="nav-timeline"
           >
-            Ծրագիր
+            {weddingConfig.navigation.timeline}
           </button>
           <button
             onClick={() => scrollToSection("rsvp")}
             className="text-charcoal hover:text-softGold transition-colors duration-300 font-medium"
             data-testid="nav-rsvp"
           >
-            Հաստատում
+            {weddingConfig.navigation.rsvp}
           </button>
         </div>
       </div>

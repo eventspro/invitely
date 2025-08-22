@@ -1,4 +1,5 @@
 import { Church, Utensils, MapPin } from "lucide-react";
+import { weddingConfig } from "@/config/wedding-config";
 
 export default function LocationsSection() {
   const openMap = (location: 'church' | 'restaurant') => {
@@ -11,7 +12,7 @@ export default function LocationsSection() {
       <div className="max-w-6xl mx-auto px-4">
         <div className="text-center mb-16">
           <h2 className="text-3xl md:text-4xl font-serif font-bold text-charcoal mb-4" data-testid="text-locations-title">
-            Վայրեր
+            {weddingConfig.locations.sectionTitle}
           </h2>
           <div className="ornament w-full h-8"></div>
         </div>
@@ -29,14 +30,14 @@ export default function LocationsSection() {
               <div className="flex items-center mb-4">
                 <Church className="text-softGold text-2xl mr-3" />
                 <h3 className="text-xl font-serif font-bold text-charcoal" data-testid="text-church-title">
-                  Եկեղեցի
+                  {weddingConfig.locations.church.title}
                 </h3>
               </div>
               <p className="text-charcoal/70 mb-4" data-testid="text-church-name">
-                Սուրբ Գրիգոր Լուսավորիչ Եկեղեցի
+                {weddingConfig.locations.church.name}
               </p>
               <p className="text-charcoal/60 text-sm mb-4" data-testid="text-church-description">
-                Պսակադրության արարողություն
+                {weddingConfig.locations.church.description}
               </p>
               <button 
                 onClick={() => openMap('church')}
@@ -44,7 +45,7 @@ export default function LocationsSection() {
                 data-testid="button-church-map"
               >
                 <MapPin className="w-4 h-4 mr-2" />
-                Քարտեզ
+                {weddingConfig.locations.church.mapButton}
               </button>
             </div>
           </div>
@@ -61,14 +62,14 @@ export default function LocationsSection() {
               <div className="flex items-center mb-4">
                 <Utensils className="text-softGold text-2xl mr-3" />
                 <h3 className="text-xl font-serif font-bold text-charcoal" data-testid="text-restaurant-title">
-                  Ռեստորան
+                  {weddingConfig.locations.restaurant.title}
                 </h3>
               </div>
               <p className="text-charcoal/70 mb-4" data-testid="text-restaurant-name">
-                Արարատ Ռեստորան
+                {weddingConfig.locations.restaurant.name}
               </p>
               <p className="text-charcoal/60 text-sm mb-4" data-testid="text-restaurant-description">
-                Ընդունելության և տոնակատարության վայր
+                {weddingConfig.locations.restaurant.description}
               </p>
               <button 
                 onClick={() => openMap('restaurant')}
@@ -76,7 +77,7 @@ export default function LocationsSection() {
                 data-testid="button-restaurant-map"
               >
                 <MapPin className="w-4 h-4 mr-2" />
-                Քարտեզ
+                {weddingConfig.locations.restaurant.mapButton}
               </button>
             </div>
           </div>

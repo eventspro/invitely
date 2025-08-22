@@ -1,8 +1,9 @@
 import { useCountdown } from "@/hooks/use-countdown";
+import { weddingConfig } from "@/config/wedding-config";
 
 export default function CountdownTimer() {
-  // Wedding date - August 18, 2024 at 3:00 PM (updated to match the reference screenshot)
-  const weddingDate = new Date('2024-08-18T15:00:00');
+  // Wedding date from configuration
+  const weddingDate = new Date(weddingConfig.wedding.date);
   const { days, hours, minutes, seconds } = useCountdown(weddingDate);
 
   return (
@@ -22,10 +23,10 @@ export default function CountdownTimer() {
         {/* Wedding Date Display */}
         <div className="mb-8">
           <h2 className="text-2xl md:text-3xl font-bold text-white mb-2" data-testid="text-wedding-date">
-            18 ՕԳՈՍՏՈՍ 2024
+            {weddingConfig.wedding.displayDate}
           </h2>
           <p className="text-white/80 text-sm md:text-base" data-testid="text-wedding-subtitle">
-            Ֆցր հարսանիքի ծանուցում ծանծգն է
+            {weddingConfig.countdown.subtitle}
           </p>
         </div>
         
@@ -35,28 +36,28 @@ export default function CountdownTimer() {
             <div className="text-4xl md:text-6xl font-bold text-white mb-1" data-testid="countdown-days">
               {days.toString().padStart(3, '0')}
             </div>
-            <div className="text-white/90 text-sm md:text-base">օր</div>
+            <div className="text-white/90 text-sm md:text-base">{weddingConfig.countdown.labels.days}</div>
           </div>
           
           <div className="text-center">
             <div className="text-4xl md:text-6xl font-bold text-white mb-1" data-testid="countdown-hours">
               {hours.toString().padStart(2, '0')}
             </div>
-            <div className="text-white/90 text-sm md:text-base">ժամ</div>
+            <div className="text-white/90 text-sm md:text-base">{weddingConfig.countdown.labels.hours}</div>
           </div>
           
           <div className="text-center">
             <div className="text-4xl md:text-6xl font-bold text-white mb-1" data-testid="countdown-minutes">
               {minutes.toString().padStart(2, '0')}
             </div>
-            <div className="text-white/90 text-sm md:text-base">րոպ</div>
+            <div className="text-white/90 text-sm md:text-base">{weddingConfig.countdown.labels.minutes}</div>
           </div>
           
           <div className="text-center">
             <div className="text-4xl md:text-6xl font-bold text-white mb-1" data-testid="countdown-seconds">
               {seconds.toString().padStart(2, '0')}
             </div>
-            <div className="text-white/90 text-sm md:text-base">վայրկ</div>
+            <div className="text-white/90 text-sm md:text-base">{weddingConfig.countdown.labels.seconds}</div>
           </div>
         </div>
       </div>
