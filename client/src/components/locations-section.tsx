@@ -1,5 +1,6 @@
 import { Church, Utensils, MapPin } from "lucide-react";
 import { weddingConfig } from "@/config/wedding-config";
+import churchPhoto from "@assets/3_1755890746399.jpg";
 
 export default function LocationsSection() {
   const openMap = (location: 'church' | 'restaurant') => {
@@ -27,7 +28,7 @@ export default function LocationsSection() {
           {/* Church Location */}
           <div className="bg-white rounded-xl shadow-xl overflow-hidden transform hover:scale-105 transition-transform duration-300" data-testid="card-church">
             <img 
-              src="https://images.unsplash.com/photo-1578662996442-48f60103fc96?ixlib=rb-4.0.3&auto=format&fit=crop&w=600&h=300" 
+              src={churchPhoto} 
               alt="Եկեղեցի" 
               className="w-full h-48 object-cover" 
               data-testid="img-church"
