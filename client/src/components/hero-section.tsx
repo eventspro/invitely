@@ -1,6 +1,8 @@
 import { useState } from "react";
 import { Play, Pause } from "lucide-react";
 import { weddingConfig } from "@/config/wedding-config";
+import couplePhoto from "@assets/nkar_1755889622603.jpg";
+import detailPhoto from "@assets/image_1755880788893.png";
 
 export default function HeroSection() {
   const [isPlaying, setIsPlaying] = useState(false);
@@ -24,14 +26,14 @@ export default function HeroSection() {
         <div className="relative flex justify-center items-center mb-8 h-64 md:h-80">
           {/* Main larger image */}
           <img 
-            src="@assets/nkar_1755889622603.jpg" 
+            src={couplePhoto} 
             alt="Հարություն և Տաթև" 
             className="w-48 h-60 md:w-64 md:h-80 object-cover rounded-lg shadow-xl ring-4 ring-softGold/30 transform hover:scale-105 transition-transform duration-300 z-10" 
             data-testid="img-main-couple"
           />
           {/* Smaller rotated overlapping image */}
           <img 
-            src="@assets/image_1755880788893.png" 
+            src={detailPhoto} 
             alt="Մանրամասներ" 
             className="absolute w-32 h-40 md:w-40 md:h-52 object-cover rounded-lg shadow-xl ring-4 ring-lightGold/40 transform rotate-12 -translate-x-6 translate-y-4 md:-translate-x-12 md:translate-y-6 hover:scale-105 transition-transform duration-300 z-20" 
             data-testid="img-detail-overlay"
