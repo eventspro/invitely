@@ -13,7 +13,7 @@ export const weddingConfig = {
   wedding: {
     date: "2025-09-10T15:00:00", // Format: YYYY-MM-DDTHH:MM:SS
     displayDate: "Հոկտեմբեր 2025",
-    month: "Օգոստոս 2024",
+    month: "Հոկտեմբեր 2025",
     day: "10",
   },
 
@@ -38,10 +38,10 @@ export const weddingConfig = {
 
   // Calendar Section
   calendar: {
-    title: "Հարցանյի հիմքեր",
+    title: "Հարգելի հյուրեր",
     description:
       "Սիրով հրավիրում ենք Ձեզ ներկա գտնվելու մեր հարսանյաց արարողությանը։ Ծանոթացեք ծրագրին և հաստատեք Ձեր ներկայությունը մինչև նոյեմբերի 15-ը։",
-    monthTitle: "Օգոստոս 2024",
+    monthTitle: "Հոկտեմբեր 2025",
     dayLabels: ["ԿՐՆ", "ԵՐԿ", "ԵՐՔ", "ՉՈՐ", "ՀՆԳ", "ՈՒՐ", "ՇԲՏ"],
   },
 
@@ -67,23 +67,18 @@ export const weddingConfig = {
     title: "Ծրագիր",
     events: [
       {
-        time: "13:00",
-        title: "Պսակադրություն",
-        description: "Նուր Նարգիզ ծետալթեր",
+        time: "14:00",
+        title: "Պսակադրության արարողություն",
       },
       {
         time: "17:00",
-        title: "Հանդիսական խանութարկարգ",
-        description: "Hannah Garden Hall",
+        title: "Հարսանյաց սրահ",
+        description: "Bayazet Hall",
       },
+
       {
-        time: "21:30",
-        title: "Հանդիսական ընդունելություն",
-        description: "",
-      },
-      {
-        time: "23:00",
-        title: "Ակտիվ",
+        time: "24:00",
+        title: "Ավարտ",
         description: "",
       },
     ],
@@ -92,7 +87,8 @@ export const weddingConfig = {
   // RSVP Section
   rsvp: {
     title: "Հաստատել մասնակցությունը",
-    description: "Խնդրում ենք հաստատել ձեր մասնակցությունը մինչև մարտի 1-ը",
+    description:
+      "Խնդրում ենք հաստատել ձեր մասնակցությունը մինչև Հոկտեմբերի 1-ը",
     form: {
       firstName: "Անուն",
       firstNamePlaceholder: "Ձեր անունը",
