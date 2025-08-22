@@ -2,12 +2,12 @@ import { weddingConfig } from "@/config/wedding-config";
 
 export default function CalendarSection() {
   const calendarDays = [
-    ['', '', '', '', '', '', ''],
-    ['', '', '', '1', '2', '3', '4'],
-    ['5', '6', '7', '8', '9', '10', '11'],
-    ['12', '13', '14', '15', '16', '17', '18'],
-    ['19', '20', '21', '22', '23', '24', '25'],
-    ['26', '27', '28', '29', '30', '31', '']
+    ['', '', '', '', '', '1', '2'],
+    ['3', '4', '5', '6', '7', '8', '9'],
+    ['10', '11', '12', '13', '14', '15', '16'],
+    ['17', '18', '19', '20', '21', '22', '23'],
+    ['24', '25', '26', '27', '28', '29', '30'],
+    ['31', '', '', '', '', '', '']
   ];
 
   return (
@@ -70,7 +70,7 @@ export default function CalendarSection() {
                       className={`
                         relative py-4 text-center text-base rounded-xl transition-all duration-300
                         ${day === weddingConfig.wedding.day 
-                          ? 'bg-gradient-to-br from-softGold to-lightGold text-white font-bold shadow-xl transform scale-110 z-10' 
+                          ? 'z-10' 
                           : day 
                             ? 'text-charcoal/70 hover:bg-softGold/10 hover:scale-105' 
                             : ''
@@ -78,13 +78,26 @@ export default function CalendarSection() {
                       `}
                       data-testid={day === weddingConfig.wedding.day ? 'calendar-wedding-day' : `calendar-day-${day}`}
                     >
-                      {day}
-                      {day === weddingConfig.wedding.day && (
-                        <>
-                          <div className="absolute -top-2 -right-2 w-4 h-4 bg-red-400 rounded-full animate-pulse"></div>
-                          <div className="absolute inset-0 rounded-xl ring-4 ring-softGold/30 ring-offset-2"></div>
-                        </>
-                      )}
+                      {day === weddingConfig.wedding.day ? (
+                        <div className="relative flex items-center justify-center">
+                          {/* Heart Shape SVG */}
+                          <svg 
+                            viewBox="0 0 100 100" 
+                            className="w-16 h-16 text-red-500 fill-current transform scale-125"
+                            style={{ filter: 'drop-shadow(0 4px 12px rgba(239, 68, 68, 0.3))' }}
+                          >
+                            <path d="M50 85c-1.5-1.5-3.5-3.5-6-6.5C35 69 25 58 25 45c0-9 7-16 16-16s16 7 16 16c0 0 0 0 0 0 0-9 7-16 16-16s16 7 16 16c0 13-10 24-19 33.5-2.5 3-4.5 5-6 6.5z"/>
+                          </svg>
+                          {/* Date Number Inside Heart */}
+                          <div className="absolute inset-0 flex items-center justify-center">
+                            <span className="text-white font-bold text-lg mt-1">
+                              {day}
+                            </span>
+                          </div>
+                        </div>
+                      ) : day ? (
+                        <span>{day}</span>
+                      ) : null}
                     </div>
                   ))
                 )}
