@@ -3,6 +3,7 @@ import { createServer, type Server } from "http";
 import { storage } from "./storage";
 import { insertRsvpSchema } from "@shared/schema";
 import { z } from "zod";
+import { sendRsvpNotificationEmails, sendRsvpConfirmationEmail } from "./email";
 
 export async function registerRoutes(app: Express): Promise<Server> {
   
@@ -21,9 +22,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       const rsvp = await storage.createRsvp(validatedData);
       
-      // TODO: Send emails here when email service is configured
-      // await sendRsvpNotificationEmails(rsvp);
-      // await sendRsvpConfirmationEmail(rsvp);
+      // Send email notifications
+      try {
+        await Promise.all([
+          sendRsvpNotificationEmails(rsvp),
+          sendRsvpConfirmationEmail(rsvp)
+        ]);
+      } catch (emailError) {
+        console.error("Email notification error:", emailError);
+        // Continue with success response even if emails fail
+      }
       
       res.json({ 
         message: "Շնորհակալություն! Ձեր հաստատումը ստացվել է:",
@@ -61,11 +69,3 @@ export async function registerRoutes(app: Express): Promise<Server> {
   return httpServer;
 }
 
-// TODO: Implement email functions when email service is configured
-// async function sendRsvpNotificationEmails(rsvp: Rsvp) {
-//   // Send to harutavetisyan0@gmail.com and tatevhovsepyan22@gmail.com
-// }
-
-// async function sendRsvpConfirmationEmail(rsvp: Rsvp) {
-//   // Send confirmation to guest
-// }
