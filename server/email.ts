@@ -20,17 +20,26 @@ export async function testEmailService(): Promise<void> {
     return;
   }
   
-  try {
-    const testResult = await resend.emails.send({
-      from: 'Հարություն և Տատև <onboarding@resend.dev>',
-      to: 'harutavetisyan0@gmail.com', // Test with first email
-      subject: 'Թեստ - Էլ․ փոստի ծառայության ստուգում',
-      text: 'Սա թեստային նամակ է։ Եթե ստանում եք այս նամակը, ապա էլ․ փոստի ծառայությունը ճիշտ է աշխատում։',
-      html: '<p>Սա թեստային նամակ է։ Եթե ստանում եք այս նամակը, ապա էլ․ փոստի ծառայությունը ճիշտ է աշխատում։</p>'
-    });
-    console.log('🧪 Test email result:', testResult);
-  } catch (error) {
-    console.error('🧪 Test email failed:', error);
+  // Test both email addresses individually
+  const testEmails = [
+    'harutavetisyan0@gmail.com',
+    'tatevhovsepyan22@gmail.com'
+  ];
+  
+  for (const email of testEmails) {
+    try {
+      console.log(`🧪 Testing email to: ${email}`);
+      const testResult = await resend.emails.send({
+        from: 'Հարություն և Տատև <onboarding@resend.dev>',
+        to: email,
+        subject: 'Թեստ - Էլ․ փոստի ծառայության ստուգում',
+        text: `Սա թեստային նամակ է ${email} հասցեի համար։ Եթե ստանում եք այս նամակը, ապա էլ․ փոստի ծառայությունը ճիշտ է աշխատում։`,
+        html: `<p>Սա թեստային նամակ է <strong>${email}</strong> հասցեի համար։ Եթե ստանում եք այս նամակը, ապա էլ․ փոստի ծառայությունը ճիշտ է աշխատում։</p>`
+      });
+      console.log(`✅ Test email success for ${email}:`, testResult);
+    } catch (error) {
+      console.error(`❌ Test email failed for ${email}:`, error);
+    }
   }
 }
 
