@@ -3,7 +3,7 @@ import { createServer, type Server } from "http";
 import { storage } from "./storage";
 import { insertRsvpSchema } from "@shared/schema";
 import { z } from "zod";
-import { sendRsvpNotificationEmails, sendRsvpConfirmationEmail } from "./email";
+import { sendRsvpNotificationEmails, sendRsvpConfirmationEmail, testEmailService } from "./email";
 
 export async function registerRoutes(app: Express): Promise<Server> {
   
@@ -62,6 +62,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Get RSVPs error:", error);
       res.status(500).json({ message: "Սերվերի սխալ" });
+    }
+  });
+
+  // Test email endpoint
+  app.get("/api/test-email", async (req, res) => {
+    try {
+      console.log("🧪 Testing email service...");
+      await testEmailService();
+      res.json({ message: "Email test initiated. Check logs for results." });
+    } catch (error) {
+      console.error("Email test error:", error);
+      res.status(500).json({ message: "Email test failed" });
     }
   });
 

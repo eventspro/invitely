@@ -7,11 +7,32 @@ if (!process.env.RESEND_API_KEY) {
 
 const resend = process.env.RESEND_API_KEY ? new Resend(process.env.RESEND_API_KEY) : null;
 
-// Wedding couple's email addresses
+// Wedding couple's email addresses  
 const COUPLE_EMAILS = [
   'harutavetisyan0@gmail.com',
   'tatevhovsepyan22@gmail.com'
 ];
+
+// Test function to verify email service is working
+export async function testEmailService(): Promise<void> {
+  if (!resend) {
+    console.log('Email service not configured.');
+    return;
+  }
+  
+  try {
+    const testResult = await resend.emails.send({
+      from: 'Հարություն և Տատև <onboarding@resend.dev>',
+      to: 'harutavetisyan0@gmail.com', // Test with first email
+      subject: 'Թեստ - Էլ․ փոստի ծառայության ստուգում',
+      text: 'Սա թեստային նամակ է։ Եթե ստանում եք այս նամակը, ապա էլ․ փոստի ծառայությունը ճիշտ է աշխատում։',
+      html: '<p>Սա թեստային նամակ է։ Եթե ստանում եք այս նամակը, ապա էլ․ փոստի ծառայությունը ճիշտ է աշխատում։</p>'
+    });
+    console.log('🧪 Test email result:', testResult);
+  } catch (error) {
+    console.error('🧪 Test email failed:', error);
+  }
+}
 
 export async function sendRsvpNotificationEmails(rsvp: Rsvp): Promise<boolean> {
   if (!resend) {
@@ -51,8 +72,18 @@ export async function sendRsvpNotificationEmails(rsvp: Rsvp): Promise<boolean> {
     );
 
     const results = await Promise.allSettled(emailPromises);
-    const successCount = results.filter(result => result.status === 'fulfilled').length;
     
+    // Detailed logging for each email attempt
+    results.forEach((result, index) => {
+      const email = COUPLE_EMAILS[index];
+      if (result.status === 'fulfilled') {
+        console.log(`✅ Email sent successfully to: ${email}`, result.value);
+      } else {
+        console.error(`❌ Email failed to: ${email}`, result.reason);
+      }
+    });
+    
+    const successCount = results.filter(result => result.status === 'fulfilled').length;
     console.log(`RSVP notification emails sent: ${successCount}/${COUPLE_EMAILS.length}`);
     return successCount > 0;
   } catch (error) {
