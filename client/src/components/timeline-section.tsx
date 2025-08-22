@@ -1,5 +1,6 @@
 import { Clock, MapPin, Users, Music } from "lucide-react";
 import { weddingConfig } from "@/config/wedding-config";
+import { useScrollAnimation, useStaggeredAnimation } from "@/hooks/use-scroll-animation";
 
 export default function TimelineSection() {
   const eventIcons = [
@@ -8,6 +9,9 @@ export default function TimelineSection() {
     <Music className="w-8 h-8" />,
     <Clock className="w-8 h-8" />,
   ];
+  
+  const titleRef = useScrollAnimation('animate-slide-up');
+  const cardsRef = useStaggeredAnimation(200);
 
   return (
     <section
@@ -16,7 +20,7 @@ export default function TimelineSection() {
     >
       <div className="max-w-6xl mx-auto px-4">
         {/* Title */}
-        <div className="text-center mb-20">
+        <div ref={titleRef} className="text-center mb-20 animate-on-scroll">
           <h2
             className="text-5xl md:text-6xl text-charcoal mb-8"
             style={{
@@ -35,11 +39,11 @@ export default function TimelineSection() {
         </div>
 
         {/* Timeline Cards */}
-        <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
+        <div ref={cardsRef} className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
           {weddingConfig.timeline.events.map((event, index) => (
             <div
               key={index}
-              className="group relative"
+              className="group relative animate-on-scroll"
               data-testid={`timeline-event-${index}`}
             >
               {/* Card */}

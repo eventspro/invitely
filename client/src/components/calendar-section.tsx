@@ -1,4 +1,5 @@
 import { weddingConfig } from "@/config/wedding-config";
+import { useScrollAnimation } from "@/hooks/use-scroll-animation";
 
 export default function CalendarSection() {
   const calendarDays = [
@@ -9,6 +10,10 @@ export default function CalendarSection() {
     ["24", "25", "26", "27", "28", "29", "30"],
     ["31", "", "", "", "", "", ""],
   ];
+  
+  const titleRef = useScrollAnimation('animate-slide-up');
+  const calendarRef = useScrollAnimation('animate-slide-in-left');
+  const dateRef = useScrollAnimation('animate-slide-in-right');
 
   return (
     <section
@@ -17,7 +22,7 @@ export default function CalendarSection() {
     >
       <div className="max-w-5xl mx-auto px-4">
         {/* Section Header */}
-        <div className="text-center mb-16">
+        <div ref={titleRef} className="text-center mb-16 animate-on-scroll">
           <h2
             className="text-5xl md:text-6xl text-charcoal mb-8"
             style={{
@@ -47,7 +52,7 @@ export default function CalendarSection() {
         {/* Calendar and Date Display */}
         <div className="grid lg:grid-cols-2 gap-12 items-center max-w-4xl mx-auto">
           {/* Calendar */}
-          <div className="order-2 lg:order-1">
+          <div ref={calendarRef} className="order-2 lg:order-1 animate-on-scroll">
             <div className="bg-white rounded-3xl shadow-2xl p-8 border border-charcoal/5">
               {/* Month Header */}
               <div className="text-center mb-8">
@@ -133,7 +138,7 @@ export default function CalendarSection() {
           </div>
 
           {/* Wedding Date Display */}
-          <div className="order-1 lg:order-2 text-center lg:text-left">
+          <div ref={dateRef} className="order-1 lg:order-2 text-center lg:text-left animate-on-scroll">
             <div className="space-y-6">
               {/* Large Date */}
               <div className="relative">

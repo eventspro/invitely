@@ -2,17 +2,22 @@ import { Church, Utensils, MapPin } from "lucide-react";
 import { weddingConfig } from "@/config/wedding-config";
 import churchPhoto from "@assets/3_1755890746399.jpg";
 import restaurantPhoto from "@assets/11_1755890922505.jpg";
+import { useScrollAnimation } from "@/hooks/use-scroll-animation";
 
 export default function LocationsSection() {
   const openMap = (location: 'church' | 'restaurant') => {
     const event = new CustomEvent('openMap', { detail: { location } });
     window.dispatchEvent(event);
   };
+  
+  const titleRef = useScrollAnimation('animate-slide-up');
+  const churchRef = useScrollAnimation('animate-slide-in-left');
+  const restaurantRef = useScrollAnimation('animate-slide-in-right');
 
   return (
     <section id="locations" className="py-20 bg-gradient-to-r from-sageGreen/10 to-warmBeige/20">
       <div className="max-w-6xl mx-auto px-4">
-        <div className="text-center mb-16">
+        <div ref={titleRef} className="text-center mb-16 animate-on-scroll">
           <h2 className="text-5xl md:text-6xl text-charcoal mb-8" 
               style={{ 
                 fontFamily: 'Playfair Display, serif', 
@@ -27,7 +32,7 @@ export default function LocationsSection() {
         
         <div className="grid md:grid-cols-2 gap-8">
           {/* Church Location */}
-          <div className="bg-white rounded-xl shadow-xl overflow-hidden transform hover:scale-105 transition-transform duration-300" data-testid="card-church">
+          <div ref={churchRef} className="bg-white rounded-xl shadow-xl overflow-hidden transform hover:scale-105 transition-transform duration-300 animate-on-scroll" data-testid="card-church">
             <img 
               src={churchPhoto} 
               alt="Եկեղեցի" 
@@ -59,7 +64,7 @@ export default function LocationsSection() {
           </div>
           
           {/* Restaurant Location */}
-          <div className="bg-white rounded-xl shadow-xl overflow-hidden transform hover:scale-105 transition-transform duration-300" data-testid="card-restaurant">
+          <div ref={restaurantRef} className="bg-white rounded-xl shadow-xl overflow-hidden transform hover:scale-105 transition-transform duration-300 animate-on-scroll" data-testid="card-restaurant">
             <img 
               src={restaurantPhoto} 
               alt="Ռեստորան" 

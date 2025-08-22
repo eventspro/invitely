@@ -13,9 +13,12 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Label } from "@/components/ui/label";
 import { weddingConfig } from "@/config/wedding-config";
+import { useScrollAnimation } from "@/hooks/use-scroll-animation";
 
 export default function RsvpSection() {
   const { toast } = useToast();
+  const titleRef = useScrollAnimation('animate-fade-in-scale');
+  const formRef = useScrollAnimation('animate-slide-up');
   
   const form = useForm<InsertRsvp>({
     resolver: zodResolver(insertRsvpSchema),
@@ -57,7 +60,7 @@ export default function RsvpSection() {
   return (
     <section id="rsvp" className="py-12 sm:py-20 bg-gradient-to-r from-lightGold/20 to-warmBeige/30">
       <div className="max-w-2xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="text-center mb-12 sm:mb-16">
+        <div ref={titleRef} className="text-center mb-12 sm:mb-16 animate-on-scroll">
           <h2 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl text-charcoal mb-6 sm:mb-8 leading-tight" 
               style={{ 
                 fontFamily: 'Playfair Display, serif', 
@@ -73,7 +76,7 @@ export default function RsvpSection() {
           </p>
         </div>
         
-        <div className="bg-white rounded-xl shadow-xl p-4 sm:p-6 lg:p-8" data-testid="rsvp-form-container">
+        <div ref={formRef} className="bg-white rounded-xl shadow-xl p-4 sm:p-6 lg:p-8 animate-on-scroll" data-testid="rsvp-form-container">
           <Form {...form}>
             <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4 sm:space-y-6" data-testid="rsvp-form">
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">

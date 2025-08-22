@@ -1,10 +1,13 @@
 import { useCountdown } from "@/hooks/use-countdown";
 import { weddingConfig } from "@/config/wedding-config";
+import { useScrollAnimation, useStaggeredAnimation } from "@/hooks/use-scroll-animation";
 
 export default function CountdownTimer() {
   // Wedding date from configuration
   const weddingDate = new Date(weddingConfig.wedding.date);
   const { days, hours, minutes, seconds } = useCountdown(weddingDate);
+  const titleRef = useScrollAnimation('animate-fade-in-scale');
+  const countdownRef = useStaggeredAnimation(150);
 
   return (
     <section id="countdown" className="relative py-20 overflow-hidden">
@@ -21,7 +24,7 @@ export default function CountdownTimer() {
 
       <div className="relative z-10 max-w-4xl mx-auto px-4 text-center">
         {/* Wedding Date Display */}
-        <div className="mb-8">
+        <div ref={titleRef} className="mb-8 animate-on-scroll">
           <h2
             className="text-2xl md:text-3xl font-bold text-white mb-2"
             data-testid="text-wedding-date"
@@ -38,10 +41,11 @@ export default function CountdownTimer() {
 
         {/* Countdown Numbers */}
         <div
+          ref={countdownRef}
           className="flex justify-center items-center space-x-4 md:space-x-8"
           data-testid="countdown-overlay"
         >
-          <div className="text-center">
+          <div className="text-center animate-on-scroll">
             <div
               className="text-4xl md:text-6xl font-bold text-white mb-1"
               data-testid="countdown-days"
@@ -53,7 +57,7 @@ export default function CountdownTimer() {
             </div>
           </div>
 
-          <div className="text-center">
+          <div className="text-center animate-on-scroll">
             <div
               className="text-4xl md:text-6xl font-bold text-white mb-1"
               data-testid="countdown-hours"
@@ -65,7 +69,7 @@ export default function CountdownTimer() {
             </div>
           </div>
 
-          <div className="text-center">
+          <div className="text-center animate-on-scroll">
             <div
               className="text-4xl md:text-6xl font-bold text-white mb-1"
               data-testid="countdown-minutes"
@@ -77,7 +81,7 @@ export default function CountdownTimer() {
             </div>
           </div>
 
-          <div className="text-center">
+          <div className="text-center animate-on-scroll">
             <div
               className="text-4xl md:text-6xl font-bold text-white mb-1"
               data-testid="countdown-seconds"
