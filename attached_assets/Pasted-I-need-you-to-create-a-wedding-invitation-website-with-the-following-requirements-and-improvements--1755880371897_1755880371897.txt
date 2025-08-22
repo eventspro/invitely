@@ -1,0 +1,62 @@
+I need you to create a wedding invitation website with the following requirements and improvements:
+________________________________________
+🎨 General Design & User Experience
+1.	Elegant, modern, and minimalistic design — light background (cream/white), soft earthy accent tones (beige, gold, soft green).
+2.	Smooth animations and transitions (fade-ins, slide-ins, hover effects).
+3.	Mobile-first design — fully responsive across phones, tablets, and desktops.
+4.	Armenian typography that is stylish yet readable.
+5.	All website text must be in Armenian.
+________________________________________
+🖼 Hero Banner
+•	A small centered banner with two images (similar to the first attached screenshot).
+•	Names of the couple + wedding announcement text displayed next to/below the images.
+•	Background music with a play/pause toggle button (optional but recommended for a wedding website).
+________________________________________
+⏳ Countdown Timer
+•	A live countdown timer to the wedding date.
+•	Elegant, large numbers with labels (օրեր, ժամեր, րոպեներ, վայրկյաններ).
+________________________________________
+📅 Calendar Section
+•	A monthly calendar with the wedding date highlighted using a heart icon (as in the screenshot).
+•	Underneath the calendar: a short text reminder about the event.
+________________________________________
+📍 Roadmap / Locations
+•	Two illustrated location cards:
+1.	Եկեղեցի – for the wedding ceremony.
+2.	Ռեստորան – for the celebration venue.
+•	Clicking a card should open a popup with an embedded Google Map of the location.
+•	Buttons labeled “Քարտեզ” for clarity.
+________________________________________
+🕒 Timeline Section
+•	A clear timeline of the wedding day:
+o	Example: 15:00 – Պսակադրություն, 17:00 – Ընդունելություն, 19:00 – Ճաշկերույթ, 21:00 – Պարում & տոնակատարություն.
+•	Displayed with icons (church, champagne glasses, dinner plate, music note) to make it more visual.
+________________________________________
+📩 RSVP with Mailing System
+•	RSVP form with the following fields:
+o	Անուն, Ազգանուն
+o	Հյուրերի քանակ + նրանց անունները և ազգանունները
+o	Մասնակցելու տարբերակ (մասնակցում եմ / չեմ մասնակցում)
+o	Էլ․ հասցե
+Functionality:
+1.	All RSVP submissions must be sent automatically to:
+o	harutavetisyan0@gmail.com
+o	tatevhovsepyan22@gmail.com
+2.	A reminder email should be sent to the guest, including:
+o	Wedding date & time
+o	Locations (church & restaurant)
+o	Optional personal thank-you message
+________________________________________
+📷 Photo Sharing Section
+•	A section with a button to access Google Drive or Yandex Disk folder with all wedding photos.
+•	Guests can download them via a secure link.
+•	Button labeled: “Ներբեռնել նկարները”.
+________________________________________
+🌟 Extra User-Friendly Features
+•	Sticky navigation menu with smooth scroll.
+•	Floating “scroll to top” button.
+•	Elegant section dividers (thin lines, floral/ornament icons).
+•	SEO-friendly structure and fast loading.
+•	Optimized image handling for both desktop and mobile.
+•	Easy configuration so I can replace images and texts myself.
+
