@@ -1,5 +1,6 @@
 import { Download } from "lucide-react";
 import { weddingConfig } from "@/config/wedding-config";
+import weddingPhoto from "@assets/IMG_5671_1755890386133.jpeg";
 
 export default function PhotoSection() {
   const openPhotoGallery = () => {
@@ -21,13 +22,16 @@ export default function PhotoSection() {
         </h2>
         <div className="w-24 h-0.5 bg-softGold mx-auto mb-12"></div>
         
-        <div className="bg-white rounded-xl shadow-xl p-8" data-testid="photo-gallery-container">
-          <img 
-            src="https://images.unsplash.com/photo-1520854221256-17451cc331bf?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&h=400" 
-            alt="Հարսանեկան նկարներ" 
-            className="w-full h-64 object-cover rounded-lg mb-6" 
-            data-testid="img-wedding-collage"
-          />
+        <div className="bg-white/90 backdrop-blur-sm rounded-2xl shadow-2xl p-8 border border-softGold/20" data-testid="photo-gallery-container">
+          <div className="relative group overflow-hidden rounded-xl">
+            <img 
+              src={weddingPhoto} 
+              alt="Հարսանեկան նկարներ" 
+              className="w-full h-80 object-cover transition-transform duration-500 group-hover:scale-105" 
+              data-testid="img-wedding-collage"
+            />
+            <div className="absolute inset-0 bg-gradient-to-t from-softGold/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+          </div>
           
           <p className="text-charcoal/70 mb-6" data-testid="text-photo-description">
             {weddingConfig.photos.description}
