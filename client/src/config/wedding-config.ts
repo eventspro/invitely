@@ -19,7 +19,7 @@ export const weddingConfig = {
 
   // Hero Section
   hero: {
-    title: "Հարսանեկան հրավիրատոմս",
+    // title: "Հարսանեկան հրավիրատոմս",
     welcomeMessage:
       "Սիրով հրավիրում ենք մեր հարսանյաց հանդեսին: Գալիս ենք միասին տոնելու սերն ու երջանկությունը:",
     musicButton: "Երաժշտություն",
@@ -117,7 +117,7 @@ export const weddingConfig = {
 
   // Photo Section
   photos: {
-    title: "Հիշարժան պահեր",
+    title: "Մեր հիշարժան օրվա լուսանկարները կգտնեք այստեղ։",
     description:
       "Բոլոր հարսանեկան նկարները հասանելի կլինեն արարողությունից հետո",
     downloadButton: "Ներբեռնել նկարները",
