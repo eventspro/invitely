@@ -27,7 +27,6 @@ export default function CalendarSection() {
             className="text-5xl md:text-6xl text-charcoal mb-8"
             style={{
               fontFamily: "Playfair Display, serif",
-              fontStyle: "italic",
               fontWeight: "300",
             }}
             data-testid="text-calendar-title"

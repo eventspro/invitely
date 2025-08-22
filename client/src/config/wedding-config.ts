@@ -11,8 +11,8 @@ export const weddingConfig = {
 
   // Wedding Date & Time
   wedding: {
-    date: "2025-09-10T15:00:00", // Format: YYYY-MM-DDTHH:MM:SS
-    displayDate: "Հոկտեմբեր 2025",
+    date: "2025-10-10T00:00:00", // Format: YYYY-MM-DDTHH:MM:SS
+    displayDate: "10 Հոկտեմբեր 2025",
     month: "10 Հոկտեմբեր 2025",
     day: "10",
   },
@@ -136,7 +136,7 @@ export const weddingConfig = {
 
   // Footer
   footer: {
-    // thankYouMessage: "Շնորհակալություն մեզ հետ այս հատուկ օրը կիսելու համար",
+    thankYouMessage: "Շնորհակալություն մեզ հետ այս հատուկ օրը կիսելու համար",
   },
 
   // Email Configuration (for admin use)

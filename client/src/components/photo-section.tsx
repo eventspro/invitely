@@ -14,7 +14,6 @@ export default function PhotoSection() {
         <h2 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl text-charcoal mb-6 sm:mb-8 leading-tight" 
             style={{ 
               fontFamily: 'Playfair Display, serif', 
-              fontStyle: 'italic',
               fontWeight: '300'
             }}
             data-testid="text-photo-title">
