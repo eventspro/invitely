@@ -11,9 +11,9 @@ export const weddingConfig = {
 
   // Wedding Date & Time
   wedding: {
-    date: "2025-10-10T15:00:00", // Format: YYYY-MM-DDTHH:MM:SS
-    displayDate: "10 Հոկտեմբեր 2025",
-    month: "Հոկտեմբեր 2025",
+    date: "2025-09-10T15:00:00", // Format: YYYY-MM-DDTHH:MM:SS
+    displayDate: "Հոկտեմբեր 2025",
+    month: "Օգոստոս 2024",
     day: "10",
   },
 
@@ -41,7 +41,7 @@ export const weddingConfig = {
     title: "Հարցանյի հիմքեր",
     description:
       "Սիրով հրավիրում ենք Ձեզ ներկա գտնվելու մեր հարսանյաց արարողությանը։ Ծանոթացեք ծրագրին և հաստատեք Ձեր ներկայությունը մինչև նոյեմբերի 15-ը։",
-    monthTitle: "Հոկտեմբեր 2025",
+    monthTitle: "Օգոստոս 2024",
     dayLabels: ["ԿՐՆ", "ԵՐԿ", "ԵՐՔ", "ՉՈՐ", "ՀՆԳ", "ՈՒՐ", "ՇԲՏ"],
   },
 

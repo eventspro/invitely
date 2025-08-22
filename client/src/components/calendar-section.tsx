@@ -101,13 +101,23 @@ export default function CalendarSection() {
                         <div className="inline-flex items-center justify-center h-full">
                           <div className="relative">
                             <svg
-                              viewBox="0 0 24 24"
-                              className="w-7 h-7 text-red-500 fill-current"
-                              style={{ filter: 'drop-shadow(0 1px 3px rgba(239, 68, 68, 0.4))' }}
+                              viewBox="0 0 32 29.6"
+                              className="w-8 h-8 fill-current"
+                              style={{
+                                marginTop: "-5px",
+                                color: "rgb(245, 245, 245)", // sets the heart color
+                                filter:
+                                  "drop-shadow(0 2px 4px rgba(0, 0, 0, 0.25))", // softer shadow for contrast
+                              }}
                             >
-                              <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/>
+                              <path
+                                d="M23.6,0c-2.9,0-5.6,1.4-7.6,3.6C14,1.4,11.3,0,8.4,0
+                                 C3.8,0,0,3.8,0,8.4c0,9.2,16,21.2,16,21.2s16-12,16-21.2
+                                 C32,3.8,28.2,0,23.6,0z"
+                              />
                             </svg>
-                            <span className="absolute inset-0 flex items-center justify-center text-white font-bold text-xs">
+
+                            <span className="absolute inset-0 flex items-center justify-center text-black font-bold text-xs" style={{ marginTop: "-5px" }}>
                               {day}
                             </span>
                           </div>
@@ -138,9 +148,7 @@ export default function CalendarSection() {
                     className="text-6xl md:text-7xl font-light text-charcoal"
                     style={{ fontFamily: "Playfair Display, serif" }}
                     data-testid="text-wedding-date"
-                  >
-                    {weddingConfig.wedding.day}
-                  </div>
+                  ></div>
                 </div>
               </div>
 
