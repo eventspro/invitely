@@ -58,11 +58,17 @@ export default function RsvpSection() {
     <section id="rsvp" className="py-20 bg-gradient-to-r from-lightGold/20 to-warmBeige/30">
       <div className="max-w-2xl mx-auto px-4">
         <div className="text-center mb-16">
-          <h2 className="text-3xl md:text-4xl font-serif font-bold text-charcoal mb-4" data-testid="text-rsvp-title">
+          <h2 className="text-5xl md:text-6xl text-charcoal mb-8" 
+              style={{ 
+                fontFamily: 'Playfair Display, serif', 
+                fontStyle: 'italic',
+                fontWeight: '300'
+              }}
+              data-testid="text-rsvp-title">
             {weddingConfig.rsvp.title}
           </h2>
-          <div className="ornament w-full h-8 mb-6"></div>
-          <p className="text-charcoal/70" data-testid="text-rsvp-description">
+          <div className="w-24 h-0.5 bg-softGold mx-auto mb-8"></div>
+          <p className="text-charcoal/70 text-lg" data-testid="text-rsvp-description">
             {weddingConfig.rsvp.description}
           </p>
         </div>
@@ -96,7 +102,7 @@ export default function RsvpSection() {
                       <FormLabel>{weddingConfig.rsvp.form.lastName}</FormLabel>
                       <FormControl>
                         <Input 
-                          placeholder="Ձեր ազգանունը" 
+                          placeholder={weddingConfig.rsvp.form.lastNamePlaceholder} 
                           {...field} 
                           data-testid="input-last-name"
                         />
@@ -112,11 +118,11 @@ export default function RsvpSection() {
                 name="email"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Էլ․ հասցե</FormLabel>
+                    <FormLabel>{weddingConfig.rsvp.form.email}</FormLabel>
                     <FormControl>
                       <Input 
                         type="email"
-                        placeholder="your@email.com" 
+                        placeholder={weddingConfig.rsvp.form.emailPlaceholder} 
                         {...field} 
                         data-testid="input-email"
                       />
@@ -131,19 +137,19 @@ export default function RsvpSection() {
                 name="guestCount"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Հյուրերի քանակ</FormLabel>
+                    <FormLabel>{weddingConfig.rsvp.form.guestCount}</FormLabel>
                     <Select onValueChange={field.onChange} value={field.value}>
                       <FormControl>
                         <SelectTrigger data-testid="select-guest-count">
-                          <SelectValue placeholder="Ընտրեք հյուրերի քանակը" />
+                          <SelectValue placeholder={weddingConfig.rsvp.form.guestCountPlaceholder} />
                         </SelectTrigger>
                       </FormControl>
                       <SelectContent>
-                        <SelectItem value="1">1 հյուր</SelectItem>
-                        <SelectItem value="2">2 հյուր</SelectItem>
-                        <SelectItem value="3">3 հյուր</SelectItem>
-                        <SelectItem value="4">4 հյուր</SelectItem>
-                        <SelectItem value="5+">5+ հյուր</SelectItem>
+                        {weddingConfig.rsvp.guestOptions.map((option) => (
+                          <SelectItem key={option.value} value={option.value}>
+                            {option.label}
+                          </SelectItem>
+                        ))}
                       </SelectContent>
                     </Select>
                     <FormMessage />
@@ -156,10 +162,10 @@ export default function RsvpSection() {
                 name="guestNames"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Հյուրերի անունները և ազգանունները</FormLabel>
+                    <FormLabel>{weddingConfig.rsvp.form.guestNames}</FormLabel>
                     <FormControl>
                       <Textarea 
-                        placeholder="Նշեք բոլոր հյուրերի անունները և ազգանունները"
+                        placeholder={weddingConfig.rsvp.form.guestNamesPlaceholder}
                         rows={3}
                         {...field} 
                         data-testid="textarea-guest-names"
@@ -175,7 +181,7 @@ export default function RsvpSection() {
                 name="attendance"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Մասնակցություն</FormLabel>
+                    <FormLabel>{weddingConfig.rsvp.form.attendance}</FormLabel>
                     <FormControl>
                       <RadioGroup
                         onValueChange={field.onChange}
@@ -185,11 +191,11 @@ export default function RsvpSection() {
                       >
                         <div className="flex items-center space-x-3">
                           <RadioGroupItem value="attending" id="attending" />
-                          <Label htmlFor="attending">Մասնակցում եմ</Label>
+                          <Label htmlFor="attending">{weddingConfig.rsvp.form.attendingYes}</Label>
                         </div>
                         <div className="flex items-center space-x-3">
                           <RadioGroupItem value="not-attending" id="not-attending" />
-                          <Label htmlFor="not-attending">Չեմ մասնակցում</Label>
+                          <Label htmlFor="not-attending">{weddingConfig.rsvp.form.attendingNo}</Label>
                         </div>
                       </RadioGroup>
                     </FormControl>
@@ -204,7 +210,7 @@ export default function RsvpSection() {
                 disabled={rsvpMutation.isPending}
                 data-testid="button-submit-rsvp"
               >
-                {rsvpMutation.isPending ? "Ուղարկվում է..." : "Ուղարկել հաստատումը"}
+                {rsvpMutation.isPending ? weddingConfig.rsvp.form.submittingButton : weddingConfig.rsvp.form.submitButton}
               </Button>
             </form>
           </Form>

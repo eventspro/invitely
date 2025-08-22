@@ -11,10 +11,16 @@ export default function LocationsSection() {
     <section id="locations" className="py-20 bg-gradient-to-r from-sageGreen/10 to-warmBeige/20">
       <div className="max-w-6xl mx-auto px-4">
         <div className="text-center mb-16">
-          <h2 className="text-3xl md:text-4xl font-serif font-bold text-charcoal mb-4" data-testid="text-locations-title">
+          <h2 className="text-5xl md:text-6xl text-charcoal mb-8" 
+              style={{ 
+                fontFamily: 'Playfair Display, serif', 
+                fontStyle: 'italic',
+                fontWeight: '300'
+              }}
+              data-testid="text-locations-title">
             {weddingConfig.locations.sectionTitle}
           </h2>
-          <div className="ornament w-full h-8"></div>
+          <div className="w-24 h-0.5 bg-softGold mx-auto"></div>
         </div>
         
         <div className="grid md:grid-cols-2 gap-8">

@@ -1,18 +1,25 @@
 import { Download } from "lucide-react";
+import { weddingConfig } from "@/config/wedding-config";
 
 export default function PhotoSection() {
   const openPhotoGallery = () => {
     // TODO: Open Google Drive or Yandex Disk link when available
-    alert('Նկարների հղումը կհասանելի լինի հարսանիքից հետո');
+    alert(weddingConfig.photos.comingSoonMessage);
   };
 
   return (
     <section className="py-20">
       <div className="max-w-4xl mx-auto px-4 text-center">
-        <h2 className="text-3xl md:text-4xl font-serif font-bold text-charcoal mb-4" data-testid="text-photo-title">
-          Նկարների հավաքածու
+        <h2 className="text-5xl md:text-6xl text-charcoal mb-8" 
+            style={{ 
+              fontFamily: 'Playfair Display, serif', 
+              fontStyle: 'italic',
+              fontWeight: '300'
+            }}
+            data-testid="text-photo-title">
+          {weddingConfig.photos.title}
         </h2>
-        <div className="ornament w-full h-8 mb-12"></div>
+        <div className="w-24 h-0.5 bg-softGold mx-auto mb-12"></div>
         
         <div className="bg-white rounded-xl shadow-xl p-8" data-testid="photo-gallery-container">
           <img 
@@ -23,7 +30,7 @@ export default function PhotoSection() {
           />
           
           <p className="text-charcoal/70 mb-6" data-testid="text-photo-description">
-            Բոլոր հարսանեկան նկարները հասանելի կլինեն արարողությունից հետո
+            {weddingConfig.photos.description}
           </p>
           
           <button 
@@ -32,7 +39,7 @@ export default function PhotoSection() {
             data-testid="button-download-photos"
           >
             <Download className="w-5 h-5 mr-2" />
-            Ներբեռնել նկարները
+            {weddingConfig.photos.downloadButton}
           </button>
         </div>
       </div>
