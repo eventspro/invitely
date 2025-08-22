@@ -98,26 +98,20 @@ export default function CalendarSection() {
                       }
                     >
                       {day === weddingConfig.wedding.day ? (
-                        <div className="flex items-center justify-center">
-                          {/* Heart Shape SVG */}
-                          <div className="relative">
-                            <svg
-                              viewBox="0 0 100 100"
-                              className="w-10 h-10 text-red-500 fill-current"
-                              style={{ filter: 'drop-shadow(0 2px 6px rgba(239, 68, 68, 0.4))' }}
-                            >
-                              <path d="M50 85c-1.5-1.5-3.5-3.5-6-6.5C35 69 25 58 25 45c0-9 7-16 16-16s16 7 16 16c0 0 0 0 0 0 0-9 7-16 16-16s16 7 16 16c0 13-10 24-19 33.5-2.5 3-4.5 5-6 6.5z" />
-                            </svg>
-                            {/* Date Number Inside Heart */}
-                            <div className="absolute inset-0 flex items-center justify-center">
-                              <span className="text-white font-bold text-sm" style={{ marginTop: '-2px' }}>
-                                {day}
-                              </span>
-                            </div>
-                          </div>
+                        <div className="relative inline-flex items-center justify-center">
+                          <svg
+                            viewBox="0 0 24 24"
+                            className="w-6 h-6 text-red-500 fill-current"
+                            style={{ filter: 'drop-shadow(0 1px 3px rgba(239, 68, 68, 0.5))' }}
+                          >
+                            <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/>
+                          </svg>
+                          <span className="absolute text-white font-bold text-xs">
+                            {day}
+                          </span>
                         </div>
                       ) : day ? (
-                        <span>{day}</span>
+                        <span className="text-charcoal/70">{day}</span>
                       ) : null}
                     </div>
                   )),
