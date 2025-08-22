@@ -4,44 +4,38 @@ export default function TimelineSection() {
   const timelineIcons = [
     // Wedding rings icon
     (
-      <svg viewBox="0 0 100 100" className="w-16 h-16 text-charcoal/70" fill="none" stroke="currentColor">
-        <circle cx="35" cy="45" r="12" strokeWidth="1.5"/>
-        <circle cx="65" cy="45" r="12" strokeWidth="1.5"/>
-        <path d="M47 45 L53 45" strokeWidth="1.5"/>
-        <circle cx="35" cy="38" r="2" fill="currentColor"/>
+      <svg viewBox="0 0 60 60" className="w-12 h-12 text-charcoal/60" fill="none" stroke="currentColor" strokeWidth="1.5">
+        <circle cx="20" cy="30" r="10" />
+        <circle cx="40" cy="30" r="10" />
+        <rect x="18" y="22" width="4" height="3" fill="currentColor" />
       </svg>
     ),
     // Dining/plate icon
     (
-      <svg viewBox="0 0 100 100" className="w-16 h-16 text-charcoal/70" fill="none" stroke="currentColor">
-        <circle cx="50" cy="50" r="20" strokeWidth="1.5"/>
-        <path d="M45 30 L45 40" strokeWidth="1.5"/>
-        <path d="M55 30 L55 40" strokeWidth="1.5"/>
-        <path d="M50 25 L50 35" strokeWidth="1.5"/>
-        <path d="M40 40 L60 40" strokeWidth="1.5"/>
+      <svg viewBox="0 0 60 60" className="w-12 h-12 text-charcoal/60" fill="none" stroke="currentColor" strokeWidth="1.5">
+        <circle cx="30" cy="30" r="15" />
+        <path d="M20 20 L20 25" />
+        <path d="M30 18 L30 25" />
+        <path d="M40 20 L40 25" />
       </svg>
     ),
     // Wedding cake icon
     (
-      <svg viewBox="0 0 100 100" className="w-16 h-16 text-charcoal/70" fill="none" stroke="currentColor">
-        <rect x="25" y="60" width="50" height="20" strokeWidth="1.5"/>
-        <rect x="35" y="45" width="30" height="15" strokeWidth="1.5"/>
-        <rect x="40" y="35" width="20" height="10" strokeWidth="1.5"/>
-        <path d="M50 30 L50 25" strokeWidth="1.5"/>
-        <circle cx="50" cy="23" r="2" fill="currentColor"/>
-        <path d="M30 60 Q35 55 40 60" strokeWidth="1"/>
-        <path d="M60 60 Q65 55 70 60" strokeWidth="1"/>
+      <svg viewBox="0 0 60 60" className="w-12 h-12 text-charcoal/60" fill="none" stroke="currentColor" strokeWidth="1.5">
+        <rect x="15" y="40" width="30" height="12" />
+        <rect x="20" y="30" width="20" height="10" />
+        <rect x="25" y="22" width="10" height="8" />
+        <path d="M30 22 L30 18" />
+        <circle cx="30" cy="16" r="1.5" fill="currentColor" />
       </svg>
     ),
     // Champagne glasses icon
     (
-      <svg viewBox="0 0 100 100" className="w-16 h-16 text-charcoal/70" fill="none" stroke="currentColor">
-        <path d="M35 35 L35 50 Q35 55 40 55 Q45 55 45 50 L45 35" strokeWidth="1.5"/>
-        <path d="M55 35 L55 50 Q55 55 60 55 Q65 55 65 50 L65 35" strokeWidth="1.5"/>
-        <path d="M30 35 L50 35" strokeWidth="1.5"/>
-        <path d="M50 35 L70 35" strokeWidth="1.5"/>
-        <path d="M35 25 L45 35" strokeWidth="1"/>
-        <path d="M55 25 L65 35" strokeWidth="1"/>
+      <svg viewBox="0 0 60 60" className="w-12 h-12 text-charcoal/60" fill="none" stroke="currentColor" strokeWidth="1.5">
+        <path d="M20 20 L20 35 Q20 38 23 38 Q26 38 26 35 L26 20" />
+        <path d="M34 20 L34 35 Q34 38 37 38 Q40 38 40 35 L40 20" />
+        <path d="M15 20 L31 20" />
+        <path d="M29 20 L45 20" />
       </svg>
     )
   ];
