@@ -24,7 +24,7 @@ export default function HeroSection() {
         <div className="relative flex justify-center items-center mb-8 h-64 md:h-80">
           {/* Main larger image */}
           <img 
-            src="@assets/image_1755880620916.png" 
+            src="@assets/nkar_1755889622603.jpg" 
             alt="Հարություն և Տաթև" 
             className="w-48 h-60 md:w-64 md:h-80 object-cover rounded-lg shadow-xl ring-4 ring-softGold/30 transform hover:scale-105 transition-transform duration-300 z-10" 
             data-testid="img-main-couple"
