@@ -82,9 +82,6 @@ export default function TimelineSection() {
                 </div>
 
                 {/* Step Number */}
-                <div className="absolute -top-3 -right-3 w-8 h-8 bg-softGold text-white rounded-full flex items-center justify-center text-sm font-bold shadow-lg">
-                  {index + 1}
-                </div>
               </div>
 
               {/* Connector Line (except last item) */}
