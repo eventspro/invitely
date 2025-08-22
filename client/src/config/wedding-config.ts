@@ -6,41 +6,43 @@ export const weddingConfig = {
   couple: {
     groomName: "Հարություն",
     brideName: "Տաթև",
-    combinedNames: "Հարություն & Տաթև"
+    combinedNames: "Հարություն & Տաթև",
   },
 
   // Wedding Date & Time
   wedding: {
-    date: "2024-08-18T15:00:00", // Format: YYYY-MM-DDTHH:MM:SS
-    displayDate: "18 ՕԳՈՍՏՈՍ 2024",
+    date: "2025-09-10T15:00:00", // Format: YYYY-MM-DDTHH:MM:SS
+    displayDate: "10 Հոկտեմբեր 2025",
     month: "Օգոստոս 2024",
-    day: "18"
+    day: "18",
   },
 
   // Hero Section
   hero: {
     title: "Հարսանեկան հրավիրատոմս",
-    welcomeMessage: "Մեզ համար մեծ պատիվ կլինի տեսնել ձեզ մեր կյանքի այս կարևոր օրվա կիսելիս: Գալիս ենք միասին տոնել սերն ու երջանկությունը:",
-    musicButton: "Երաժշտություն"
+    welcomeMessage:
+      "Սիրով հրավիրում ենք մեր հարսանյաց հանդեսին: Գալիս ենք միասին տոնելու սերն ու երջանկությունը:",
+    musicButton: "Երաժշտություն",
   },
 
   // Countdown Section
   countdown: {
-    subtitle: "Ֆցր հարսանիքի ծանուցում ծանծգն է",
+    subtitle: "Հարսանիքին մնացել է",
     labels: {
       days: "օր",
-      hours: "ժամ", 
-      minutes: "րոպ",
-      seconds: "վայրկ"
-    }
+      hours: "ժամ",
+      minutes: "րոպե",
+      seconds: "վայրկյան",
+    },
   },
 
   // Calendar Section
   calendar: {
     title: "Հարցանյի հիմքեր",
-    description: "Նուրա ունիցանունն եմք Մեր նիվգե ցարենք\nԶցր հարցանիքտ ճագիրձտռն\nՆուայեմությւմ ծրագիրների Ն հարցանիքի Մեր\nհարցանյիկով տ քիքուր ծագիրառն 15։",
+    description:
+      "Սիրով հրավիրում ենք Ձեզ ներկա գտնվելու մեր հարսանյաց արարողությանը։ Ծանոթացեք ծրագրին և հաստատեք Ձեր ներկայությունը մինչև նոյեմբերի 15-ը։",
     monthTitle: "Օգոստոս 2024",
-    dayLabels: ["ԿՐՆ", "ԵՐԿ", "ԵՐՔ", "ՉՈՐ", "ՀՆԳ", "ՈՒՐ", "ՇԲՏ"]
+    dayLabels: ["ԿՐՆ", "ԵՐԿ", "ԵՐՔ", "ՉՈՐ", "ՀՆԳ", "ՈՒՐ", "ՇԲՏ"],
   },
 
   // Locations
@@ -50,14 +52,14 @@ export const weddingConfig = {
       title: "Եկեղեցի",
       name: "Սուրբ Գրիգոր Լուսավորիչ Եկեղեցի",
       description: "Պսակադրության արարողություն",
-      mapButton: "Քարտեզ"
+      mapButton: "Քարտեզ",
     },
     restaurant: {
-      title: "Ռեստորան", 
+      title: "Ռեստորան",
       name: "Արարատ Ռեստորան",
       description: "Ընդունելության և տոնակատարության վայր",
-      mapButton: "Քարտեզ"
-    }
+      mapButton: "Քարտեզ",
+    },
   },
 
   // Timeline Events
@@ -67,24 +69,24 @@ export const weddingConfig = {
       {
         time: "13:00",
         title: "Պսակադրություն",
-        description: "Նուր Նարգիզ ծետալթեր"
+        description: "Նուր Նարգիզ ծետալթեր",
       },
       {
         time: "17:00",
-        title: "Հանդիսական խանութարկարգ", 
-        description: "Hannah Garden Hall"
+        title: "Հանդիսական խանութարկարգ",
+        description: "Hannah Garden Hall",
       },
       {
         time: "21:30",
         title: "Հանդիսական ընդունելություն",
-        description: ""
+        description: "",
       },
       {
         time: "23:00",
         title: "Ակտիվ",
-        description: ""
-      }
-    ]
+        description: "",
+      },
+    ],
   },
 
   // RSVP Section
@@ -94,7 +96,7 @@ export const weddingConfig = {
     form: {
       firstName: "Անուն",
       firstNamePlaceholder: "Ձեր անունը",
-      lastName: "Ազգանուն", 
+      lastName: "Ազգանուն",
       lastNamePlaceholder: "Ձեր ազգանունը",
       email: "Էլ․ հասցե",
       emailPlaceholder: "your@email.com",
@@ -106,45 +108,43 @@ export const weddingConfig = {
       attendingYes: "Մասնակցում եմ",
       attendingNo: "Չեմ մասնակցում",
       submitButton: "Ուղարկել հաստատումը",
-      submittingButton: "Ուղարկվում է..."
+      submittingButton: "Ուղարկվում է...",
     },
     guestOptions: [
       { value: "1", label: "1 հյուր" },
       { value: "2", label: "2 հյուր" },
       { value: "3", label: "3 հյուր" },
       { value: "4", label: "4 հյուր" },
-      { value: "5+", label: "5+ հյուր" }
-    ]
+      { value: "5+", label: "5+ հյուր" },
+    ],
   },
 
   // Photo Section
   photos: {
     title: "Նկարների հավաքածու",
-    description: "Բոլոր հարսանեկան նկարները հասանելի կլինեն արարողությունից հետո",
+    description:
+      "Բոլոր հարսանեկան նկարները հասանելի կլինեն արարողությունից հետո",
     downloadButton: "Ներբեռնել նկարները",
-    comingSoonMessage: "Նկարների հղումը կհասանելի լինի հարսանիքից հետո"
+    comingSoonMessage: "Նկարների հղումը կհասանելի լինի հարսանիքից հետո",
   },
 
   // Navigation
   navigation: {
     home: "Գլխավոր",
-    countdown: "Հաշվարկ", 
+    countdown: "Հաշվարկ",
     calendar: "Օրացույց",
     locations: "Վայրեր",
     timeline: "Ծրագիր",
-    rsvp: "Հաստատում"
+    rsvp: "Հաստատում",
   },
 
   // Footer
   footer: {
-    thankYouMessage: "Շնորհակալություն մեզ հետ այս հատուկ օրը կիսելու համար"
+    thankYouMessage: "Շնորհակալություն մեզ հետ այս հատուկ օրը կիսելու համար",
   },
 
   // Email Configuration (for admin use)
   email: {
-    recipients: [
-      "harutavetisyan0@gmail.com",
-      "tatevhovsepyan22@gmail.com"
-    ]
-  }
+    recipients: ["harutavetisyan0@gmail.com", "tatevhovsepyan22@gmail.com"],
+  },
 };
