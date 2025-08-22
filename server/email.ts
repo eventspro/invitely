@@ -25,7 +25,7 @@ export async function sendRsvpNotificationEmails(rsvp: Rsvp): Promise<boolean> {
     
     const emailPromises = COUPLE_EMAILS.map(email => 
       resend.emails.send({
-        from: 'noreply@your-domain.com', // You'll need to configure this with your domain
+        from: 'onboarding@resend.dev', // Using Resend's verified domain for testing
         to: email,
         subject: `🤵👰 Նոր RSVP հաստատում - ${rsvp.firstName} ${rsvp.lastName}`,
         html: `
@@ -73,7 +73,7 @@ export async function sendRsvpConfirmationEmail(rsvp: Rsvp): Promise<boolean> {
       : 'Ցավոք, որ չեք կարողանա գալ: Ցանկանում ենք ձեզ բարելավություն: 💙';
 
     await resend.emails.send({
-      from: 'noreply@your-domain.com', // You'll need to configure this with your domain
+      from: 'onboarding@resend.dev', // Using Resend's verified domain for testing
       to: rsvp.email,
       subject: 'Հաստատում - Հարություն և Տատև 10 Հոկտեմբեր 2025',
       html: `
