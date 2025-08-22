@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { X } from "lucide-react";
+import { X, ExternalLink } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 
 export default function MapModal() {
@@ -20,17 +20,17 @@ export default function MapModal() {
     if (location === 'church') {
       return {
         title: 'Սուրբ Գրիգոր Լուսավորիչ Եկեղեցի',
-        // TODO: Add actual Google Maps embed URL
-        mapUrl: 'https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3047.3!2d44.5!3d40.2!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x0%3A0x0!2zNDDCsDEyJzAwLjAiTiA0NMKwMzAnMDAuMCJF!5e0!3m2!1sen!2sam!4v1234567890123!5m2!1sen!2sam'
+        mapUrl: `https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3048.1!2d44.51732572776011!3d40.1723136334379!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x0%3A0x0!2zNDDCsDEwJzIwLjMiTiA0NMKwMzEnMDIuNCJF!5e0!3m2!1sen!2sam!4v${Date.now()}!5m2!1sen!2sam`,
+        directUrl: `https://www.google.com/maps?q=40.1723136334379,44.51732572776011`
       };
     } else if (location === 'restaurant') {
       return {
-        title: 'Արարատ Ռեստորան',
-        // TODO: Add actual Google Maps embed URL
-        mapUrl: 'https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3047.3!2d44.5!3d40.2!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x0%3A0x0!2zNDDCsDEyJzAwLjAiTiA0NMKwMzAnMDAuMCJF!5e0!3m2!1sen!2sam!4v1234567890123!5m2!1sen!2sam'
+        title: 'BAYAZET HALL',
+        mapUrl: `https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3037.8!2d45.145645997030925!3d40.35985267995858!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x0%3A0x0!2zNDDCsDIxJzM1LjUiTiA0NcKwMDgnNDQuMyJF!5e0!3m2!1sen!2sam!4v${Date.now()}!5m2!1sen!2sam`,
+        directUrl: `https://www.google.com/maps?q=40.35985267995858,45.145645997030925`
       };
     }
-    return { title: '', mapUrl: '' };
+    return { title: '', mapUrl: '', directUrl: '' };
   };
 
   const locationInfo = getLocationInfo();
@@ -43,14 +43,29 @@ export default function MapModal() {
             {locationInfo.title}
           </DialogTitle>
         </DialogHeader>
-        <div className="h-96" data-testid="map-container">
-          {/* TODO: Replace with actual Google Maps embed when API is configured */}
-          <div className="w-full h-full bg-gray-200 flex items-center justify-center text-charcoal/50 rounded-lg">
-            <div className="text-center">
-              <i className="fas fa-map-marked-alt text-4xl mb-4"></i>
-              <p>Google Maps կտեղադրվի այստեղ</p>
-              <p className="text-sm mt-2">Առժամանակ մակետային պատկեր</p>
-            </div>
+        <div className="space-y-4">
+          <div className="h-96" data-testid="map-container">
+            <iframe
+              src={locationInfo.mapUrl}
+              width="100%"
+              height="100%"
+              style={{ border: 0 }}
+              allowFullScreen
+              loading="lazy"
+              referrerPolicy="no-referrer-when-downgrade"
+              className="rounded-lg"
+            ></iframe>
+          </div>
+          <div className="flex justify-center">
+            <a
+              href={locationInfo.directUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="bg-softGold hover:bg-softGold/90 text-white px-6 py-3 rounded-lg font-medium transition-colors duration-300 flex items-center space-x-2"
+            >
+              <ExternalLink className="w-4 h-4" />
+              <span>Բացել Google Maps-ում</span>
+            </a>
           </div>
         </div>
       </DialogContent>
