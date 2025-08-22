@@ -5,33 +5,33 @@
 @tailwind utilities;
 
 :root {
-  --background: hsl(30, 8%, 96%);
-  --foreground: hsl(0, 0%, 12%);
+  --background: hsl(340, 30%, 97%);
+  --foreground: hsl(340, 15%, 15%);
   --card: hsl(0, 0%, 100%);
-  --card-foreground: hsl(0, 0%, 12%);
+  --card-foreground: hsl(340, 15%, 15%);
   --popover: hsl(0, 0%, 100%);
-  --popover-foreground: hsl(0, 0%, 12%);
-  --primary: hsl(0, 0%, 45%);
+  --popover-foreground: hsl(340, 15%, 15%);
+  --primary: hsl(340, 45%, 65%);
   --primary-foreground: hsl(0, 0%, 100%);
-  --secondary: hsl(30, 5%, 88%);
-  --secondary-foreground: hsl(0, 0%, 12%);
-  --muted: hsl(30, 5%, 92%);
-  --muted-foreground: hsl(0, 0%, 45%);
-  --accent: hsl(30, 8%, 90%);
-  --accent-foreground: hsl(0, 0%, 12%);
+  --secondary: hsl(340, 20%, 90%);
+  --secondary-foreground: hsl(340, 15%, 15%);
+  --muted: hsl(340, 15%, 92%);
+  --muted-foreground: hsl(340, 10%, 50%);
+  --accent: hsl(340, 25%, 88%);
+  --accent-foreground: hsl(340, 15%, 15%);
   --destructive: hsl(0, 84%, 60%);
   --destructive-foreground: hsl(0, 0%, 100%);
-  --border: hsl(30, 5%, 85%);
-  --input: hsl(30, 8%, 96%);
-  --ring: hsl(0, 0%, 45%);
+  --border: hsl(340, 15%, 85%);
+  --input: hsl(340, 20%, 96%);
+  --ring: hsl(340, 45%, 65%);
   
-  /* Custom wedding colors - Neutral Palette */
-  --cream: hsl(30, 8%, 96%);
-  --soft-gold: hsl(0, 0%, 45%);
-  --sage-green: hsl(30, 5%, 75%);
-  --warm-beige: hsl(30, 10%, 85%);
-  --charcoal: hsl(0, 0%, 12%);
-  --light-gold: hsl(30, 8%, 88%);
+  /* Custom wedding colors - Blush Pink Palette */
+  --cream: hsl(340, 30%, 97%);
+  --soft-gold: hsl(340, 45%, 65%);
+  --sage-green: hsl(340, 20%, 80%);
+  --warm-beige: hsl(340, 25%, 88%);
+  --charcoal: hsl(340, 15%, 15%);
+  --light-gold: hsl(340, 30%, 85%);
   
   --font-serif: 'Playfair Display', serif;
   --font-sans: 'Inter', sans-serif;
@@ -78,7 +78,7 @@
 
 @layer components {
   .ornament {
-    background-image: url("data:image/svg+xml,%3Csvg width='40' height='20' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M20 10 L10 5 L15 10 L10 15 L20 10 L30 15 L25 10 L30 5 Z' fill='%23737373' opacity='0.5'/%3E%3C/svg%3E");
+    background-image: url("data:image/svg+xml,%3Csvg width='40' height='20' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M20 10 L10 5 L15 10 L10 15 L20 10 L30 15 L25 10 L30 5 Z' fill='%23E4A5B8' opacity='0.7'/%3E%3C/svg%3E");
     background-repeat: no-repeat;
     background-position: center;
   }
