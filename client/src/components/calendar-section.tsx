@@ -88,9 +88,10 @@ export default function CalendarSection() {
                           >
                             <path d="M50 85c-1.5-1.5-3.5-3.5-6-6.5C35 69 25 58 25 45c0-9 7-16 16-16s16 7 16 16c0 0 0 0 0 0 0-9 7-16 16-16s16 7 16 16c0 13-10 24-19 33.5-2.5 3-4.5 5-6 6.5z"/>
                           </svg>
-                          {/* Date Number Inside Heart */}
+                          {/* Date Number Inside Heart - Perfectly Centered */}
                           <div className="absolute inset-0 flex items-center justify-center">
-                            <span className="text-white font-bold text-lg mt-1">
+                            <span className="text-white font-bold text-lg" 
+                                  style={{ marginTop: '-4px' }}>
                               {day}
                             </span>
                           </div>
