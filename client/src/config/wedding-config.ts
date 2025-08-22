@@ -136,7 +136,7 @@ export const weddingConfig = {
 
   // Footer
   footer: {
-    thankYouMessage: "Շնորհակալություն մեզ հետ այս հատուկ օրը կիսելու համար",
+    // thankYouMessage: "Շնորհակալություն մեզ հետ այս հատուկ օրը կիսելու համար",
   },
 
   // Email Configuration (for admin use)
