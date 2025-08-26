@@ -88,7 +88,7 @@ export default function HeroSection() {
           className="text-xl md:text-2xl text-charcoal/80 mb-8 font-light"
           data-testid="text-invitation"
         >
-          {weddingConfig.hero.title}
+          Հարսանեկան հրավիրատոմս
         </p>
         <p
           className="text-lg md:text-xl text-charcoal/70 max-w-2xl mx-auto leading-relaxed"
