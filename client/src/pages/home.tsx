@@ -9,6 +9,7 @@ import PhotoSection from "@/components/photo-section";
 import ScrollToTop from "@/components/scroll-to-top";
 import MapModal from "@/components/map-modal";
 import { weddingConfig } from "@/config/wedding-config";
+import heartImage from "@assets/heart-tattoo.jfif";
 
 export default function Home() {
   return (
@@ -28,7 +29,15 @@ export default function Home() {
       <footer className="bg-charcoal text-white py-12">
         <div className="max-w-4xl mx-auto px-4 text-center">
           <div className="ornament w-full h-8 mb-8 opacity-50"></div>
-          <h3 className="text-2xl font-serif font-bold mb-4">{weddingConfig.couple.combinedNames}</h3>
+          <h3 className="text-2xl font-serif font-bold mb-4 flex items-center justify-center gap-3">
+            <span>{weddingConfig.couple.groomName}</span>
+            <img 
+              src={heartImage} 
+              alt="Heart" 
+              className="w-6 h-6 object-contain"
+            />
+            <span>{weddingConfig.couple.brideName}</span>
+          </h3>
           <p className="text-white/70 mb-6">{weddingConfig.footer.thankYouMessage}</p>
           <p className="text-white/50 text-sm">{weddingConfig.wedding.displayDate}</p>
         </div>

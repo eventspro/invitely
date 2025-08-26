@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { Menu, X } from "lucide-react";
 import { weddingConfig } from "@/config/wedding-config";
+import heartImage from "@assets/heart-tattoo.jfif";
 
 export default function Navigation() {
   const [isScrolled, setIsScrolled] = useState(false);
@@ -33,8 +34,14 @@ export default function Navigation() {
       <div className="max-w-6xl mx-auto px-4 py-4">
         {/* Mobile Menu Button */}
         <div className="md:hidden flex justify-between items-center">
-          <span className="text-lg font-serif font-bold text-charcoal">
-            {weddingConfig.couple.combinedNames}
+          <span className="text-lg font-serif font-bold text-charcoal flex items-center gap-2">
+            <span>{weddingConfig.couple.groomName}</span>
+            <img 
+              src={heartImage} 
+              alt="Heart" 
+              className="w-4 h-4 object-contain"
+            />
+            <span>{weddingConfig.couple.brideName}</span>
           </span>
           <button
             onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
