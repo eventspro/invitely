@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useRef, useEffect } from "react";
 import { Play, Pause } from "lucide-react";
 import { weddingConfig } from "@/config/wedding-config";
 import couplePhoto from "@assets/primary_1755896240450.jpg";
@@ -6,10 +6,51 @@ import detailPhoto from "@assets/Blog_Banner_Left_Hand_Story_1755890185205.webp"
 
 export default function HeroSection() {
   const [isPlaying, setIsPlaying] = useState(false);
+  const [audioLoaded, setAudioLoaded] = useState(false);
+  const audioRef = useRef<HTMLAudioElement | null>(null);
 
-  const toggleMusic = () => {
-    setIsPlaying(!isPlaying);
-    // TODO: Implement actual music playback when audio file is provided
+  useEffect(() => {
+    // Create audio element
+    audioRef.current = new Audio();
+    // You can replace this with your own music file path
+    // Add your music file to client/public/audio/ folder
+    audioRef.current.src = "/audio/wedding-music.mp3"; // Change this to your music file name
+    
+    audioRef.current.loop = true;
+    audioRef.current.volume = 0.3; // Set volume to 30%
+    
+    audioRef.current.addEventListener('canplaythrough', () => {
+      setAudioLoaded(true);
+    });
+    
+    audioRef.current.addEventListener('error', () => {
+      console.log('Audio file not found or failed to load');
+      setAudioLoaded(false);
+    });
+
+    return () => {
+      if (audioRef.current) {
+        audioRef.current.pause();
+        audioRef.current = null;
+      }
+    };
+  }, []);
+
+  const toggleMusic = async () => {
+    if (!audioRef.current) return;
+    
+    try {
+      if (isPlaying) {
+        audioRef.current.pause();
+        setIsPlaying(false);
+      } else {
+        await audioRef.current.play();
+        setIsPlaying(true);
+      }
+    } catch (error) {
+      console.log('Audio playback failed:', error);
+      alert('Չհաջողվեց միացնել երաժշտությունը: Խնդրում ենք ստուգել, որ մուսիկական ֆայլը գոյություն ունի:');
+    }
   };
 
   return (
