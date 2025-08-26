@@ -84,11 +84,7 @@ export default function HeroSection() {
           data-testid="text-couple-names"
         >
           <span>{weddingConfig.couple.groomName}</span>
-          <img 
-            src={heartImage} 
-            alt="Heart" 
-            className="w-8 h-8 md:w-12 md:h-12 object-contain inline-block"
-          />
+          <span className="text-softGold mx-1">∞</span>
           <span>{weddingConfig.couple.brideName}</span>
         </h1>
         <p

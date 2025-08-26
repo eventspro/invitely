@@ -36,11 +36,7 @@ export default function Navigation() {
         <div className="md:hidden flex justify-between items-center">
           <span className="text-lg font-serif font-bold text-charcoal flex items-center gap-2">
             <span>{weddingConfig.couple.groomName}</span>
-            <img 
-              src={heartImage} 
-              alt="Heart" 
-              className="w-4 h-4 object-contain"
-            />
+            <span className="text-softGold mx-1">∞</span>
             <span>{weddingConfig.couple.brideName}</span>
           </span>
           <button
