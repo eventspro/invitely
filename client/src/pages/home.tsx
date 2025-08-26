@@ -30,14 +30,6 @@ export default function Home() {
           <div className="ornament w-full h-8 mb-8 opacity-50"></div>
           <h3 className="text-2xl font-serif font-bold mb-4">{weddingConfig.couple.combinedNames}</h3>
           <p className="text-white/70 mb-6">{weddingConfig.footer.thankYouMessage}</p>
-          <div className="text-white/60 mb-6 space-y-3">
-            <p className="text-sm leading-relaxed">
-              Ձեզ հետ բերեք ՍԵՐ, ժպիտներ ու անսահման դրական էմոցիաներ, ինչպես նաև հարմարավետ կոշիկներ՝ պարելու համար։
-            </p>
-            <p className="text-sm leading-relaxed">
-              Թույլ տանք, որ այդ օրը սպիտակ զգեստով լինի միայն հարսնացուն 🤍
-            </p>
-          </div>
           <p className="text-white/50 text-sm">{weddingConfig.wedding.displayDate}</p>
         </div>
       </footer>
