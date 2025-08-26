@@ -3,6 +3,7 @@ import { Play, Pause } from "lucide-react";
 import { weddingConfig } from "@/config/wedding-config";
 import couplePhoto from "@assets/primary_1755896240450.jpg";
 import detailPhoto from "@assets/Blog_Banner_Left_Hand_Story_1755890185205.webp";
+import heartImage from "@assets/heart-tattoo.jfif";
 
 export default function HeroSection() {
   const [isPlaying, setIsPlaying] = useState(false);
@@ -79,10 +80,16 @@ export default function HeroSection() {
         </div>
 
         <h1
-          className="text-4xl md:text-6xl font-serif font-bold text-charcoal mb-4"
+          className="text-4xl md:text-6xl font-serif font-bold text-charcoal mb-4 flex items-center justify-center flex-wrap gap-3"
           data-testid="text-couple-names"
         >
-          {weddingConfig.couple.combinedNames}
+          <span>{weddingConfig.couple.groomName}</span>
+          <img 
+            src={heartImage} 
+            alt="Heart" 
+            className="w-8 h-8 md:w-12 md:h-12 object-contain inline-block"
+          />
+          <span>{weddingConfig.couple.brideName}</span>
         </h1>
         <p
           className="text-xl md:text-2xl text-charcoal/80 mb-8 font-light"
