@@ -109,7 +109,7 @@ export default function CalendarSection() {
                               className="w-8 h-8 fill-current"
                               style={{
                                 marginTop: "-5px",
-                                color: "rgb(245, 245, 245)", // sets the heart color
+                                color: "#E4A5B8", // sets the heart color to match website pink theme
                                 filter:
                                   "drop-shadow(0 2px 4px rgba(0, 0, 0, 0.25))", // softer shadow for contrast
                               }}
