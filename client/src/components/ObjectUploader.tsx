@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useRef } from "react";
 import type { ReactNode } from "react";
 import { Button } from "@/components/ui/button";
 
@@ -26,6 +26,11 @@ export function ObjectUploader({
   children,
 }: ObjectUploaderProps) {
   const [isUploading, setIsUploading] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const handleButtonClick = () => {
+    fileInputRef.current?.click();
+  };
 
   const handleFileUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const files = Array.from(event.target.files || []);
@@ -81,16 +86,22 @@ export function ObjectUploader({
   };
 
   return (
-    <div className="relative">
+    <div>
       <input
+        ref={fileInputRef}
         type="file"
         multiple
         accept="image/*"
         onChange={handleFileUpload}
-        className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+        style={{ display: 'none' }}
         disabled={isUploading}
       />
-      <Button className={buttonClassName} disabled={isUploading}>
+      <Button 
+        onClick={handleButtonClick}
+        className={buttonClassName} 
+        disabled={isUploading}
+        data-testid="button-upload-photos"
+      >
         {isUploading ? 'Վերբեռնվում է...' : children}
       </Button>
     </div>
