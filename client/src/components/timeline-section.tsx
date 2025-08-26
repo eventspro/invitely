@@ -97,7 +97,7 @@ export default function TimelineSection() {
 
         {/* Thank You Message After Timeline */}
         {weddingConfig.timeline.afterMessage && (
-          <div className="mt-20 text-center animate-on-scroll">
+          <div className="mt-20 text-center">
             <div
               className="text-2xl md:text-3xl text-charcoal mb-8"
               style={{
