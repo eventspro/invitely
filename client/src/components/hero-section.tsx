@@ -73,7 +73,7 @@ export default function HeroSection() {
           <img
             src={couplePhoto}
             alt="Հարություն և Տաթև"
-            className="w-80 h-96 md:w-96 md:h-[500px] object-cover rounded-lg shadow-xl ring-4 ring-softGold/30 transform hover:scale-105 transition-transform duration-300 z-10"
+            className="w-80 h-96 md:w-96 md:h-[500px] object-cover rounded-lg shadow-xl border-4 border-cream/80 transform hover:scale-105 transition-transform duration-300 z-10"
             data-testid="img-main-couple"
           />
           {/* Smaller rotated overlapping image */}
