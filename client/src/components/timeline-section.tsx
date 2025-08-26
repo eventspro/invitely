@@ -95,7 +95,31 @@ export default function TimelineSection() {
           ))}
         </div>
 
-        {/* Bottom Message */}
+        {/* Thank You Message After Timeline */}
+        {weddingConfig.timeline.afterMessage && (
+          <div className="mt-20 text-center animate-on-scroll">
+            <div
+              className="text-2xl md:text-3xl text-charcoal mb-8"
+              style={{
+                fontFamily: "Playfair Display, serif",
+                fontWeight: "300",
+              }}
+              data-testid="timeline-thank-you"
+            >
+              {weddingConfig.timeline.afterMessage.thankYou}
+            </div>
+            
+            <div className="w-24 h-0.5 bg-softGold mx-auto mb-8"></div>
+            
+            <div
+              className="text-charcoal/80 text-lg max-w-3xl mx-auto leading-relaxed bg-white/60 backdrop-blur-sm rounded-2xl p-8 shadow-lg border border-softGold/20"
+              style={{ whiteSpace: 'pre-line' }}
+              data-testid="timeline-notes"
+            >
+              {weddingConfig.timeline.afterMessage.notes}
+            </div>
+          </div>
+        )}
       </div>
     </section>
   );
