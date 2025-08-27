@@ -108,7 +108,7 @@ export default function CalendarSection() {
                           <div className="relative">
                             <svg
                               viewBox="0 0 32 29.6"
-                              className="w-8 h-8 fill-current"
+                              className="w-8 h-8 fill-current animate-heartbeat"
                               style={{
                                 marginTop: "-5px",
                                 color: "#E4A5B8", // sets the heart color to match website pink theme
