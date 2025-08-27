@@ -4,9 +4,9 @@
 export const weddingConfig = {
   // Couple Information
   couple: {
-    groomName: "Հարություն",
+    groomName: "Հարութ",
     brideName: "Տաթև",
-    combinedNames: "Հարություն & Տաթև",
+    combinedNames: "Հարութ & Տաթև",
   },
 
   // Wedding Date & Time

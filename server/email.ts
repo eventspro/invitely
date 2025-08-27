@@ -1,5 +1,5 @@
-import { Resend } from 'resend';
-import type { Rsvp } from '@shared/schema';
+import { Resend } from "resend";
+import type { Rsvp } from "@shared/schema";
 
 // Lazy load Resend instance to reduce startup time
 let resendInstance: Resend | null = null;
@@ -8,13 +8,15 @@ let resendInitialized = false;
 function getResendInstance(): Resend | null {
   if (!resendInitialized) {
     if (!process.env.RESEND_API_KEY) {
-      console.warn("RESEND_API_KEY environment variable is not set. Email notifications will be disabled.");
+      console.warn(
+        "RESEND_API_KEY environment variable is not set. Email notifications will be disabled.",
+      );
       resendInstance = null;
     } else {
       try {
         resendInstance = new Resend(process.env.RESEND_API_KEY);
       } catch (error) {
-        console.error('Failed to initialize Resend:', error);
+        console.error("Failed to initialize Resend:", error);
         resendInstance = null;
       }
     }
@@ -23,35 +25,35 @@ function getResendInstance(): Resend | null {
   return resendInstance;
 }
 
-// Wedding couple's email addresses  
+// Wedding couple's email addresses
 const COUPLE_EMAILS = [
-  'harutavetisyan0@gmail.com',
-  'tatevhovsepyan22@gmail.com'
+  "harutavetisyan0@gmail.com",
+  "tatevhovsepyan22@gmail.com",
 ];
 
 // Test function to verify email service is working
 export async function testEmailService(): Promise<void> {
   const resend = getResendInstance();
   if (!resend) {
-    console.log('Email service not configured.');
+    console.log("Email service not configured.");
     return;
   }
-  
+
   // Test both email addresses individually
   const testEmails = [
-    'harutavetisyan0@gmail.com',
-    'tatevhovsepyan22@gmail.com'
+    "harutavetisyan0@gmail.com",
+    "tatevhovsepyan22@gmail.com",
   ];
-  
+
   for (const email of testEmails) {
     try {
       console.log(`🧪 Testing email to: ${email}`);
       const testResult = await resend.emails.send({
-        from: 'Հարություն և Տատև <onboarding@resend.dev>',
+        from: "Հարութ և Տաթև <onboarding@resend.dev>",
         to: email,
-        subject: 'Թեստ - Էլ․ փոստի ծառայության ստուգում',
+        subject: "Թեստ - Էլ․ փոստի ծառայության ստուգում",
         text: `Սա թեստային նամակ է ${email} հասցեի համար։ Եթե ստանում եք այս նամակը, ապա էլ․ փոստի ծառայությունը ճիշտ է աշխատում։`,
-        html: `<p>Սա թեստային նամակ է <strong>${email}</strong> հասցեի համար։ Եթե ստանում եք այս նամակը, ապա էլ․ փոստի ծառայությունը ճիշտ է աշխատում։</p>`
+        html: `<p>Սա թեստային նամակ է <strong>${email}</strong> հասցեի համար։ Եթե ստանում եք այս նամակը, ապա էլ․ փոստի ծառայությունը ճիշտ է աշխատում։</p>`,
       });
       console.log(`✅ Test email success for ${email}:`, testResult);
     } catch (error) {
@@ -63,20 +65,22 @@ export async function testEmailService(): Promise<void> {
 export async function sendRsvpNotificationEmails(rsvp: Rsvp): Promise<boolean> {
   const resend = getResendInstance();
   if (!resend) {
-    console.log('Email service not configured. Skipping RSVP notification emails.');
+    console.log(
+      "Email service not configured. Skipping RSVP notification emails.",
+    );
     return false;
   }
 
   try {
-    const attendanceText = rsvp.attendance === 'attending' ? 'Կգա' : 'Չի գալիս';
-    const guestInfo = rsvp.guestNames ? `\nՀյուրեր: ${rsvp.guestNames}` : '';
-    
-    const emailPromises = COUPLE_EMAILS.map(email => 
+    const attendanceText = rsvp.attendance === "attending" ? "Կգա" : "Չի գալիս";
+    const guestInfo = rsvp.guestNames ? `\nՀյուրեր: ${rsvp.guestNames}` : "";
+
+    const emailPromises = COUPLE_EMAILS.map((email) =>
       resend.emails.send({
-        from: 'Հարուտ և Տատև <onboarding@resend.dev>',
+        from: "Հարութ և Տաթև <onboarding@resend.dev>",
         to: email,
         subject: `Նոր հաստատում հարսանիքի համար - ${rsvp.firstName} ${rsvp.lastName}`,
-        text: `Նոր RSVP հաստատում\n\nԱնուն: ${rsvp.firstName} ${rsvp.lastName}\nԷլ․ հասցե: ${rsvp.email}\nՀյուրերի քանակ: ${rsvp.guestCount}\nՄասնակցություն: ${rsvp.attendance === 'attending' ? 'Կգա' : 'Չի գալիս'}${rsvp.guestNames ? `\nՀյուրեր: ${rsvp.guestNames}` : ''}\n\nՀաստատվել է: ${rsvp.createdAt ? new Date(rsvp.createdAt).toLocaleString('hy-AM') : new Date().toLocaleString('hy-AM')}`,
+        text: `Նոր RSVP հաստատում\n\nԱնուն: ${rsvp.firstName} ${rsvp.lastName}\nԷլ․ հասցե: ${rsvp.email}\nՀյուրերի քանակ: ${rsvp.guestCount}\nՄասնակցություն: ${rsvp.attendance === "attending" ? "Կգա" : "Չի գալիս"}${rsvp.guestNames ? `\nՀյուրեր: ${rsvp.guestNames}` : ""}\n\nՀաստատվել է: ${rsvp.createdAt ? new Date(rsvp.createdAt).toLocaleString("hy-AM") : new Date().toLocaleString("hy-AM")}`,
         html: `
           <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; background-color: white;">
             <h2 style="color: #333; text-align: center; font-weight: normal;">Նոր հաստատում ձեր հարսանիքի համար</h2>
@@ -91,30 +95,34 @@ export async function sendRsvpNotificationEmails(rsvp: Rsvp): Promise<boolean> {
             </div>
             
             <div style="text-align: center; margin-top: 30px; padding-top: 20px; border-top: 1px solid #ddd;">
-              <p style="color: #666; font-size: 14px; margin: 0;">Հաստատվել է: ${rsvp.createdAt ? new Date(rsvp.createdAt).toLocaleString('hy-AM') : new Date().toLocaleString('hy-AM')}</p>
+              <p style="color: #666; font-size: 14px; margin: 0;">Հաստատվել է: ${rsvp.createdAt ? new Date(rsvp.createdAt).toLocaleString("hy-AM") : new Date().toLocaleString("hy-AM")}</p>
             </div>
           </div>
-        `
-      })
+        `,
+      }),
     );
 
     const results = await Promise.allSettled(emailPromises);
-    
+
     // Detailed logging for each email attempt
     results.forEach((result, index) => {
       const email = COUPLE_EMAILS[index];
-      if (result.status === 'fulfilled') {
+      if (result.status === "fulfilled") {
         console.log(`✅ Email sent successfully to: ${email}`, result.value);
       } else {
         console.error(`❌ Email failed to: ${email}`, result.reason);
       }
     });
-    
-    const successCount = results.filter(result => result.status === 'fulfilled').length;
-    console.log(`RSVP notification emails sent: ${successCount}/${COUPLE_EMAILS.length}`);
+
+    const successCount = results.filter(
+      (result) => result.status === "fulfilled",
+    ).length;
+    console.log(
+      `RSVP notification emails sent: ${successCount}/${COUPLE_EMAILS.length}`,
+    );
     return successCount > 0;
   } catch (error) {
-    console.error('Failed to send RSVP notification emails:', error);
+    console.error("Failed to send RSVP notification emails:", error);
     return false;
   }
 }
@@ -122,24 +130,27 @@ export async function sendRsvpNotificationEmails(rsvp: Rsvp): Promise<boolean> {
 export async function sendRsvpConfirmationEmail(rsvp: Rsvp): Promise<boolean> {
   const resend = getResendInstance();
   if (!resend) {
-    console.log('Email service not configured. Skipping RSVP confirmation email.');
+    console.log(
+      "Email service not configured. Skipping RSVP confirmation email.",
+    );
     return false;
   }
 
   try {
-    const attendanceText = rsvp.attendance === 'attending' 
-      ? 'Շատ ուրախ ենք, որ կգաք մեր հարսանիքին! 💕' 
-      : 'Ցավոք, որ չեք կարողանա գալ: Ցանկանում ենք ձեզ բարելավություն: 💙';
+    const attendanceText =
+      rsvp.attendance === "attending"
+        ? "Շատ ուրախ ենք, որ կգաք մեր հարսանիքին! 💕"
+        : "Ցավոք, որ չեք կարողանա գալ: Ցանկանում ենք ձեզ բարելավություն: 💙";
 
     await resend.emails.send({
-      from: 'Հարություն և Տատև <onboarding@resend.dev>',
+      from: "Հարություն և Տաթև <onboarding@resend.dev>",
       to: rsvp.email,
-      subject: 'Ձեր հաստատումը ստացվել է - Հարսանիք 10 Հոկտեմբեր 2025',
-      text: `Սիրելի ${rsvp.firstName},\n\nՇնորհակալություն ձեր հաստատման համար:\n\n${attendanceText}\n\n${rsvp.attendance === 'attending' ? 'Ծիսակարգություն - Սուրբ Գրիգոր Լուսավորիչ Եկեղեցի, Ժամը 16:00\nՀանդես - BAYAZET HALL, Ժամը 19:00\n\nՄենք շատ ենք սիրում ձեզ և սպասում ենք այս հատուկ օրը ձեզ հետ կիսելուն:' : ''}\n\nՀարցերի դեպքում կապվեք մեզ հետ:\nharutavetisyan0@gmail.com | tatevhovsepyan22@gmail.com\n\nՀարգանքով,\nՀարություն և Տատև`,
+      subject: "Ձեր հաստատումը ստացվել է - Հարսանիք 10 Հոկտեմբեր 2025",
+      text: `Սիրելի ${rsvp.firstName},\n\nՇնորհակալություն ձեր հաստատման համար:\n\n${attendanceText}\n\n${rsvp.attendance === "attending" ? "Ծիսակարգություն - Սուրբ Գրիգոր Լուսավորիչ Եկեղեցի, Ժամը 16:00\nՀանդես - BAYAZET HALL, Ժամը 19:00\n\nՄենք շատ ենք սիրում ձեզ և սպասում ենք այս հատուկ օրը ձեզ հետ կիսելուն:" : ""}\n\nՀարցերի դեպքում կապվեք մեզ հետ:\nharutavetisyan0@gmail.com | tatevhovsepyan22@gmail.com\n\nՀարգանքով,\nՀարություն և Տատև`,
       html: `
         <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
           <div style="text-align: center; margin-bottom: 30px;">
-            <h1 style="color: #E4A5B8; font-style: italic;">Հարություն & Տատև</h1>
+            <h1 style="color: #E4A5B8; font-style: italic;">Հարություն & Տաթև</h1>
             <p style="color: #666; font-size: 18px;">10 Հոկտեմբեր 2025</p>
           </div>
           
@@ -147,7 +158,9 @@ export async function sendRsvpConfirmationEmail(rsvp: Rsvp): Promise<boolean> {
             <h2 style="color: #333; margin-bottom: 15px;">Շնորհակալություն ${rsvp.firstName}ը!</h2>
             <p style="font-size: 16px; line-height: 1.6; color: #555;">${attendanceText}</p>
             
-            ${rsvp.attendance === 'attending' ? `
+            ${
+              rsvp.attendance === "attending"
+                ? `
               <div style="margin: 20px 0; padding: 15px; background-color: white; border-radius: 10px;">
                 <h3 style="color: #E4A5B8; margin-bottom: 10px;">📍 Ծիսակարգություն</h3>
                 <p><strong>Սուրբ Գրիգոր Լուսավորիչ Եկեղեցի</strong><br/>
@@ -161,7 +174,9 @@ export async function sendRsvpConfirmationEmail(rsvp: Rsvp): Promise<boolean> {
               <p style="color: #666; font-size: 14px; margin-top: 20px;">
                 Մենք շատ ենք սիրում ձեզ և սպասում ենք այս հատուկ օրը ձեզ հետ կիսելուն: 💐
               </p>
-            ` : ''}
+            `
+                : ""
+            }
           </div>
           
           <div style="text-align: center; margin-top: 20px; color: #999; font-size: 12px;">
@@ -169,13 +184,13 @@ export async function sendRsvpConfirmationEmail(rsvp: Rsvp): Promise<boolean> {
             <p>harutavetisyan0@gmail.com | tatevhovsepyan22@gmail.com</p>
           </div>
         </div>
-      `
+      `,
     });
 
     console.log(`RSVP confirmation email sent to: ${rsvp.email}`);
     return true;
   } catch (error) {
-    console.error('Failed to send RSVP confirmation email:', error);
+    console.error("Failed to send RSVP confirmation email:", error);
     return false;
   }
 }

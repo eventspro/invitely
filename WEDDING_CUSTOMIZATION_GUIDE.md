@@ -11,9 +11,9 @@ All the text content on your wedding website can be easily customized by editing
 ### 1. **Couple Names**
 ```typescript
 couple: {
-  groomName: "Հարություն",      // Groom's name
+  groomName: "Հարութ",      // Groom's name
   brideName: "Տաթև",           // Bride's name  
-  combinedNames: "Հարություն & Տաթև"  // Names displayed together
+  combinedNames: "Հարութ & Տաթև"  // Names displayed together
 }
 ```
 
