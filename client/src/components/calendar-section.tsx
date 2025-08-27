@@ -124,7 +124,7 @@ export default function CalendarSection() {
                             </svg>
 
                             <span
-                              className="absolute inset-0 flex items-center justify-center text-black font-bold text-xs"
+                              className="absolute inset-0 flex items-center justify-center text-gray font-bold text-xs"
                               style={{ marginTop: "-5px" }}
                             >
                               {day}
