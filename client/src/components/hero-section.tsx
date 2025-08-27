@@ -4,6 +4,7 @@ import { weddingConfig } from "@/config/wedding-config";
 import couplePhoto from "@assets/couple11.jpg";
 import detailPhoto from "@assets/Blog_Banner_Left_Hand_Story_1755890185205.webp";
 import heartImage from "@assets/heart-tattoo.jfif";
+import weddingMusic from "@assets/Indila - Love Story_1756335711694.mp3";
 
 export default function HeroSection() {
   const [isPlaying, setIsPlaying] = useState(false);
@@ -13,9 +14,8 @@ export default function HeroSection() {
   useEffect(() => {
     // Create audio element
     audioRef.current = new Audio();
-    // You can replace this with your own music file path
-    // Add your music file to client/public/audio/ folder
-    audioRef.current.src = "/audio/wedding-music.mp3"; // Change this to your music file name
+    // Using Indila - Love Story for background music
+    audioRef.current.src = weddingMusic;
 
     audioRef.current.loop = true;
     audioRef.current.volume = 0.3; // Set volume to 30%
