@@ -6,7 +6,6 @@ import LocationsSection from "@/components/locations-section";
 import TimelineSection from "@/components/timeline-section";
 import RsvpSection from "@/components/rsvp-section";
 import PhotoSection from "@/components/photo-section";
-import ScrollToTop from "@/components/scroll-to-top";
 import MapModal from "@/components/map-modal";
 import { weddingConfig } from "@/config/wedding-config";
 import heartImage from "@assets/heart-tattoo.jfif";
@@ -39,7 +38,6 @@ export default function Home() {
         </div>
       </footer>
 
-      <ScrollToTop />
       <MapModal />
     </div>
   );
