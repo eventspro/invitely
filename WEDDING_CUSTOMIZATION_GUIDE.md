@@ -30,7 +30,7 @@ wedding: {
 ### 3. **Hero Section (Main Banner)**
 ```typescript
 hero: {
-  title: "Հարսանեկան հրավիրատոմս",     // Main title
+  title: "Հրավիրում ենք մեր հարսանիքին։",     // Main title
   welcomeMessage: "Your welcome message...",  // Welcome text
   musicButton: "Երաժշտություն"          // Music button text
 }

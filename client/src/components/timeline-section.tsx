@@ -1,6 +1,9 @@
 import { Clock, MapPin, Users, Music } from "lucide-react";
 import { weddingConfig } from "@/config/wedding-config";
-import { useScrollAnimation, useStaggeredAnimation } from "@/hooks/use-scroll-animation";
+import {
+  useScrollAnimation,
+  useStaggeredAnimation,
+} from "@/hooks/use-scroll-animation";
 
 export default function TimelineSection() {
   const eventIcons = [
@@ -9,8 +12,8 @@ export default function TimelineSection() {
     <Music className="w-8 h-8" />,
     <Clock className="w-8 h-8" />,
   ];
-  
-  const titleRef = useScrollAnimation('animate-slide-up');
+
+  const titleRef = useScrollAnimation("animate-slide-up");
   const cardsRef = useStaggeredAnimation(200);
 
   return (
@@ -32,13 +35,13 @@ export default function TimelineSection() {
             {weddingConfig.timeline.title}
           </h2>
           <div className="w-24 h-0.5 bg-softGold mx-auto mb-8"></div>
-          <p className="text-charcoal/70 text-lg max-w-2xl mx-auto">
-            Մանրամասն ծրագիր մեր հատուկ օրվա համար
-          </p>
         </div>
 
         {/* Timeline Cards */}
-        <div ref={cardsRef} className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
+        <div
+          ref={cardsRef}
+          className="grid md:grid-cols-2 lg:grid-cols-3 gap-8"
+        >
           {weddingConfig.timeline.events.map((event, index) => (
             <div
               key={index}
@@ -108,12 +111,12 @@ export default function TimelineSection() {
             >
               {weddingConfig.timeline.afterMessage.thankYou}
             </div>
-            
+
             <div className="w-24 h-0.5 bg-softGold mx-auto mb-8"></div>
-            
+
             <div
               className="text-charcoal/80 text-lg max-w-3xl mx-auto leading-relaxed bg-white/60 backdrop-blur-sm rounded-2xl p-8 shadow-lg border border-softGold/20"
-              style={{ whiteSpace: 'pre-line' }}
+              style={{ whiteSpace: "pre-line" }}
               data-testid="timeline-notes"
             >
               {weddingConfig.timeline.afterMessage.notes}

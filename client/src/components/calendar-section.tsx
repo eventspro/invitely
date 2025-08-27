@@ -10,10 +10,10 @@ export default function CalendarSection() {
     ["24", "25", "26", "27", "28", "29", "30"],
     ["31", "", "", "", "", "", ""],
   ];
-  
-  const titleRef = useScrollAnimation('animate-slide-up');
-  const calendarRef = useScrollAnimation('animate-slide-in-left');
-  const dateRef = useScrollAnimation('animate-slide-in-right');
+
+  const titleRef = useScrollAnimation("animate-slide-up");
+  const calendarRef = useScrollAnimation("animate-slide-in-left");
+  const dateRef = useScrollAnimation("animate-slide-in-right");
 
   return (
     <section
@@ -51,7 +51,10 @@ export default function CalendarSection() {
         {/* Calendar and Date Display */}
         <div className="grid lg:grid-cols-2 gap-12 items-center max-w-4xl mx-auto">
           {/* Calendar */}
-          <div ref={calendarRef} className="order-2 lg:order-1 animate-on-scroll">
+          <div
+            ref={calendarRef}
+            className="order-2 lg:order-1 animate-on-scroll"
+          >
             <div className="bg-white rounded-3xl shadow-2xl p-8 border border-charcoal/5">
               {/* Month Header */}
               <div className="text-center mb-8">
@@ -121,7 +124,10 @@ export default function CalendarSection() {
                               />
                             </svg>
 
-                            <span className="absolute inset-0 flex items-center justify-center text-black font-bold text-xs" style={{ marginTop: "-5px" }}>
+                            <span
+                              className="absolute inset-0 flex items-center justify-center text-black font-bold text-xs"
+                              style={{ marginTop: "-5px" }}
+                            >
                               {day}
                             </span>
                           </div>
@@ -137,7 +143,10 @@ export default function CalendarSection() {
           </div>
 
           {/* Wedding Date Display */}
-          <div ref={dateRef} className="order-1 lg:order-2 text-center lg:text-left animate-on-scroll">
+          <div
+            ref={dateRef}
+            className="order-1 lg:order-2 text-center lg:text-left animate-on-scroll"
+          >
             <div className="space-y-6">
               {/* Large Date */}
               <div className="relative">
@@ -157,7 +166,7 @@ export default function CalendarSection() {
               </div>
 
               {/* Date Description */}
-              <div className="space-y-3">
+              {/* <div className="space-y-3">
                 <p
                   className="text-2xl md:text-3xl text-charcoal font-medium"
                   style={{ fontFamily: "Playfair Display, serif" }}
@@ -166,8 +175,8 @@ export default function CalendarSection() {
                   {weddingConfig.wedding.displayDate}
                 </p>
                 <div className="w-20 h-0.5 bg-softGold mx-auto lg:mx-0"></div>
-                <p className="text-charcoal/60 text-lg">Մեր հատուկ օրը</p>
-              </div>
+                <p className="text-charcoal/60 text-lg">Սիրո սկիզբը</p>
+              </div> */}
             </div>
           </div>
         </div>

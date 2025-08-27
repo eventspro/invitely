@@ -1,7 +1,7 @@
 import { useState, useRef, useEffect } from "react";
 import { Play, Pause } from "lucide-react";
 import { weddingConfig } from "@/config/wedding-config";
-import couplePhoto from "@assets/primary_1755896240450.jpg";
+import couplePhoto from "@assets/couple11.jpg";
 import detailPhoto from "@assets/Blog_Banner_Left_Hand_Story_1755890185205.webp";
 import heartImage from "@assets/heart-tattoo.jfif";
 
@@ -16,16 +16,16 @@ export default function HeroSection() {
     // You can replace this with your own music file path
     // Add your music file to client/public/audio/ folder
     audioRef.current.src = "/audio/wedding-music.mp3"; // Change this to your music file name
-    
+
     audioRef.current.loop = true;
     audioRef.current.volume = 0.3; // Set volume to 30%
-    
-    audioRef.current.addEventListener('canplaythrough', () => {
+
+    audioRef.current.addEventListener("canplaythrough", () => {
       setAudioLoaded(true);
     });
-    
-    audioRef.current.addEventListener('error', () => {
-      console.log('Audio file not found or failed to load');
+
+    audioRef.current.addEventListener("error", () => {
+      console.log("Audio file not found or failed to load");
       setAudioLoaded(false);
     });
 
@@ -39,7 +39,7 @@ export default function HeroSection() {
 
   const toggleMusic = async () => {
     if (!audioRef.current) return;
-    
+
     try {
       if (isPlaying) {
         audioRef.current.pause();
@@ -49,8 +49,10 @@ export default function HeroSection() {
         setIsPlaying(true);
       }
     } catch (error) {
-      console.log('Audio playback failed:', error);
-      alert('Չհաջողվեց միացնել երաժշտությունը: Խնդրում ենք ստուգել, որ մուսիկական ֆայլը գոյություն ունի:');
+      console.log("Audio playback failed:", error);
+      alert(
+        "Չհաջողվեց միացնել երաժշտությունը: Խնդրում ենք ստուգել, որ մուսիկական ֆայլը գոյություն ունի:",
+      );
     }
   };
 
@@ -91,7 +93,7 @@ export default function HeroSection() {
           className="text-xl md:text-2xl text-charcoal/80 mb-8 font-light"
           data-testid="text-invitation"
         >
-          Հարսանեկան հրավիրատոմս
+          Հրավիրում ենք մեր հարսանիքին
         </p>
         <p
           className="text-lg md:text-xl text-charcoal/70 max-w-2xl mx-auto leading-relaxed"
