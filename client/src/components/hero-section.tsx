@@ -66,23 +66,23 @@ export default function HeroSection() {
       <div className="absolute top-20 left-10 w-32 h-32 bg-softGold/10 rounded-full blur-xl"></div>
       <div className="absolute bottom-20 right-10 w-40 h-40 bg-sageGreen/10 rounded-full blur-xl"></div>
 
+      {/* Hero Image - Full Width */}
+      <div className="absolute inset-0 w-full h-full">
+        <img
+          src={couplePhoto}
+          alt="Հարություն և Տաթև"
+          className="w-full h-full object-cover"
+          data-testid="img-main-couple"
+        />
+        {/* Overlay for better text readability */}
+        <div className="absolute inset-0 bg-black/30"></div>
+      </div>
+
       <div className="max-w-4xl mx-auto px-4 text-center relative z-10 animate-fade-in">
         <div className="ornament w-full h-8 mb-8"></div>
 
-        {/* Overlapping Couple Images */}
-        <div className="relative flex justify-center items-center mb-8 h-96 md:h-[600px]">
-          {/* Main larger image */}
-          <img
-            src={couplePhoto}
-            alt="Հարություն և Տաթև"
-            className="w-80 h-96 md:w-96 md:h-[500px] object-cover rounded-lg shadow-xl border-4 border-cream/80 transform hover:scale-105 transition-transform duration-300 z-10"
-            data-testid="img-main-couple"
-          />
-          {/* Smaller rotated overlapping image */}
-        </div>
-
         <h1
-          className="text-4xl md:text-6xl font-serif font-bold text-charcoal mb-4 flex items-center justify-center flex-wrap gap-3"
+          className="text-4xl md:text-6xl font-serif font-bold text-white mb-4 flex items-center justify-center flex-wrap gap-3 drop-shadow-lg"
           data-testid="text-couple-names"
         >
           <span>{weddingConfig.couple.groomName}</span>
@@ -90,13 +90,13 @@ export default function HeroSection() {
           <span>{weddingConfig.couple.brideName}</span>
         </h1>
         <p
-          className="text-xl md:text-2xl text-charcoal/80 mb-8 font-light"
+          className="text-xl md:text-2xl text-white/90 mb-8 font-light drop-shadow-lg"
           data-testid="text-invitation"
         >
           Հրավիրում ենք մեր հարսանիքին
         </p>
         <p
-          className="text-lg md:text-xl text-charcoal/70 max-w-2xl mx-auto leading-relaxed"
+          className="text-lg md:text-xl text-white/80 max-w-2xl mx-auto leading-relaxed drop-shadow-lg"
           data-testid="text-welcome-message"
         >
           {weddingConfig.hero.welcomeMessage}

@@ -149,14 +149,14 @@ export default function CalendarSection() {
           >
             <div className="space-y-6">
               {/* Large Date */}
-              <div className="relative">
+              {/* <div className="relative">
                 <div
                   className="text-8xl md:text-9xl font-light text-charcoal/10 leading-none"
                   style={{ fontFamily: "Playfair Display, serif" }}
                 >
                   {weddingConfig.wedding.day}
                 </div>
-              </div>
+              </div> */}
 
               {/* Date Description */}
               {/* <div className="space-y-3">
