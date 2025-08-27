@@ -156,13 +156,6 @@ export default function CalendarSection() {
                 >
                   {weddingConfig.wedding.day}
                 </div>
-                <div className="absolute inset-0 flex items-center justify-center">
-                  <div
-                    className="text-6xl md:text-7xl font-light text-charcoal"
-                    style={{ fontFamily: "Playfair Display, serif" }}
-                    data-testid="text-wedding-date"
-                  ></div>
-                </div>
               </div>
 
               {/* Date Description */}

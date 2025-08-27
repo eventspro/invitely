@@ -66,7 +66,7 @@ export const weddingConfig = {
     title: "Timeline",
     events: [
       {
-        time: "14:00",
+        time: "14:30",
         title: "Պսակադրության արարողություն",
       },
       {
