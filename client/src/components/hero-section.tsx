@@ -78,7 +78,7 @@ export default function HeroSection() {
         <div className="absolute inset-0 bg-black/30"></div>
       </div>
 
-      <div className="max-w-4xl mx-auto px-4 text-center relative z-10 animate-fade-in">
+      <div className="max-w-4xl mx-auto px-4 text-center relative z-10 animate-fade-in mt-16">
         <div className="ornament w-full h-8 mb-8"></div>
 
         <h1
