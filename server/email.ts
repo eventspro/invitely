@@ -1,11 +1,27 @@
 import { Resend } from 'resend';
 import type { Rsvp } from '@shared/schema';
 
-if (!process.env.RESEND_API_KEY) {
-  console.warn("RESEND_API_KEY environment variable is not set. Email notifications will be disabled.");
-}
+// Lazy load Resend instance to reduce startup time
+let resendInstance: Resend | null = null;
+let resendInitialized = false;
 
-const resend = process.env.RESEND_API_KEY ? new Resend(process.env.RESEND_API_KEY) : null;
+function getResendInstance(): Resend | null {
+  if (!resendInitialized) {
+    if (!process.env.RESEND_API_KEY) {
+      console.warn("RESEND_API_KEY environment variable is not set. Email notifications will be disabled.");
+      resendInstance = null;
+    } else {
+      try {
+        resendInstance = new Resend(process.env.RESEND_API_KEY);
+      } catch (error) {
+        console.error('Failed to initialize Resend:', error);
+        resendInstance = null;
+      }
+    }
+    resendInitialized = true;
+  }
+  return resendInstance;
+}
 
 // Wedding couple's email addresses  
 const COUPLE_EMAILS = [
@@ -15,6 +31,7 @@ const COUPLE_EMAILS = [
 
 // Test function to verify email service is working
 export async function testEmailService(): Promise<void> {
+  const resend = getResendInstance();
   if (!resend) {
     console.log('Email service not configured.');
     return;
@@ -44,6 +61,7 @@ export async function testEmailService(): Promise<void> {
 }
 
 export async function sendRsvpNotificationEmails(rsvp: Rsvp): Promise<boolean> {
+  const resend = getResendInstance();
   if (!resend) {
     console.log('Email service not configured. Skipping RSVP notification emails.');
     return false;
@@ -102,6 +120,7 @@ export async function sendRsvpNotificationEmails(rsvp: Rsvp): Promise<boolean> {
 }
 
 export async function sendRsvpConfirmationEmail(rsvp: Rsvp): Promise<boolean> {
+  const resend = getResendInstance();
   if (!resend) {
     console.log('Email service not configured. Skipping RSVP confirmation email.');
     return false;
