@@ -148,4 +148,17 @@ export const weddingConfig = {
   email: {
     recipients: ["harutavetisyan0@gmail.com", "tatevhovsepyan22@gmail.com"],
   },
+
+  // Maintenance Mode Configuration
+  maintenance: {
+    enabled: false, // Toggle this to enable/disable maintenance mode
+    password: "haruttev2025", // Password to bypass maintenance mode
+    title: "Շուտով գալիս ենք",
+    subtitle: "Հարությունի և Տաթևի հարսանեկան կայք",
+    message: "Մենք պատրաստում ենք մեր հատուկ օրը Ձեզ համար։ Շուտով կվերադառնանք գեղեցիկ նորությունների հետ։",
+    countdownText: "Մինչև հարսանիքը",
+    passwordPrompt: "Ներմուծեք գաղտնի կոդը նախադիտման համար",
+    wrongPassword: "Սխալ գաղտնի կոդ",
+    enterPassword: "Մուտքագրել կոդ",
+  },
 };

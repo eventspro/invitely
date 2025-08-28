@@ -81,6 +81,37 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Maintenance mode endpoints
+  app.get("/api/maintenance", async (req, res) => {
+    try {
+      const status = await storage.getMaintenanceStatus();
+      res.json({ enabled: status });
+    } catch (error) {
+      console.error("Get maintenance status error:", error);
+      res.status(500).json({ message: "Server error" });
+    }
+  });
+
+  app.post("/api/maintenance", async (req, res) => {
+    try {
+      const { enabled, password } = req.body;
+      
+      // Simple password check for admin access
+      if (password !== "haruttev2025admin") {
+        return res.status(401).json({ message: "Unauthorized" });
+      }
+      
+      await storage.setMaintenanceStatus(enabled);
+      res.json({ 
+        message: enabled ? "Maintenance mode enabled" : "Maintenance mode disabled",
+        enabled 
+      });
+    } catch (error) {
+      console.error("Set maintenance status error:", error);
+      res.status(500).json({ message: "Server error" });
+    }
+  });
+
   // Photo upload endpoints
   
   // Serve public objects (photos)

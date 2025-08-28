@@ -8,15 +8,19 @@ export interface IStorage {
   createRsvp(rsvp: InsertRsvp): Promise<Rsvp>;
   getAllRsvps(): Promise<Rsvp[]>;
   getRsvpByEmail(email: string): Promise<Rsvp | undefined>;
+  getMaintenanceStatus(): Promise<boolean>;
+  setMaintenanceStatus(enabled: boolean): Promise<void>;
 }
 
 export class MemStorage implements IStorage {
   private users: Map<string, User>;
   private rsvps: Map<string, Rsvp>;
+  private maintenanceEnabled: boolean;
 
   constructor() {
     this.users = new Map();
     this.rsvps = new Map();
+    this.maintenanceEnabled = false;
   }
 
   async getUser(id: string): Promise<User | undefined> {
@@ -56,6 +60,14 @@ export class MemStorage implements IStorage {
     return Array.from(this.rsvps.values()).find(
       (rsvp) => rsvp.email === email,
     );
+  }
+
+  async getMaintenanceStatus(): Promise<boolean> {
+    return this.maintenanceEnabled;
+  }
+
+  async setMaintenanceStatus(enabled: boolean): Promise<void> {
+    this.maintenanceEnabled = enabled;
   }
 }
 
