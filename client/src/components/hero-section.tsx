@@ -68,10 +68,10 @@ export default function HeroSection() {
 
       {/* Hero Image - Desktop Optimized Background */}
       <div 
-        className="absolute inset-0 w-full h-full bg-cover bg-center bg-no-repeat"
+        className="absolute inset-0 w-full h-full bg-cover bg-no-repeat"
         style={{
           backgroundImage: `url(${couplePhoto})`,
-          backgroundPosition: 'center center',
+          backgroundPosition: 'center 35%',
           backgroundSize: 'cover'
         }}
         data-testid="bg-main-couple"
