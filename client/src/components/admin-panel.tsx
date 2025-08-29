@@ -37,15 +37,16 @@ export function AdminPanel() {
 
   const loadData = async () => {
     try {
-      const [maintenanceResponse, rsvpResponse] = await Promise.all([
-        fetch("/api/maintenance"),
-        fetch("/api/rsvps")
-      ]);
-      
+      // Load maintenance status first
+      const maintenanceResponse = await fetch("/api/maintenance");
       const maintenanceData = await maintenanceResponse.json();
+      console.log("🔧 Maintenance status loaded:", maintenanceData);
+      setMaintenanceEnabled(maintenanceData.enabled);
+      
+      // Load RSVP data
+      const rsvpResponse = await fetch("/api/rsvps");
       const rsvpData = await rsvpResponse.json();
       
-      setMaintenanceEnabled(maintenanceData.enabled);
       setRsvps(rsvpData);
       setRsvpCount(rsvpData.length);
       
@@ -80,6 +81,7 @@ export function AdminPanel() {
   const handleMaintenanceToggle = async (enabled: boolean) => {
     setLoading(true);
     try {
+      console.log("🔄 Toggling maintenance mode to:", enabled);
       const response = await fetch("/api/maintenance", {
         method: "POST",
         headers: {
@@ -92,7 +94,11 @@ export function AdminPanel() {
       });
 
       if (response.ok) {
+        const result = await response.json();
+        console.log("✅ Maintenance mode updated:", result);
         setMaintenanceEnabled(enabled);
+        // Reload data to confirm the change
+        await loadData();
         toast({
           title: enabled ? "Maintenance mode enabled" : "Maintenance mode disabled",
           description: enabled 
