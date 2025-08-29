@@ -66,13 +66,11 @@ export default function HeroSection() {
       <div className="absolute top-20 left-10 w-32 h-32 bg-softGold/10 rounded-full blur-xl"></div>
       <div className="absolute bottom-20 right-10 w-40 h-40 bg-sageGreen/10 rounded-full blur-xl"></div>
 
-      {/* Hero Image - Desktop Optimized Background */}
+      {/* Hero Image - Responsive Background */}
       <div 
-        className="absolute inset-0 w-full h-full bg-cover bg-no-repeat"
+        className="absolute inset-0 w-full h-full bg-cover bg-no-repeat hero-bg-responsive"
         style={{
-          backgroundImage: `url(${couplePhoto})`,
-          backgroundPosition: 'center 35%',
-          backgroundSize: 'cover'
+          backgroundImage: `url(${couplePhoto})`
         }}
         data-testid="bg-main-couple"
       >

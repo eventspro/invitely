@@ -241,3 +241,15 @@
     transform: translateY(-10px); 
   }
 }
+
+/* Responsive Hero Background Positioning */
+.hero-bg-responsive {
+  background-position: center 60% !important;
+}
+
+@media (max-width: 768px) {
+  .hero-bg-responsive {
+    background-position: center center !important;
+    background-size: auto 100% !important;
+  }
+}
