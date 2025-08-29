@@ -70,7 +70,7 @@ export default function HeroSection() {
       <div className="absolute inset-0 w-full h-full">
         <img
           src={couplePhoto}
-          alt="Հարություն և Տաթև"
+          alt="Հարութ և Տաթև"
           className="w-full h-full object-cover"
           data-testid="img-main-couple"
         />

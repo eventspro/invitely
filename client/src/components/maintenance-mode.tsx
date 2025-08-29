@@ -133,7 +133,7 @@ export function MaintenanceMode({ onPasswordCorrect }: MaintenanceModeProps) {
 
         {/* Footer */}
         <div className="pt-8 text-sm text-charcoal-500">
-          <p>Հարություն ∞ Տաթև</p>
+          <p>Հարութ ∞ Տաթև</p>
           <p className="mt-1">{weddingConfig.wedding.displayDate}</p>
         </div>
       </div>

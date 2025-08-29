@@ -153,12 +153,12 @@ export const weddingConfig = {
   maintenance: {
     enabled: false, // Toggle this to enable/disable maintenance mode
     password: "haruttev2025", // Password to bypass maintenance mode
-    title: "Շուտով գալիս ենք",
-    subtitle: "Հարությունի և Տաթևի հարսանեկան կայք",
-    message: "Մենք պատրաստում ենք մեր հատուկ օրը Ձեզ համար։ Շուտով կվերադառնանք գեղեցիկ նորությունների հետ։",
+    title: "Coming Soon",
+    subtitle: "",
+    message: "",
     countdownText: "Մինչև հարսանիքը",
-    passwordPrompt: "Ներմուծեք գաղտնի կոդը նախադիտման համար",
+    passwordPrompt: "",
     wrongPassword: "Սխալ գաղտնի կոդ",
-    enterPassword: "Մուտքագրել կոդ",
+    enterPassword: "Մուտքագրել կոդը",
   },
 };
