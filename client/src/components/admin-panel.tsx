@@ -438,6 +438,97 @@ export function AdminPanel() {
           </CardContent>
         </Card>
 
+        {/* RSVP Export & Email Tools */}
+        <Card>
+          <CardHeader>
+            <CardTitle>RSVP Management</CardTitle>
+            <CardDescription>
+              Export guest data and send email reminders
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+              <Button
+                onClick={exportToCSV}
+                disabled={rsvps.length === 0}
+                className="w-full"
+                data-testid="export-csv"
+              >
+                <Download className="w-4 h-4 mr-2" />
+                Export to CSV ({rsvps.length})
+              </Button>
+              <Button
+                variant="outline"
+                onClick={sendEmailReminders}
+                disabled={rsvps.length === 0}
+                className="w-full"
+                data-testid="copy-emails"
+              >
+                <Mail className="w-4 h-4 mr-2" />
+                Copy Email Addresses
+              </Button>
+            </div>
+            
+            {rsvps.length === 0 && (
+              <div className="text-center py-4 bg-amber-50 rounded-lg border border-amber-200">
+                <Users className="w-8 h-8 text-amber-500 mx-auto mb-2" />
+                <p className="text-sm text-amber-700 font-medium">No RSVP responses yet</p>
+                <p className="text-xs text-amber-600">Guest responses will appear here for export</p>
+              </div>
+            )}
+
+            {/* Show RSVP Details if any exist */}
+            {rsvps.length > 0 && (
+              <div className="border rounded-lg overflow-hidden">
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Name</TableHead>
+                      <TableHead>Email</TableHead>
+                      <TableHead>Guests</TableHead>
+                      <TableHead>Status</TableHead>
+                      <TableHead>Date</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {rsvps.map((rsvp) => (
+                      <TableRow key={rsvp.id}>
+                        <TableCell className="font-medium">
+                          {rsvp.firstName} {rsvp.lastName}
+                        </TableCell>
+                        <TableCell className="text-sm">
+                          {rsvp.email}
+                        </TableCell>
+                        <TableCell>
+                          <span className="px-2 py-1 rounded-full text-xs bg-gold-100 text-gold-800">
+                            {rsvp.guestCount}
+                          </span>
+                        </TableCell>
+                        <TableCell>
+                          {rsvp.attendance === "attending" ? (
+                            <span className="inline-flex items-center px-2 py-1 rounded-full text-xs bg-green-100 text-green-800">
+                              <CheckCircle className="w-3 h-3 mr-1" />
+                              Attending
+                            </span>
+                          ) : (
+                            <span className="inline-flex items-center px-2 py-1 rounded-full text-xs bg-red-100 text-red-800">
+                              <XCircle className="w-3 h-3 mr-1" />
+                              Not Attending
+                            </span>
+                          )}
+                        </TableCell>
+                        <TableCell className="text-sm">
+                          {formatDate(rsvp.createdAt)}
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </div>
+            )}
+          </CardContent>
+        </Card>
+
         {/* Quick Actions */}
         <Card>
           <CardHeader>
