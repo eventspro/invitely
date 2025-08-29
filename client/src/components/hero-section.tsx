@@ -59,19 +59,24 @@ export default function HeroSection() {
   return (
     <section
       id="hero"
-      className="min-h-screen flex items-center justify-center relative overflow-hidden pt-20"
+      className="min-h-screen h-screen flex items-center justify-center relative overflow-hidden pt-20"
     >
       {/* Background decorative elements */}
       <div className="absolute inset-0 bg-gradient-to-br from-lightGold/20 to-sageGreen/10"></div>
       <div className="absolute top-20 left-10 w-32 h-32 bg-softGold/10 rounded-full blur-xl"></div>
       <div className="absolute bottom-20 right-10 w-40 h-40 bg-sageGreen/10 rounded-full blur-xl"></div>
 
-      {/* Hero Image - Full Width */}
+      {/* Hero Image - Full Width Desktop Optimized */}
       <div className="absolute inset-0 w-full h-full">
         <img
           src={couplePhoto}
           alt="Հարութ և Տաթև"
-          className="w-full h-full object-cover"
+          className="w-full h-full object-cover object-center scale-100 md:scale-105 lg:scale-100"
+          style={{
+            objectPosition: 'center center',
+            minHeight: '100vh',
+            minWidth: '100vw'
+          }}
           data-testid="img-main-couple"
         />
         {/* Overlay for better text readability */}
