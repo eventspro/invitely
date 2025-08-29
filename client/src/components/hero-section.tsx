@@ -59,7 +59,7 @@ export default function HeroSection() {
   return (
     <section
       id="hero"
-      className="min-h-screen h-screen flex items-center justify-center relative overflow-hidden pt-20"
+      className="min-h-screen h-screen lg:h-[120vh] flex items-center justify-center relative overflow-hidden pt-20"
     >
       {/* Background decorative elements */}
       <div className="absolute inset-0 bg-gradient-to-br from-lightGold/20 to-sageGreen/10"></div>
