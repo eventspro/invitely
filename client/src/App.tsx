@@ -27,11 +27,14 @@ function App() {
 
   // Check maintenance status from server and bypass conditions
   useEffect(() => {
-    const checkMaintenanceStatus = async () => {
+    const checkMaintenanceStatus = async (retryCount = 0) => {
       try {
         const response = await fetch("/api/maintenance");
+        if (!response.ok) throw new Error(`HTTP ${response.status}`);
+        
         const data = await response.json();
         setMaintenanceEnabled(data.enabled);
+        console.log("🔧 Maintenance status loaded:", data.enabled);
 
         // Check bypass conditions
         const bypassKey = localStorage.getItem("maintenance-bypass");
@@ -44,14 +47,23 @@ function App() {
         }
       } catch (error) {
         console.error("Failed to check maintenance status:", error);
-        // Fallback to config if API fails
-        setMaintenanceEnabled(weddingConfig.maintenance.enabled);
+        
+        // Retry once after 2 seconds if first attempt fails
+        if (retryCount === 0) {
+          console.log("🔄 Retrying maintenance status check...");
+          setTimeout(() => checkMaintenanceStatus(1), 2000);
+          return;
+        }
+        
+        // Don't change maintenance state on API failure to prevent automatic turn-off
+        console.warn("⚠️ Keeping current maintenance state due to API failure");
       } finally {
-        setLoading(false);
+        if (retryCount > 0) setLoading(false);
       }
     };
 
     checkMaintenanceStatus();
+    setTimeout(() => setLoading(false), 5000); // Failsafe timeout
   }, []);
 
   const handlePasswordCorrect = () => {
