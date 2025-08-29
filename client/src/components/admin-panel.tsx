@@ -3,15 +3,30 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Switch } from "@/components/ui/switch";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { useToast } from "@/hooks/use-toast";
-import { Settings, Shield, Users } from "lucide-react";
+import { Settings, Shield, Users, Download, Mail, Calendar, CheckCircle, XCircle } from "lucide-react";
+
+interface Rsvp {
+  id: string;
+  firstName: string;
+  lastName: string;
+  email: string;
+  guestCount: string;
+  guestNames?: string | null;
+  attendance: string;
+  createdAt: string;
+}
 
 export function AdminPanel() {
   const [password, setPassword] = useState("");
   const [authenticated, setAuthenticated] = useState(false);
   const [maintenanceEnabled, setMaintenanceEnabled] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [rsvps, setRsvps] = useState<Rsvp[]>([]);
   const [rsvpCount, setRsvpCount] = useState(0);
+  const [attendingCount, setAttendingCount] = useState(0);
+  const [notAttendingCount, setNotAttendingCount] = useState(0);
   const { toast } = useToast();
 
   useEffect(() => {
@@ -31,7 +46,15 @@ export function AdminPanel() {
       const rsvpData = await rsvpResponse.json();
       
       setMaintenanceEnabled(maintenanceData.enabled);
+      setRsvps(rsvpData);
       setRsvpCount(rsvpData.length);
+      
+      // Calculate attendance statistics
+      const attending = rsvpData.filter((rsvp: Rsvp) => rsvp.attendance === "attending").length;
+      const notAttending = rsvpData.filter((rsvp: Rsvp) => rsvp.attendance === "not-attending").length;
+      
+      setAttendingCount(attending);
+      setNotAttendingCount(notAttending);
     } catch (error) {
       console.error("Failed to load admin data:", error);
     }
@@ -99,6 +122,89 @@ export function AdminPanel() {
     });
   };
 
+  const exportToCSV = () => {
+    if (rsvps.length === 0) {
+      toast({
+        title: "No data to export",
+        description: "There are no RSVP responses to export",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    const headers = [
+      "First Name",
+      "Last Name", 
+      "Email",
+      "Guest Count",
+      "Guest Names",
+      "Attendance",
+      "Submitted Date"
+    ];
+
+    const csvContent = [
+      headers.join(","),
+      ...rsvps.map(rsvp => [
+        `"${rsvp.firstName}"`,
+        `"${rsvp.lastName}"`,
+        `"${rsvp.email}"`,
+        `"${rsvp.guestCount}"`,
+        `"${rsvp.guestNames || ''}"`,
+        `"${rsvp.attendance === 'attending' ? 'Attending' : 'Not Attending'}"`,
+        `"${new Date(rsvp.createdAt).toLocaleDateString()}"`
+      ].join(","))
+    ].join("\n");
+
+    const blob = new Blob([csvContent], { type: "text/csv" });
+    const url = window.URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = `wedding-rsvps-${new Date().toISOString().split('T')[0]}.csv`;
+    link.click();
+    window.URL.revokeObjectURL(url);
+
+    toast({
+      title: "Export successful",
+      description: `Exported ${rsvps.length} RSVP responses to CSV`,
+    });
+  };
+
+  const sendEmailReminders = async () => {
+    const emailList = rsvps.map(rsvp => rsvp.email).join(', ');
+    
+    // Copy to clipboard for now - real email integration would require more setup
+    try {
+      await navigator.clipboard.writeText(emailList);
+      toast({
+        title: "Email addresses copied",
+        description: `${rsvps.length} email addresses copied to clipboard. You can use these to send reminders via your preferred email service.`,
+      });
+    } catch (error) {
+      // Fallback for browsers that don't support clipboard API
+      const textArea = document.createElement("textarea");
+      textArea.value = emailList;
+      document.body.appendChild(textArea);
+      textArea.select();
+      document.execCommand('copy');
+      document.body.removeChild(textArea);
+      
+      toast({
+        title: "Email addresses copied",
+        description: `${rsvps.length} email addresses copied to clipboard`,
+      });
+    }
+  };
+
+  const formatDate = (dateString: string) => {
+    return new Date(dateString).toLocaleDateString('en-US', {
+      year: 'numeric',
+      month: 'short',
+      day: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit'
+    });
+  };
+
   if (!authenticated) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-cream-50 via-cream-100 to-gold-50 flex items-center justify-center px-4">
@@ -142,10 +248,10 @@ export function AdminPanel() {
         </div>
 
         {/* Stats Overview */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">RSVP Count</CardTitle>
+              <CardTitle className="text-sm font-medium">Total RSVPs</CardTitle>
               <Users className="h-4 w-4 text-gold-500" />
             </CardHeader>
             <CardContent>
@@ -156,21 +262,30 @@ export function AdminPanel() {
 
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Website Status</CardTitle>
-              <Settings className="h-4 w-4 text-gold-500" />
+              <CardTitle className="text-sm font-medium">Attending</CardTitle>
+              <CheckCircle className="h-4 w-4 text-green-500" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold text-gold-600">
-                {maintenanceEnabled ? "Maintenance" : "Live"}
-              </div>
-              <p className="text-xs text-charcoal-500">Current status</p>
+              <div className="text-2xl font-bold text-green-600">{attendingCount}</div>
+              <p className="text-xs text-charcoal-500">Will attend</p>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">Not Attending</CardTitle>
+              <XCircle className="h-4 w-4 text-red-500" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold text-red-600">{notAttendingCount}</div>
+              <p className="text-xs text-charcoal-500">Cannot attend</p>
             </CardContent>
           </Card>
 
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium">Days Until Wedding</CardTitle>
-              <Shield className="h-4 w-4 text-gold-500" />
+              <Calendar className="h-4 w-4 text-gold-500" />
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold text-gold-600">
@@ -229,6 +344,100 @@ export function AdminPanel() {
           </CardContent>
         </Card>
 
+        {/* RSVP Management */}
+        <Card>
+          <CardHeader>
+            <CardTitle>RSVP Responses</CardTitle>
+            <CardDescription>
+              Manage wedding guest responses and send reminders
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            {/* Action Buttons */}
+            <div className="flex flex-col sm:flex-row gap-2">
+              <Button
+                onClick={exportToCSV}
+                disabled={rsvps.length === 0}
+                className="flex-1"
+                data-testid="export-csv"
+              >
+                <Download className="w-4 h-4 mr-2" />
+                Export to CSV ({rsvps.length})
+              </Button>
+              <Button
+                variant="outline"
+                onClick={sendEmailReminders}
+                disabled={rsvps.length === 0}
+                className="flex-1"
+                data-testid="copy-emails"
+              >
+                <Mail className="w-4 h-4 mr-2" />
+                Copy Email Addresses
+              </Button>
+            </div>
+
+            {/* RSVP Table */}
+            {rsvps.length > 0 ? (
+              <div className="border rounded-lg overflow-hidden">
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Name</TableHead>
+                      <TableHead>Email</TableHead>
+                      <TableHead>Guests</TableHead>
+                      <TableHead>Guest Names</TableHead>
+                      <TableHead>Status</TableHead>
+                      <TableHead>Date</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {rsvps.map((rsvp) => (
+                      <TableRow key={rsvp.id}>
+                        <TableCell className="font-medium">
+                          {rsvp.firstName} {rsvp.lastName}
+                        </TableCell>
+                        <TableCell className="text-sm text-charcoal-600">
+                          {rsvp.email}
+                        </TableCell>
+                        <TableCell>
+                          <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-gold-100 text-gold-800">
+                            {rsvp.guestCount}
+                          </span>
+                        </TableCell>
+                        <TableCell className="text-sm max-w-48 truncate">
+                          {rsvp.guestNames || "-"}
+                        </TableCell>
+                        <TableCell>
+                          {rsvp.attendance === "attending" ? (
+                            <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                              <CheckCircle className="w-3 h-3 mr-1" />
+                              Attending
+                            </span>
+                          ) : (
+                            <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-red-100 text-red-800">
+                              <XCircle className="w-3 h-3 mr-1" />
+                              Not Attending
+                            </span>
+                          )}
+                        </TableCell>
+                        <TableCell className="text-sm text-charcoal-600">
+                          {formatDate(rsvp.createdAt)}
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </div>
+            ) : (
+              <div className="text-center py-8">
+                <Users className="w-12 h-12 text-charcoal-300 mx-auto mb-2" />
+                <p className="text-charcoal-500">No RSVP responses yet</p>
+                <p className="text-sm text-charcoal-400">Guest responses will appear here</p>
+              </div>
+            )}
+          </CardContent>
+        </Card>
+
         {/* Quick Actions */}
         <Card>
           <CardHeader>
@@ -237,12 +446,12 @@ export function AdminPanel() {
           <CardContent className="space-y-3">
             <Button
               variant="outline"
-              onClick={() => window.open("/api/rsvps", "_blank")}
+              onClick={() => window.open("/", "_blank")}
               className="w-full justify-start"
-              data-testid="view-rsvps"
+              data-testid="preview-website"
             >
-              <Users className="w-4 h-4 mr-2" />
-              View All RSVPs
+              <Shield className="w-4 h-4 mr-2" />
+              Preview Website
             </Button>
             <Button
               variant="outline"
@@ -253,7 +462,7 @@ export function AdminPanel() {
               className="w-full justify-start"
               data-testid="logout-admin"
             >
-              <Shield className="w-4 h-4 mr-2" />
+              <Settings className="w-4 h-4 mr-2" />
               Exit Admin & Test as Visitor
             </Button>
           </CardContent>

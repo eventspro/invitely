@@ -1,5 +1,7 @@
-import { type User, type InsertUser, type Rsvp, type InsertRsvp } from "@shared/schema";
+import { type User, type InsertUser, type Rsvp, type InsertRsvp, users, rsvps, settings } from "@shared/schema";
 import { randomUUID } from "crypto";
+import { db } from "./db";
+import { eq, desc } from "drizzle-orm";
 
 export interface IStorage {
   getUser(id: string): Promise<User | undefined>;
@@ -12,63 +14,65 @@ export interface IStorage {
   setMaintenanceStatus(enabled: boolean): Promise<void>;
 }
 
-export class MemStorage implements IStorage {
-  private users: Map<string, User>;
-  private rsvps: Map<string, Rsvp>;
-  private maintenanceEnabled: boolean;
-
-  constructor() {
-    this.users = new Map();
-    this.rsvps = new Map();
-    this.maintenanceEnabled = false;
-  }
-
+export class DatabaseStorage implements IStorage {
   async getUser(id: string): Promise<User | undefined> {
-    return this.users.get(id);
+    const [user] = await db.select().from(users).where(eq(users.id, id));
+    return user || undefined;
   }
 
   async getUserByUsername(username: string): Promise<User | undefined> {
-    return Array.from(this.users.values()).find(
-      (user) => user.username === username,
-    );
+    const [user] = await db.select().from(users).where(eq(users.username, username));
+    return user || undefined;
   }
 
   async createUser(insertUser: InsertUser): Promise<User> {
-    const id = randomUUID();
-    const user: User = { ...insertUser, id };
-    this.users.set(id, user);
+    const [user] = await db
+      .insert(users)
+      .values(insertUser)
+      .returning();
     return user;
   }
 
   async createRsvp(insertRsvp: InsertRsvp): Promise<Rsvp> {
-    const id = randomUUID();
-    const rsvp: Rsvp = { 
-      ...insertRsvp, 
-      id,
-      guestNames: insertRsvp.guestNames || null,
-      createdAt: new Date()
-    };
-    this.rsvps.set(id, rsvp);
+    const [rsvp] = await db
+      .insert(rsvps)
+      .values({
+        ...insertRsvp,
+        guestNames: insertRsvp.guestNames || null,
+      })
+      .returning();
     return rsvp;
   }
 
   async getAllRsvps(): Promise<Rsvp[]> {
-    return Array.from(this.rsvps.values());
+    return await db.select().from(rsvps).orderBy(desc(rsvps.createdAt));
   }
 
   async getRsvpByEmail(email: string): Promise<Rsvp | undefined> {
-    return Array.from(this.rsvps.values()).find(
-      (rsvp) => rsvp.email === email,
-    );
+    const [rsvp] = await db.select().from(rsvps).where(eq(rsvps.email, email));
+    return rsvp || undefined;
   }
 
   async getMaintenanceStatus(): Promise<boolean> {
-    return this.maintenanceEnabled;
+    const [setting] = await db.select().from(settings).where(eq(settings.key, 'maintenance_enabled'));
+    return setting ? setting.value === 'true' : false;
   }
 
   async setMaintenanceStatus(enabled: boolean): Promise<void> {
-    this.maintenanceEnabled = enabled;
+    await db
+      .insert(settings)
+      .values({
+        key: 'maintenance_enabled',
+        value: enabled.toString(),
+      })
+      .onConflictDoUpdate({
+        target: settings.key,
+        set: {
+          value: enabled.toString(),
+          updatedAt: new Date(),
+        },
+      });
   }
 }
 
-export const storage = new MemStorage();
+export const storage = new DatabaseStorage();

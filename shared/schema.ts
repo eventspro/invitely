@@ -20,6 +20,12 @@ export const rsvps = pgTable("rsvps", {
   createdAt: timestamp("created_at").default(sql`now()`),
 });
 
+export const settings = pgTable("settings", {
+  key: text("key").primaryKey(),
+  value: text("value").notNull(),
+  updatedAt: timestamp("updated_at").default(sql`now()`),
+});
+
 export const insertUserSchema = createInsertSchema(users).pick({
   username: true,
   password: true,
