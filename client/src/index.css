@@ -249,7 +249,7 @@
 
 @media (max-width: 768px) {
   .hero-bg-responsive {
-    background-position: center center !important;
+    background-position: 40% center !important;
     background-size: cover !important;
   }
 }
