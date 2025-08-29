@@ -48,13 +48,13 @@ export default function CalendarSection() {
         </div>
 
         {/* Calendar and Date Display */}
-        <div className="grid lg:grid-cols-2 gap-12 items-center max-w-4xl mx-auto">
+        <div className="flex justify-center max-w-6xl mx-auto">
           {/* Calendar */}
           <div
             ref={calendarRef}
-            className="order-2 lg:order-1 animate-on-scroll"
+            className="w-full max-w-lg animate-on-scroll"
           >
-            <div className="bg-white rounded-3xl shadow-2xl p-8 border border-charcoal/5">
+            <div className="bg-white rounded-3xl shadow-2xl p-10 border border-charcoal/5 w-full">
               {/* Month Header */}
               <div className="text-center mb-8">
                 <h3
@@ -141,36 +141,6 @@ export default function CalendarSection() {
             </div>
           </div>
 
-          {/* Wedding Date Display */}
-          <div
-            ref={dateRef}
-            className="order-1 lg:order-2 text-center lg:text-left animate-on-scroll"
-          >
-            <div className="space-y-6">
-              {/* Large Date */}
-              {/* <div className="relative">
-                <div
-                  className="text-8xl md:text-9xl font-light text-charcoal/10 leading-none"
-                  style={{ fontFamily: "Playfair Display, serif" }}
-                >
-                  {weddingConfig.wedding.day}
-                </div>
-              </div> */}
-
-              {/* Date Description */}
-              {/* <div className="space-y-3">
-                <p
-                  className="text-2xl md:text-3xl text-charcoal font-medium"
-                  style={{ fontFamily: "Playfair Display, serif" }}
-                  data-testid="text-wedding-description"
-                >
-                  {weddingConfig.wedding.displayDate}
-                </p>
-                <div className="w-20 h-0.5 bg-softGold mx-auto lg:mx-0"></div>
-                <p className="text-charcoal/60 text-lg">Սիրո սկիզբը</p>
-              </div> */}
-            </div>
-          </div>
         </div>
       </div>
     </section>
