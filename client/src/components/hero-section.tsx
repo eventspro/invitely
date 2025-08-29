@@ -66,19 +66,16 @@ export default function HeroSection() {
       <div className="absolute top-20 left-10 w-32 h-32 bg-softGold/10 rounded-full blur-xl"></div>
       <div className="absolute bottom-20 right-10 w-40 h-40 bg-sageGreen/10 rounded-full blur-xl"></div>
 
-      {/* Hero Image - Full Width Desktop Optimized */}
-      <div className="absolute inset-0 w-full h-full">
-        <img
-          src={couplePhoto}
-          alt="Հարութ և Տաթև"
-          className="w-full h-full object-cover object-center scale-100 md:scale-105 lg:scale-100"
-          style={{
-            objectPosition: 'center center',
-            minHeight: '100vh',
-            minWidth: '100vw'
-          }}
-          data-testid="img-main-couple"
-        />
+      {/* Hero Image - Desktop Optimized Background */}
+      <div 
+        className="absolute inset-0 w-full h-full bg-cover bg-center bg-no-repeat"
+        style={{
+          backgroundImage: `url(${couplePhoto})`,
+          backgroundPosition: 'center center',
+          backgroundSize: 'cover'
+        }}
+        data-testid="bg-main-couple"
+      >
         {/* Overlay for better text readability */}
         <div className="absolute inset-0 bg-black/30"></div>
       </div>
