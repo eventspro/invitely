@@ -70,7 +70,7 @@ export const weddingConfig = {
         title: "Պսակադրության արարողություն",
       },
       {
-        time: "17:00",
+        time: "17:30",
         title: "Հարսանյաց սրահ",
         description: "Bayazet Hall",
       },
