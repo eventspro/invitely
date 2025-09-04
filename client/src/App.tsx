@@ -9,6 +9,7 @@ import { AdminPanel } from "@/components/admin-panel";
 import { weddingConfig } from "@/config/wedding-config";
 import Home from "@/pages/home";
 import NotFound from "@/pages/not-found";
+import LoadingScreen from "@/components/loading-screen";
 
 function Router() {
   return (
@@ -78,11 +79,7 @@ function App() {
 
   // Show loading state while checking maintenance status
   if (loading) {
-    return (
-      <div className="min-h-screen bg-gradient-to-br from-cream-50 via-cream-100 to-gold-50 flex items-center justify-center">
-        <div className="text-gold-600 text-lg">...</div>
-      </div>
-    );
+    return <LoadingScreen />;
   }
 
   if (shouldShowMaintenance) {
