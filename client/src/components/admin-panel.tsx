@@ -4,8 +4,9 @@ import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Switch } from "@/components/ui/switch";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { useToast } from "@/hooks/use-toast";
-import { Settings, Shield, Users, Download, Mail, Calendar, CheckCircle, XCircle } from "lucide-react";
+import { Settings, Shield, Users, Download, Mail, Calendar, CheckCircle, XCircle, Eye } from "lucide-react";
 
 interface Rsvp {
   id: string;
@@ -27,6 +28,7 @@ export function AdminPanel() {
   const [rsvpCount, setRsvpCount] = useState(0);
   const [attendingCount, setAttendingCount] = useState(0);
   const [notAttendingCount, setNotAttendingCount] = useState(0);
+  const [selectedRsvp, setSelectedRsvp] = useState<Rsvp | null>(null);
   const { toast } = useToast();
 
   useEffect(() => {
@@ -394,6 +396,7 @@ export function AdminPanel() {
                       <TableHead>Guest Names</TableHead>
                       <TableHead>Status</TableHead>
                       <TableHead>Date</TableHead>
+                      <TableHead>Details</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
@@ -428,6 +431,86 @@ export function AdminPanel() {
                         </TableCell>
                         <TableCell className="text-sm text-charcoal-600">
                           {formatDate(rsvp.createdAt)}
+                        </TableCell>
+                        <TableCell>
+                          <Dialog>
+                            <DialogTrigger asChild>
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                className="h-8 w-8 p-0"
+                                onClick={() => setSelectedRsvp(rsvp)}
+                                data-testid={`view-details-${rsvp.id}`}
+                              >
+                                <Eye className="h-4 w-4" />
+                              </Button>
+                            </DialogTrigger>
+                            <DialogContent className="max-w-md">
+                              <DialogHeader>
+                                <DialogTitle>RSVP Details</DialogTitle>
+                                <DialogDescription>
+                                  Complete information for this guest response
+                                </DialogDescription>
+                              </DialogHeader>
+                              <div className="space-y-4">
+                                <div className="grid grid-cols-2 gap-4">
+                                  <div>
+                                    <label className="text-sm font-medium text-gray-600">First Name</label>
+                                    <p className="text-sm font-semibold">{rsvp.firstName}</p>
+                                  </div>
+                                  <div>
+                                    <label className="text-sm font-medium text-gray-600">Last Name</label>
+                                    <p className="text-sm font-semibold">{rsvp.lastName}</p>
+                                  </div>
+                                </div>
+                                
+                                <div>
+                                  <label className="text-sm font-medium text-gray-600">Email Address</label>
+                                  <p className="text-sm font-semibold">{rsvp.email}</p>
+                                </div>
+                                
+                                <div className="grid grid-cols-2 gap-4">
+                                  <div>
+                                    <label className="text-sm font-medium text-gray-600">Guest Count</label>
+                                    <p className="text-sm font-semibold">{rsvp.guestCount}</p>
+                                  </div>
+                                  <div>
+                                    <label className="text-sm font-medium text-gray-600">Attendance</label>
+                                    <div className="flex items-center mt-1">
+                                      {rsvp.attendance === "attending" ? (
+                                        <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                                          <CheckCircle className="w-3 h-3 mr-1" />
+                                          Attending
+                                        </span>
+                                      ) : (
+                                        <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-red-100 text-red-800">
+                                          <XCircle className="w-3 h-3 mr-1" />
+                                          Not Attending
+                                        </span>
+                                      )}
+                                    </div>
+                                  </div>
+                                </div>
+                                
+                                <div>
+                                  <label className="text-sm font-medium text-gray-600">Guest Names</label>
+                                  <p className="text-sm font-semibold break-words">
+                                    {rsvp.guestNames || "No guest names provided"}
+                                  </p>
+                                </div>
+                                
+                                <div>
+                                  <label className="text-sm font-medium text-gray-600">Submission Date</label>
+                                  <p className="text-sm font-semibold">{formatDate(rsvp.createdAt)}</p>
+                                </div>
+                                
+                                <div>
+                                  <label className="text-sm font-medium text-gray-600">Response ID</label>
+                                  <p className="text-xs font-mono text-gray-500 break-all">{rsvp.id}</p>
+                                </div>
+                              </div>
+                            </DialogContent>
+                          </Dialog>
                         </TableCell>
                       </TableRow>
                     ))}
@@ -494,6 +577,7 @@ export function AdminPanel() {
                       <TableHead>Guests</TableHead>
                       <TableHead>Status</TableHead>
                       <TableHead>Date</TableHead>
+                      <TableHead>Details</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
@@ -525,6 +609,86 @@ export function AdminPanel() {
                         </TableCell>
                         <TableCell className="text-sm">
                           {formatDate(rsvp.createdAt)}
+                        </TableCell>
+                        <TableCell>
+                          <Dialog>
+                            <DialogTrigger asChild>
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                className="h-8 w-8 p-0"
+                                onClick={() => setSelectedRsvp(rsvp)}
+                                data-testid={`view-details-${rsvp.id}`}
+                              >
+                                <Eye className="h-4 w-4" />
+                              </Button>
+                            </DialogTrigger>
+                            <DialogContent className="max-w-md">
+                              <DialogHeader>
+                                <DialogTitle>RSVP Details</DialogTitle>
+                                <DialogDescription>
+                                  Complete information for this guest response
+                                </DialogDescription>
+                              </DialogHeader>
+                              <div className="space-y-4">
+                                <div className="grid grid-cols-2 gap-4">
+                                  <div>
+                                    <label className="text-sm font-medium text-gray-600">First Name</label>
+                                    <p className="text-sm font-semibold">{rsvp.firstName}</p>
+                                  </div>
+                                  <div>
+                                    <label className="text-sm font-medium text-gray-600">Last Name</label>
+                                    <p className="text-sm font-semibold">{rsvp.lastName}</p>
+                                  </div>
+                                </div>
+                                
+                                <div>
+                                  <label className="text-sm font-medium text-gray-600">Email Address</label>
+                                  <p className="text-sm font-semibold">{rsvp.email}</p>
+                                </div>
+                                
+                                <div className="grid grid-cols-2 gap-4">
+                                  <div>
+                                    <label className="text-sm font-medium text-gray-600">Guest Count</label>
+                                    <p className="text-sm font-semibold">{rsvp.guestCount}</p>
+                                  </div>
+                                  <div>
+                                    <label className="text-sm font-medium text-gray-600">Attendance</label>
+                                    <div className="flex items-center mt-1">
+                                      {rsvp.attendance === "attending" ? (
+                                        <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                                          <CheckCircle className="w-3 h-3 mr-1" />
+                                          Attending
+                                        </span>
+                                      ) : (
+                                        <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-red-100 text-red-800">
+                                          <XCircle className="w-3 h-3 mr-1" />
+                                          Not Attending
+                                        </span>
+                                      )}
+                                    </div>
+                                  </div>
+                                </div>
+                                
+                                <div>
+                                  <label className="text-sm font-medium text-gray-600">Guest Names</label>
+                                  <p className="text-sm font-semibold break-words">
+                                    {rsvp.guestNames || "No guest names provided"}
+                                  </p>
+                                </div>
+                                
+                                <div>
+                                  <label className="text-sm font-medium text-gray-600">Submission Date</label>
+                                  <p className="text-sm font-semibold">{formatDate(rsvp.createdAt)}</p>
+                                </div>
+                                
+                                <div>
+                                  <label className="text-sm font-medium text-gray-600">Response ID</label>
+                                  <p className="text-xs font-mono text-gray-500 break-all">{rsvp.id}</p>
+                                </div>
+                              </div>
+                            </DialogContent>
+                          </Dialog>
                         </TableCell>
                       </TableRow>
                     ))}
