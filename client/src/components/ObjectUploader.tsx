@@ -66,7 +66,22 @@ export function ObjectUploader({
           });
           
           if (uploadResponse.ok) {
-            uploadedFiles.push(file);
+            // After successful upload, register the photo with the backend
+            const registerResponse = await fetch('/api/photos', {
+              method: 'PUT',
+              headers: {
+                'Content-Type': 'application/json',
+              },
+              body: JSON.stringify({
+                photoURL: url,
+              }),
+            });
+            
+            if (registerResponse.ok) {
+              uploadedFiles.push(file);
+            } else {
+              console.error('Failed to register photo:', await registerResponse.text());
+            }
           }
         } catch (error) {
           console.error('Upload failed for file:', file.name, error);

@@ -2,7 +2,8 @@ import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Camera, Heart, Home } from "lucide-react";
+import { Progress } from "@/components/ui/progress";
+import { Camera, Heart, Home, Upload } from "lucide-react";
 import { Link } from "wouter";
 import { ObjectUploader } from "@/components/ObjectUploader";
 
@@ -10,6 +11,8 @@ export default function PhotosPage() {
   const [guestName, setGuestName] = useState("");
   const [nameSubmitted, setNameSubmitted] = useState(false);
   const [uploadStatus, setUploadStatus] = useState<string>("");
+  const [uploadedPhotosCount, setUploadedPhotosCount] = useState(0);
+  const MAX_PHOTOS = 25;
 
   // Get upload parameters using existing API
   const handleGetUploadParameters = async () => {
@@ -31,7 +34,13 @@ export default function PhotosPage() {
 
   const handleUploadComplete = async (files: File[]) => {
     try {
-      setUploadStatus(`${files.length} նկար(ներ) հաջողությամբ ավելացվեցին! Շնորհակալություն ${guestName}:`);
+      const newCount = uploadedPhotosCount + files.length;
+      setUploadedPhotosCount(newCount);
+      
+      // Store the count in localStorage for persistence
+      localStorage.setItem(`wedding-photos-count-${guestName}`, newCount.toString());
+      
+      setUploadStatus(`${files.length} նկար(ներ) հաջողությամբ ավելացվեցին! Շնորհակալություն ${guestName}! (Ընդամենը: ${newCount})`);
       setTimeout(() => setUploadStatus(""), 5000);
     } catch (error) {
       console.error('Failed to complete upload:', error);
@@ -44,6 +53,12 @@ export default function PhotosPage() {
     e.preventDefault();
     if (guestName.trim()) {
       setNameSubmitted(true);
+      
+      // Load existing photo count for this guest
+      const savedCount = localStorage.getItem(`wedding-photos-count-${guestName}`);
+      if (savedCount) {
+        setUploadedPhotosCount(parseInt(savedCount));
+      }
     }
   };
 
@@ -109,6 +124,40 @@ export default function PhotosPage() {
         </Link>
       </div>
 
+      {/* Upload Progress Bar */}
+      <Card className="mb-6">
+        <CardHeader className="text-center pb-2">
+          <CardTitle className="text-lg">Upload Progress</CardTitle>
+          <CardDescription>
+            {uploadedPhotosCount} of {MAX_PHOTOS} photos uploaded
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="space-y-2">
+            <div className="flex justify-between text-sm text-charcoal/70">
+              <span>Photos Uploaded</span>
+              <span>{uploadedPhotosCount}/{MAX_PHOTOS}</span>
+            </div>
+            <Progress 
+              value={(uploadedPhotosCount / MAX_PHOTOS) * 100} 
+              className="h-3"
+            />
+          </div>
+          
+          {uploadedPhotosCount >= MAX_PHOTOS ? (
+            <div className="text-center p-3 bg-green-50 border border-green-200 rounded-lg">
+              <p className="text-green-700 font-medium">
+                🎉 Maximum photos reached! Thank you for sharing your memories!
+              </p>
+            </div>
+          ) : (
+            <div className="text-center text-sm text-charcoal/60">
+              {MAX_PHOTOS - uploadedPhotosCount} more photos remaining
+            </div>
+          )}
+        </CardContent>
+      </Card>
+
       {/* Upload Status Message */}
       {uploadStatus && (
         <Card className="mb-6">
@@ -131,21 +180,32 @@ export default function PhotosPage() {
         <CardContent className="space-y-6">
           {/* Upload Component */}
           <div className="flex justify-center">
-            <ObjectUploader
-              maxNumberOfFiles={25}
-              maxFileSize={10485760} // 10MB
-              onGetUploadParameters={handleGetUploadParameters}
-              onComplete={handleUploadComplete}
-              buttonClassName="bg-softGold hover:bg-softGold/90 text-white px-8 py-4 rounded-lg font-medium transition-colors duration-300 transform hover:scale-105 flex items-center text-lg"
-            >
-              <Camera className="w-5 h-5 mr-2" />
-              Ավելացնել նկարներ
-            </ObjectUploader>
+            {uploadedPhotosCount >= MAX_PHOTOS ? (
+              <div className="text-center py-4">
+                <p className="text-charcoal/70 mb-4">You've reached the maximum number of photos!</p>
+                <Button disabled className="opacity-50">
+                  <Camera className="w-5 h-5 mr-2" />
+                  Maximum Reached
+                </Button>
+              </div>
+            ) : (
+              <ObjectUploader
+                maxNumberOfFiles={Math.min(25, MAX_PHOTOS - uploadedPhotosCount)}
+                maxFileSize={10485760} // 10MB
+                onGetUploadParameters={handleGetUploadParameters}
+                onComplete={handleUploadComplete}
+                buttonClassName="bg-softGold hover:bg-softGold/90 text-white px-8 py-4 rounded-lg font-medium transition-colors duration-300 transform hover:scale-105 flex items-center text-lg"
+              >
+                <Camera className="w-5 h-5 mr-2" />
+                Ավելացնել նկարներ
+              </ObjectUploader>
+            )}
           </div>
           
           {/* Instructions */}
           <div className="text-center text-sm text-charcoal/70 space-y-2">
-            <p>• You can upload up to 25 photos</p>
+            <p>• You can upload up to {MAX_PHOTOS} photos total</p>
+            <p>• You can upload {Math.min(25, MAX_PHOTOS - uploadedPhotosCount)} photos in one batch</p>
             <p>• Maximum file size: 10MB per photo</p>
             <p>• Supported formats: JPG, PNG, GIF</p>
           </div>
