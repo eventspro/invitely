@@ -1,0 +1,39 @@
+{
+  "name": "Հարություն & Տաթև Wedding Photos",
+  "short_name": "Wedding Photos",
+  "description": "Share your beautiful memories from Harut & Tatev's wedding day",
+  "start_url": "/photos",
+  "display": "standalone",
+  "background_color": "#F8F6F1",
+  "theme_color": "#DAA520",
+  "orientation": "portrait",
+  "scope": "/",
+  "lang": "hy",
+  "categories": ["photo", "social"],
+  "icons": [
+    {
+      "src": "/favicon.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "/favicon.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ],
+  "screenshots": [
+    {
+      "src": "/favicon.png",
+      "sizes": "1280x720",
+      "type": "image/png",
+      "form_factor": "wide"
+    },
+    {
+      "src": "/favicon.png",
+      "sizes": "750x1334",
+      "type": "image/png",
+      "form_factor": "narrow"
+    }
+  ]
+}
