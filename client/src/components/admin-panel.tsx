@@ -6,7 +6,7 @@ import { Switch } from "@/components/ui/switch";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { useToast } from "@/hooks/use-toast";
-import { Settings, Shield, Users, Download, Mail, Calendar, CheckCircle, XCircle, Eye } from "lucide-react";
+import { Settings, Shield, Users, Download, Mail, Calendar, CheckCircle, XCircle, Eye, QrCode, Printer, Link2 } from "lucide-react";
 
 interface Rsvp {
   id: string;
@@ -303,6 +303,74 @@ export function AdminPanel() {
             </CardContent>
           </Card>
         </div>
+
+        {/* QR Code for Photo Sharing */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <QrCode className="w-5 h-5 text-softGold" />
+              Photo Sharing QR Code
+            </CardTitle>
+            <CardDescription>
+              QR code for guests to easily access the photo upload page (harutandtatev.com/photos)
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="flex flex-col md:flex-row gap-4 items-center">
+              {/* QR Code Display */}
+              <div className="bg-white p-4 rounded-lg border-2 border-softGold/20">
+                <img 
+                  src="/wedding-photos-qr.png" 
+                  alt="Wedding Photos QR Code" 
+                  className="w-48 h-48 mx-auto"
+                />
+              </div>
+              
+              {/* QR Code Actions */}
+              <div className="space-y-3 flex-1">
+                <div className="text-sm text-charcoal/70">
+                  <p><strong>URL:</strong> harutandtatev.com/photos</p>
+                  <p className="mt-2">Print this QR code and place it at your wedding venue so guests can easily share their photos!</p>
+                </div>
+                
+                <div className="flex flex-wrap gap-2">
+                  <Button
+                    onClick={() => window.open('/wedding-photos-qr.png', '_blank')}
+                    className="bg-softGold hover:bg-softGold/90"
+                    size="sm"
+                  >
+                    <Download className="w-4 h-4 mr-2" />
+                    Download QR Code
+                  </Button>
+                  
+                  <Button
+                    onClick={() => window.print()}
+                    variant="outline"
+                    size="sm"
+                  >
+                    <Printer className="w-4 h-4 mr-2" />
+                    Print Page
+                  </Button>
+                  
+                  <Button
+                    onClick={() => {
+                      navigator.clipboard.writeText('https://harutandtatev.com/photos');
+                      toast({
+                        title: "Link copied!",
+                        description: "Photo sharing link copied to clipboard",
+                      });
+                    }}
+                    variant="outline"
+                    size="sm"
+                  >
+                    <Link2 className="w-4 h-4 mr-2" />
+                    Copy Link
+                  </Button>
+                </div>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
 
         {/* Maintenance Control */}
         <Card>
