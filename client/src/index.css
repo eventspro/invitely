@@ -5,33 +5,33 @@
 @tailwind utilities;
 
 :root {
-  --background: hsl(340, 30%, 97%);
-  --foreground: hsl(340, 15%, 15%);
+  --background: hsl(45, 15%, 97%);
+  --foreground: hsl(210, 15%, 15%);
   --card: hsl(0, 0%, 100%);
-  --card-foreground: hsl(340, 15%, 15%);
+  --card-foreground: hsl(210, 15%, 15%);
   --popover: hsl(0, 0%, 100%);
-  --popover-foreground: hsl(340, 15%, 15%);
-  --primary: hsl(340, 45%, 65%);
+  --popover-foreground: hsl(210, 15%, 15%);
+  --primary: hsl(45, 60%, 70%);
   --primary-foreground: hsl(0, 0%, 100%);
-  --secondary: hsl(340, 20%, 90%);
-  --secondary-foreground: hsl(340, 15%, 15%);
-  --muted: hsl(340, 15%, 92%);
-  --muted-foreground: hsl(340, 10%, 50%);
-  --accent: hsl(340, 25%, 88%);
-  --accent-foreground: hsl(340, 15%, 15%);
+  --secondary: hsl(30, 20%, 90%);
+  --secondary-foreground: hsl(210, 15%, 15%);
+  --muted: hsl(30, 15%, 92%);
+  --muted-foreground: hsl(210, 10%, 50%);
+  --accent: hsl(30, 25%, 88%);
+  --accent-foreground: hsl(210, 15%, 15%);
   --destructive: hsl(0, 84%, 60%);
   --destructive-foreground: hsl(0, 0%, 100%);
-  --border: hsl(340, 15%, 85%);
-  --input: hsl(340, 20%, 96%);
-  --ring: hsl(340, 45%, 65%);
+  --border: hsl(30, 15%, 85%);
+  --input: hsl(30, 20%, 96%);
+  --ring: hsl(45, 60%, 70%);
   
-  /* Custom wedding colors - Blush Pink Palette */
-  --cream: hsl(340, 30%, 97%);
-  --soft-gold: hsl(340, 45%, 65%);
-  --sage-green: hsl(340, 20%, 80%);
-  --warm-beige: hsl(340, 25%, 88%);
-  --charcoal: hsl(340, 15%, 15%);
-  --light-gold: hsl(340, 30%, 85%);
+  /* Custom wedding colors - Cream & Gold Palette */
+  --cream: hsl(45, 15%, 97%);
+  --soft-gold: hsl(45, 60%, 70%);
+  --sage-green: hsl(90, 20%, 75%);
+  --warm-beige: hsl(30, 25%, 92%);
+  --charcoal: hsl(210, 15%, 15%);
+  --light-gold: hsl(45, 30%, 85%);
   
   --font-serif: 'Playfair Display', serif;
   --font-sans: 'Inter', sans-serif;
