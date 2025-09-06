@@ -8,6 +8,7 @@ import { MaintenanceMode } from "@/components/maintenance-mode";
 import { AdminPanel } from "@/components/admin-panel";
 import { weddingConfig } from "@/config/wedding-config";
 import Home from "@/pages/home";
+import PhotosPage from "@/pages/photos";
 import NotFound from "@/pages/not-found";
 import LoadingScreen from "@/components/loading-screen";
 
@@ -15,6 +16,7 @@ function Router() {
   return (
     <Switch>
       <Route path="/" component={Home} />
+      <Route path="/photos" component={PhotosPage} />
       <Route path="/admin" component={AdminPanel} />
       <Route component={NotFound} />
     </Switch>
