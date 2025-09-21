@@ -5,7 +5,7 @@ import React, { useEffect } from 'react';
  */
 export const ArmenianFontProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   useEffect(() => {
-    console.log('🔧 ArmenianFontProvider: Initializing...');
+    let hasLogged = false;
     
     // Armenian text detection
     const armenianRegex = /[\u0530-\u058F\uFB13-\uFB17]/;
@@ -27,7 +27,11 @@ export const ArmenianFontProvider: React.FC<{ children: React.ReactNode }> = ({ 
         }
       });
       
-      console.log(`🔧 Forced Armenian fonts on ${processed} elements`);
+      // Only log once and only in development
+      if (process.env.NODE_ENV === 'development' && !hasLogged && processed > 0) {
+        console.log('🔧 ArmenianFontProvider: Initialized with', processed, 'elements');
+        hasLogged = true;
+      }
       return processed;
     }
     
@@ -89,7 +93,9 @@ export const ArmenianFontProvider: React.FC<{ children: React.ReactNode }> = ({ 
     // Add global class to body
     document.body.classList.add('armenian-optimized');
 
-    // Monitor for new content
+    // Monitor for new content (throttled)
+    let updateTimeout: NodeJS.Timeout | null = null;
+    
     const observer = new MutationObserver((mutations) => {
       let needsUpdate = false;
       
@@ -106,8 +112,11 @@ export const ArmenianFontProvider: React.FC<{ children: React.ReactNode }> = ({ 
         }
       });
       
-      if (needsUpdate) {
-        setTimeout(forceArmenianFonts, 10);
+      if (needsUpdate && !updateTimeout) {
+        updateTimeout = setTimeout(() => {
+          forceArmenianFonts();
+          updateTimeout = null;
+        }, 100); // Throttle updates
       }
     });
 
@@ -117,14 +126,15 @@ export const ArmenianFontProvider: React.FC<{ children: React.ReactNode }> = ({ 
       characterData: true
     });
 
-    // Apply fonts periodically for the first few seconds
-    const intervals = [100, 500, 1000, 2000];
-    intervals.forEach((delay) => {
-      setTimeout(forceArmenianFonts, delay);
-    });
+    // Apply fonts initially and once more after a delay
+    forceArmenianFonts();
+    setTimeout(forceArmenianFonts, 500);
 
     // Cleanup function
     return () => {
+      if (updateTimeout) {
+        clearTimeout(updateTimeout);
+      }
       const styleElement = document.getElementById(styleId);
       if (styleElement) {
         styleElement.remove();

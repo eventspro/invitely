@@ -12,8 +12,6 @@
     <meta name="msapplication-navbutton-color" content="#F8F6F1" />
     
     <!-- Preload critical resources -->
-    <link rel="preload" href="/src/main.tsx" as="script" />
-    <link rel="preload" href="/src/App.tsx" as="script" />
     <link rel="dns-prefetch" href="//fonts.googleapis.com" />
     <link rel="dns-prefetch" href="//fonts.gstatic.com" />
     
@@ -85,26 +83,6 @@
         visibility: visible !important;
       }
     </style>
-    
-    <!-- Emergency Armenian font fix - Load immediately -->
-    <script src="/armenian-fix.js"></script>
-    
-    <!-- Font loading detection script -->
-    <script>
-      (function() {
-        console.log('🔧 Simple Armenian Font Fix');
-        
-        // Ensure content is visible immediately
-        document.documentElement.style.visibility = 'visible';
-        document.body.style.visibility = 'visible';
-        
-        // Remove any font loading classes that hide content
-        document.documentElement.classList.remove('font-loading');
-        document.documentElement.classList.add('fonts-loaded');
-        
-        console.log('✅ Content visibility ensured');
-      })();
-    </script>
   </head>
   <body>
     <div id="root"></div>

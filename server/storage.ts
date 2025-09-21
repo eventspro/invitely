@@ -7,7 +7,9 @@ import {
   type InsertTemplate,
   type UpdateTemplate,
   type Image,
+  type LegacyUser,
   users, 
+  managementUsers,
   rsvps, 
   settings,
   templates,
@@ -57,19 +59,19 @@ export interface IStorage {
 export class DatabaseStorage implements IStorage {
   // User management
   async getUser(id: string): Promise<User | undefined> {
-    const [user] = await db.select().from(users).where(eq(users.id, id));
+    const [user] = await db.select().from(managementUsers).where(eq(managementUsers.id, id));
     return user || undefined;
   }
 
   async getUserByUsername(username: string): Promise<User | undefined> {
-    const [user] = await db.select().from(users).where(eq(users.username, username));
+    const [user] = await db.select().from(managementUsers).where(eq(managementUsers.email, username));
     return user || undefined;
   }
 
   async createUser(insertUser: InsertUser): Promise<User> {
     const [user] = await db
-      .insert(users)
-      .values(insertUser)
+      .insert(managementUsers)
+      .values(insertUser as any)
       .returning();
     return user;
   }
@@ -138,7 +140,7 @@ export class DatabaseStorage implements IStorage {
     const [rsvp] = await db
       .select()
       .from(rsvps)
-      .where(eq(rsvps.email, email) && eq(rsvps.templateId, templateId));
+      .where(and(eq(rsvps.email, email), eq(rsvps.templateId, templateId)));
     return rsvp || undefined;
   }
 
@@ -186,18 +188,19 @@ export class DatabaseStorage implements IStorage {
 
   // Settings (template-scoped)
   async getMaintenanceStatus(templateId?: string): Promise<boolean> {
-    if (templateId) {
-      // Check template-specific maintenance
-      const template = await this.getTemplate(templateId);
-      return template?.maintenance || false;
+    try {
+      if (templateId) {
+        // Check template-specific maintenance
+        const template = await this.getTemplate(templateId);
+        return template?.maintenance || false;
+      }
+      
+      // Global maintenance check (legacy) - simplified to always return false
+      return false;
+    } catch (error) {
+      console.warn('Maintenance status check failed, defaulting to false:', error);
+      return false;
     }
-    
-    // Global maintenance check (legacy)
-    const [setting] = await db
-      .select()
-      .from(settings)
-      .where(eq(settings.key, 'maintenance_enabled'));
-    return setting ? setting.value === 'true' : false;
   }
 
   async setMaintenanceStatus(enabled: boolean, templateId?: string): Promise<void> {

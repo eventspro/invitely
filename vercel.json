@@ -1,18 +1,11 @@
 {
   "version": 2,
+  "functions": {
+    "api/**/*.ts": {
+      "runtime": "@vercel/node"
+    }
+  },
   "builds": [
-    {
-      "src": "server/index.ts",
-      "use": "@vercel/node",
-      "config": {
-        "includeFiles": [
-          "server/**",
-          "shared/**",
-          "dist/public/**",
-          "attached_assets/**"
-        ]
-      }
-    },
     {
       "src": "package.json",
       "use": "@vercel/static-build",
@@ -23,16 +16,12 @@
   ],
   "routes": [
     {
-      "src": "/api/(.*)",
-      "dest": "/server/index.ts"
+      "src": "/manifest.json",
+      "dest": "/dist/public/manifest.json"
     },
     {
-      "src": "/health",
-      "dest": "/server/index.ts"
-    },
-    {
-      "src": "/uploads/(.*)",
-      "dest": "/server/index.ts"
+      "src": "/favicon.png",
+      "dest": "/dist/public/favicon.png"
     },
     {
       "src": "/attached_assets/(.*)",
@@ -41,50 +30,6 @@
     {
       "src": "/(.*)",
       "dest": "/dist/public/$1"
-    }
-  ],
-  "functions": {
-    "server/index.ts": {
-      "maxDuration": 30
-    }
-  },
-  "env": {
-    "NODE_ENV": "production"
-  },
-  "headers": [
-    {
-      "source": "/api/(.*)",
-      "headers": [
-        {
-          "key": "Access-Control-Allow-Origin",
-          "value": "*"
-        },
-        {
-          "key": "Access-Control-Allow-Methods",
-          "value": "GET, POST, PUT, DELETE, OPTIONS"
-        },
-        {
-          "key": "Access-Control-Allow-Headers",
-          "value": "Content-Type, Authorization"
-        }
-      ]
-    },
-    {
-      "source": "/(.*)",
-      "headers": [
-        {
-          "key": "X-Frame-Options",
-          "value": "DENY"
-        },
-        {
-          "key": "X-Content-Type-Options",
-          "value": "nosniff"
-        },
-        {
-          "key": "Referrer-Policy",
-          "value": "origin-when-cross-origin"
-        }
-      ]
     }
   ]
 }
