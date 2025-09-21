@@ -1,0 +1,592 @@
+<!DOCTYPE html>
+<html lang="hy" dir="ltr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Հարության և Տաթևի Հարսանիք</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/js/all.min.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600;700&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        cream: '#FAF7F2',
+                        softGold: '#D4AF37',
+                        sageGreen: '#9CAF88',
+                        warmBeige: '#E6D7C3',
+                        charcoal: '#2D2D2D',
+                        lightGold: '#F4E4BC'
+                    },
+                    fontFamily: {
+                        'serif': ['Playfair Display', 'serif'],
+                        'sans': ['Inter', 'sans-serif']
+                    },
+                    animation: {
+                        'fade-in': 'fadeIn 1s ease-in-out',
+                        'slide-up': 'slideUp 0.8s ease-out',
+                        'bounce-gentle': 'bounceGentle 2s infinite'
+                    }
+                }
+            }
+        };
+    </script>
+    <style>
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        @keyframes slideUp {
+            from { opacity: 0; transform: translateY(30px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        @keyframes bounceGentle {
+            0%, 20%, 50%, 80%, 100% { transform: translateY(0); }
+            40% { transform: translateY(-10px); }
+            60% { transform: translateY(-5px); }
+        }
+        
+        .scroll-smooth { scroll-behavior: smooth; }
+        
+        .ornament {
+            background-image: url("data:image/svg+xml,%3Csvg width='40' height='20' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M20 10 L10 5 L15 10 L10 15 L20 10 L30 15 L25 10 L30 5 Z' fill='%23D4AF37' opacity='0.6'/%3E%3C/svg%3E");
+            background-repeat: no-repeat;
+            background-position: center;
+        }
+    </style>
+</head>
+<body class="bg-cream text-charcoal font-sans scroll-smooth">
+    
+    <!-- Navigation -->
+    <nav class="fixed top-0 w-full bg-cream/95 backdrop-blur-sm z-50 shadow-sm transition-all duration-300">
+        <div class="max-w-6xl mx-auto px-4 py-4">
+            <div class="flex justify-center space-x-8">
+                <a href="#hero" class="text-charcoal hover:text-softGold transition-colors duration-300 font-medium">Գլխավոր</a>
+                <a href="#countdown" class="text-charcoal hover:text-softGold transition-colors duration-300 font-medium">Հաշվարկ</a>
+                <a href="#calendar" class="text-charcoal hover:text-softGold transition-colors duration-300 font-medium">Օրացույց</a>
+                <a href="#locations" class="text-charcoal hover:text-softGold transition-colors duration-300 font-medium">Վայրեր</a>
+                <a href="#timeline" class="text-charcoal hover:text-softGold transition-colors duration-300 font-medium">Ծրագիր</a>
+                <a href="#rsvp" class="text-charcoal hover:text-softGold transition-colors duration-300 font-medium">Հաստատում</a>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Hero Section -->
+    <section id="hero" class="min-h-screen flex items-center justify-center relative overflow-hidden pt-20">
+        <!-- Background decorative elements -->
+        <div class="absolute inset-0 bg-gradient-to-br from-lightGold/20 to-sageGreen/10"></div>
+        <div class="absolute top-20 left-10 w-32 h-32 bg-softGold/10 rounded-full blur-xl"></div>
+        <div class="absolute bottom-20 right-10 w-40 h-40 bg-sageGreen/10 rounded-full blur-xl"></div>
+        
+        <div class="max-w-4xl mx-auto px-4 text-center relative z-10 animate-fade-in">
+            <div class="ornament w-full h-8 mb-8"></div>
+            
+            <!-- Couple Images -->
+            <div class="flex justify-center mb-8 space-x-6">
+                <!-- Elegant romantic couple portraits -->
+                <img src="https://pixabay.com/get/g8ee78960c2d31ceca99af9bffd5e141f01182ae5111b20e729e160dfebe201d0c24b44380fa258a6a566b5b606e4eb4aab2fd4d3e518a51a6a7383995d378db6_1280.jpg" 
+                     alt="Հարություն" 
+                     class="w-32 h-40 md:w-40 md:h-52 object-cover rounded-lg shadow-lg ring-4 ring-softGold/30 transform hover:scale-105 transition-transform duration-300" />
+                <img src="https://pixabay.com/get/g8ee78960c2d31ceca99af9bffd5e141f01182ae5111b20e729e160dfebe201d0c24b44380fa258a6a566b5b606e4eb4aab2fd4d3e518a51a6a7383995d378db6_1280.jpg" 
+                     alt="Տաթև" 
+                     class="w-32 h-40 md:w-40 md:h-52 object-cover rounded-lg shadow-lg ring-4 ring-softGold/30 transform hover:scale-105 transition-transform duration-300" />
+            </div>
+            
+            <h1 class="text-4xl md:text-6xl font-serif font-bold text-charcoal mb-4">Հարություն & Տաթև</h1>
+            <p class="text-xl md:text-2xl text-charcoal/80 mb-8 font-light">Հարսանեկան հրավիրատոմս</p>
+            <p class="text-lg md:text-xl text-charcoal/70 max-w-2xl mx-auto leading-relaxed">
+                Մեզ համար մեծ պատիվ կլինի տեսնել ձեզ մեր կյանքի այս կարևոր օրվա կիսելիս:
+                Գալիս ենք միասին տոնել սերն ու երջանկությունը:
+            </p>
+            
+            <!-- Music Player -->
+            <div class="mt-8 flex justify-center">
+                <button id="musicToggle" class="bg-softGold hover:bg-softGold/90 text-white px-6 py-3 rounded-full shadow-lg transition-all duration-300 flex items-center space-x-2">
+                    <i class="fas fa-play" id="playIcon"></i>
+                    <span>Երաժշտություն</span>
+                </button>
+            </div>
+            
+            <div class="ornament w-full h-8 mt-8"></div>
+        </div>
+    </section>
+
+    <!-- Countdown Timer -->
+    <section id="countdown" class="py-20 bg-gradient-to-r from-warmBeige/30 to-lightGold/20">
+        <div class="max-w-4xl mx-auto px-4 text-center">
+            <h2 class="text-3xl md:text-4xl font-serif font-bold text-charcoal mb-4">Մինչև մեր հարսանիքը</h2>
+            <div class="ornament w-full h-8 mb-12"></div>
+            
+            <div class="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-8" id="countdown-timer">
+                <div class="bg-white rounded-lg shadow-lg p-6 transform hover:scale-105 transition-transform duration-300">
+                    <div class="text-3xl md:text-4xl font-bold text-softGold" id="days">00</div>
+                    <div class="text-charcoal/70 font-medium">Օրեր</div>
+                </div>
+                <div class="bg-white rounded-lg shadow-lg p-6 transform hover:scale-105 transition-transform duration-300">
+                    <div class="text-3xl md:text-4xl font-bold text-softGold" id="hours">00</div>
+                    <div class="text-charcoal/70 font-medium">Ժամեր</div>
+                </div>
+                <div class="bg-white rounded-lg shadow-lg p-6 transform hover:scale-105 transition-transform duration-300">
+                    <div class="text-3xl md:text-4xl font-bold text-softGold" id="minutes">00</div>
+                    <div class="text-charcoal/70 font-medium">Րոպեներ</div>
+                </div>
+                <div class="bg-white rounded-lg shadow-lg p-6 transform hover:scale-105 transition-transform duration-300">
+                    <div class="text-3xl md:text-4xl font-bold text-softGold" id="seconds">00</div>
+                    <div class="text-charcoal/70 font-medium">Վայրկյաններ</div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Calendar Section -->
+    <section id="calendar" class="py-20">
+        <div class="max-w-4xl mx-auto px-4 text-center">
+            <h2 class="text-3xl md:text-4xl font-serif font-bold text-charcoal mb-4">Օրացույց</h2>
+            <div class="ornament w-full h-8 mb-12"></div>
+            
+            <div class="bg-white rounded-xl shadow-xl p-8 max-w-md mx-auto">
+                <div class="text-2xl font-serif font-bold text-charcoal mb-6">Մարտ 2024</div>
+                
+                <div class="grid grid-cols-7 gap-2 mb-4">
+                    <div class="text-charcoal/60 font-medium py-2">Կ</div>
+                    <div class="text-charcoal/60 font-medium py-2">Ե</div>
+                    <div class="text-charcoal/60 font-medium py-2">Ե</div>
+                    <div class="text-charcoal/60 font-medium py-2">Չ</div>
+                    <div class="text-charcoal/60 font-medium py-2">Հ</div>
+                    <div class="text-charcoal/60 font-medium py-2">Ո</div>
+                    <div class="text-charcoal/60 font-medium py-2">Շ</div>
+                    
+                    <!-- Calendar dates -->
+                    <div class="py-2"></div>
+                    <div class="py-2"></div>
+                    <div class="py-2"></div>
+                    <div class="py-2"></div>
+                    <div class="py-2"></div>
+                    <div class="py-2 text-charcoal/40">1</div>
+                    <div class="py-2 text-charcoal/40">2</div>
+                    
+                    <div class="py-2 text-charcoal/40">3</div>
+                    <div class="py-2 text-charcoal/40">4</div>
+                    <div class="py-2 text-charcoal/40">5</div>
+                    <div class="py-2 text-charcoal/40">6</div>
+                    <div class="py-2 text-charcoal/40">7</div>
+                    <div class="py-2 text-charcoal/40">8</div>
+                    <div class="py-2 text-charcoal/40">9</div>
+                    
+                    <div class="py-2 text-charcoal/40">10</div>
+                    <div class="py-2 text-charcoal/40">11</div>
+                    <div class="py-2 text-charcoal/40">12</div>
+                    <div class="py-2 text-charcoal/40">13</div>
+                    <div class="py-2 text-charcoal/40">14</div>
+                    <!-- Wedding date with heart -->
+                    <div class="py-2 bg-softGold text-white rounded-full relative">
+                        15
+                        <i class="fas fa-heart absolute -top-1 -right-1 text-red-500 text-xs"></i>
+                    </div>
+                    <div class="py-2 text-charcoal/40">16</div>
+                    
+                    <div class="py-2 text-charcoal/40">17</div>
+                    <div class="py-2 text-charcoal/40">18</div>
+                    <div class="py-2 text-charcoal/40">19</div>
+                    <div class="py-2 text-charcoal/40">20</div>
+                    <div class="py-2 text-charcoal/40">21</div>
+                    <div class="py-2 text-charcoal/40">22</div>
+                    <div class="py-2 text-charcoal/40">23</div>
+                    
+                    <div class="py-2 text-charcoal/40">24</div>
+                    <div class="py-2 text-charcoal/40">25</div>
+                    <div class="py-2 text-charcoal/40">26</div>
+                    <div class="py-2 text-charcoal/40">27</div>
+                    <div class="py-2 text-charcoal/40">28</div>
+                    <div class="py-2 text-charcoal/40">29</div>
+                    <div class="py-2 text-charcoal/40">30</div>
+                    
+                    <div class="py-2 text-charcoal/40">31</div>
+                </div>
+                
+                <div class="text-charcoal/70 mt-4">
+                    <p class="font-medium">Մարտ 15, 2024</p>
+                    <p class="text-sm">Հարության և Տաթևի հարսանիք</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Locations -->
+    <section id="locations" class="py-20 bg-gradient-to-r from-sageGreen/10 to-warmBeige/20">
+        <div class="max-w-6xl mx-auto px-4">
+            <div class="text-center mb-16">
+                <h2 class="text-3xl md:text-4xl font-serif font-bold text-charcoal mb-4">Վայրեր</h2>
+                <div class="ornament w-full h-8"></div>
+            </div>
+            
+            <div class="grid md:grid-cols-2 gap-8">
+                <!-- Church Location -->
+                <div class="bg-white rounded-xl shadow-xl overflow-hidden transform hover:scale-105 transition-transform duration-300">
+                    <!-- Beautiful church interior -->
+                    <img src="https://pixabay.com/get/g9174f672284ce7238896e33ef9bc4a5db3d454f7b92b5ae32daf50997c5de8b81c62ebc6b36164e45f66857608aac481231857365db440c0d13855728f2e7778_1280.jpg" 
+                         alt="Եկեղեցի" 
+                         class="w-full h-48 object-cover" />
+                    <div class="p-6">
+                        <div class="flex items-center mb-4">
+                            <i class="fas fa-church text-softGold text-2xl mr-3"></i>
+                            <h3 class="text-xl font-serif font-bold text-charcoal">Եկեղեցի</h3>
+                        </div>
+                        <p class="text-charcoal/70 mb-4">Սուրբ Գրիգոր Լուսավորիչ Եկեղեցի</p>
+                        <p class="text-charcoal/60 text-sm mb-4">Պսակադրության արարողություն</p>
+                        <button onclick="openMap('church')" class="bg-softGold hover:bg-softGold/90 text-white px-4 py-2 rounded-lg transition-colors duration-300 flex items-center">
+                            <i class="fas fa-map-marker-alt mr-2"></i>
+                            Քարտեզ
+                        </button>
+                    </div>
+                </div>
+                
+                <!-- Restaurant Location -->
+                <div class="bg-white rounded-xl shadow-xl overflow-hidden transform hover:scale-105 transition-transform duration-300">
+                    <!-- Elegant restaurant dining room -->
+                    <img src="https://images.unsplash.com/photo-1555396273-367ea4eb4db5?ixlib=rb-4.0.3&auto=format&fit=crop&w=600&h=300" 
+                         alt="Ռեստորան" 
+                         class="w-full h-48 object-cover" />
+                    <div class="p-6">
+                        <div class="flex items-center mb-4">
+                            <i class="fas fa-utensils text-softGold text-2xl mr-3"></i>
+                            <h3 class="text-xl font-serif font-bold text-charcoal">Ռեստորան</h3>
+                        </div>
+                        <p class="text-charcoal/70 mb-4">Արարատ Ռեստորան</p>
+                        <p class="text-charcoal/60 text-sm mb-4">Ընդունելության և տոնակատարության վայր</p>
+                        <button onclick="openMap('restaurant')" class="bg-softGold hover:bg-softGold/90 text-white px-4 py-2 rounded-lg transition-colors duration-300 flex items-center">
+                            <i class="fas fa-map-marker-alt mr-2"></i>
+                            Քարտեզ
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Timeline -->
+    <section id="timeline" class="py-20">
+        <div class="max-w-4xl mx-auto px-4">
+            <div class="text-center mb-16">
+                <h2 class="text-3xl md:text-4xl font-serif font-bold text-charcoal mb-4">Օրվա ծրագիր</h2>
+                <div class="ornament w-full h-8"></div>
+            </div>
+            
+            <div class="space-y-6">
+                <div class="flex items-center bg-white rounded-lg shadow-lg p-6 transform hover:scale-105 transition-transform duration-300">
+                    <div class="bg-softGold rounded-full p-4 mr-6">
+                        <i class="fas fa-church text-white text-xl"></i>
+                    </div>
+                    <div class="flex-1">
+                        <div class="text-xl font-bold text-charcoal">15:00</div>
+                        <div class="text-charcoal/70">Պսակադրություն</div>
+                        <div class="text-charcoal/50 text-sm">Սուրբ Գրիգոր Լուսավորիչ Եկեղեցի</div>
+                    </div>
+                </div>
+                
+                <div class="flex items-center bg-white rounded-lg shadow-lg p-6 transform hover:scale-105 transition-transform duration-300">
+                    <div class="bg-sageGreen rounded-full p-4 mr-6">
+                        <i class="fas fa-champagne-glasses text-white text-xl"></i>
+                    </div>
+                    <div class="flex-1">
+                        <div class="text-xl font-bold text-charcoal">17:00</div>
+                        <div class="text-charcoal/70">Ընդունելություն</div>
+                        <div class="text-charcoal/50 text-sm">Շնորհավորություններ և լուսանկարահանում</div>
+                    </div>
+                </div>
+                
+                <div class="flex items-center bg-white rounded-lg shadow-lg p-6 transform hover:scale-105 transition-transform duration-300">
+                    <div class="bg-softGold rounded-full p-4 mr-6">
+                        <i class="fas fa-utensils text-white text-xl"></i>
+                    </div>
+                    <div class="flex-1">
+                        <div class="text-xl font-bold text-charcoal">19:00</div>
+                        <div class="text-charcoal/70">Ճաշկերույթ</div>
+                        <div class="text-charcoal/50 text-sm">Տոնական ծրագիր և ընթրիք</div>
+                    </div>
+                </div>
+                
+                <div class="flex items-center bg-white rounded-lg shadow-lg p-6 transform hover:scale-105 transition-transform duration-300">
+                    <div class="bg-sageGreen rounded-full p-4 mr-6">
+                        <i class="fas fa-music text-white text-xl"></i>
+                    </div>
+                    <div class="flex-1">
+                        <div class="text-xl font-bold text-charcoal">21:00</div>
+                        <div class="text-charcoal/70">Պարում & տոնակատարություն</div>
+                        <div class="text-charcoal/50 text-sm">Երաժշտություն և պարային ծրագիր</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- RSVP Section -->
+    <section id="rsvp" class="py-20 bg-gradient-to-r from-lightGold/20 to-warmBeige/30">
+        <div class="max-w-2xl mx-auto px-4">
+            <div class="text-center mb-16">
+                <h2 class="text-3xl md:text-4xl font-serif font-bold text-charcoal mb-4">Հաստատել մասնակցությունը</h2>
+                <div class="ornament w-full h-8 mb-6"></div>
+                <p class="text-charcoal/70">Խնդրում ենք հաստատել ձեր մասնակցությունը մինչև մարտի 1-ը</p>
+            </div>
+            
+            <form id="rsvpForm" class="bg-white rounded-xl shadow-xl p-8">
+                <div class="space-y-6">
+                    <div class="grid md:grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-charcoal font-medium mb-2">Անուն</label>
+                            <input type="text" name="firstName" required class="w-full border border-charcoal/20 rounded-lg px-4 py-3 focus:border-softGold focus:outline-none transition-colors">
+                        </div>
+                        <div>
+                            <label class="block text-charcoal font-medium mb-2">Ազգանուն</label>
+                            <input type="text" name="lastName" required class="w-full border border-charcoal/20 rounded-lg px-4 py-3 focus:border-softGold focus:outline-none transition-colors">
+                        </div>
+                    </div>
+                    
+                    <div>
+                        <label class="block text-charcoal font-medium mb-2">Էլ․ հասցե</label>
+                        <input type="email" name="email" required class="w-full border border-charcoal/20 rounded-lg px-4 py-3 focus:border-softGold focus:outline-none transition-colors">
+                    </div>
+                    
+                    <div>
+                        <label class="block text-charcoal font-medium mb-2">Հյուրերի քանակ</label>
+                        <select name="guestCount" class="w-full border border-charcoal/20 rounded-lg px-4 py-3 focus:border-softGold focus:outline-none transition-colors">
+                            <option value="1">1 հյուր</option>
+                            <option value="2">2 հյուր</option>
+                            <option value="3">3 հյուր</option>
+                            <option value="4">4 հյուր</option>
+                            <option value="5+">5+ հյուր</option>
+                        </select>
+                    </div>
+                    
+                    <div>
+                        <label class="block text-charcoal font-medium mb-2">Հյուրերի անունները և ազգանունները</label>
+                        <textarea name="guestNames" rows="3" placeholder="Նշեք բոլոր հյուրերի անունները և ազգանունները" class="w-full border border-charcoal/20 rounded-lg px-4 py-3 focus:border-softGold focus:outline-none transition-colors"></textarea>
+                    </div>
+                    
+                    <div>
+                        <label class="block text-charcoal font-medium mb-2">Մասնակցություն</label>
+                        <div class="space-y-3">
+                            <label class="flex items-center">
+                                <input type="radio" name="attendance" value="attending" class="text-softGold mr-3">
+                                <span>Մասնակցում եմ</span>
+                            </label>
+                            <label class="flex items-center">
+                                <input type="radio" name="attendance" value="not-attending" class="text-softGold mr-3">
+                                <span>Չեմ մասնակցում</span>
+                            </label>
+                        </div>
+                    </div>
+                    
+                    <button type="submit" class="w-full bg-softGold hover:bg-softGold/90 text-white py-4 rounded-lg font-medium transition-colors duration-300 transform hover:scale-105">
+                        Ուղարկել հաստատումը
+                    </button>
+                </div>
+            </form>
+        </div>
+    </section>
+
+    <!-- Photo Sharing -->
+    <section class="py-20">
+        <div class="max-w-4xl mx-auto px-4 text-center">
+            <h2 class="text-3xl md:text-4xl font-serif font-bold text-charcoal mb-4">Նկարների հավաքածու</h2>
+            <div class="ornament w-full h-8 mb-12"></div>
+            
+            <div class="bg-white rounded-xl shadow-xl p-8">
+                <!-- Beautiful wedding photo collage -->
+                <img src="https://images.unsplash.com/photo-1520854221256-17451cc331bf?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&h=400" 
+                     alt="Հարսանեկան նկարներ" 
+                     class="w-full h-64 object-cover rounded-lg mb-6" />
+                
+                <p class="text-charcoal/70 mb-6">Բոլոր հարսանեկան նկարները հասանելի կլինեն արարողությունից հետո</p>
+                
+                <button onclick="openPhotoGallery()" class="bg-sageGreen hover:bg-sageGreen/90 text-white px-8 py-4 rounded-lg font-medium transition-colors duration-300 transform hover:scale-105">
+                    <i class="fas fa-download mr-2"></i>
+                    Ներբեռնել նկարները
+                </button>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="bg-charcoal text-white py-12">
+        <div class="max-w-4xl mx-auto px-4 text-center">
+            <div class="ornament w-full h-8 mb-8 opacity-50"></div>
+            <h3 class="text-2xl font-serif font-bold mb-4">Հարություն & Տաթև</h3>
+            <p class="text-white/70 mb-6">Շնորհակալություն մեզ հետ այս հատուկ օրը կիսելու համար</p>
+            <p class="text-white/50 text-sm">Մարտ 15, 2024</p>
+        </div>
+    </footer>
+
+    <!-- Map Modal -->
+    <div id="mapModal" class="fixed inset-0 bg-black/50 z-50 hidden flex items-center justify-center p-4">
+        <div class="bg-white rounded-xl max-w-4xl w-full max-h-[90vh] overflow-hidden">
+            <div class="p-6 border-b flex justify-between items-center">
+                <h3 id="mapTitle" class="text-xl font-bold text-charcoal"></h3>
+                <button onclick="closeMap()" class="text-charcoal/50 hover:text-charcoal">
+                    <i class="fas fa-times text-xl"></i>
+                </button>
+            </div>
+            <div id="mapContainer" class="h-96">
+                <!-- Google Map will be embedded here -->
+                <div class="w-full h-full bg-gray-200 flex items-center justify-center text-charcoal/50">
+                    <i class="fas fa-map-marked-alt text-4xl"></i>
+                    <span class="ml-4">Google Maps կտեղադրվի այստեղ</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Scroll to Top Button -->
+    <button id="scrollToTop" class="fixed bottom-8 right-8 bg-softGold hover:bg-softGold/90 text-white p-4 rounded-full shadow-lg transition-all duration-300 transform scale-0 animate-bounce-gentle">
+        <i class="fas fa-arrow-up"></i>
+    </button>
+
+    <script>
+        (function() {
+            // Wedding date - March 15, 2024
+            const weddingDate = new Date('2024-03-15T15:00:00').getTime();
+
+            // Countdown Timer
+            function updateCountdown() {
+                const now = new Date().getTime();
+                const timeLeft = weddingDate - now;
+
+                const days = Math.floor(timeLeft / (1000 * 60 * 60 * 24));
+                const hours = Math.floor((timeLeft % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+                const minutes = Math.floor((timeLeft % (1000 * 60 * 60)) / (1000 * 60));
+                const seconds = Math.floor((timeLeft % (1000 * 60)) / 1000);
+
+                document.getElementById('days').textContent = days.toString().padStart(2, '0');
+                document.getElementById('hours').textContent = hours.toString().padStart(2, '0');
+                document.getElementById('minutes').textContent = minutes.toString().padStart(2, '0');
+                document.getElementById('seconds').textContent = seconds.toString().padStart(2, '0');
+            }
+
+            // Update countdown every second
+            updateCountdown();
+            setInterval(updateCountdown, 1000);
+
+            // Music Player
+            let isPlaying = false;
+            const musicToggle = document.getElementById('musicToggle');
+            const playIcon = document.getElementById('playIcon');
+
+            musicToggle.addEventListener('click', function() {
+                isPlaying = !isPlaying;
+                if (isPlaying) {
+                    playIcon.className = 'fas fa-pause';
+                    // TODO: Implement actual music playback
+                } else {
+                    playIcon.className = 'fas fa-play';
+                    // TODO: Pause music
+                }
+            });
+
+            // RSVP Form
+            document.getElementById('rsvpForm').addEventListener('submit', function(e) {
+                e.preventDefault();
+                
+                const formData = new FormData(this);
+                const rsvpData = {
+                    firstName: formData.get('firstName'),
+                    lastName: formData.get('lastName'),
+                    email: formData.get('email'),
+                    guestCount: formData.get('guestCount'),
+                    guestNames: formData.get('guestNames'),
+                    attendance: formData.get('attendance')
+                };
+
+                // TODO: Send email to harutavetisyan0@gmail.com and tatevhovsepyan22@gmail.com
+                // TODO: Send confirmation email to guest
+                
+                alert('Շնորհակալություն! Ձեր հաստատումը ստացվել է:');
+                this.reset();
+            });
+
+            // Scroll to Top Button
+            const scrollToTopBtn = document.getElementById('scrollToTop');
+
+            window.addEventListener('scroll', function() {
+                if (window.pageYOffset > 300) {
+                    scrollToTopBtn.classList.remove('scale-0');
+                    scrollToTopBtn.classList.add('scale-100');
+                } else {
+                    scrollToTopBtn.classList.remove('scale-100');
+                    scrollToTopBtn.classList.add('scale-0');
+                }
+            });
+
+            scrollToTopBtn.addEventListener('click', function() {
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+            });
+
+            // Smooth scroll for navigation links
+            document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+                anchor.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    const target = document.querySelector(this.getAttribute('href'));
+                    if (target) {
+                        target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                    }
+                });
+            });
+
+            // Animation on scroll
+            const observerOptions = {
+                threshold: 0.1,
+                rootMargin: '0px 0px -50px 0px'
+            };
+
+            const observer = new IntersectionObserver(function(entries) {
+                entries.forEach(entry => {
+                    if (entry.isIntersecting) {
+                        entry.target.classList.add('animate-slide-up');
+                    }
+                });
+            }, observerOptions);
+
+            document.querySelectorAll('section').forEach(section => {
+                observer.observe(section);
+            });
+        })();
+
+        // Map Modal Functions
+        function openMap(location) {
+            const modal = document.getElementById('mapModal');
+            const title = document.getElementById('mapTitle');
+            
+            if (location === 'church') {
+                title.textContent = 'Սուրբ Գրիգոր Լուսավորիչ Եկեղեցի';
+                // TODO: Load actual Google Map for church location
+            } else if (location === 'restaurant') {
+                title.textContent = 'Արարատ Ռեստորան';
+                // TODO: Load actual Google Map for restaurant location
+            }
+            
+            modal.classList.remove('hidden');
+            document.body.style.overflow = 'hidden';
+        }
+
+        function closeMap() {
+            const modal = document.getElementById('mapModal');
+            modal.classList.add('hidden');
+            document.body.style.overflow = 'auto';
+        }
+
+        function openPhotoGallery() {
+            // TODO: Open Google Drive or Yandex Disk link
+            alert('Նկարների հղումը կհասանելի լինի հարսանիքից հետո');
+        }
+
+        // Close modal when clicking outside
+        document.getElementById('mapModal').addEventListener('click', function(e) {
+            if (e.target === this) {
+                closeMap();
+            }
+        });
+    </script>
+</body>
+</html>

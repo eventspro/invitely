@@ -194,3 +194,143 @@ export async function sendRsvpConfirmationEmail(rsvp: Rsvp): Promise<boolean> {
     return false;
   }
 }
+
+// Template-scoped email functions
+export async function sendTemplateRsvpNotificationEmails(rsvp: Rsvp, template: any): Promise<boolean> {
+  const resend = getResendInstance();
+  if (!resend) {
+    console.log("Email service not configured. Skipping template RSVP notification emails.");
+    return false;
+  }
+
+  try {
+    const config = template.config as any;
+    const couple = config.couple || {};
+    const wedding = config.wedding || {};
+    const email = config.email || {};
+    
+    // Use template-specific emails or fallback to couple emails
+    const recipientEmails = email.recipients || [
+      "harutavetisyan0@gmail.com",
+      "tatevhovsepyan22@gmail.com"
+    ];
+    
+    const coupleNames = couple.combinedNames || `${couple.groomName || "Groom"} & ${couple.brideName || "Bride"}`;
+    const weddingDate = wedding.displayDate || wedding.date || "Wedding Day";
+    
+    const attendanceText = rsvp.attendance === "attending" ? "Կգա" : "Չի գալիս";
+    const guestInfo = rsvp.guestNames ? `\nՀյուրեր: ${rsvp.guestNames}` : "";
+
+    const emailPromises = recipientEmails.map((emailAddr: string) =>
+      resend.emails.send({
+        from: `${coupleNames} <onboarding@resend.dev>`,
+        to: emailAddr,
+        subject: `Նոր հաստատում հարսանիքի համար - ${rsvp.firstName} ${rsvp.lastName}`,
+        text: `Նոր RSVP հաստատում\n\nԱնուն: ${rsvp.firstName} ${rsvp.lastName}\nԷլ․ հասցե: ${rsvp.email}\nՀյուրերի քանակ: ${rsvp.guestCount}\nՄասնակցություն: ${attendanceText}${guestInfo}\n\nՀաստատվել է: ${rsvp.createdAt ? new Date(rsvp.createdAt).toLocaleString("hy-AM") : new Date().toLocaleString("hy-AM")}`,
+        html: `
+          <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; background-color: white;">
+            <h2 style="color: #333; text-align: center; font-weight: normal;">Նոր հաստատում ${coupleNames} հարսանիքի համար</h2>
+            
+            <div style="background-color: #f9f9f9; padding: 20px; border-radius: 8px; margin: 20px 0; border: 1px solid #e0e0e0;">
+              <h3 style="color: #333; margin-bottom: 15px; font-weight: normal;">Հյուրի տվյալներ</h3>
+              <p style="margin: 8px 0;"><strong>Անուն:</strong> ${rsvp.firstName} ${rsvp.lastName}</p>
+              <p style="margin: 8px 0;"><strong>Էլ․ հասցե:</strong> ${rsvp.email}</p>
+              <p style="margin: 8px 0;"><strong>Հյուրերի քանակ:</strong> ${rsvp.guestCount}</p>
+              <p style="margin: 8px 0;"><strong>Մասնակցություն:</strong> ${attendanceText}</p>
+              ${guestInfo}
+            </div>
+            
+            <div style="text-align: center; margin-top: 30px; padding-top: 20px; border-top: 1px solid #ddd;">
+              <p style="color: #666; font-size: 14px; margin: 0;">Հաստատվել է: ${rsvp.createdAt ? new Date(rsvp.createdAt).toLocaleString("hy-AM") : new Date().toLocaleString("hy-AM")}</p>
+              <p style="color: #666; font-size: 12px; margin-top: 10px;">Տեմփլեյթ: ${template.name || template.templateKey}</p>
+            </div>
+          </div>
+        `,
+      }),
+    );
+
+    const results = await Promise.allSettled(emailPromises);
+    const successCount = results.filter(result => result.status === "fulfilled").length;
+    
+    console.log(`Template RSVP notification emails sent: ${successCount}/${recipientEmails.length} for template ${template.id}`);
+    return successCount > 0;
+  } catch (error) {
+    console.error("Failed to send template RSVP notification emails:", error);
+    return false;
+  }
+}
+
+export async function sendTemplateRsvpConfirmationEmail(rsvp: Rsvp, template: any): Promise<boolean> {
+  const resend = getResendInstance();
+  if (!resend) {
+    console.log("Email service not configured. Skipping template RSVP confirmation email.");
+    return false;
+  }
+
+  try {
+    const config = template.config as any;
+    const couple = config.couple || {};
+    const wedding = config.wedding || {};
+    const locations = config.locations || [];
+    
+    const coupleNames = couple.combinedNames || `${couple.groomName || "Groom"} & ${couple.brideName || "Bride"}`;
+    const weddingDate = wedding.displayDate || wedding.date || "Wedding Day";
+    
+    const attendanceText = rsvp.attendance === "attending"
+      ? "Շատ ուրախ ենք, որ կգաք մեր հարսանիքին! 💕"
+      : "Ցավոք, որ չեք կարողանա գալ: Ցանկանում ենք ձեզ բարելավություն: 💙";
+
+    // Build location information from template config
+    let locationInfo = "";
+    if (rsvp.attendance === "attending" && locations.length > 0) {
+      locationInfo = locations.map((loc: any, index: number) => {
+        const emoji = index === 0 ? "📍" : "🍾";
+        return `
+          <h3 style="color: #E4A5B8; margin-bottom: 10px;">${emoji} ${loc.title || `Location ${index + 1}`}</h3>
+          <p><strong>${loc.name || "Venue"}</strong><br/>
+          ${loc.time ? `Ժամը ${loc.time}` : ""}${loc.address ? `<br/>${loc.address}` : ""}</p>
+        `;
+      }).join("");
+    }
+
+    await resend.emails.send({
+      from: `${coupleNames} <onboarding@resend.dev>`,
+      to: rsvp.email,
+      subject: `Ձեր հաստատումը ստացվել է - ${coupleNames} - ${weddingDate}`,
+      text: `Սիրելի ${rsvp.firstName},\n\nՇնորհակալություն ձեր հաստատման համար:\n\n${attendanceText}\n\n${rsvp.attendance === "attending" && locations.length > 0 ? locations.map((loc: any) => `${loc.title || "Venue"}: ${loc.name || "TBD"}${loc.time ? ` - ${loc.time}` : ""}`).join("\n") : ""}\n\nՀարգանքով,\n${coupleNames}`,
+      html: `
+        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
+          <div style="text-align: center; margin-bottom: 30px;">
+            <h1 style="color: #E4A5B8; font-style: italic;">${coupleNames}</h1>
+            <p style="color: #666; font-size: 18px;">${weddingDate}</p>
+          </div>
+          
+          <div style="background-color: #f9f9f9; padding: 25px; border-radius: 15px; text-align: center;">
+            <h2 style="color: #333; margin-bottom: 15px;">Շնորհակալություն ${rsvp.firstName}ը!</h2>
+            <p style="font-size: 16px; line-height: 1.6; color: #555;">${attendanceText}</p>
+            
+            ${rsvp.attendance === "attending" && locationInfo ? `
+              <div style="margin: 20px 0; padding: 15px; background-color: white; border-radius: 10px;">
+                ${locationInfo}
+              </div>
+              
+              <p style="color: #666; font-size: 14px; margin-top: 20px;">
+                Մենք սպասում ենք այս հատուկ օրը ձեզ հետ կիսելուն: 💐
+              </p>
+            ` : ""}
+          </div>
+          
+          <div style="text-align: center; margin-top: 20px; color: #999; font-size: 12px;">
+            <p>Հարգանքով, ${coupleNames}</p>
+          </div>
+        </div>
+      `,
+    });
+
+    console.log(`Template RSVP confirmation email sent to: ${rsvp.email} for template ${template.id}`);
+    return true;
+  } catch (error) {
+    console.error("Failed to send template RSVP confirmation email:", error);
+    return false;
+  }
+}

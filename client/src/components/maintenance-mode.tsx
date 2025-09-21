@@ -65,7 +65,7 @@ export function MaintenanceMode({ onPasswordCorrect }: MaintenanceModeProps) {
             <div className="bg-white/50 backdrop-blur-sm rounded-lg p-6 border border-gold-200 shadow-sm">
               <p className="text-sm text-charcoal-600 mb-2">{weddingConfig.maintenance.countdownText}</p>
               <div className="text-3xl font-bold text-gold-600">
-                {daysUntil} {weddingConfig.countdown.labels.days}
+                {daysUntil} {weddingConfig.countdown?.labels?.days}
               </div>
             </div>
           )}

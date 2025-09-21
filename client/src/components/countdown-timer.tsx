@@ -1,10 +1,15 @@
 import { useCountdown } from "@/hooks/use-countdown";
 import { weddingConfig } from "@/config/wedding-config";
+import { WeddingConfig } from "@/templates/types";
 import { useScrollAnimation, useStaggeredAnimation } from "@/hooks/use-scroll-animation";
 
-export default function CountdownTimer() {
+interface CountdownTimerProps {
+  config?: WeddingConfig;
+}
+
+export default function CountdownTimer({ config = weddingConfig }: CountdownTimerProps) {
   // Wedding date from configuration
-  const weddingDate = new Date(weddingConfig.wedding.date);
+  const weddingDate = new Date(config.wedding?.date || '2025-10-10');
   const { days, hours, minutes, seconds } = useCountdown(weddingDate);
   const titleRef = useScrollAnimation('animate-fade-in-scale');
   const countdownRef = useStaggeredAnimation(150);
@@ -27,15 +32,13 @@ export default function CountdownTimer() {
         <div ref={titleRef} className="mb-8 animate-on-scroll">
           <h2
             className="text-2xl md:text-3xl font-bold text-white mb-2"
-            data-testid="text-wedding-date"
           >
-            {weddingConfig.wedding.displayDate}
+            {config.wedding?.displayDate || 'Wedding Day'}
           </h2>
           <p
             className="text-white/80 text-sm md:text-base"
-            data-testid="text-wedding-subtitle"
           >
-            {weddingConfig.countdown.subtitle}
+            {config.countdown?.subtitle || 'Countdown to the big day'}
           </p>
         </div>
 
@@ -43,53 +46,48 @@ export default function CountdownTimer() {
         <div
           ref={countdownRef}
           className="flex justify-center items-center space-x-4 md:space-x-8"
-          data-testid="countdown-overlay"
         >
           <div className="text-center animate-on-scroll">
             <div
               className="text-4xl md:text-6xl font-bold text-white mb-1"
-              data-testid="countdown-days"
             >
               {days.toString().padStart(2, "0")}
             </div>
             <div className="text-white/90 text-sm md:text-base">
-              {weddingConfig.countdown.labels.days}
+              {config.countdown?.labels?.days || 'Days'}
             </div>
           </div>
 
           <div className="text-center animate-on-scroll">
             <div
               className="text-4xl md:text-6xl font-bold text-white mb-1"
-              data-testid="countdown-hours"
             >
               {hours.toString().padStart(2, "0")}
             </div>
             <div className="text-white/90 text-sm md:text-base">
-              {weddingConfig.countdown.labels.hours}
+              {config.countdown?.labels?.hours || 'Hours'}
             </div>
           </div>
 
           <div className="text-center animate-on-scroll">
             <div
               className="text-4xl md:text-6xl font-bold text-white mb-1"
-              data-testid="countdown-minutes"
             >
               {minutes.toString().padStart(2, "0")}
             </div>
             <div className="text-white/90 text-sm md:text-base">
-              {weddingConfig.countdown.labels.minutes}
+              {config.countdown?.labels?.minutes || 'Minutes'}
             </div>
           </div>
 
           <div className="text-center animate-on-scroll">
             <div
               className="text-4xl md:text-6xl font-bold text-white mb-1"
-              data-testid="countdown-seconds"
             >
               {seconds.toString().padStart(2, "0")}
             </div>
             <div className="text-white/90 text-sm md:text-base">
-              {weddingConfig.countdown.labels.seconds}
+              {config.countdown?.labels?.seconds || 'Seconds'}
             </div>
           </div>
         </div>

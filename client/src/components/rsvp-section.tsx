@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useForm } from "react-hook-form";
+import { useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useMutation } from "@tanstack/react-query";
 import { insertRsvpSchema, type InsertRsvp } from "@shared/schema";
@@ -13,9 +13,15 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Label } from "@/components/ui/label";
 import { weddingConfig } from "@/config/wedding-config";
+import { WeddingConfig } from "@/templates/types";
 import { useScrollAnimation } from "@/hooks/use-scroll-animation";
+import { getHeadingFont, getBodyFont } from "@/utils/font-utils";
 
-export default function RsvpSection() {
+interface RsvpSectionProps {
+  config?: WeddingConfig;
+}
+
+export default function RsvpSection({ config = weddingConfig }: RsvpSectionProps) {
   const { toast } = useToast();
   const titleRef = useScrollAnimation('animate-fade-in-scale');
   const formRef = useScrollAnimation('animate-slide-up');
@@ -58,20 +64,27 @@ export default function RsvpSection() {
   };
 
   return (
-    <section id="rsvp" className="py-12 sm:py-20 bg-gradient-to-r from-lightGold/20 to-warmBeige/30">
+    <section id="rsvp" className="py-12 sm:py-20" style={{
+      background: `linear-gradient(to right, ${config.theme?.colors?.accent || '#e8d5b7'}20 0%, ${config.theme?.colors?.background || '#faf5f0'}30 100%)`
+    }}>
       <div className="max-w-2xl mx-auto px-4 sm:px-6 lg:px-8">
         <div ref={titleRef} className="text-center mb-12 sm:mb-16 animate-on-scroll">
-          <h2 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl text-charcoal mb-6 sm:mb-8 leading-tight" 
+          <h2 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl mb-6 sm:mb-8 leading-tight" 
               style={{ 
-                fontFamily: 'Playfair Display, serif', 
-                fontWeight: '300'
+                fontFamily: getHeadingFont(config.theme?.fonts), 
+                fontWeight: '300',
+                color: config.theme?.colors?.primary || '#333333'
               }}
               data-testid="text-rsvp-title">
-            {weddingConfig.rsvp.title}
+            {config.rsvp?.title}
           </h2>
-          <div className="w-16 sm:w-24 h-0.5 bg-softGold mx-auto mb-6 sm:mb-8"></div>
-          <p className="text-charcoal/70 text-base sm:text-lg px-4" data-testid="text-rsvp-description">
-            {weddingConfig.rsvp.description}
+          <div className="w-16 sm:w-24 h-0.5 mx-auto mb-6 sm:mb-8" style={{
+            backgroundColor: config.theme?.colors?.accent || '#e8d5b7'
+          }}></div>
+          <p className="text-base sm:text-lg px-4" style={{
+            color: `${config.theme?.colors?.primary || '#333333'}70`
+          }} data-testid="text-rsvp-description">
+            {config.rsvp?.description}
           </p>
         </div>
         
@@ -84,10 +97,10 @@ export default function RsvpSection() {
                   name="firstName"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>{weddingConfig.rsvp.form.firstName}</FormLabel>
+                      <FormLabel>{config.rsvp?.form?.firstName}</FormLabel>
                       <FormControl>
                         <Input 
-                          placeholder={weddingConfig.rsvp.form.firstNamePlaceholder} 
+                          placeholder={config.rsvp?.form?.firstNamePlaceholder} 
                           {...field} 
                           data-testid="input-first-name"
                         />
@@ -101,10 +114,10 @@ export default function RsvpSection() {
                   name="lastName"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>{weddingConfig.rsvp.form.lastName}</FormLabel>
+                      <FormLabel>{config.rsvp?.form?.lastName}</FormLabel>
                       <FormControl>
                         <Input 
-                          placeholder={weddingConfig.rsvp.form.lastNamePlaceholder} 
+                          placeholder={config.rsvp?.form?.lastNamePlaceholder} 
                           {...field} 
                           data-testid="input-last-name"
                         />
@@ -120,11 +133,11 @@ export default function RsvpSection() {
                 name="email"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>{weddingConfig.rsvp.form.email}</FormLabel>
+                    <FormLabel>{config.rsvp?.form?.email}</FormLabel>
                     <FormControl>
                       <Input 
                         type="email"
-                        placeholder={weddingConfig.rsvp.form.emailPlaceholder} 
+                        placeholder={config.rsvp?.form?.emailPlaceholder} 
                         {...field} 
                         data-testid="input-email"
                       />
@@ -139,15 +152,15 @@ export default function RsvpSection() {
                 name="guestCount"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>{weddingConfig.rsvp.form.guestCount}</FormLabel>
+                    <FormLabel>{config.rsvp?.form?.guestCount}</FormLabel>
                     <Select onValueChange={field.onChange} value={field.value}>
                       <FormControl>
                         <SelectTrigger data-testid="select-guest-count">
-                          <SelectValue placeholder={weddingConfig.rsvp.form.guestCountPlaceholder} />
+                          <SelectValue placeholder={config.rsvp?.form?.guestCountPlaceholder} />
                         </SelectTrigger>
                       </FormControl>
                       <SelectContent>
-                        {weddingConfig.rsvp.guestOptions.map((option) => (
+                        {config.rsvp?.guestOptions?.map((option) => (
                           <SelectItem key={option.value} value={option.value}>
                             {option.label}
                           </SelectItem>
@@ -164,10 +177,10 @@ export default function RsvpSection() {
                 name="guestNames"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>{weddingConfig.rsvp.form.guestNames}</FormLabel>
+                    <FormLabel>{config.rsvp?.form?.guestNames}</FormLabel>
                     <FormControl>
                       <Textarea 
-                        placeholder={weddingConfig.rsvp.form.guestNamesPlaceholder}
+                        placeholder={config.rsvp?.form?.guestNamesPlaceholder}
                         rows={3}
                         {...field} 
                         data-testid="textarea-guest-names"
@@ -183,7 +196,7 @@ export default function RsvpSection() {
                 name="attendance"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>{weddingConfig.rsvp.form.attendance}</FormLabel>
+                    <FormLabel>{config.rsvp?.form?.attendance}</FormLabel>
                     <FormControl>
                       <RadioGroup
                         onValueChange={field.onChange}
@@ -193,11 +206,11 @@ export default function RsvpSection() {
                       >
                         <div className="flex items-center space-x-3">
                           <RadioGroupItem value="attending" id="attending" />
-                          <Label htmlFor="attending">{weddingConfig.rsvp.form.attendingYes}</Label>
+                          <Label htmlFor="attending">{config.rsvp?.form?.attendingYes}</Label>
                         </div>
                         <div className="flex items-center space-x-3">
                           <RadioGroupItem value="not-attending" id="not-attending" />
-                          <Label htmlFor="not-attending">{weddingConfig.rsvp.form.attendingNo}</Label>
+                          <Label htmlFor="not-attending">{config.rsvp?.form?.attendingNo}</Label>
                         </div>
                       </RadioGroup>
                     </FormControl>
@@ -208,11 +221,14 @@ export default function RsvpSection() {
               
               <Button 
                 type="submit" 
-                className="w-full bg-softGold hover:bg-softGold/90 text-white py-3 sm:py-4 font-medium transition-colors duration-300 transform hover:scale-105 text-sm sm:text-base"
+                className="w-full text-white py-3 sm:py-4 font-medium transition-colors duration-300 transform hover:scale-105 text-sm sm:text-base hover:opacity-90"
+                style={{
+                  backgroundColor: config.theme?.colors?.accent || '#e8d5b7'
+                }}
                 disabled={rsvpMutation.isPending}
                 data-testid="button-submit-rsvp"
               >
-                {rsvpMutation.isPending ? weddingConfig.rsvp.form.submittingButton : weddingConfig.rsvp.form.submitButton}
+                {rsvpMutation.isPending ? config.rsvp?.form?.submittingButton : config.rsvp?.form?.submitButton}
               </Button>
             </form>
           </Form>

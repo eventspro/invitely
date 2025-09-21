@@ -1,17 +1,78 @@
-import { Clock, MapPin, Users, Music } from "lucide-react";
+import { Clock, MapPin, Users, Music, Church, Camera, Car, Utensils, Heart, PartyPopper } from "lucide-react";
 import { weddingConfig } from "@/config/wedding-config";
+import type { WeddingConfig } from "@/templates/types";
+import { getHeadingFont, getBodyFont } from "@/utils/font-utils";
 import {
   useScrollAnimation,
   useStaggeredAnimation,
 } from "@/hooks/use-scroll-animation";
 
-export default function TimelineSection() {
-  const eventIcons = [
-    <MapPin className="w-8 h-8" />,
-    <Users className="w-8 h-8" />,
-    <Music className="w-8 h-8" />,
-    <Clock className="w-8 h-8" />,
-  ];
+interface TimelineSectionProps {
+  config?: WeddingConfig;
+}
+
+export default function TimelineSection({ config }: TimelineSectionProps) {
+  // Use passed config or fallback to default
+  const sectionConfig = config || (weddingConfig as WeddingConfig);
+  const themeColors = sectionConfig.theme?.colors;
+  
+  // Professional wedding icons mapping
+  const getWeddingIcon = (event: any, index: number) => {
+    const iconStyle = { color: 'white', fontSize: '24px' };
+    
+    // Map specific events to professional Lucide icons
+    if (event.title?.includes('Պսակադրություն') || event.title?.includes('Ceremony')) {
+      return <Church className="w-6 h-6 text-white" />;
+    }
+    if (event.title?.includes('Նկարահանում') || event.title?.includes('Photography')) {
+      return <Camera className="w-6 h-6 text-white" />;
+    }
+    if (event.title?.includes('Շարժում') || event.title?.includes('Transportation')) {
+      return <Car className="w-6 h-6 text-white" />;
+    }
+    if (event.title?.includes('Կոկտեյլ') || event.title?.includes('Cocktail')) {
+      return (
+        <svg className="w-6 h-6 text-white" fill="currentColor" viewBox="0 0 24 24">
+          <path d="M5 8V6h14v2l-7 7-7-7zM12 16l-2-2h4l-2 2zM7 4h10v1H7V4zM8 19h8v1H8v-1z"/>
+        </svg>
+      );
+    }
+    if (event.title?.includes('ընթրիք') || event.title?.includes('Dinner')) {
+      return <Utensils className="w-6 h-6 text-white" />;
+    }
+    if (event.title?.includes('պար') || event.title?.includes('Dance')) {
+      return <Heart className="w-6 h-6 text-white" />;
+    }
+    if (event.title?.includes('տոն') || event.title?.includes('Celebration')) {
+      return <PartyPopper className="w-6 h-6 text-white" />;
+    }
+    if (event.title?.includes('Գիշեր') || event.title?.includes('Night')) {
+      return (
+        <svg className="w-6 h-6 text-white" fill="currentColor" viewBox="0 0 24 24">
+          <path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z"/>
+        </svg>
+      );
+    }
+    
+    // If custom emoji icon exists, display it with professional styling
+    if (event.icon) {
+      return (
+        <div className="text-lg text-white font-medium">
+          {event.icon}
+        </div>
+      );
+    }
+    
+    // Default fallback icons
+    const defaultIcons = [
+      <Church className="w-6 h-6 text-white" />,
+      <Camera className="w-6 h-6 text-white" />,
+      <Users className="w-6 h-6 text-white" />,
+      <Music className="w-6 h-6 text-white" />,
+    ];
+    
+    return defaultIcons[index % defaultIcons.length];
+  };
 
   const titleRef = useScrollAnimation("animate-slide-up");
   const cardsRef = useStaggeredAnimation(200);
@@ -32,9 +93,9 @@ export default function TimelineSection() {
             }}
             data-testid="text-timeline-title"
           >
-            {weddingConfig.timeline.title}
+            {sectionConfig.timeline?.title}
           </h2>
-          <div className="w-24 h-0.5 bg-softGold mx-auto mb-8"></div>
+          <div className="w-24 h-0.5 mx-auto mb-8" style={{ backgroundColor: themeColors?.primary || '#9b7353' }}></div>
         </div>
 
         {/* Timeline Cards */}
@@ -42,7 +103,7 @@ export default function TimelineSection() {
           ref={cardsRef}
           className="grid md:grid-cols-2 lg:grid-cols-3 gap-8"
         >
-          {weddingConfig.timeline.events.map((event, index) => (
+          {(sectionConfig.timeline?.events || []).map((event, index) => (
             <div
               key={index}
               className="group relative animate-on-scroll"
@@ -51,12 +112,22 @@ export default function TimelineSection() {
               {/* Card */}
               <div className="bg-white/90 backdrop-blur-sm rounded-2xl p-8 shadow-xl border border-softGold/20 hover:shadow-2xl hover:scale-105 transition-all duration-500 relative overflow-hidden">
                 {/* Background Pattern */}
-                <div className="absolute top-0 right-0 w-20 h-20 bg-gradient-to-br from-softGold/10 to-lightGold/20 rounded-bl-full"></div>
+                <div 
+                  className="absolute top-0 right-0 w-20 h-20 rounded-bl-full"
+                  style={{ 
+                    background: `linear-gradient(135deg, ${themeColors?.accent || '#e6c89c'}20 0%, ${themeColors?.primary || '#9b7353'}20 100%)`
+                  }}
+                ></div>
 
                 {/* Icon */}
                 <div className="flex justify-center mb-6">
-                  <div className="w-16 h-16 bg-gradient-to-br from-softGold to-lightGold rounded-full flex items-center justify-center text-white shadow-lg group-hover:scale-110 transition-transform duration-300">
-                    {eventIcons[index]}
+                  <div 
+                    className="w-16 h-16 rounded-full flex items-center justify-center text-white shadow-lg group-hover:scale-110 transition-transform duration-300"
+                    style={{ 
+                      background: `linear-gradient(135deg, ${themeColors?.primary || '#9b7353'} 0%, ${themeColors?.secondary || '#7c5e40'} 100%)`
+                    }}
+                  >
+                    {getWeddingIcon(event, index)}
                   </div>
                 </div>
 
@@ -64,7 +135,7 @@ export default function TimelineSection() {
                 <div className="text-center space-y-4">
                   <div
                     className="text-3xl md:text-4xl font-light text-charcoal"
-                    style={{ fontFamily: "Playfair Display, serif" }}
+                    style={{ fontFamily: getHeadingFont(sectionConfig.theme?.fonts) }}
                     data-testid={`timeline-time-${index}`}
                   >
                     {event.time}
@@ -91,7 +162,7 @@ export default function TimelineSection() {
               </div>
 
               {/* Connector Line (except last item) */}
-              {index < weddingConfig.timeline.events.length - 1 && (
+              {index < (sectionConfig.timeline?.events?.length || 0) - 1 && (
                 <div className="hidden lg:block absolute top-1/2 -right-4 w-8 h-0.5 bg-gradient-to-r from-softGold/50 to-lightGold/30 z-10"></div>
               )}
             </div>
@@ -99,17 +170,17 @@ export default function TimelineSection() {
         </div>
 
         {/* Thank You Message After Timeline */}
-        {weddingConfig.timeline.afterMessage && (
+        {sectionConfig.timeline?.afterMessage && (
           <div className="mt-20 text-center">
             <div
               className="text-2xl md:text-3xl text-charcoal mb-8"
               style={{
-                fontFamily: "Playfair Display, serif",
+                fontFamily: getHeadingFont(sectionConfig.theme?.fonts),
                 fontWeight: "300",
               }}
               data-testid="timeline-thank-you"
             >
-              {weddingConfig.timeline.afterMessage.thankYou}
+              {sectionConfig.timeline?.afterMessage?.thankYou}
             </div>
 
             <div className="w-24 h-0.5 bg-softGold mx-auto mb-8"></div>
@@ -119,7 +190,7 @@ export default function TimelineSection() {
               style={{ whiteSpace: "pre-line" }}
               data-testid="timeline-notes"
             >
-              {weddingConfig.timeline.afterMessage.notes}
+              {sectionConfig.timeline?.afterMessage?.notes}
             </div>
           </div>
         )}

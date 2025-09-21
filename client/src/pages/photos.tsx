@@ -6,6 +6,7 @@ import { Progress } from "@/components/ui/progress";
 import { Camera, Heart, Home, Upload } from "lucide-react";
 import { Link } from "wouter";
 import { ObjectUploader } from "@/components/ObjectUploader";
+import { ImageUploader } from "@/components/ui/image-uploader";
 
 export default function PhotosPage() {
   const [guestName, setGuestName] = useState("");
@@ -189,16 +190,40 @@ export default function PhotosPage() {
                 </Button>
               </div>
             ) : (
-              <ObjectUploader
-                maxNumberOfFiles={Math.min(25, MAX_PHOTOS - uploadedPhotosCount)}
-                maxFileSize={10485760} // 10MB
-                onGetUploadParameters={handleGetUploadParameters}
-                onComplete={handleUploadComplete}
-                buttonClassName="bg-softGold hover:bg-softGold/90 text-white px-8 py-4 rounded-lg font-medium transition-colors duration-300 transform hover:scale-105 flex items-center text-lg"
-              >
-                <Camera className="w-5 h-5 mr-2" />
-                Ավելացնել նկարներ
-              </ObjectUploader>
+              <div className="w-full space-y-6">
+                {/* Enhanced Image Uploader */}
+                <ImageUploader
+                  maxFiles={Math.min(25, MAX_PHOTOS - uploadedPhotosCount)}
+                  maxFileSize={10485760} // 10MB
+                  onFilesUploaded={(files) => {
+                    const newCount = uploadedPhotosCount + files.length;
+                    setUploadedPhotosCount(newCount);
+                    localStorage.setItem(`wedding-photos-count-${guestName}`, newCount.toString());
+                    setUploadStatus(`${files.length} նկար(ներ) հաջողությամբ ավելացվեցին! Շնորհակալություն ${guestName}! (Ընդամենը: ${newCount})`);
+                    setTimeout(() => setUploadStatus(""), 5000);
+                  }}
+                  onFileRemoved={() => {
+                    // Handle file removal if needed
+                  }}
+                />
+                
+                {/* Alternative: Original Uploader */}
+                <div className="pt-4 border-t">
+                  <p className="text-sm text-charcoal/60 mb-4 text-center">Or use the simple uploader:</p>
+                  <div className="flex justify-center">
+                    <ObjectUploader
+                      maxNumberOfFiles={Math.min(25, MAX_PHOTOS - uploadedPhotosCount)}
+                      maxFileSize={10485760} // 10MB
+                      onGetUploadParameters={handleGetUploadParameters}
+                      onComplete={handleUploadComplete}
+                      buttonClassName="bg-softGold hover:bg-softGold/90 text-white px-8 py-4 rounded-lg font-medium transition-colors duration-300 transform hover:scale-105 flex items-center text-lg"
+                    >
+                      <Camera className="w-5 h-5 mr-2" />
+                      Ավելացնել նկարներ
+                    </ObjectUploader>
+                  </div>
+                </div>
+              </div>
             )}
           </div>
           

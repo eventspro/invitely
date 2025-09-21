@@ -8,8 +8,61 @@ import {
   ObjectStorageService,
   ObjectNotFoundError,
 } from "./objectStorage";
+import path from "path";
+import fs from "fs";
+import multer from "multer";
+
+// Import new route modules
+import authRoutes from './routes/auth';
+import adminPanelRoutes from './routes/admin-panel';
+import platformAdminRoutes from './routes/platform-admin';
+import { registerTemplateRoutes } from './routes/templates';
+
+// Configure multer for file uploads
+const uploadsDir = path.join(process.cwd(), 'uploads');
+if (!fs.existsSync(uploadsDir)) {
+  fs.mkdirSync(uploadsDir, { recursive: true });
+}
+
+const multerStorage = multer.diskStorage({
+  destination: (req: any, file: any, cb: any) => {
+    cb(null, uploadsDir);
+  },
+  filename: (req: any, file: any, cb: any) => {
+    const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
+    const ext = path.extname(file.originalname);
+    cb(null, file.fieldname + '-' + uniqueSuffix + ext);
+  }
+});
+
+const upload = multer({ 
+  storage: multerStorage,
+  limits: {
+    fileSize: 10 * 1024 * 1024 // 10MB limit
+  },
+  fileFilter: (req: any, file: any, cb: any) => {
+    // Check if file is an image
+    if (file.mimetype.startsWith('image/')) {
+      cb(null, true);
+    } else {
+      cb(new Error('Only image files are allowed!'), false);
+    }
+  }
+});
 
 export async function registerRoutes(app: Express): Promise<Server> {
+  
+  // Register authentication routes
+  app.use('/api/auth', authRoutes);
+  
+  // Register admin panel routes (for Ultimate template customers)
+  app.use('/api/admin-panel', adminPanelRoutes);
+  
+  // Register platform admin routes (for platform owner)
+  app.use('/api/platform-admin', platformAdminRoutes);
+  
+  // Register template routes (for template-specific endpoints)
+  registerTemplateRoutes(app);
   
   // RSVP submission endpoint
   app.post("/api/rsvp", async (req, res) => {
@@ -17,12 +70,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const validatedData = insertRsvpSchema.parse(req.body);
       
       // Check if email already exists
-      const existingRsvp = await storage.getRsvpByEmail(validatedData.email);
-      if (existingRsvp) {
-        return res.status(400).json({ 
-          message: "Այս էլ․ հասցեով արդեն ուղարկվել է հաստատում" 
-        });
-      }
+      // const existingRsvp = await storage.getRsvpByEmail(validatedData.email);
+      // if (existingRsvp) {
+      //   return res.status(400).json({ 
+      //     message: "Այս էլ․ հասցեով արդեն ուղարկվել է հաստատում" 
+      //   });
+      // }
 
       const rsvp = await storage.createRsvp(validatedData);
       
@@ -112,76 +165,360 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Photo upload endpoints
-  
-  // Serve public objects (photos)
-  app.get("/public-objects/:filePath(*)", async (req, res) => {
-    const filePath = req.params.filePath;
-    const objectStorageService = new ObjectStorageService();
+  // Image upload endpoints
+
+  // Upload image for a specific template
+  app.post("/api/images/upload", upload.single('image'), async (req, res) => {
     try {
-      const file = await objectStorageService.searchPublicObject(filePath);
-      if (!file) {
-        return res.status(404).json({ error: "File not found" });
+      if (!req.file) {
+        return res.status(400).json({ error: 'No file uploaded' });
       }
-      objectStorageService.downloadObject(file, res);
-    } catch (error) {
-      console.error("Error searching for public object:", error);
-      return res.status(500).json({ error: "Internal server error" });
-    }
-  });
-
-  // Serve uploaded photos
-  app.get("/objects/:objectPath(*)", async (req, res) => {
-    const objectStorageService = new ObjectStorageService();
-    try {
-      const objectFile = await objectStorageService.getObjectEntityFile(
-        req.path,
-      );
-      objectStorageService.downloadObject(objectFile, res);
-    } catch (error) {
-      console.error("Error checking object access:", error);
-      if (error instanceof ObjectNotFoundError) {
-        return res.sendStatus(404);
+      
+      const { templateId, category = 'gallery' } = req.body;
+        
+      if (!templateId) {
+        return res.status(400).json({ error: 'Template ID is required' });
       }
-      return res.sendStatus(500);
-    }
-  });
-
-  // Get upload URL for photo
-  app.post("/api/photos/upload", async (req, res) => {
-    const objectStorageService = new ObjectStorageService();
-    try {
-      const uploadURL = await objectStorageService.getObjectEntityUploadURL();
-      res.json({ uploadURL });
-    } catch (error) {
-      console.error("Error getting upload URL:", error);
-      res.status(500).json({ error: "Failed to get upload URL" });
-    }
-  });
-
-  // Set photo as uploaded (public visibility)
-  app.put("/api/photos", async (req, res) => {
-    if (!req.body.photoURL) {
-      return res.status(400).json({ error: "photoURL is required" });
-    }
-
-    try {
-      const objectStorageService = new ObjectStorageService();
-      const objectPath = await objectStorageService.trySetObjectEntityAclPolicy(
-        req.body.photoURL,
-        {
-          owner: "guest", // Generic owner for guest uploads
-          visibility: "public", // Make photos publicly accessible
-        },
-      );
-
-      res.status(200).json({
-        objectPath: objectPath,
-        message: "Photo uploaded successfully"
+        
+      // Create image record in database
+      const imageUrl = `/api/images/serve/${req.file.filename}`;
+      
+      const imageRecord = await storage.createImage({
+        templateId,
+        url: imageUrl,
+        name: req.file.originalname,
+        category,
+        size: req.file.size.toString(),
+        mimeType: req.file.mimetype,
+        order: "0"
       });
+      
+      console.log(`📸 Image uploaded successfully: ${req.file.filename} for template ${templateId}`);
+      
+      res.json({
+        id: imageRecord.id,
+        url: imageUrl,
+        name: req.file.originalname,
+        size: req.file.size,
+        category
+      });
+      
     } catch (error) {
-      console.error("Error setting photo:", error);
-      res.status(500).json({ error: "Internal server error" });
+      console.error('Image upload error:', error);
+      if (req.file) {
+        // Clean up uploaded file if there's an error
+        fs.unlinkSync(req.file.path);
+      }
+      res.status(500).json({ error: 'Failed to upload image' });
+    }
+  });
+
+  // Serve uploaded images
+  app.get("/api/images/serve/:filename", (req, res) => {
+    try {
+      const { filename } = req.params;
+      
+      const filePath = path.join(process.cwd(), 'uploads', filename);
+      
+      // Check if file exists
+      if (!fs.existsSync(filePath)) {
+        return res.status(404).json({ error: "Image not found" });
+      }
+      
+      // Determine content type based on file extension
+      const ext = path.extname(filename).toLowerCase();
+      const contentTypes: Record<string, string> = {
+        '.jpg': 'image/jpeg',
+        '.jpeg': 'image/jpeg',
+        '.png': 'image/png',
+        '.webp': 'image/webp',
+        '.gif': 'image/gif'
+      };
+      
+      const contentType = contentTypes[ext] || 'application/octet-stream';
+      
+      res.setHeader('Content-Type', contentType);
+      res.setHeader('Cache-Control', 'public, max-age=86400'); // Cache for 1 day
+      
+      const stream = fs.createReadStream(filePath);
+      stream.pipe(res);
+      
+    } catch (error) {
+      console.error("Error serving image:", error);
+      res.status(500).json({ error: "Failed to serve image" });
+    }
+  });
+
+  // Get images for a template (query parameter version for frontend compatibility)
+  app.get("/api/images", async (req, res) => {
+    try {
+      const { templateId, category } = req.query;
+      
+      if (!templateId) {
+        return res.status(400).json({ error: "Template ID is required" });
+      }
+      
+      console.log(`📸 Getting images for template: ${templateId}, category: ${category || 'all'}`);
+      
+      const images = await storage.getImages(templateId as string, category as string);
+      
+      console.log(`📊 Found ${images.length} images`);
+      res.json(images);
+    } catch (error) {
+      console.error("❌ Failed to get images:", error);
+      res.status(500).json({ error: "Failed to get images" });
+    }
+  });
+
+  // Get images for a template
+  app.get("/api/images/:templateId", async (req, res) => {
+    try {
+      const { templateId } = req.params;
+      const { category } = req.query;
+      
+      console.log(`📸 Getting images for template: ${templateId}, category: ${category || 'all'}`);
+      
+      const images = await storage.getImages(templateId, category as string);
+      
+      console.log(`📊 Found ${images.length} images`);
+      res.json(images);
+    } catch (error) {
+      console.error("❌ Failed to get images:", error);
+      res.status(500).json({ error: "Failed to get images" });
+    }
+  });
+
+  // Delete an image
+  app.delete("/api/images", async (req, res) => {
+    try {
+      const { id, templateId } = req.body;
+      
+      if (!id || !templateId) {
+        return res.status(400).json({ error: "Image ID and template ID are required" });
+      }
+      
+      console.log(`🗑️ Deleting image: ${id} for template ${templateId}`);
+      
+      // Get image record to find the file
+      const images = await storage.getImages(templateId);
+      const imageRecord = images.find(img => img.id === id);
+      
+      if (imageRecord) {
+        // Delete from database
+        await storage.deleteImage(imageRecord.id);
+        
+        // Delete physical file
+        const filename = imageRecord.url.split('/').pop();
+        if (filename) {
+          const filePath = path.join(process.cwd(), 'uploads', filename);
+          
+          if (fs.existsSync(filePath)) {
+            fs.unlinkSync(filePath);
+            console.log(`🗑️ Deleted file: ${filename}`);
+          }
+        }
+        
+        res.json({ message: "Image deleted successfully" });
+      } else {
+        res.status(404).json({ error: "Image not found" });
+      }
+      
+    } catch (error) {
+      console.error("❌ Failed to delete image:", error);
+      res.status(500).json({ error: "Failed to delete image" });
+    }
+  });
+
+  // Serve template preview images
+  app.get("/api/images/template-preview-:id.jpg", async (req, res) => {
+    try {
+      const { id } = req.params;
+      
+      const filename = `template-preview-${id}.jpg`;
+      const filePath = path.join(process.cwd(), 'attached_assets', 'template_previews', filename);
+      
+      // Check if file exists
+      if (!fs.existsSync(filePath)) {
+        return res.status(404).json({ error: "Template preview image not found" });
+      }
+      
+      res.setHeader('Content-Type', 'image/jpeg');
+      res.setHeader('Cache-Control', 'public, max-age=86400'); // Cache for 1 day
+      
+      const stream = fs.createReadStream(filePath);
+      stream.pipe(res);
+      
+    } catch (error) {
+      console.error("Error serving template preview image:", error);
+      res.status(500).json({ error: "Failed to serve template preview image" });
+    }
+  });
+
+  // Serve images from attached_assets folder for development
+  app.get("/api/assets/:filename", async (req, res) => {
+    try {
+      const { filename } = req.params;
+      
+      const filePath = path.join(process.cwd(), 'attached_assets', filename);
+      
+      // Check if file exists
+      if (!fs.existsSync(filePath)) {
+        return res.status(404).json({ error: "Image not found" });
+      }
+      
+      // Determine content type based on file extension
+      const ext = path.extname(filename).toLowerCase();
+      const contentTypes: Record<string, string> = {
+        '.jpg': 'image/jpeg',
+        '.jpeg': 'image/jpeg',
+        '.png': 'image/png',
+        '.webp': 'image/webp',
+        '.gif': 'image/gif'
+      };
+      
+      const contentType = contentTypes[ext] || 'application/octet-stream';
+      
+      res.setHeader('Content-Type', contentType);
+      res.setHeader('Cache-Control', 'public, max-age=86400'); // Cache for 1 day
+      
+      const stream = fs.createReadStream(filePath);
+      stream.pipe(res);
+      
+    } catch (error) {
+      console.error("Error serving image:", error);
+      res.status(500).json({ error: "Failed to serve image" });
+    }
+  });
+
+  // Template endpoints
+  app.get("/api/templates", async (req, res) => {
+    try {
+      console.log(`📋 Getting all templates`);
+      
+      const templates = await storage.getAllTemplates();
+      
+      console.log(`📊 Found ${templates.length} templates`);
+      res.json(templates);
+    } catch (error) {
+      console.error("❌ Failed to get templates:", error);
+      res.status(500).json({ error: "Failed to get templates" });
+    }
+  });
+
+  // Template configuration endpoints
+  app.get("/api/templates/:templateId/config", async (req, res) => {
+    try {
+      const { templateId } = req.params;
+      console.log(`📋 Getting template config for: ${templateId}`);
+      
+      // Try to find template by ID first, then by slug
+      let template = await storage.getTemplate(templateId);
+      if (!template) {
+        console.log(`❌ Template not found by ID, trying slug: ${templateId}`);
+        template = await storage.getTemplateBySlug(templateId);
+      }
+      
+      if (!template) {
+        console.log(`❌ Template not found by ID or slug: ${templateId}`);
+        return res.status(404).json({ message: "Template not found" });
+      }
+      
+      console.log(`✅ Template found: ${template.name} (${template.id})`);
+      
+      // Load images for this template and enrich the configuration
+      const allImages = await storage.getImages(template.id);
+      const heroImages = allImages.filter(img => img.category === 'hero').map(img => img.url);
+      const galleryImages = allImages.filter(img => img.category === 'gallery').map(img => img.url);
+      
+      // Enrich configuration with images
+      const config = template.config as any;
+      const enrichedConfig = {
+        ...config,
+        hero: {
+          ...config.hero,
+          images: heroImages
+        },
+        photos: {
+          ...config.photos,
+          images: galleryImages
+        }
+      };
+      
+      const templateInfo = {
+        templateId: template.id,
+        templateKey: template.templateKey,
+        config: enrichedConfig,
+        maintenance: template.maintenance || false
+      };
+      
+      console.log(`✅ Template info loaded successfully with ${heroImages.length} hero images and ${galleryImages.length} gallery images`);
+      res.json(templateInfo);
+    } catch (error) {
+      console.error("Get template config error:", error);
+      res.status(500).json({ message: "Server error" });
+    }
+  });
+
+  app.put("/api/templates/:templateId/config", async (req, res) => {
+    try {
+      const { templateId } = req.params;
+      const config = req.body;
+      
+      console.log(`💾 Saving template config for: ${templateId}`);
+      console.log(`💾 Config data:`, JSON.stringify(config, null, 2));
+      
+      // Try to find template by ID first, then by slug to get the actual ID
+      let template = await storage.getTemplate(templateId);
+      if (!template) {
+        console.log(`❌ Template not found by ID, trying slug: ${templateId}`);
+        template = await storage.getTemplateBySlug(templateId);
+      }
+      
+      if (!template) {
+        console.log(`❌ Template not found by ID or slug: ${templateId}`);
+        return res.status(404).json({ message: "Template not found" });
+      }
+      
+      // Use the actual template ID for the update
+      const updatedTemplate = await storage.updateTemplate(template.id, { config });
+      if (!updatedTemplate) {
+        return res.status(404).json({ message: "Template not found" });
+      }
+      
+      console.log(`✅ Template config saved successfully`);
+      res.json(updatedTemplate.config);
+    } catch (error) {
+      console.error("Save template config error:", error);
+      res.status(500).json({ message: "Server error" });
+    }
+  });
+
+  // Template RSVPs endpoint
+  app.get("/api/templates/:templateId/rsvps", async (req, res) => {
+    try {
+      const { templateId } = req.params;
+      console.log(`📋 Getting RSVPs for template: ${templateId}`);
+      
+      // Try to find template by ID first, then by slug to get the actual ID
+      let template = await storage.getTemplate(templateId);
+      if (!template) {
+        console.log(`❌ Template not found by ID, trying slug: ${templateId}`);
+        template = await storage.getTemplateBySlug(templateId);
+      }
+      
+      if (!template) {
+        console.log(`❌ Template not found by ID or slug: ${templateId}`);
+        return res.status(404).json({ message: "Template not found" });
+      }
+      
+      // Use the actual template ID for the RSVPs query
+      const rsvps = await storage.getAllRsvps(template.id);
+      
+      console.log(`📊 Found ${rsvps.length} RSVPs for template`);
+      res.json(rsvps);
+    } catch (error) {
+      console.error("❌ Failed to get RSVPs:", error);
+      res.status(500).json({ error: "Failed to get RSVPs" });
     }
   });
 

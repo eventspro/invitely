@@ -1,5 +1,7 @@
+import "dotenv/config";
 import express, { type Request, Response, NextFunction } from "express";
 import { registerRoutes } from "./routes";
+import { registerAdminRoutes } from "./routes/admin";
 import { setupVite, serveStatic, log } from "./vite";
 
 // Environment variable validation
@@ -17,22 +19,48 @@ function validateEnvironment() {
   }
   
   return {
-    port: parseInt(process.env.PORT || '5000', 10),
+    port: parseInt(process.env.PORT || '5001', 10),
     nodeEnv: process.env.NODE_ENV,
     isProduction: process.env.NODE_ENV === 'production'
   };
 }
 
 const app = express();
-app.use(express.json());
-app.use(express.urlencoded({ extended: false }));
+
+// Security middleware for production
+if (process.env.NODE_ENV === 'production') {
+  // Trust proxy for Vercel
+  app.set('trust proxy', 1);
+  
+  // Security headers
+  app.use((req, res, next) => {
+    // HTTPS redirect (handled by Vercel, but good to have)
+    if (req.header('x-forwarded-proto') !== 'https') {
+      res.redirect(`https://${req.header('host')}${req.url}`);
+      return;
+    }
+    
+    // Security headers
+    res.setHeader('X-Frame-Options', 'DENY');
+    res.setHeader('X-Content-Type-Options', 'nosniff');
+    res.setHeader('X-XSS-Protection', '1; mode=block');
+    res.setHeader('Referrer-Policy', 'origin-when-cross-origin');
+    res.setHeader('Permissions-Policy', 'camera=(), microphone=(), geolocation=()');
+    
+    next();
+  });
+}
+
+app.use(express.json({ limit: '10mb' }));
+app.use(express.urlencoded({ extended: false, limit: '10mb' }));
 
 // Health check endpoint for deployment monitoring
 app.get('/health', (req, res) => {
   res.status(200).json({ 
     status: 'ok', 
     timestamp: new Date().toISOString(),
-    environment: process.env.NODE_ENV || 'production'
+    environment: process.env.NODE_ENV || 'production',
+    version: '1.0.0'
   });
 });
 
@@ -72,6 +100,9 @@ app.use((req, res, next) => {
     const env = validateEnvironment();
     
     const server = await registerRoutes(app);
+    
+    // Register admin routes
+    registerAdminRoutes(app);
 
     app.use((err: any, _req: Request, res: Response, _next: NextFunction) => {
       const status = err.status || err.statusCode || 500;

@@ -13,15 +13,15 @@ import heartImage from "@assets/heart-tattoo.jfif";
 export default function Home() {
   return (
     <div className="min-h-screen bg-cream text-charcoal">
-      <Navigation />
+      <Navigation config={weddingConfig} />
       <main>
-        <HeroSection />
-        <CountdownTimer />
-        <CalendarSection />
-        <LocationsSection />
-        <TimelineSection />
-        <RsvpSection />
-        <PhotoSection />
+        <HeroSection config={weddingConfig} />
+        <CountdownTimer config={weddingConfig} />
+        <CalendarSection config={weddingConfig} />
+        <LocationsSection config={weddingConfig} />
+        <TimelineSection config={weddingConfig} />
+        <RsvpSection config={weddingConfig} />
+        <PhotoSection config={weddingConfig} />
       </main>
       
       {/* Footer */}
@@ -38,7 +38,7 @@ export default function Home() {
         </div>
       </footer>
 
-      <MapModal />
+      <MapModal config={weddingConfig} />
     </div>
   );
 }
