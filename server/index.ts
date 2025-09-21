@@ -1,8 +1,8 @@
 import "dotenv/config";
 import express, { type Request, Response, NextFunction } from "express";
-import { registerRoutes } from "./routes";
-import { registerAdminRoutes } from "./routes/admin";
-import { setupVite, serveStatic, log } from "./vite";
+import { registerRoutes } from "./routes.js";
+import { registerAdminRoutes } from "./routes/admin.js";
+import { setupVite, serveStatic, log } from "./vite.js";
 
 // Environment variable validation
 function validateEnvironment() {

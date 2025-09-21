@@ -1,9 +1,9 @@
 import type { Express } from "express";
 import { createServer, type Server } from "http";
-import { storage } from "./storage";
+import { storage } from "./storage.js";
 import { insertRsvpSchema } from "@shared/schema";
 import { z } from "zod";
-import { sendRsvpNotificationEmails, sendRsvpConfirmationEmail, testEmailService } from "./email";
+import { sendRsvpNotificationEmails, sendRsvpConfirmationEmail, testEmailService } from "./email.js";
 import {
   ObjectStorageService,
   ObjectNotFoundError,
@@ -13,10 +13,10 @@ import fs from "fs";
 import multer from "multer";
 
 // Import new route modules
-import authRoutes from './routes/auth';
-import adminPanelRoutes from './routes/admin-panel';
-import platformAdminRoutes from './routes/platform-admin';
-import { registerTemplateRoutes } from './routes/templates';
+import authRoutes from './routes/auth.js';
+import adminPanelRoutes from './routes/admin-panel.js';
+import platformAdminRoutes from './routes/platform-admin.js';
+import { registerTemplateRoutes } from './routes/templates.js';
 
 // Configure multer for file uploads
 const uploadsDir = path.join(process.cwd(), 'uploads');

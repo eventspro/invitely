@@ -16,7 +16,7 @@ import {
   images
 } from "@shared/schema";
 import { randomUUID } from "crypto";
-import { db } from "./db";
+import { db } from "./db.js";
 import { eq, desc, and } from "drizzle-orm";
 
 export interface IStorage {
