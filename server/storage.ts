@@ -82,13 +82,50 @@ export class DatabaseStorage implements IStorage {
   }
 
   async getTemplate(id: string): Promise<Template | undefined> {
-    const [template] = await db.select().from(templates).where(eq(templates.id, id));
-    return template || undefined;
+    try {
+      console.log(`🔍 Searching for template with ID: ${id}`);
+      
+      const result = await db.select().from(templates).where(eq(templates.id, id)).limit(1);
+      
+      console.log(`📊 Query result count: ${result.length}`);
+      if (result.length > 0) {
+        console.log(`✅ Found template: ${result[0].name} (ID: ${result[0].id})`);
+      } else {
+        console.log(`❌ No template found with ID: ${id}`);
+      }
+      
+      return result[0];
+    } catch (error) {
+      console.error(`❌ Database error in getTemplate:`, error);
+      throw error;
+    }
   }
 
   async getTemplateBySlug(slug: string): Promise<Template | undefined> {
-    const [template] = await db.select().from(templates).where(eq(templates.slug, slug));
-    return template || undefined;
+    try {
+      console.log(`🔍 Searching for template with slug: ${slug}`);
+      console.log(`🔗 Database URL available: ${!!process.env.DATABASE_URL}`);
+      
+      const result = await db.select().from(templates).where(eq(templates.slug, slug)).limit(1);
+      
+      console.log(`📊 Query result count: ${result.length}`);
+      if (result.length > 0) {
+        console.log(`✅ Found template: ${result[0].name} (ID: ${result[0].id})`);
+      } else {
+        console.log(`❌ No template found with slug: ${slug}`);
+      }
+      
+      return result[0];
+    } catch (error) {
+      console.error(`❌ Database error in getTemplateBySlug:`, error);
+      console.error(`❌ Error details:`, {
+        message: error instanceof Error ? error.message : 'Unknown error',
+        stack: error instanceof Error ? error.stack : 'No stack trace',
+        slug,
+        databaseUrl: !!process.env.DATABASE_URL
+      });
+      throw error;
+    }
   }
 
   async createTemplate(insertTemplate: InsertTemplate): Promise<Template> {
