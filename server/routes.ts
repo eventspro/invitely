@@ -137,11 +137,20 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Maintenance mode endpoints
   app.get("/api/maintenance", async (req, res) => {
     try {
+      console.log(`🔧 Checking maintenance status - DATABASE_URL exists: ${!!process.env.DATABASE_URL}`);
+      
       const status = await storage.getMaintenanceStatus();
+      console.log(`✅ Maintenance status retrieved: ${status}`);
       res.json({ enabled: status });
     } catch (error) {
-      console.error("Get maintenance status error:", error);
-      res.status(500).json({ message: "Server error" });
+      console.error("❌ Get maintenance status error details:", error);
+      console.error("❌ Error stack:", error instanceof Error ? error.stack : 'No stack available');
+      console.error("❌ Database URL available:", !!process.env.DATABASE_URL);
+      res.status(500).json({ 
+        message: "Server error",
+        error: error instanceof Error ? error.message : 'Unknown error',
+        hasDatabase: !!process.env.DATABASE_URL
+      });
     }
   });
 
@@ -410,6 +419,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const { templateId } = req.params;
       console.log(`📋 Getting template config for: ${templateId}`);
+      console.log(`🔧 Environment check - DATABASE_URL exists: ${!!process.env.DATABASE_URL}`);
+      console.log(`🔧 Environment check - NODE_ENV: ${process.env.NODE_ENV}`);
       
       // Try to find template by ID first, then by slug
       let template = await storage.getTemplate(templateId);
@@ -454,8 +465,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
       console.log(`✅ Template info loaded successfully with ${heroImages.length} hero images and ${galleryImages.length} gallery images`);
       res.json(templateInfo);
     } catch (error) {
-      console.error("Get template config error:", error);
-      res.status(500).json({ message: "Server error" });
+      console.error("❌ Get template config error details:", error);
+      console.error("❌ Error stack:", error instanceof Error ? error.stack : 'No stack available');
+      console.error("❌ Database URL available:", !!process.env.DATABASE_URL);
+      res.status(500).json({ 
+        message: "Server error",
+        error: error instanceof Error ? error.message : 'Unknown error',
+        hasDatabase: !!process.env.DATABASE_URL
+      });
     }
   });
 
