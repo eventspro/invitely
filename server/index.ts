@@ -64,6 +64,17 @@ app.get('/health', (req, res) => {
   });
 });
 
+// Test endpoint to verify server and database connection
+app.get('/api/test', (req, res) => {
+  res.status(200).json({
+    message: 'Server is running',
+    timestamp: new Date().toISOString(),
+    environment: process.env.NODE_ENV,
+    hasDatabase: !!process.env.DATABASE_URL,
+    databaseUrlPrefix: process.env.DATABASE_URL?.substring(0, 20) + '...'
+  });
+});
+
 app.use((req, res, next) => {
   const start = Date.now();
   const path = req.path;
