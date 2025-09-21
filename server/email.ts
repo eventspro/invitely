@@ -1,5 +1,5 @@
 import { Resend } from "resend";
-import type { Rsvp } from "@shared/schema";
+import type { Rsvp } from "../shared/schema.js";
 
 // Lazy load Resend instance to reduce startup time
 let resendInstance: Resend | null = null;

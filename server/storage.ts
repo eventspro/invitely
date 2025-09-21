@@ -14,7 +14,7 @@ import {
   settings,
   templates,
   images
-} from "@shared/schema";
+} from "../shared/schema.js";
 import { randomUUID } from "crypto";
 import { db } from "./db.js";
 import { eq, desc, and } from "drizzle-orm";

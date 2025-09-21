@@ -1,7 +1,7 @@
 // Template Management API Routes
 import type { Express } from "express";
 import { storage } from "../storage";
-import { insertRsvpSchema, updateTemplateSchema } from "@shared/schema";
+import { insertRsvpSchema, updateTemplateSchema } from "../../shared/schema.js";
 import { z } from "zod";
 import { authenticateUser, requireAdminPanelAccess } from "../middleware/auth";
 import { sendTemplateRsvpNotificationEmails, sendTemplateRsvpConfirmationEmail } from "../email";
