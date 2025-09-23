@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { 
   Heart, 
   Star, 
@@ -29,6 +29,29 @@ import { Link } from "wouter";
 import { useTranslation, useLocaleFormat } from "@/hooks/useLanguage";
 import LanguageSelector from "@/components/LanguageSelector";
 
+// Template interface based on database schema
+interface Template {
+  id: string;
+  name: string;
+  slug: string;
+  templateKey: string;
+  ownerEmail: string | null;
+  config: any;
+  maintenance: boolean;
+  isMain: boolean;
+  createdAt: string;
+  updatedAt: string;
+}
+
+// Display template interface
+interface DisplayTemplate {
+  id: string;
+  name: string;
+  preview: string;
+  demoUrl: string;
+  features: string[];
+}
+
 interface TemplateFeature {
   name: string;
   icon: React.ReactNode;
@@ -52,41 +75,118 @@ export default function MainPage() {
   const { translations: t } = useTranslation();
   const { formatPrice } = useLocaleFormat();
   const [selectedPlan, setSelectedPlan] = useState<string>("standard");
+  const [templates, setTemplates] = useState<DisplayTemplate[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
-  const features = [
-    {
-      icon: Globe,
-      title: t.features.items[0].title,
-      description: t.features.items[0].description
-    },
-    {
-      icon: Palette,
-      title: t.features.items[3].title,
-      description: t.features.items[3].description
-    },
-    {
-      icon: Smartphone,
-      title: t.features.items[2].title,
-      description: t.features.items[2].description
-    },
-    {
-      icon: Users,
-      title: t.features.items[1].title,
-      description: t.features.items[1].description
-    },
-    {
-      icon: Camera,
-      title: t.features.items[4].title,
-      description: t.features.items[4].description
-    },
-    {
-      icon: Lock,
-      title: t.features.items[5].title,
-      description: t.features.items[5].description
+  // Fetch templates from API
+  useEffect(() => {
+    const fetchTemplates = async () => {
+      try {
+        setLoading(true);
+        const response = await fetch('/api/templates');
+        if (!response.ok) {
+          throw new Error('Failed to fetch templates');
+        }
+        const apiTemplates: Template[] = await response.json();
+        
+        // Filter only main templates for display
+        const mainTemplates = apiTemplates.filter(template => template.isMain);
+        
+        // Convert API templates to display format - USE ACTUAL TEMPLATE DATA
+        const displayTemplates = mainTemplates.map((template, index) => {
+          // Map template previews based on template name or slug - preserve order from database
+          let previewImage = `/api/images/template-preview-${Math.min(index + 1, 5)}.jpg`;
+          
+          // Try to match specific templates to their preview images based on actual slugs
+          if (template.slug.includes('harut') || template.name.toLowerCase().includes('harut')) {
+            previewImage = '/api/images/template-preview-1.jpg';
+          } else if (template.slug.includes('forest') || template.slug.includes('lily') || template.name.toLowerCase().includes('forest') || template.name.toLowerCase().includes('lily')) {
+            previewImage = '/api/images/template-preview-2.jpg';
+          } else if (template.slug.includes('michael') || template.slug.includes('sarah') || template.name.toLowerCase().includes('classic')) {
+            previewImage = '/api/images/template-preview-3.jpg';
+          } else if (template.slug.includes('alexander') || template.slug.includes('isabella') || template.name.toLowerCase().includes('elegant')) {
+            previewImage = '/api/images/template-preview-4.jpg';
+          } else if (template.slug.includes('david') || template.slug.includes('rose') || template.name.toLowerCase().includes('romantic')) {
+            previewImage = '/api/images/template-preview-5.jpg';
+          } else {
+            // Ensure first template always has an image - assign based on order
+            const imageMapping = [
+              '/api/images/template-preview-1.jpg',
+              '/api/images/template-preview-2.jpg', 
+              '/api/images/template-preview-3.jpg',
+              '/api/images/template-preview-4.jpg',
+              '/api/images/template-preview-5.jpg'
+            ];
+            previewImage = imageMapping[index % imageMapping.length];
+          }
+          
+          return {
+            id: template.slug,
+            name: template.name, // USE ACTUAL TEMPLATE NAME FROM DATABASE
+            preview: previewImage,
+            demoUrl: `/${template.slug}`,
+            features: getTemplateFeatures(template)
+          };
+        });
+        
+        setTemplates(displayTemplates);
+      } catch (err) {
+        console.error('Error fetching templates:', err);
+        setError('Failed to load templates');
+        // Fall back to hardcoded templates if API fails
+        setTemplates(fallbackTemplates);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchTemplates();
+  }, []);
+
+  // Extract features from template config - use actual template data
+  const getTemplateFeatures = (template: Template) => {
+    const features = [];
+    
+    // Try to extract features from template config if available
+    if (template.config) {
+      // Check if config has specific features
+      if (template.config.features) {
+        return template.config.features;
+      }
+      
+      // Check for specific configuration properties
+      if (template.config.hasTimeline) features.push('Timeline');
+      if (template.config.hasGallery) features.push('Photo Gallery');
+      if (template.config.hasMusic) features.push('Music Player');
+      if (template.config.theme) features.push(`${template.config.theme} Theme`);
     }
-  ];
+    
+    // Add features based on template slug patterns (fallback)
+    if (template.slug.includes('harut') || template.name.toLowerCase().includes('armenian')) {
+      features.push('Armenian Fonts');
+    }
+    if (template.slug.includes('forest') || template.slug.includes('lily') || template.name.toLowerCase().includes('nature')) {
+      features.push('Nature Theme', 'Green Colors');
+    }
+    if (template.slug.includes('classic') || template.name.toLowerCase().includes('classic')) {
+      features.push('Classic Design');
+    }
+    if (template.slug.includes('elegant') || template.name.toLowerCase().includes('elegant')) {
+      features.push('Elegant Style');
+    }
+    if (template.slug.includes('romantic') || template.name.toLowerCase().includes('romantic')) {
+      features.push('Romantic Design');
+    }
+    
+    // Add common features that all templates should have
+    features.push('RSVP', 'Mobile Responsive');
+    
+    return features;
+  };
 
-  const templates = [
+  // Fallback templates in case API fails
+  const fallbackTemplates: DisplayTemplate[] = [
     {
       id: "harut-tatev",
       name: "Elegant Armenian Wedding",
@@ -121,6 +221,39 @@ export default function MainPage() {
       preview: "/api/images/template-preview-5.jpg",
       demoUrl: "/david-rose-romantic",
       features: ["Romantic Design", "Pink Theme", "Music Player", "Love Story"]
+    }
+  ];
+
+  const features = [
+    {
+      icon: Globe,
+      title: t.features.items[0].title,
+      description: t.features.items[0].description
+    },
+    {
+      icon: Palette,
+      title: t.features.items[3].title,
+      description: t.features.items[3].description
+    },
+    {
+      icon: Smartphone,
+      title: t.features.items[2].title,
+      description: t.features.items[2].description
+    },
+    {
+      icon: Users,
+      title: t.features.items[1].title,
+      description: t.features.items[1].description
+    },
+    {
+      icon: Camera,
+      title: t.features.items[4].title,
+      description: t.features.items[4].description
+    },
+    {
+      icon: Lock,
+      title: t.features.items[5].title,
+      description: t.features.items[5].description
     }
   ];
 
@@ -369,26 +502,63 @@ export default function MainPage() {
               Choose from our collection of stunning wedding website templates
             </p>
           </div>
-          <div className="grid md:grid-cols-2 gap-12">
-            {templates.map((template) => (
-              <div key={template.id} className="bg-white rounded-xl shadow-xl overflow-hidden hover:shadow-2xl transition-shadow">
-                <div className="aspect-video bg-gradient-to-br from-softGold/20 to-sageGreen/20 flex items-center justify-center">
-                  <div className="text-center p-8">
-                    <h3 className="text-2xl font-bold text-charcoal mb-2">{template.name}</h3>
-                    <p className="text-charcoal/60 mb-4">Live Preview Available</p>
+          
+          {loading ? (
+            <div className="text-center py-12">
+              <div className="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-softGold"></div>
+              <p className="mt-4 text-charcoal/60">Loading templates...</p>
+            </div>
+          ) : error ? (
+            <div className="text-center py-12">
+              <p className="text-red-600 mb-4">{error}</p>
+              <p className="text-charcoal/60">Showing default templates</p>
+            </div>
+          ) : null}
+          
+          <div className="grid sm:grid-cols-1 md:grid-cols-2 lg:grid-cols-2 gap-8">
+            {templates.map((template, index) => (
+              <div 
+                key={template.id} 
+                className="bg-white rounded-xl shadow-xl overflow-hidden hover:shadow-2xl transition-all duration-300 hover:scale-105 group"
+                style={{ animationDelay: `${index * 0.1}s` }}
+              >
+                <div className="relative aspect-video overflow-hidden bg-gray-100">
+                  <img 
+                    src={template.preview} 
+                    alt={`${template.name} preview`}
+                    className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
+                    loading="lazy"
+                    onLoad={(e) => {
+                      // Image loaded successfully
+                      const target = e.target as HTMLImageElement;
+                      target.style.opacity = '1';
+                      target.parentElement!.classList.remove('bg-gray-100');
+                    }}
+                    style={{ opacity: 0, transition: 'opacity 0.3s ease-in-out' }}
+                  />
+                  {/* Overlay with demo button */}
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-end justify-center pb-6">
                     <Link 
                       to={template.demoUrl}
-                      className="inline-flex items-center bg-softGold hover:bg-softGold/90 text-white px-6 py-3 rounded-lg transition-colors"
+                      className="inline-flex items-center bg-white hover:bg-gray-100 text-charcoal px-6 py-3 rounded-lg transition-all duration-300 font-semibold shadow-lg transform translate-y-4 group-hover:translate-y-0"
                     >
                       View Live Demo <ArrowRight className="ml-2 h-4 w-4" />
                     </Link>
                   </div>
+                  {/* Template label */}
+                  <div className="absolute top-4 left-4">
+                    <span className="bg-white/90 backdrop-blur-sm text-charcoal px-3 py-1 rounded-full text-sm font-medium shadow-lg">
+                      Template
+                    </span>
+                  </div>
                 </div>
                 <div className="p-6">
-                  <h4 className="font-semibold text-charcoal mb-3">Features:</h4>
+                  <h3 className="text-xl font-bold text-charcoal mb-2">{template.name}</h3>
+                  <p className="text-charcoal/60 mb-4 text-sm">Live Preview Available • Mobile Responsive</p>
+                  <h4 className="font-semibold text-charcoal mb-3 text-sm">Features:</h4>
                   <div className="flex flex-wrap gap-2">
-                    {template.features.map((feature, idx) => (
-                      <span key={idx} className="bg-softGold/10 text-softGold px-3 py-1 rounded-full text-sm">
+                    {template.features.map((feature: string, idx: number) => (
+                      <span key={idx} className="bg-softGold/10 text-softGold px-3 py-1 rounded-full text-sm font-medium border border-softGold/20">
                         {feature}
                       </span>
                     ))}
