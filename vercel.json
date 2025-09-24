@@ -16,14 +16,34 @@
   "routes": [
     {
       "src": "/manifest.json",
-      "dest": "/manifest.json",
       "headers": {
         "Cache-Control": "public, max-age=86400"
       }
     },
     {
-      "src": "/favicon.png",
-      "dest": "/favicon.png"
+      "src": "/favicon.png"
+    },
+    {
+      "src": "/sw.js",
+      "headers": {
+        "Cache-Control": "public, max-age=0"
+      }
+    },
+    {
+      "src": "/assets/(.*)"
+    },
+    {
+      "src": "/fonts/(.*)"
+    },
+    {
+      "src": "/audio/(.*)"
+    },
+    {
+      "src": "/template_previews/(.*)"
+    },
+    {
+      "src": "/attached_assets/(.*)",
+      "dest": "/attached_assets/$1"
     },
     {
       "src": "/api/(.*)",
@@ -38,16 +58,7 @@
       "dest": "/server/index.ts"
     },
     {
-      "src": "/attached_assets/(.*)",
-      "dest": "/attached_assets/$1"
-    },
-    {
-      "src": "/assets/(.*)",
-      "dest": "/assets/$1"
-    },
-    {
-      "src": "/(.+\\.(js|css|png|jpg|jpeg|gif|ico|svg|woff|woff2|ttf|eot|mp3|mp4|webp|webm))",
-      "dest": "/$1"
+      "src": "/(.+\\.(js|css|png|jpg|jpeg|gif|ico|svg|woff|woff2|ttf|eot|mp3|mp4|webp|webm))"
     },
     {
       "src": "/(.*)",

@@ -134,14 +134,20 @@ app.use((req, res, next) => {
       const { setupVite } = await import("./vite.js");
       await setupVite(app, server);
     } else {
-      // In production, serve static files from dist
-      const staticPath = path.join(process.cwd(), "dist/public");
-      app.use(express.static(staticPath));
+      // In production on Vercel, static files are handled by Vercel routing
+      // Only set up the catch-all for SPA routing if needed
       
-      // Handle SPA routing - serve index.html for non-API routes
-      app.get("*", (_req, res) => {
-        res.sendFile(path.join(staticPath, "index.html"));
-      });
+      // Serve static files only if running locally in production mode
+      if (!process.env.VERCEL) {
+        const staticPath = path.join(process.cwd(), "dist/public");
+        app.use(express.static(staticPath));
+        
+        // Handle SPA routing - serve index.html for non-API routes
+        app.get("*", (_req, res) => {
+          res.sendFile(path.join(staticPath, "index.html"));
+        });
+      }
+      // On Vercel, routing is handled by vercel.json
     }
 
     // Simplified server.listen call with timeout handling
