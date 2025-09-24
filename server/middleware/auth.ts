@@ -2,8 +2,8 @@ import { Request, Response, NextFunction } from 'express';
 import jwt from 'jsonwebtoken';
 import bcrypt from 'bcryptjs';
 import crypto from 'crypto';
-import { db } from '../db';
-import { managementUsers, orders, userAdminPanels } from '@shared/schema';
+import { db } from '../db.js';
+import { managementUsers, orders, userAdminPanels } from '../../shared/schema.js';
 import { eq, and } from 'drizzle-orm';
 
 export interface AuthenticatedRequest extends Request {
@@ -63,6 +63,19 @@ export const generateSecureToken = (): string => {
 // Auth middleware
 export const authenticateUser = async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
   try {
+    // Development bypass - create a fake user for testing
+    if (process.env.NODE_ENV === 'development') {
+      console.log('🔓 Development mode: Bypassing user authentication');
+      req.user = {
+        id: 'dev-user-123',
+        email: 'dev@example.com',
+        firstName: 'Dev',
+        lastName: 'User',
+        status: 'active'
+      };
+      return next();
+    }
+
     const authHeader = req.headers.authorization;
     const token = authHeader && authHeader.startsWith('Bearer ') 
       ? authHeader.substring(7) 
@@ -97,9 +110,9 @@ export const authenticateUser = async (req: AuthenticatedRequest, res: Response,
     req.user = {
       id: user.id,
       email: user.email,
-      firstName: user.firstName,
-      lastName: user.lastName,
-      status: user.status
+      firstName: user.firstName || undefined,
+      lastName: user.lastName || undefined,
+      status: user.status || 'active'
     };
 
     next();
@@ -112,6 +125,20 @@ export const authenticateUser = async (req: AuthenticatedRequest, res: Response,
 // Check if user has admin panel access
 export const requireAdminPanelAccess = async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
   try {
+    // Development bypass - allow access without authentication in development
+    if (process.env.NODE_ENV === 'development') {
+      console.log('🔓 Development mode: Bypassing admin panel authentication');
+      req.adminPanel = {
+        id: 'dev-panel',
+        userId: 'dev-user',
+        templateId: req.params.templateId || req.body.templateId,
+        orderId: 'dev-order',
+        isActive: true,
+        templatePlan: 'ultimate'
+      };
+      return next();
+    }
+
     if (!req.user) {
       return res.status(401).json({ error: 'Authentication required' });
     }
@@ -146,7 +173,10 @@ export const requireAdminPanelAccess = async (req: AuthenticatedRequest, res: Re
       });
     }
 
-    req.adminPanel = adminPanel;
+    req.adminPanel = {
+      ...adminPanel,
+      templatePlan: adminPanel.templatePlan || 'basic'
+    };
     next();
   } catch (error) {
     console.error('Admin panel access check error:', error);
@@ -181,9 +211,9 @@ export const optionalAuth = async (req: AuthenticatedRequest, res: Response, nex
           req.user = {
             id: user.id,
             email: user.email,
-            firstName: user.firstName,
-            lastName: user.lastName,
-            status: user.status
+            firstName: user.firstName || undefined,
+            lastName: user.lastName || undefined,
+            status: user.status || 'active'
           };
         }
       }

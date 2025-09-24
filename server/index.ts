@@ -2,7 +2,12 @@ import "dotenv/config";
 import express, { type Request, Response, NextFunction } from "express";
 import { registerRoutes } from "./routes.js";
 import { registerAdminRoutes } from "./routes/admin.js";
-import { setupVite, serveStatic, log } from "./vite.js";
+import path from "path";
+
+// Simple logging function
+const log = (message: string) => {
+  console.log(`[${new Date().toISOString()}] ${message}`);
+};
 
 // Environment variable validation
 function validateEnvironment() {
@@ -125,9 +130,18 @@ app.use((req, res, next) => {
 
     // Use NODE_ENV directly for better production detection
     if (env.nodeEnv === "development") {
+      // Only import vite in development to avoid bundling it in production
+      const { setupVite } = await import("./vite.js");
       await setupVite(app, server);
     } else {
-      serveStatic(app);
+      // In production, serve static files from dist
+      const staticPath = path.join(process.cwd(), "dist/public");
+      app.use(express.static(staticPath));
+      
+      // Handle SPA routing - serve index.html for non-API routes
+      app.get("*", (_req, res) => {
+        res.sendFile(path.join(staticPath, "index.html"));
+      });
     }
 
     // Simplified server.listen call with timeout handling

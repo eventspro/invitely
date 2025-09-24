@@ -1,7 +1,7 @@
 // Platform Admin API Routes
 import type { Express } from "express";
-import { storage } from "../storage";
-import { insertTemplateSchema, updateTemplateSchema } from "@shared/schema";
+import { storage } from "../storage.js";
+import { insertTemplateSchema, updateTemplateSchema } from "../../shared/schema.js";
 import { z } from "zod";
 import jwt from "jsonwebtoken";
 

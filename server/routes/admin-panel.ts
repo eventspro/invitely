@@ -1,5 +1,5 @@
 import express from 'express';
-import { db } from '../db';
+import { db } from '../db.js';
 import { 
   managementUsers, 
   rsvps, 
@@ -9,9 +9,9 @@ import {
   activityLogs,
   templates,
   orders 
-} from '@shared/schema';
+} from '../../shared/schema.js';
 import { eq, and, desc, count, sql } from 'drizzle-orm';
-import { authenticateUser, requireAdminPanelAccess, AuthenticatedRequest } from '../middleware/auth';
+import { authenticateUser, requireAdminPanelAccess, AuthenticatedRequest } from '../middleware/auth.js';
 import multer from 'multer';
 import path from 'path';
 import fs from 'fs/promises';

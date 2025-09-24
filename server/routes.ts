@@ -64,49 +64,19 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Register template routes (for template-specific endpoints)
   registerTemplateRoutes(app);
   
-  // RSVP submission endpoint
+  // Legacy RSVP endpoint - redirect to template-scoped endpoint
   app.post("/api/rsvp", async (req, res) => {
     try {
-      const validatedData = insertRsvpSchema.parse(req.body);
+      // Try to determine the template ID from the request or use default
+      const templateId = req.body.templateId || 'default-harut-tatev';
       
-      // Check if email already exists
-      // const existingRsvp = await storage.getRsvpByEmail(validatedData.email);
-      // if (existingRsvp) {
-      //   return res.status(400).json({ 
-      //     message: "Այս էլ․ հասցեով արդեն ուղարկվել է հաստատում" 
-      //   });
-      // }
-
-      const rsvp = await storage.createRsvp(validatedData);
-      
-      // Send email notifications
-      try {
-        await Promise.all([
-          sendRsvpNotificationEmails(rsvp),
-          sendRsvpConfirmationEmail(rsvp)
-        ]);
-      } catch (emailError) {
-        console.error("Email notification error:", emailError);
-        // Continue with success response even if emails fail
-      }
-      
-      res.json({ 
-        message: "Շնորհակալություն! Ձեր հաստատումը ստացվել է:",
-        rsvp: {
-          id: rsvp.id,
-          firstName: rsvp.firstName,
-          lastName: rsvp.lastName,
-          attendance: rsvp.attendance
-        }
+      // Redirect to template-scoped endpoint
+      return res.status(301).json({ 
+        message: "Please use template-specific RSVP endpoint",
+        redirectTo: `/api/templates/${templateId}/rsvp`
       });
     } catch (error) {
-      if (error instanceof z.ZodError) {
-        return res.status(400).json({ 
-          message: "Տվյալները ճիշտ չեն լրացված",
-          errors: error.errors 
-        });
-      }
-      console.error("RSVP submission error:", error);
+      console.error("Legacy RSVP endpoint error:", error);
       res.status(500).json({ message: "Սերվերի սխալ" });
     }
   });
@@ -227,7 +197,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const { filename } = req.params;
       
-      const filePath = path.join(process.cwd(), 'uploads', filename);
+      // Check if this is a template-scoped image (new format: templateId-image-timestamp-random.ext)
+      const templateMatch = filename.match(/^([a-f0-9-]{36})-/);
+      let filePath: string;
+      
+      if (templateMatch) {
+        // Template-scoped image: look in uploads/templateId/filename
+        const templateId = templateMatch[1];
+        filePath = path.join(process.cwd(), 'uploads', templateId, filename);
+      } else {
+        // Legacy image: look in uploads/filename
+        filePath = path.join(process.cwd(), 'uploads', filename);
+      }
       
       // Check if file exists
       if (!fs.existsSync(filePath)) {
@@ -415,29 +396,58 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Template configuration endpoints
-  app.get("/api/templates/:templateId/config", async (req, res) => {
+  app.get("/api/templates/:identifier/config", async (req, res) => {
     try {
-      const { templateId } = req.params;
-      console.log(`📋 Getting template config for: ${templateId}`);
-      console.log(`🔧 Environment check - DATABASE_URL exists: ${!!process.env.DATABASE_URL}`);
-      console.log(`🔧 Environment check - NODE_ENV: ${process.env.NODE_ENV}`);
+      const { identifier } = req.params;
+      console.log(`📋 Getting template config for: ${identifier}`);
+      
+      // Sanitize identifier to prevent injection
+      const sanitizedIdentifier = identifier.replace(/[^a-zA-Z0-9-_]/g, '');
+      if (!sanitizedIdentifier) {
+        return res.status(400).json({ message: "Invalid template identifier" });
+      }
       
       // Try to find template by ID first, then by slug
-      let template = await storage.getTemplate(templateId);
+      let template = await storage.getTemplate(sanitizedIdentifier);
       if (!template) {
-        console.log(`❌ Template not found by ID, trying slug: ${templateId}`);
-        template = await storage.getTemplateBySlug(templateId);
+        console.log(`📋 Template not found by ID, trying slug: ${sanitizedIdentifier}`);
+        template = await storage.getTemplateBySlug(sanitizedIdentifier);
       }
       
       if (!template) {
-        console.log(`❌ Template not found by ID or slug: ${templateId}`);
-        return res.status(404).json({ message: "Template not found" });
+        console.log(`❌ Template not found: ${sanitizedIdentifier}`);
+        return res.status(404).json({ 
+          message: "Template not found",
+          identifier: sanitizedIdentifier
+        });
+      }
+      
+      // Check if template is in maintenance mode
+      if (template.maintenance) {
+        const maintenanceConfig = (template.config as any).maintenance || {};
+        return res.json({
+          templateId: template.id,
+          templateKey: template.templateKey,
+          maintenance: true,
+          maintenanceConfig: {
+            title: maintenanceConfig.title || 'Site Under Maintenance',
+            message: maintenanceConfig.message || 'We will be back soon',
+            enabled: true
+          }
+        });
       }
       
       console.log(`✅ Template found: ${template.name} (${template.id})`);
       
       // Load images for this template and enrich the configuration
-      const allImages = await storage.getImages(template.id);
+      let allImages = [];
+      try {
+        allImages = await storage.getImages(template.id);
+      } catch (imageError) {
+        console.warn(`⚠️ Could not load images for template ${template.id}:`, imageError);
+        // Continue without images
+      }
+      
       const heroImages = allImages.filter(img => img.category === 'hero').map(img => img.url);
       const galleryImages = allImages.filter(img => img.category === 'gallery').map(img => img.url);
       
@@ -447,31 +457,32 @@ export async function registerRoutes(app: Express): Promise<Server> {
         ...config,
         hero: {
           ...config.hero,
-          images: heroImages
+          images: heroImages.length > 0 ? heroImages : config.hero?.images || []
         },
         photos: {
           ...config.photos,
-          images: galleryImages
+          images: galleryImages.length > 0 ? galleryImages : config.photos?.images || []
         }
       };
       
       const templateInfo = {
         templateId: template.id,
         templateKey: template.templateKey,
+        slug: template.slug,
         config: enrichedConfig,
-        maintenance: template.maintenance || false
+        maintenance: false
       };
       
-      console.log(`✅ Template info loaded successfully with ${heroImages.length} hero images and ${galleryImages.length} gallery images`);
+      // Set cache headers for better performance
+      res.setHeader('Cache-Control', 'public, max-age=300'); // 5 minutes
+      
+      console.log(`✅ Template config loaded: ${heroImages.length} hero, ${galleryImages.length} gallery images`);
       res.json(templateInfo);
     } catch (error) {
-      console.error("❌ Get template config error details:", error);
-      console.error("❌ Error stack:", error instanceof Error ? error.stack : 'No stack available');
-      console.error("❌ Database URL available:", !!process.env.DATABASE_URL);
+      console.error("❌ Get template config error:", error);
       res.status(500).json({ 
         message: "Server error",
-        error: error instanceof Error ? error.message : 'Unknown error',
-        hasDatabase: !!process.env.DATABASE_URL
+        error: process.env.NODE_ENV === 'development' ? (error instanceof Error ? error.message : 'Unknown error') : 'Internal server error'
       });
     }
   });

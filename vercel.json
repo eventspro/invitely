@@ -42,8 +42,16 @@
       "dest": "/attached_assets/$1"
     },
     {
-      "src": "/(.*)",
+      "src": "/assets/(.*)",
+      "dest": "/dist/public/assets/$1"
+    },
+    {
+      "src": "/(.+\\.(js|css|png|jpg|jpeg|gif|ico|svg|woff|woff2|ttf|eot|mp3|mp4|webp|webm))",
       "dest": "/dist/public/$1"
+    },
+    {
+      "src": "/(.*)",
+      "dest": "/server/index.ts"
     }
   ]
 }

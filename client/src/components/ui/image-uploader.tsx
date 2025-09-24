@@ -41,7 +41,7 @@ export const ImageUploader: React.FC<ImageUploaderProps> = ({
   React.useEffect(() => {
     const loadImages = async () => {
       try {
-        const response = await fetch(`/api/images?templateId=${templateId}&category=${category}`);
+        const response = await fetch(`/api/templates/${templateId}/images?category=${category}`);
         if (response.ok) {
           const imageData = await response.json();
           setImages(imageData);
@@ -59,7 +59,7 @@ export const ImageUploader: React.FC<ImageUploaderProps> = ({
   const uploadFiles = useCallback(async (files: FileList) => {
     if (!files.length) return;
 
-    if (images.length + files.length > maxFiles) {
+    if (existingImages.length + files.length > maxFiles) {
       setError(`Կարող եք ավելացնել ամենաշատը ${maxFiles} նկար`);
       return;
     }
@@ -79,10 +79,9 @@ export const ImageUploader: React.FC<ImageUploaderProps> = ({
 
         const formData = new FormData();
         formData.append('image', file);
-        formData.append('templateId', templateId);
         formData.append('category', category);
 
-        const response = await fetch('/api/images/upload', {
+        const response = await fetch(`/api/templates/${templateId}/photos/upload`, {
           method: 'POST',
           body: formData,
         });
@@ -115,12 +114,11 @@ export const ImageUploader: React.FC<ImageUploaderProps> = ({
 
   const removeImage = useCallback(async (imageId: string) => {
     try {
-      const response = await fetch('/api/images', {
+      const response = await fetch(`/api/templates/${templateId}/images/${imageId}`, {
         method: 'DELETE',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ id: imageId, templateId }),
       });
 
       if (response.ok) {

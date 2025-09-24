@@ -1,8 +1,8 @@
 import express from 'express';
-import { db } from '../db';
-import { managementUsers, orders, userAdminPanels, templates } from '@shared/schema';
+import { db } from '../db.js';
+import { managementUsers, orders, userAdminPanels, templates } from '../../shared/schema.js';
 import { eq, and, desc } from 'drizzle-orm';
-import { hashPassword, generateToken } from '../middleware/auth';
+import { hashPassword, generateToken } from '../middleware/auth.js';
 
 const router = express.Router();
 

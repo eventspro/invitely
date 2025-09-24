@@ -96,29 +96,19 @@ export default function MainPage() {
         // Convert API templates to display format - USE ACTUAL TEMPLATE DATA
         const displayTemplates = mainTemplates.map((template, index) => {
           // Map template previews based on template name or slug - preserve order from database
-          let previewImage = `/api/images/template-preview-${Math.min(index + 1, 5)}.jpg`;
+          let previewImage = `/template_previews/template-preview-${Math.min(index + 1, 5)}.jpg`;
           
           // Try to match specific templates to their preview images based on actual slugs
-          if (template.slug.includes('harut') || template.name.toLowerCase().includes('harut')) {
-            previewImage = '/api/images/template-preview-1.jpg';
-          } else if (template.slug.includes('forest') || template.slug.includes('lily') || template.name.toLowerCase().includes('forest') || template.name.toLowerCase().includes('lily')) {
-            previewImage = '/api/images/template-preview-2.jpg';
-          } else if (template.slug.includes('michael') || template.slug.includes('sarah') || template.name.toLowerCase().includes('classic')) {
-            previewImage = '/api/images/template-preview-3.jpg';
-          } else if (template.slug.includes('alexander') || template.slug.includes('isabella') || template.name.toLowerCase().includes('elegant')) {
-            previewImage = '/api/images/template-preview-4.jpg';
-          } else if (template.slug.includes('david') || template.slug.includes('rose') || template.name.toLowerCase().includes('romantic')) {
-            previewImage = '/api/images/template-preview-5.jpg';
-          } else {
-            // Ensure first template always has an image - assign based on order
-            const imageMapping = [
-              '/api/images/template-preview-1.jpg',
-              '/api/images/template-preview-2.jpg', 
-              '/api/images/template-preview-3.jpg',
-              '/api/images/template-preview-4.jpg',
-              '/api/images/template-preview-5.jpg'
-            ];
-            previewImage = imageMapping[index % imageMapping.length];
+          if (template.slug.includes('harut')) {
+            previewImage = '/template_previews/template-preview-1.jpg';
+          } else if (template.slug.includes('forest') || template.slug.includes('lily')) {
+            previewImage = '/template_previews/template-preview-2.jpg';
+          } else if (template.slug.includes('michael') || template.slug.includes('sarah')) {
+            previewImage = '/template_previews/template-preview-3.jpg';
+          } else if (template.slug.includes('alexander') || template.slug.includes('isabella')) {
+            previewImage = '/template_previews/template-preview-4.jpg';
+          } else if (template.slug.includes('david') || template.slug.includes('rose')) {
+            previewImage = '/template_previews/template-preview-5.jpg';
           }
           
           return {
@@ -190,35 +180,35 @@ export default function MainPage() {
     {
       id: "harut-tatev",
       name: "Elegant Armenian Wedding",
-      preview: "/api/images/template-preview-1.jpg",
+      preview: "/template_previews/template-preview-1.jpg",
       demoUrl: "/harut-tatev",
       features: ["Armenian Fonts", "Timeline", "RSVP", "Photo Gallery"]
     },
     {
       id: "forest-lily",
       name: "Nature Wedding Theme",
-      preview: "/api/images/template-preview-2.jpg", 
+      preview: "/template_previews/template-preview-2.jpg", 
       demoUrl: "/forest-lily-nature",
       features: ["Nature Theme", "Green Colors", "RSVP", "Calendar"]
     },
     {
       id: "classic-wedding",
       name: "Classic Romantic Wedding",
-      preview: "/api/images/template-preview-3.jpg",
+      preview: "/template_previews/template-preview-3.jpg",
       demoUrl: "/michael-sarah-classic",
       features: ["Classic Design", "Elegant Style", "RSVP", "Mobile Responsive"]
     },
     {
       id: "luxury-wedding",
       name: "Luxury Elegant Wedding",
-      preview: "/api/images/template-preview-4.jpg",
+      preview: "/template_previews/template-preview-4.jpg",
       demoUrl: "/alexander-isabella-elegant",
       features: ["Premium Features", "Admin Panel", "Blue Theme", "Full Gallery"]
     },
     {
       id: "modern-wedding",
       name: "Romantic Pink Wedding",
-      preview: "/api/images/template-preview-5.jpg",
+      preview: "/template_previews/template-preview-5.jpg",
       demoUrl: "/david-rose-romantic",
       features: ["Romantic Design", "Pink Theme", "Music Player", "Love Story"]
     }

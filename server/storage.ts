@@ -17,7 +17,7 @@ import {
 } from "../shared/schema.js";
 import { randomUUID } from "crypto";
 import { db } from "./db.js";
-import { eq, desc, and } from "drizzle-orm";
+import { eq, desc, and, or } from "drizzle-orm";
 
 export interface IStorage {
   // User management
@@ -177,7 +177,13 @@ export class DatabaseStorage implements IStorage {
     const [rsvp] = await db
       .select()
       .from(rsvps)
-      .where(and(eq(rsvps.email, email), eq(rsvps.templateId, templateId)));
+      .where(and(
+        eq(rsvps.templateId, templateId),
+        or(
+          eq(rsvps.email, email),
+          eq(rsvps.guestEmail, email)
+        )
+      ));
     return rsvp || undefined;
   }
 

@@ -1503,11 +1503,6 @@ export default function TemplateAdminPanel() {
                   }
                 };
                 setTemplate(prev => prev ? { ...prev, config: newConfig } : null);
-                
-                // Refresh template data to get the latest state from server
-                setTimeout(() => {
-                  loadTemplateData();
-                }, 1000);
               }}
               maxImages={5}
             />
@@ -1528,11 +1523,6 @@ export default function TemplateAdminPanel() {
                   }
                 };
                 setTemplate(prev => prev ? { ...prev, config: newConfig } : null);
-                
-                // Refresh template data to get the latest state from server
-                setTimeout(() => {
-                  loadTemplateData();
-                }, 1000);
               }}
               maxImages={20}
             />

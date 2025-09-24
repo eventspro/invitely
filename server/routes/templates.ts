@@ -1,10 +1,10 @@
 // Template Management API Routes
 import type { Express } from "express";
-import { storage } from "../storage";
+import { storage } from "../storage.js";
 import { insertRsvpSchema, updateTemplateSchema } from "../../shared/schema.js";
 import { z } from "zod";
-import { authenticateUser, requireAdminPanelAccess } from "../middleware/auth";
-import { sendTemplateRsvpNotificationEmails, sendTemplateRsvpConfirmationEmail } from "../email";
+import { authenticateUser, requireAdminPanelAccess } from "../middleware/auth.js";
+import { sendTemplateRsvpNotificationEmails, sendTemplateRsvpConfirmationEmail } from "../email.js";
 import multer from "multer";
 import path from "path";
 import fs from "fs";
@@ -60,8 +60,9 @@ export function registerTemplateRoutes(app: Express) {
         templateId
       });
       
-      // Check if email already exists for this template
-      const existingRsvp = await storage.getRsvpByEmail(validatedData.email, templateId);
+      // Check if email already exists for this template (check both possible email fields)
+      const emailToCheck = validatedData.guestEmail || validatedData.email;
+      const existingRsvp = await storage.getRsvpByEmail(emailToCheck, templateId);
       if (existingRsvp) {
         return res.status(400).json({ 
           message: "Այս էլ․ հասցեով արդեն ուղարկվել է հաստատում" 
@@ -228,6 +229,53 @@ export function registerTemplateRoutes(app: Express) {
       });
     } catch (error) {
       console.error("Template maintenance toggle error:", error);
+      res.status(500).json({ message: "Server error" });
+    }
+  });
+
+  // Template-scoped image listing endpoint
+  app.get("/api/templates/:templateId/images", authenticateUser, requireAdminPanelAccess, async (req, res) => {
+    try {
+      const { templateId } = req.params;
+      const { category } = req.query;
+      
+      const template = await storage.getTemplate(templateId);
+      if (!template) {
+        return res.status(404).json({ message: "Template not found" });
+      }
+      
+      // Get images for this template
+      const images = await storage.getImages(templateId, category as string);
+      
+      console.log(`📷 Retrieved ${images.length} images for template ${templateId}${category ? ` (category: ${category})` : ''}`);
+      
+      res.json(images);
+    } catch (error) {
+      console.error("Template images listing error:", error);
+      res.status(500).json({ message: "Server error" });
+    }
+  });
+
+  // Template-scoped image deletion endpoint
+  app.delete("/api/templates/:templateId/images/:imageId", authenticateUser, requireAdminPanelAccess, async (req, res) => {
+    try {
+      const { templateId, imageId } = req.params;
+      
+      const template = await storage.getTemplate(templateId);
+      if (!template) {
+        return res.status(404).json({ message: "Template not found" });
+      }
+      
+      // Delete the image record from database
+      const success = await storage.deleteImage(imageId);
+      if (success) {
+        console.log(`🗑️ Deleted image ${imageId} for template ${templateId}`);
+        res.json({ success: true, message: "Image deleted successfully" });
+      } else {
+        res.status(404).json({ message: "Image not found" });
+      }
+    } catch (error) {
+      console.error("Template image deletion error:", error);
       res.status(500).json({ message: "Server error" });
     }
   });

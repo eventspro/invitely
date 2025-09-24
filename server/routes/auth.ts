@@ -1,6 +1,6 @@
 import express from 'express';
-import { db } from '../db';
-import { managementUsers, orders, userAdminPanels, templates } from '@shared/schema';
+import { db } from '../db.js';
+import { managementUsers, orders, userAdminPanels, templates } from '../../shared/schema.js';
 import { eq, and, sql } from 'drizzle-orm';
 import { 
   hashPassword, 
@@ -9,7 +9,7 @@ import {
   generateSecureToken,
   authenticateUser,
   AuthenticatedRequest 
-} from '../middleware/auth';
+} from '../middleware/auth.js';
 import nodemailer from 'nodemailer';
 import rateLimit from 'express-rate-limit';
 
@@ -133,20 +133,29 @@ router.post('/register', authLimiter, async (req, res) => {
       
       // Create admin panel access if Ultimate template
       if (order.templatePlan === 'ultimate' && order.templateId) {
-        await db
-          .insert(userAdminPanels)
-          .values({
-            userId: user.id,
-            templateId: order.templateId,
-            orderId: order.id,
-            isActive: true,
-          });
+        // Get template slug
+        const [template] = await db.select({ slug: templates.slug })
+          .from(templates)
+          .where(eq(templates.id, order.templateId))
+          .limit(1);
+        
+        if (template) {
+          await db
+            .insert(userAdminPanels)
+            .values({
+              userId: user.id,
+              templateId: order.templateId,
+              templateSlug: template.slug,
+              orderId: order.id,
+              isActive: true,
+            });
         
         // Update order to mark admin access granted
         await db
           .update(orders)
           .set({ adminAccessGranted: true })
           .where(eq(orders.id, order.id));
+        }
       }
     }
 
@@ -283,66 +292,12 @@ router.post('/login', authLimiter, async (req, res) => {
   }
 });
 
-// Template-specific customer login
+// Template-specific customer login - this endpoint is deprecated
+// Users should login through the regular /login endpoint
 router.post('/template-login', authLimiter, async (req, res) => {
-  try {
-    const { email, password, templateSlug } = req.body;
-
-    if (!email || !password || !templateSlug) {
-      return res.status(400).json({ error: 'Email, password, and template are required' });
-    }
-
-    // First, check if this is a direct userAdminPanels entry (Ultimate customers)
-    const adminPanelResult = await db
-      .select({
-        id: userAdminPanels.id,
-        email: userAdminPanels.email,
-        hashedPassword: userAdminPanels.hashedPassword,
-        templateSlug: userAdminPanels.templateSlug,
-        isActive: userAdminPanels.isActive,
-      })
-      .from(userAdminPanels)
-      .where(
-        and(
-          eq(userAdminPanels.email, email.toLowerCase()),
-          eq(userAdminPanels.templateSlug, templateSlug),
-          eq(userAdminPanels.isActive, true)
-        )
-      )
-      .limit(1);
-
-    if (adminPanelResult.length === 0) {
-      return res.status(401).json({ error: 'Invalid credentials or template access' });
-    }
-
-    const customer = adminPanelResult[0];
-
-    // Verify password
-    const passwordValid = await comparePassword(password, customer.hashedPassword);
-    if (!passwordValid) {
-      return res.status(401).json({ error: 'Invalid credentials' });
-    }
-
-    // Generate JWT token with template context
-    const token = generateToken(customer.id, customer.email, { 
-      templateSlug: customer.templateSlug,
-      role: 'template-admin' 
-    });
-
-    res.json({
-      message: 'Login successful',
-      token,
-      user: {
-        id: customer.id,
-        email: customer.email,
-        templateSlug: customer.templateSlug,
-        role: 'template-admin'
-      }
-    });
-  } catch (error) {
-    console.error('Template login error:', error);
-    res.status(500).json({ error: 'Login failed' });
-  }
+  res.status(404).json({ 
+    error: 'This endpoint is deprecated. Please use /login instead.' 
+  });
 });
 
 // Verify email
@@ -617,12 +572,21 @@ router.post('/create-order', async (req, res) => {
 
     // If this is an Ultimate plan, create admin panel access
     if (templatePlan.toLowerCase() === 'ultimate') {
-      await db.insert(userAdminPanels).values({
-        userId: user.id,
-        templateId,
-        orderId: order.id,
-        isActive: true
-      });
+      // Get template slug
+      const [template] = await db.select({ slug: templates.slug })
+        .from(templates)
+        .where(eq(templates.id, templateId))
+        .limit(1);
+      
+      if (template) {
+        await db.insert(userAdminPanels).values({
+          userId: user.id,
+          templateId,
+          templateSlug: template.slug,
+          orderId: order.id,
+          isActive: true
+        });
+      }
     }
 
     res.json({ 
