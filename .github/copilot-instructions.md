@@ -56,7 +56,7 @@ Routes in `server/routes/` follow RESTful conventions:
 
 ### Component Architecture
 - **Shadcn/UI components** in `client/src/components/ui/`
-- **Path aliases**: `@/` → `client/src/`, `@shared/` → `shared/`, `@assets/` → `attached_assets/`
+- **Path aliases**: `@/` → `client/src/`, `@shared/` → `shared/`, `@assets/` → `client/public/attached_assets/`
 - **State management**: TanStack Query for server state, Context for app-level state
 - **Styling**: Tailwind with custom CSS variables for wedding themes
 
@@ -76,7 +76,7 @@ This platform specifically supports **Armenian weddings** with:
 ### Deployment & Environment
 - **Vercel deployment** with `vercel.json` configuration for SPA routing
 - **Environment variables**: `DATABASE_URL`, `JWT_SECRET`, admin credentials
-- **Asset handling**: Static assets in `attached_assets/` served via Vercel routes
+- **Asset handling**: Static assets in `client/public/attached_assets/` served via Vercel routes
 - **Monitoring**: Health check at `/health`, request logging middleware
 
 ## Common Development Tasks

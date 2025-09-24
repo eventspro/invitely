@@ -19,7 +19,7 @@ export const defaultConfig: WeddingConfig = {
     musicButton: "Play Music",
     playIcon: "▶️",
     pauseIcon: "⏸️",
-    images: ["/api/assets/default-wedding-couple.jpg"]
+    images: ["/attached_assets/default-wedding-couple.jpg"]
   },
   countdown: {
     subtitle: "Until our big day",
@@ -127,7 +127,7 @@ export const defaultConfig: WeddingConfig = {
     downloadButton: "Download",
     uploadButton: "Upload Photo",
     comingSoonMessage: "Photos coming soon",
-    images: ["/api/assets/default-wedding-couple.jpg"]
+    images: ["/attached_assets/default-wedding-couple.jpg"]
   },
   navigation: {
     home: "Home",

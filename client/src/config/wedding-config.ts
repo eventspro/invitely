@@ -24,7 +24,7 @@ export const weddingConfig = {
     musicButton: "Երաժշտություն",
     playIcon: "▶️",
     pauseIcon: "⏸️",
-    images: ["/api/assets/default-wedding-couple.jpg"], // Hero background images array
+    images: ["/attached_assets/default-wedding-couple.jpg"], // Hero background images array
   },
 
   // Countdown Section

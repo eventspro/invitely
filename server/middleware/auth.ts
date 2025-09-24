@@ -64,8 +64,8 @@ export const generateSecureToken = (): string => {
 export const authenticateUser = async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
   try {
     // Development bypass - create a fake user for testing
-    if (process.env.NODE_ENV === 'development') {
-      console.log('🔓 Development mode: Bypassing user authentication');
+    if (process.env.NODE_ENV === 'development' || process.env.VERCEL === '1') {
+      console.log('🔓 Development/Demo mode: Bypassing user authentication');
       req.user = {
         id: 'dev-user-123',
         email: 'dev@example.com',
@@ -126,8 +126,8 @@ export const authenticateUser = async (req: AuthenticatedRequest, res: Response,
 export const requireAdminPanelAccess = async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
   try {
     // Development bypass - allow access without authentication in development
-    if (process.env.NODE_ENV === 'development') {
-      console.log('🔓 Development mode: Bypassing admin panel authentication');
+    if (process.env.NODE_ENV === 'development' || process.env.VERCEL === '1') {
+      console.log('🔓 Development/Demo mode: Bypassing admin panel authentication');
       req.adminPanel = {
         id: 'dev-panel',
         userId: 'dev-user',

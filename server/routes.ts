@@ -19,7 +19,7 @@ import platformAdminRoutes from './routes/platform-admin.js';
 import { registerTemplateRoutes } from './routes/templates.js';
 
 // Configure multer for file uploads
-const uploadsDir = path.join(process.cwd(), 'uploads');
+const uploadsDir = process.env.VERCEL ? '/tmp/uploads' : path.join(process.cwd(), 'uploads');
 if (!fs.existsSync(uploadsDir)) {
   fs.mkdirSync(uploadsDir, { recursive: true });
 }
@@ -51,6 +51,49 @@ const upload = multer({
 });
 
 export async function registerRoutes(app: Express): Promise<Server> {
+  
+  // Test route to verify Express is working
+  app.get('/api/test-static', (req, res) => {
+    console.log('🔧 Test static route accessed');
+    res.json({ message: 'Express static route working', timestamp: new Date().toISOString() });
+  });
+  
+  // Static files that should NEVER require authentication
+  // These routes handle cases where Vercel routing doesn't work as expected
+  app.get('/manifest.json', (req, res) => {
+    console.log('🔧 Manifest.json requested - serving directly from Express');
+    try {
+      const manifestPath = path.join(process.cwd(), 'dist/public/manifest.json');
+      console.log(`📁 Looking for manifest at: ${manifestPath}`);
+      if (fs.existsSync(manifestPath)) {
+        console.log('✅ Manifest found, serving file');
+        res.setHeader('Content-Type', 'application/json');
+        res.setHeader('Cache-Control', 'public, max-age=86400');
+        res.sendFile(manifestPath);
+      } else {
+        console.log('❌ Manifest not found at path');
+        res.status(404).json({ error: 'Manifest not found' });
+      }
+    } catch (error) {
+      console.error('💥 Error serving manifest:', error);
+      res.status(500).json({ error: 'Failed to serve manifest' });
+    }
+  });
+  
+  app.get('/favicon.png', (req, res) => {
+    try {
+      const faviconPath = path.join(process.cwd(), 'dist/public/favicon.png');
+      if (fs.existsSync(faviconPath)) {
+        res.setHeader('Content-Type', 'image/png');
+        res.setHeader('Cache-Control', 'public, max-age=86400');
+        res.sendFile(faviconPath);
+      } else {
+        res.status(404).send('Favicon not found');
+      }
+    } catch (error) {
+      res.status(500).send('Failed to serve favicon');
+    }
+  });
   
   // Register authentication routes
   app.use('/api/auth', authRoutes);
@@ -204,15 +247,49 @@ export async function registerRoutes(app: Express): Promise<Server> {
       if (templateMatch) {
         // Template-scoped image: look in uploads/templateId/filename
         const templateId = templateMatch[1];
-        filePath = path.join(process.cwd(), 'uploads', templateId, filename);
+        const baseUploadsDir = process.env.VERCEL ? '/tmp/uploads' : path.join(process.cwd(), 'uploads');
+        filePath = path.join(baseUploadsDir, templateId, filename);
       } else {
         // Legacy image: look in uploads/filename
-        filePath = path.join(process.cwd(), 'uploads', filename);
+        const baseUploadsDir = process.env.VERCEL ? '/tmp/uploads' : path.join(process.cwd(), 'uploads');
+        filePath = path.join(baseUploadsDir, filename);
       }
       
       // Check if file exists
       if (!fs.existsSync(filePath)) {
-        return res.status(404).json({ error: "Image not found" });
+        console.log(`⚠️ Image not found at ${filePath}, serving placeholder`);
+        
+        // For demo purposes, serve a default image from attached_assets
+        // Check multiple possible locations for the placeholder
+        const possiblePaths = [
+          path.join(process.cwd(), 'client/public/attached_assets', 'default-wedding-couple.jpg'),
+          path.join(process.cwd(), 'dist', 'attached_assets', 'default-wedding-couple.jpg'),
+          path.join(process.cwd(), 'dist/attached_assets/default-wedding-couple.jpg')
+        ];
+        
+        let placeholderPath = null;
+        for (const possiblePath of possiblePaths) {
+          if (fs.existsSync(possiblePath)) {
+            placeholderPath = possiblePath;
+            console.log(`✅ Found placeholder at: ${possiblePath}`);
+            break;
+          } else {
+            console.log(`❌ No placeholder at: ${possiblePath}`);
+          }
+        }
+        
+        if (placeholderPath) {
+          const ext = path.extname(placeholderPath).toLowerCase();
+          const contentType = ext === '.jpg' || ext === '.jpeg' ? 'image/jpeg' : 
+                             ext === '.png' ? 'image/png' : 
+                             ext === '.webp' ? 'image/webp' : 'image/jpeg';
+          
+          res.setHeader('Content-Type', contentType);
+          res.setHeader('Cache-Control', 'public, max-age=86400');
+          return res.sendFile(placeholderPath);
+        }
+        
+        return res.status(404).json({ error: "Image not found and no placeholder available" });
       }
       
       // Determine content type based on file extension
@@ -300,7 +377,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
         // Delete physical file
         const filename = imageRecord.url.split('/').pop();
         if (filename) {
-          const filePath = path.join(process.cwd(), 'uploads', filename);
+          const baseUploadsDir = process.env.VERCEL ? '/tmp/uploads' : path.join(process.cwd(), 'uploads');
+          const filePath = path.join(baseUploadsDir, filename);
           
           if (fs.existsSync(filePath)) {
             fs.unlinkSync(filePath);
@@ -325,7 +403,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const { id } = req.params;
       
       const filename = `template-preview-${id}.jpg`;
-      const filePath = path.join(process.cwd(), 'attached_assets', 'template_previews', filename);
+      const filePath = path.join(process.cwd(), 'client/public/attached_assets', 'template_previews', filename);
       
       // Check if file exists
       if (!fs.existsSync(filePath)) {
@@ -349,7 +427,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const { filename } = req.params;
       
-      const filePath = path.join(process.cwd(), 'attached_assets', filename);
+      const filePath = path.join(process.cwd(), 'client/public/attached_assets', filename);
       
       // Check if file exists
       if (!fs.existsSync(filePath)) {
@@ -440,7 +518,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       console.log(`✅ Template found: ${template.name} (${template.id})`);
       
       // Load images for this template and enrich the configuration
-      let allImages = [];
+      let allImages: any[] = [];
       try {
         allImages = await storage.getImages(template.id);
       } catch (imageError) {

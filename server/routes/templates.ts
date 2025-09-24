@@ -125,7 +125,7 @@ export function registerTemplateRoutes(app: Express) {
   });
 
   // Configure multer for template-scoped photo uploads
-  const uploadsDir = path.join(process.cwd(), 'uploads');
+  const uploadsDir = process.env.VERCEL ? '/tmp/uploads' : path.join(process.cwd(), 'uploads');
   if (!fs.existsSync(uploadsDir)) {
     fs.mkdirSync(uploadsDir, { recursive: true });
   }
@@ -162,22 +162,39 @@ export function registerTemplateRoutes(app: Express) {
   // Template-scoped photo upload endpoints
   app.post("/api/templates/:templateId/photos/upload", authenticateUser, requireAdminPanelAccess, templateUpload.single('image'), async (req, res) => {
     try {
+      console.log('🔧 Photo upload endpoint hit, templateId:', req.params.templateId);
+      console.log('🔧 File received:', !!req.file);
+      console.log('🔧 Body:', req.body);
+      
       const { templateId } = req.params;
       
       if (!req.file) {
+        console.log('❌ No file uploaded');
         return res.status(400).json({ error: 'No file uploaded' });
       }
       
+      console.log('📁 File details:', {
+        filename: req.file.filename,
+        originalname: req.file.originalname,
+        size: req.file.size,
+        mimetype: req.file.mimetype,
+        path: req.file.path
+      });
+      
       const template = await storage.getTemplate(templateId);
       if (!template) {
+        console.log('❌ Template not found:', templateId);
         return res.status(404).json({ message: "Template not found" });
       }
+      
+      console.log('✅ Template found:', template.name);
       
       const { category = 'gallery' } = req.body;
       
       // Create image record in database with template scope
       const imageUrl = `/api/images/serve/${req.file.filename}`;
       
+      console.log('💾 Creating image record in database...');
       const imageRecord = await storage.createImage({
         templateId,
         url: imageUrl,
@@ -190,22 +207,31 @@ export function registerTemplateRoutes(app: Express) {
       
       console.log(`📸 Template-scoped image uploaded: ${req.file.filename} for template ${templateId}`);
       
-      res.json({
+      const response = {
         id: imageRecord.id,
         url: imageUrl,
         name: req.file.originalname,
         size: req.file.size,
         category,
         templateId
-      });
+      };
+      
+      console.log('📤 Sending response:', response);
+      res.json(response);
       
     } catch (error) {
-      console.error("Template photo upload error:", error);
+      console.error("💥 Template photo upload error:", error);
+      console.error("💥 Error stack:", error instanceof Error ? error.stack : 'No stack trace');
       if (req.file) {
         // Clean up uploaded file if there's an error
-        fs.unlinkSync(req.file.path);
+        try {
+          fs.unlinkSync(req.file.path);
+          console.log('🧹 Cleaned up uploaded file');
+        } catch (cleanupError) {
+          console.error('🧹 Failed to cleanup file:', cleanupError);
+        }
       }
-      res.status(500).json({ message: "Server error" });
+      res.status(500).json({ error: "Server error", message: error instanceof Error ? error.message : 'Unknown error' });
     }
   });
 

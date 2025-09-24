@@ -16,6 +16,7 @@
   "routes": [
     {
       "src": "/manifest.json",
+      "dest": "/manifest.json",
       "headers": {
         "Cache-Control": "public, max-age=86400",
         "Content-Type": "application/json"
@@ -23,6 +24,7 @@
     },
     {
       "src": "/favicon.png",
+      "dest": "/favicon.png",
       "headers": {
         "Cache-Control": "public, max-age=86400"
       }
@@ -84,20 +86,12 @@
       "dest": "/server/index.ts"
     },
     {
-      "src": "/platform(.*)",
-      "dest": "/server/index.ts"
-    },
-    {
-      "src": "/admin(.*)",
-      "dest": "/server/index.ts"
-    },
-    {
       "src": "/",
       "dest": "/index.html"
     },
     {
       "src": "/(.*)",
-      "dest": "/server/index.ts"
+      "dest": "/index.html"
     }
   ]
 }

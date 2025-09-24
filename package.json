@@ -13,9 +13,11 @@
     "db:push": "drizzle-kit push",
     "db:migrate": "drizzle-kit push && tsx scripts/migrate-default-template.ts",
     "db:generate": "drizzle-kit generate",
-    "postbuild": "cp -r attached_assets dist/ 2>/dev/null || xcopy attached_assets dist\\attached_assets /E /I /Q 2>nul || echo 'Assets copy completed'"
+    "postbuild": "cp -r client/public/attached_assets dist/ 2>/dev/null || xcopy client\\public\\attached_assets dist\\attached_assets /E /I /Q 2>nul || echo 'Assets copy completed'"
   },
   "dependencies": {
+    "@aws-sdk/client-s3": "^3.895.0",
+    "@aws-sdk/s3-request-presigner": "^3.895.0",
     "@google-cloud/storage": "^7.17.0",
     "@hookform/resolvers": "^5.2.1",
     "@jridgewell/trace-mapping": "^0.3.25",
