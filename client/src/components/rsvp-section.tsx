@@ -67,14 +67,18 @@ export default function RsvpSection({ config = weddingConfig, templateId }: Rsvp
   });
 
   const onSubmit = (data: InsertRsvp) => {
-    // Ensure templateId is included
+    console.log("🚀 Form submitted with data:", data);
+    console.log("📊 Form validation errors:", form.formState.errors);
+    
+    // Ensure templateId is included and map fields correctly
     const submitData = {
       ...data,
       templateId: templateId || data.templateId,
-      guestEmail: data.email, // Map email to guestEmail for schema compatibility
+      guestEmail: data.email || data.guestEmail, // Map email to guestEmail for schema compatibility
       attending: data.attendance === "attending",
       guests: parseInt(data.guestCount) || 1
     };
+    console.log("📤 Submitting data:", submitData);
     rsvpMutation.mutate(submitData);
   };
 
@@ -242,6 +246,30 @@ export default function RsvpSection({ config = weddingConfig, templateId }: Rsvp
                 }}
                 disabled={rsvpMutation.isPending}
                 data-testid="button-submit-rsvp"
+                onClick={async (e) => {
+                  e.preventDefault();
+                  console.log("🔘 Button clicked!");
+                  
+                  const formValues = form.getValues();
+                  console.log("📋 Current form values:", formValues);
+                  console.log("📋 Form state:", {
+                    isValid: form.formState.isValid,
+                    errors: form.formState.errors,
+                    isDirty: form.formState.isDirty
+                  });
+                  
+                  // Trigger validation manually
+                  const isValid = await form.trigger();
+                  console.log("✅ Manual validation result:", isValid);
+                  
+                  if (isValid) {
+                    console.log("✅ Form is valid, calling onSubmit");
+                    onSubmit(formValues);
+                  } else {
+                    console.log("❌ Form validation failed");
+                    console.log("❌ Validation errors:", form.formState.errors);
+                  }
+                }}
               >
                 {rsvpMutation.isPending ? config.rsvp?.form?.submittingButton : config.rsvp?.form?.submitButton}
               </Button>

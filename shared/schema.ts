@@ -238,17 +238,17 @@ export const insertRsvpSchema = createInsertSchema(rsvps).omit({
   submittedAt: true,
 }).extend({
   templateId: z.string().min(1, "Template ID is required"),
-  firstName: z.string().min(1, "Անունը պարտադիր է"),
-  lastName: z.string().min(1, "Ազգանունը պարտադիր է"),
-  guestEmail: z.string().email("Էլ․ հասցեն ճիշտ չէ"),
-  guests: z.number().min(1, "Հյուրերի քանակը պարտադիր է"),
-  attending: z.boolean().nullable(),
-  // Legacy compatibility
-  email: z.string().email("Էլ․ հասցեն ճիշտ չէ"),
-  guestCount: z.string().min(1, "Հյուրերի քանակը պարտադիր է"),
+  firstName: z.string().min(1, "First name is required"),
+  lastName: z.string().min(1, "Last name is required"),
+  guestEmail: z.string().email("Email address is invalid").or(z.literal("")).optional(),
+  guests: z.number().min(1, "Number of guests is required").optional(),
+  attending: z.boolean().nullable().optional(),
+  // Legacy compatibility fields - required for backward compatibility
+  email: z.string().email("Email address is invalid"),
+  guestCount: z.string().min(1, "Number of guests is required"),
   guestNames: z.string().optional(),
   attendance: z.enum(["attending", "not-attending"], {
-    errorMap: () => ({ message: "Խնդրում ենք ընտրել մասնակցության տարբերակը" })
+    errorMap: () => ({ message: "Please select attendance status" })
   }),
 });
 
