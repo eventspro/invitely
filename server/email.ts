@@ -1,28 +1,57 @@
-import { Resend } from "resend";
+import sgMail from "@sendgrid/mail";
 import type { Rsvp } from "../shared/schema.js";
 
-// Lazy load Resend instance to reduce startup time
-let resendInstance: Resend | null = null;
-let resendInitialized = false;
+// Initialize SendGrid
+let emailServiceInitialized = false;
+let emailServiceAvailable = false;
 
-function getResendInstance(): Resend | null {
-  if (!resendInitialized) {
-    if (!process.env.RESEND_API_KEY) {
+function initializeEmailService(): boolean {
+  if (!emailServiceInitialized) {
+    if (!process.env.SENDGRID_API_KEY) {
       console.warn(
-        "RESEND_API_KEY environment variable is not set. Email notifications will be disabled.",
+        "SENDGRID_API_KEY environment variable is not set. Email notifications will be disabled.",
       );
-      resendInstance = null;
+      emailServiceAvailable = false;
     } else {
       try {
-        resendInstance = new Resend(process.env.RESEND_API_KEY);
+        sgMail.setApiKey(process.env.SENDGRID_API_KEY);
+        emailServiceAvailable = true;
+        console.log("✅ SendGrid email service initialized successfully");
       } catch (error) {
-        console.error("Failed to initialize Resend:", error);
-        resendInstance = null;
+        console.error("Failed to initialize SendGrid:", error);
+        emailServiceAvailable = false;
       }
     }
-    resendInitialized = true;
+    emailServiceInitialized = true;
   }
-  return resendInstance;
+  return emailServiceAvailable;
+}
+
+async function sendEmail(params: {
+  to: string;
+  from: string;
+  subject: string;
+  text?: string;
+  html?: string;
+}): Promise<boolean> {
+  if (!initializeEmailService()) {
+    console.log("Email service not configured.");
+    return false;
+  }
+
+  try {
+    await sgMail.send({
+      to: params.to,
+      from: params.from,
+      subject: params.subject,
+      text: params.text || "",
+      html: params.html || "",
+    });
+    return true;
+  } catch (error) {
+    console.error("SendGrid email error:", error);
+    return false;
+  }
 }
 
 // Wedding couple's email addresses
@@ -33,8 +62,7 @@ const COUPLE_EMAILS = [
 
 // Test function to verify email service is working
 export async function testEmailService(): Promise<void> {
-  const resend = getResendInstance();
-  if (!resend) {
+  if (!initializeEmailService()) {
     console.log("Email service not configured.");
     return;
   }
@@ -48,14 +76,19 @@ export async function testEmailService(): Promise<void> {
   for (const email of testEmails) {
     try {
       console.log(`🧪 Testing email to: ${email}`);
-      const testResult = await resend.emails.send({
-        from: "Հարութ և Տաթև <onboarding@resend.dev>",
+      const success = await sendEmail({
+        from: "noreply@wedding-platform.com",
         to: email,
-        subject: "Թեստ - Էլ․ փոստի ծառայության ստուգում",
-        text: `Սա թեստային նամակ է ${email} հասցեի համար։ Եթե ստանում եք այս նամակը, ապա էլ․ փոստի ծառայությունը ճիշտ է աշխատում։`,
-        html: `<p>Սա թեստային նամակ է <strong>${email}</strong> հասցեի համար։ Եթե ստանում եք այս նամակը, ապա էլ․ փոստի ծառայությունը ճիշտ է աշխատում։</p>`,
+        subject: "Test - Email Service Check",
+        text: `This is a test email for ${email}. If you receive this email, the email service is working correctly.`,
+        html: `<p>This is a test email for <strong>${email}</strong>. If you receive this email, the email service is working correctly.</p>`,
       });
-      console.log(`✅ Test email success for ${email}:`, testResult);
+      
+      if (success) {
+        console.log(`✅ Test email sent successfully to ${email}`);
+      } else {
+        console.log(`❌ Test email failed for ${email}`);
+      }
     } catch (error) {
       console.error(`❌ Test email failed for ${email}:`, error);
     }
@@ -63,8 +96,7 @@ export async function testEmailService(): Promise<void> {
 }
 
 export async function sendRsvpNotificationEmails(rsvp: Rsvp): Promise<boolean> {
-  const resend = getResendInstance();
-  if (!resend) {
+  if (!initializeEmailService()) {
     console.log(
       "Email service not configured. Skipping RSVP notification emails.",
     );
@@ -76,8 +108,8 @@ export async function sendRsvpNotificationEmails(rsvp: Rsvp): Promise<boolean> {
     const guestInfo = rsvp.guestNames ? `\nՀյուրեր: ${rsvp.guestNames}` : "";
 
     const emailPromises = COUPLE_EMAILS.map((email) =>
-      resend.emails.send({
-        from: "Հարութ և Տաթև <onboarding@resend.dev>",
+      sendEmail({
+        from: "noreply@wedding-platform.com",
         to: email,
         subject: `Նոր հաստատում հարսանիքի համար - ${rsvp.firstName} ${rsvp.lastName}`,
         text: `Նոր RSVP հաստատում\n\nԱնուն: ${rsvp.firstName} ${rsvp.lastName}\nԷլ․ հասցե: ${rsvp.email}\nՀյուրերի քանակ: ${rsvp.guestCount}\nՄասնակցություն: ${rsvp.attendance === "attending" ? "Կգա" : "Չի գալիս"}${rsvp.guestNames ? `\nՀյուրեր: ${rsvp.guestNames}` : ""}\n\nՀաստատվել է: ${rsvp.createdAt ? new Date(rsvp.createdAt).toLocaleString("hy-AM") : new Date().toLocaleString("hy-AM")}`,
@@ -107,15 +139,15 @@ export async function sendRsvpNotificationEmails(rsvp: Rsvp): Promise<boolean> {
     // Detailed logging for each email attempt
     results.forEach((result, index) => {
       const email = COUPLE_EMAILS[index];
-      if (result.status === "fulfilled") {
-        console.log(`✅ Email sent successfully to: ${email}`, result.value);
+      if (result.status === "fulfilled" && result.value) {
+        console.log(`✅ Email sent successfully to: ${email}`);
       } else {
-        console.error(`❌ Email failed to: ${email}`, result.reason);
+        console.error(`❌ Email failed to: ${email}`, result.status === "rejected" ? result.reason : "Unknown error");
       }
     });
 
     const successCount = results.filter(
-      (result) => result.status === "fulfilled",
+      (result) => result.status === "fulfilled" && result.value,
     ).length;
     console.log(
       `RSVP notification emails sent: ${successCount}/${COUPLE_EMAILS.length}`,
@@ -128,8 +160,7 @@ export async function sendRsvpNotificationEmails(rsvp: Rsvp): Promise<boolean> {
 }
 
 export async function sendRsvpConfirmationEmail(rsvp: Rsvp): Promise<boolean> {
-  const resend = getResendInstance();
-  if (!resend) {
+  if (!initializeEmailService()) {
     console.log(
       "Email service not configured. Skipping RSVP confirmation email.",
     );
@@ -142,9 +173,9 @@ export async function sendRsvpConfirmationEmail(rsvp: Rsvp): Promise<boolean> {
         ? "Շատ ուրախ ենք, որ կգաք մեր հարսանիքին! 💕"
         : "Ցավոք, որ չեք կարողանա գալ: Ցանկանում ենք ձեզ բարելավություն: 💙";
 
-    await resend.emails.send({
-      from: "Հարութ և Տաթև <onboarding@resend.dev>",
-      to: rsvp.email,
+    const success = await sendEmail({
+      from: "noreply@wedding-platform.com",
+      to: rsvp.email || "",
       subject: "Ձեր հաստատումը ստացվել է - Հարսանիք 10 Հոկտեմբեր 2025",
       text: `Սիրելի ${rsvp.firstName},\n\nՇնորհակալություն ձեր հաստատման համար:\n\n${attendanceText}\n\n${rsvp.attendance === "attending" ? "Ծիսակարգություն - Սուրբ Գրիգոր Լուսավորիչ Եկեղեցի, Ժամը 16:00\nՀանդես - BAYAZET HALL, Ժամը 19:00\n\nՄենք շատ ենք սիրում ձեզ և սպասում ենք այս հատուկ օրը ձեզ հետ կիսելուն:" : ""}\n\nՀարցերի դեպքում կապվեք մեզ հետ:\nharutavetisyan0@gmail.com | tatevhovsepyan22@gmail.com\n\nՀարգանքով,\nՀարութ և Տաթև`,
       html: `
@@ -187,8 +218,10 @@ export async function sendRsvpConfirmationEmail(rsvp: Rsvp): Promise<boolean> {
       `,
     });
 
-    console.log(`RSVP confirmation email sent to: ${rsvp.email}`);
-    return true;
+    if (success) {
+      console.log(`RSVP confirmation email sent to: ${rsvp.email}`);
+    }
+    return success;
   } catch (error) {
     console.error("Failed to send RSVP confirmation email:", error);
     return false;
@@ -197,8 +230,7 @@ export async function sendRsvpConfirmationEmail(rsvp: Rsvp): Promise<boolean> {
 
 // Template-scoped email functions
 export async function sendTemplateRsvpNotificationEmails(rsvp: Rsvp, template: any): Promise<boolean> {
-  const resend = getResendInstance();
-  if (!resend) {
+  if (!initializeEmailService()) {
     console.log("Email service not configured. Skipping template RSVP notification emails.");
     return false;
   }
@@ -232,8 +264,8 @@ export async function sendTemplateRsvpNotificationEmails(rsvp: Rsvp, template: a
     const guestInfo = rsvp.guestNames ? `\nՀյուրեր: ${rsvp.guestNames}` : "";
 
     const emailPromises = recipientEmails.map((emailAddr: string) =>
-      resend.emails.send({
-        from: `${coupleNames} <onboarding@resend.dev>`,
+      sendEmail({
+        from: "noreply@wedding-platform.com",
         to: emailAddr,
         subject: `Նոր հաստատում հարսանիքի համար - ${rsvp.firstName} ${rsvp.lastName}`,
         text: `Նոր RSVP հաստատում\n\nԱնուն: ${rsvp.firstName} ${rsvp.lastName}\nԷլ․ հասցե: ${rsvp.email}\nՀյուրերի քանակ: ${rsvp.guestCount}\nՄասնակցություն: ${attendanceText}${guestInfo}\n\nՀաստատվել է: ${rsvp.createdAt ? new Date(rsvp.createdAt).toLocaleString("hy-AM") : new Date().toLocaleString("hy-AM")}`,
@@ -271,8 +303,7 @@ export async function sendTemplateRsvpNotificationEmails(rsvp: Rsvp, template: a
 }
 
 export async function sendTemplateRsvpConfirmationEmail(rsvp: Rsvp, template: any): Promise<boolean> {
-  const resend = getResendInstance();
-  if (!resend) {
+  if (!initializeEmailService()) {
     console.log("Email service not configured. Skipping template RSVP confirmation email.");
     return false;
   }
@@ -303,9 +334,9 @@ export async function sendTemplateRsvpConfirmationEmail(rsvp: Rsvp, template: an
       }).join("");
     }
 
-    await resend.emails.send({
-      from: `${coupleNames} <onboarding@resend.dev>`,
-      to: rsvp.email,
+    const success = await sendEmail({
+      from: "noreply@wedding-platform.com",
+      to: rsvp.email || "",
       subject: `Ձեր հաստատումը ստացվել է - ${coupleNames} - ${weddingDate}`,
       text: `Սիրելի ${rsvp.firstName},\n\nՇնորհակալություն ձեր հաստատման համար:\n\n${attendanceText}\n\n${rsvp.attendance === "attending" && locations.length > 0 ? locations.map((loc: any) => `${loc.title || "Venue"}: ${loc.name || "TBD"}${loc.time ? ` - ${loc.time}` : ""}`).join("\n") : ""}\n\nՀարգանքով,\n${coupleNames}`,
       html: `
@@ -337,8 +368,10 @@ export async function sendTemplateRsvpConfirmationEmail(rsvp: Rsvp, template: an
       `,
     });
 
-    console.log(`Template RSVP confirmation email sent to: ${rsvp.email} for template ${template.id}`);
-    return true;
+    if (success) {
+      console.log(`Template RSVP confirmation email sent to: ${rsvp.email} for template ${template.id}`);
+    }
+    return success;
   } catch (error) {
     console.error("Failed to send template RSVP confirmation email:", error);
     return false;
