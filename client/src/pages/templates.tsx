@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import { useLocation } from "wouter";
+import { useQuery } from "@tanstack/react-query";
 import { 
   Check, 
   X, 
@@ -20,7 +21,8 @@ import {
   Upload,
   QrCode,
   Palette,
-  Settings
+  Settings,
+  Loader2
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -45,122 +47,149 @@ interface TemplatePlan {
   popular?: boolean;
 }
 
-const templatePlans: TemplatePlan[] = [
-  {
-    id: "basic",
-    name: "Basic Wedding",
+// Template pricing plans mapped to actual template keys
+const templatePricingPlans = {
+  classic: {
     price: "10,000 AMD",
+    badge: "Simple & Elegant",
+    badgeColor: "bg-gray-500",
     description: "Perfect for simple, elegant weddings with essential features",
-    templateRoute: "/template/classic",
-    features: [
-      { name: "Hero Banner (Single Image)", icon: <Camera className="w-4 h-4" />, included: true },
-      { name: "Countdown Timer", icon: <Calendar className="w-4 h-4" />, included: true },
-      { name: "Wedding Calendar", icon: <Calendar className="w-4 h-4" />, included: true },
-      { name: "Venues (Max 2, No Google Maps)", icon: <MapPin className="w-4 h-4" />, included: true },
-      { name: "Planning Timeline (Max 2 Cards)", icon: <Calendar className="w-4 h-4" />, included: true },
-      { name: "RSVP Form", icon: <Users className="w-4 h-4" />, included: true },
-      { name: "Hero Image Slider", icon: <Camera className="w-4 h-4" />, included: false },
-      { name: "Google Maps Integration", icon: <MapPin className="w-4 h-4" />, included: false },
-      { name: "Background Music", icon: <Music className="w-4 h-4" />, included: false },
-      { name: "Email Notifications", icon: <Mail className="w-4 h-4" />, included: false }
-    ]
+    planType: "basic"
   },
-  {
-    id: "standard",
-    name: "Standard Wedding",
-    price: "15,000 AMD",
+  elegant: {
+    price: "15,000 AMD", 
+    badge: "Enhanced",
+    badgeColor: "bg-blue-500",
     description: "Enhanced features with image slider and more venues",
-    templateRoute: "/template/elegant",
-    features: [
-      { name: "Hero Banner (Single Image)", icon: <Camera className="w-4 h-4" />, included: true },
-      { name: "Hero Image Slider (2 Images)", icon: <Camera className="w-4 h-4" />, included: true },
-      { name: "Countdown Timer", icon: <Calendar className="w-4 h-4" />, included: true },
-      { name: "Wedding Calendar", icon: <Calendar className="w-4 h-4" />, included: true },
-      { name: "Venues (Max 3, No Google Maps)", icon: <MapPin className="w-4 h-4" />, included: true },
-      { name: "Planning Timeline (Max 3 Cards)", icon: <Calendar className="w-4 h-4" />, included: true },
-      { name: "RSVP Form", icon: <Users className="w-4 h-4" />, included: true },
-      { name: "Google Maps Integration", icon: <MapPin className="w-4 h-4" />, included: false },
-      { name: "Background Music", icon: <Music className="w-4 h-4" />, included: false },
-      { name: "Email Notifications", icon: <Mail className="w-4 h-4" />, included: false }
-    ]
+    planType: "standard"
   },
-  {
-    id: "premium",
-    name: "Premium Wedding",
+  romantic: {
     price: "19,000 AMD",
     badge: "Popular",
-    badgeColor: "bg-blue-500",
+    badgeColor: "bg-rose-500",
     description: "Complete wedding solution with music and email features",
-    templateRoute: "/template/romantic",
-    popular: true,
-    features: [
-      { name: "Hero Banner (Single Image)", icon: <Camera className="w-4 h-4" />, included: true },
-      { name: "Hero Image Slider (5 Images)", icon: <Camera className="w-4 h-4" />, included: true },
-      { name: "RSVP with Email Notifications", icon: <Mail className="w-4 h-4" />, included: true },
-      { name: "Background Music (Custom)", icon: <Music className="w-4 h-4" />, included: true },
-      { name: "Countdown Timer", icon: <Calendar className="w-4 h-4" />, included: true },
-      { name: "Wedding Calendar", icon: <Calendar className="w-4 h-4" />, included: true },
-      { name: "Venues (Max 4 Cards)", icon: <MapPin className="w-4 h-4" />, included: true },
-      { name: "Planning Timeline (Max 4 Cards)", icon: <Calendar className="w-4 h-4" />, included: true },
-      { name: "Google Maps Integration", icon: <MapPin className="w-4 h-4" />, included: false },
-      { name: "Photo Gallery", icon: <Camera className="w-4 h-4" />, included: false }
-    ]
+    planType: "premium",
+    popular: true
   },
-  {
-    id: "deluxe",
-    name: "Deluxe Wedding",
+  nature: {
     price: "24,000 AMD",
+    badge: "Advanced",
+    badgeColor: "bg-green-500", 
     description: "Advanced features with photo gallery and guest management",
-    templateRoute: "/template/nature",
-    features: [
-      { name: "All Premium Features", icon: <Star className="w-4 h-4" />, included: true },
-      { name: "Photo Download (Password Protected)", icon: <Download className="w-4 h-4" />, included: true },
-      { name: "Photo Upload via Website", icon: <Upload className="w-4 h-4" />, included: true },
-      { name: "Guest Photo Gallery", icon: <Camera className="w-4 h-4" />, included: true },
-      { name: "Hero Image Slider (5 Images)", icon: <Camera className="w-4 h-4" />, included: true },
-      { name: "RSVP with Email Notifications", icon: <Mail className="w-4 h-4" />, included: true },
-      { name: "Background Music (Custom)", icon: <Music className="w-4 h-4" />, included: true },
-      { name: "Venues (Max 4 Cards)", icon: <MapPin className="w-4 h-4" />, included: true },
-      { name: "Planning Timeline (Max 4 Cards)", icon: <Calendar className="w-4 h-4" />, included: true },
-      { name: "Custom Admin Panel", icon: <Settings className="w-4 h-4" />, included: false }
-    ]
-  },
-  {
-    id: "ultimate",
-    name: "Ultimate Wedding",
-    price: "37,000 AMD",
-    badge: "Best Value",
-    badgeColor: "bg-gold",
-    description: "Everything included - unlimited features with custom QR cards",
-    templateRoute: "/template/pro",
-    features: [
-      { name: "Unlimited Image Slider", icon: <Camera className="w-4 h-4" />, included: true },
-      { name: "Unlimited Venue Locations", icon: <MapPin className="w-4 h-4" />, included: true },
-      { name: "Unlimited Planning Cards", icon: <Calendar className="w-4 h-4" />, included: true },
-      { name: "Custom Color Theming", icon: <Palette className="w-4 h-4" />, included: true },
-      { name: "RSVP with Email System", icon: <Mail className="w-4 h-4" />, included: true },
-      { name: "Admin Panel with Analytics", icon: <Settings className="w-4 h-4" />, included: true },
-      { name: "Photo Gallery with QR Upload", icon: <QrCode className="w-4 h-4" />, included: true },
-      { name: "Password Protected Downloads", icon: <Download className="w-4 h-4" />, included: true },
-      { name: "20 Custom QR Cards (Gift)", icon: <Gift className="w-4 h-4" />, included: true, description: "Physical QR cards for easy photo sharing" },
-      { name: "Background Music (Custom)", icon: <Music className="w-4 h-4" />, included: true }
-    ]
+    planType: "deluxe"
   }
-];
+};
+
+const featuresByPlan = {
+  basic: [
+    { name: "Hero Banner (Single Image)", icon: <Camera className="w-4 h-4" />, included: true },
+    { name: "Countdown Timer", icon: <Calendar className="w-4 h-4" />, included: true },
+    { name: "Wedding Calendar", icon: <Calendar className="w-4 h-4" />, included: true },
+    { name: "Venues (Max 2, No Google Maps)", icon: <MapPin className="w-4 h-4" />, included: true },
+    { name: "Planning Timeline (Max 2 Cards)", icon: <Calendar className="w-4 h-4" />, included: true },
+    { name: "RSVP Form", icon: <Users className="w-4 h-4" />, included: true },
+    { name: "Hero Image Slider", icon: <Camera className="w-4 h-4" />, included: false },
+    { name: "Google Maps Integration", icon: <MapPin className="w-4 h-4" />, included: false },
+    { name: "Background Music", icon: <Music className="w-4 h-4" />, included: false },
+    { name: "Email Notifications", icon: <Mail className="w-4 h-4" />, included: false }
+  ],
+  standard: [
+    { name: "Hero Banner (Single Image)", icon: <Camera className="w-4 h-4" />, included: true },
+    { name: "Hero Image Slider (2 Images)", icon: <Camera className="w-4 h-4" />, included: true },
+    { name: "Countdown Timer", icon: <Calendar className="w-4 h-4" />, included: true },
+    { name: "Wedding Calendar", icon: <Calendar className="w-4 h-4" />, included: true },
+    { name: "Venues (Max 3, No Google Maps)", icon: <MapPin className="w-4 h-4" />, included: true },
+    { name: "Planning Timeline (Max 3 Cards)", icon: <Calendar className="w-4 h-4" />, included: true },
+    { name: "RSVP Form", icon: <Users className="w-4 h-4" />, included: true },
+    { name: "Google Maps Integration", icon: <MapPin className="w-4 h-4" />, included: false },
+    { name: "Background Music", icon: <Music className="w-4 h-4" />, included: false },
+    { name: "Email Notifications", icon: <Mail className="w-4 h-4" />, included: false }
+  ],
+  premium: [
+    { name: "Hero Banner (Single Image)", icon: <Camera className="w-4 h-4" />, included: true },
+    { name: "Hero Image Slider (5 Images)", icon: <Camera className="w-4 h-4" />, included: true },
+    { name: "RSVP with Email Notifications", icon: <Mail className="w-4 h-4" />, included: true },
+    { name: "Background Music (Custom)", icon: <Music className="w-4 h-4" />, included: true },
+    { name: "Countdown Timer", icon: <Calendar className="w-4 h-4" />, included: true },
+    { name: "Wedding Calendar", icon: <Calendar className="w-4 h-4" />, included: true },
+    { name: "Venues (Max 4 Cards)", icon: <MapPin className="w-4 h-4" />, included: true },
+    { name: "Planning Timeline (Max 4 Cards)", icon: <Calendar className="w-4 h-4" />, included: true },
+    { name: "Google Maps Integration", icon: <MapPin className="w-4 h-4" />, included: false },
+    { name: "Photo Gallery", icon: <Camera className="w-4 h-4" />, included: false }
+  ],
+  deluxe: [
+    { name: "All Premium Features", icon: <Star className="w-4 h-4" />, included: true },
+    { name: "Photo Download (Password Protected)", icon: <Download className="w-4 h-4" />, included: true },
+    { name: "Photo Upload via Website", icon: <Upload className="w-4 h-4" />, included: true },
+    { name: "Guest Photo Gallery", icon: <Camera className="w-4 h-4" />, included: true },
+    { name: "Hero Image Slider (5 Images)", icon: <Camera className="w-4 h-4" />, included: true },
+    { name: "RSVP with Email Notifications", icon: <Mail className="w-4 h-4" />, included: true },
+    { name: "Background Music (Custom)", icon: <Music className="w-4 h-4" />, included: true },
+    { name: "Venues (Max 4 Cards)", icon: <MapPin className="w-4 h-4" />, included: true },
+    { name: "Planning Timeline (Max 4 Cards)", icon: <Calendar className="w-4 h-4" />, included: true },
+    { name: "Custom Admin Panel", icon: <Settings className="w-4 h-4" />, included: false }
+  ]
+};
+
+interface Template {
+  id: string;
+  name: string;
+  slug: string;
+  templateKey: string;
+  config: any;
+}
 
 export default function TemplatesPage() {
   const [, navigate] = useLocation();
   const [selectedPlan, setSelectedPlan] = useState<string | null>(null);
 
-  const handlePreview = (templateRoute: string) => {
-    navigate(templateRoute);
+  // Fetch templates from API
+  const { data: templates, isLoading, error } = useQuery<Template[]>({
+    queryKey: ['/api/templates'],
+    staleTime: 5 * 60 * 1000, // 5 minutes
+  });
+
+  const handlePreview = (slug: string) => {
+    navigate(`/t/${slug}`);
   };
 
-  const handleSelectPlan = (planId: string) => {
-    setSelectedPlan(planId);
+  const handleSelectPlan = (templateId: string) => {
+    setSelectedPlan(templateId);
     // Here you would integrate with payment/booking system
-    console.log('Selected plan:', planId);
+    console.log('Selected template:', templateId);
   };
+
+  // Create template plans from fetched data
+  const templatePlans = templates?.map(template => {
+    const pricingPlan = templatePricingPlans[template.templateKey as keyof typeof templatePricingPlans];
+    const features = featuresByPlan[pricingPlan?.planType as keyof typeof featuresByPlan] || [];
+    
+    return {
+      id: template.id,
+      name: template.name,
+      slug: template.slug,
+      templateKey: template.templateKey,
+      price: pricingPlan?.price || "Price TBD",
+      badge: pricingPlan?.badge,
+      badgeColor: pricingPlan?.badgeColor,
+      description: pricingPlan?.description || template.name,
+      templateRoute: `/t/${template.slug}`,
+      popular: pricingPlan?.popular || false,
+      features
+    };
+  }) || [];
+
+  if (error) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gray-50">
+        <div className="text-center">
+          <h1 className="text-2xl font-bold text-gray-900 mb-4">Error Loading Templates</h1>
+          <p className="text-gray-600 mb-4">Unable to load wedding templates. Please try again later.</p>
+          <Button onClick={() => window.location.reload()}>Retry</Button>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-rose-50 via-white to-purple-50">
@@ -191,11 +220,24 @@ export default function TemplatesPage() {
         </div>
       </section>
 
+      {/* Loading State */}
+      {isLoading && (
+        <section className="pb-20 px-4">
+          <div className="max-w-7xl mx-auto">
+            <div className="flex items-center justify-center py-20">
+              <Loader2 className="w-8 h-8 animate-spin text-rose-500" />
+              <span className="ml-3 text-lg text-gray-600">Loading templates...</span>
+            </div>
+          </div>
+        </section>
+      )}
+
       {/* Templates Grid */}
-      <section className="pb-20 px-4">
-        <div className="max-w-7xl mx-auto">
-          <div className="grid lg:grid-cols-3 xl:grid-cols-5 gap-8">
-            {templatePlans.map((plan) => (
+      {!isLoading && templatePlans.length > 0 && (
+        <section className="pb-20 px-4">
+          <div className="max-w-7xl mx-auto">
+            <div className="grid lg:grid-cols-2 xl:grid-cols-4 gap-8">
+              {templatePlans.map((plan) => (
               <Card 
                 key={plan.id} 
                 className={`relative transition-all duration-300 hover:shadow-xl ${
@@ -276,8 +318,10 @@ export default function TemplatesPage() {
           </div>
         </div>
       </section>
+      )}
 
       {/* Feature Comparison Table */}
+      {!isLoading && templatePlans.length > 0 && (
       <section className="py-20 px-4 bg-white">
         <div className="max-w-7xl mx-auto">
           <h2 className="text-4xl font-bold text-center mb-12">Feature Comparison</h2>
@@ -319,6 +363,7 @@ export default function TemplatesPage() {
           </div>
         </div>
       </section>
+      )}
 
       {/* FAQ Section */}
       <section className="py-20 px-4 bg-gradient-to-br from-purple-50 to-pink-50">

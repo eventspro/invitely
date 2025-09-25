@@ -44,8 +44,12 @@ export function registerTemplateRoutes(app: Express) {
     try {
       const { templateId } = req.params;
       
-      // Verify template exists
-      const template = await storage.getTemplate(templateId);
+      // Verify template exists - try by ID first, then by slug
+      let template = await storage.getTemplate(templateId);
+      if (!template) {
+        template = await storage.getTemplateBySlug(templateId);
+      }
+      
       if (!template) {
         return res.status(404).json({ message: "Template not found" });
       }
@@ -57,12 +61,12 @@ export function registerTemplateRoutes(app: Express) {
       
       const validatedData = insertRsvpSchema.parse({
         ...req.body,
-        templateId
+        templateId: template.id  // Use the actual template ID, not the slug
       });
       
       // Check if email already exists for this template (check both possible email fields)
       const emailToCheck = validatedData.guestEmail || validatedData.email;
-      const existingRsvp = await storage.getRsvpByEmail(emailToCheck, templateId);
+      const existingRsvp = await storage.getRsvpByEmail(emailToCheck, template.id);
       if (existingRsvp) {
         return res.status(400).json({ 
           message: "Այս էլ․ հասցեով արդեն ուղարկվել է հաստատում" 
