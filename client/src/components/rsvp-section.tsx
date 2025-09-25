@@ -30,12 +30,16 @@ export default function RsvpSection({ config = weddingConfig, templateId }: Rsvp
   const form = useForm<InsertRsvp>({
     resolver: zodResolver(insertRsvpSchema),
     defaultValues: {
+      templateId: templateId || "",
       firstName: "",
       lastName: "",
       email: "",
+      guestEmail: "",
       guestCount: "",
       guestNames: "",
-      attendance: "attending"
+      attendance: "attending",
+      attending: true,
+      guests: 1
     }
   });
 
@@ -63,7 +67,15 @@ export default function RsvpSection({ config = weddingConfig, templateId }: Rsvp
   });
 
   const onSubmit = (data: InsertRsvp) => {
-    rsvpMutation.mutate(data);
+    // Ensure templateId is included
+    const submitData = {
+      ...data,
+      templateId: templateId || data.templateId,
+      guestEmail: data.email, // Map email to guestEmail for schema compatibility
+      attending: data.attendance === "attending",
+      guests: parseInt(data.guestCount) || 1
+    };
+    rsvpMutation.mutate(submitData);
   };
 
   return (
