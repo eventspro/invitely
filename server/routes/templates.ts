@@ -115,12 +115,17 @@ export function registerTemplateRoutes(app: Express) {
     try {
       const { templateId } = req.params;
       
-      const template = await storage.getTemplate(templateId);
+      // Try to get template by ID first, then by slug
+      let template = await storage.getTemplate(templateId);
+      if (!template) {
+        template = await storage.getTemplateBySlug(templateId);
+      }
+      
       if (!template) {
         return res.status(404).json({ message: "Template not found" });
       }
       
-      const rsvps = await storage.getAllRsvps(templateId);
+      const rsvps = await storage.getAllRsvps(template.id);
       res.json(rsvps);
     } catch (error) {
       console.error("Get template RSVPs error:", error);
