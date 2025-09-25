@@ -209,11 +209,21 @@ export async function sendTemplateRsvpNotificationEmails(rsvp: Rsvp, template: a
     const wedding = config.wedding || {};
     const email = config.email || {};
     
-    // Use template-specific emails or fallback to couple emails
-    const recipientEmails = email.recipients || [
-      "harutavetisyan0@gmail.com",
-      "tatevhovsepyan22@gmail.com"
-    ];
+    // Priority order: template ownerEmail > config recipients > fallback couple emails
+    let recipientEmails = [];
+    if (template.ownerEmail) {
+      recipientEmails = [template.ownerEmail];
+      console.log(`📧 Using template owner email: ${template.ownerEmail}`);
+    } else if (email.recipients && email.recipients.length > 0) {
+      recipientEmails = email.recipients;
+      console.log(`📧 Using config recipient emails: ${email.recipients.join(', ')}`);
+    } else {
+      recipientEmails = [
+        "harutavetisyan0@gmail.com",
+        "tatevhovsepyan22@gmail.com"
+      ];
+      console.log(`📧 Using fallback couple emails`);
+    }
     
     const coupleNames = couple.combinedNames || `${couple.groomName || "Groom"} & ${couple.brideName || "Bride"}`;
     const weddingDate = wedding.displayDate || wedding.date || "Wedding Day";
