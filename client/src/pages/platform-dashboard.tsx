@@ -52,17 +52,31 @@ interface CreateTemplateForm {
   sourceTemplateId?: string;
 }
 
+interface CloneTemplateForm {
+  name: string;
+  slug: string;
+  ownerEmail: string;
+  sourceTemplate?: Template;
+}
+
 export default function PlatformDashboard() {
   const [templates, setTemplates] = useState<Template[]>([]);
   const [loading, setLoading] = useState(true);
   const [authenticated, setAuthenticated] = useState(false);
   const [loginForm, setLoginForm] = useState({ username: "", password: "" });
   const [createDialogOpen, setCreateDialogOpen] = useState(false);
+  const [cloneDialogOpen, setCloneDialogOpen] = useState(false);
   const [createForm, setCreateForm] = useState<CreateTemplateForm>({
     name: "",
     slug: "",
     templateKey: "pro",
     ownerEmail: "",
+  });
+  const [cloneForm, setCloneForm] = useState<CloneTemplateForm>({
+    name: "",
+    slug: "",
+    ownerEmail: "",
+    sourceTemplate: undefined,
   });
   const { toast } = useToast();
 
@@ -174,9 +188,22 @@ export default function PlatformDashboard() {
     }
   };
 
-  const cloneTemplate = async (sourceTemplate: Template) => {
-    const clonedName = `${sourceTemplate.name} (Copy)`;
-    const clonedSlug = `${sourceTemplate.slug}-copy-${Date.now()}`.toLowerCase();
+  const openCloneDialog = (sourceTemplate: Template) => {
+    const clonedName = `${sourceTemplate.name} (Clone)`;
+    const clonedSlug = `${sourceTemplate.slug}-clone-${Date.now()}`.toLowerCase();
+    
+    setCloneForm({
+      name: clonedName,
+      slug: clonedSlug,
+      ownerEmail: "",
+      sourceTemplate: sourceTemplate,
+    });
+    setCloneDialogOpen(true);
+  };
+
+  const handleCloneTemplate = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!cloneForm.sourceTemplate) return;
     
     try {
       const token = localStorage.getItem("admin-token");
@@ -187,17 +214,26 @@ export default function PlatformDashboard() {
           Authorization: `Bearer ${token}`,
         },
         body: JSON.stringify({
-          sourceTemplateId: sourceTemplate.id,
-          name: clonedName,
-          slug: clonedSlug,
-          templateKey: sourceTemplate.templateKey,
+          sourceTemplateId: cloneForm.sourceTemplate.id,
+          name: cloneForm.name,
+          slug: cloneForm.slug,
+          templateKey: cloneForm.sourceTemplate.templateKey,
+          ownerEmail: cloneForm.ownerEmail,
         }),
       });
 
       if (response.ok) {
         const clonedTemplate = await response.json();
         setTemplates([clonedTemplate, ...templates]);
-        toast({ title: "Template cloned", description: `${clonedName} has been created` });
+        setCloneDialogOpen(false);
+        setCloneForm({ name: "", slug: "", ownerEmail: "", sourceTemplate: undefined });
+        toast({ 
+          title: "Template cloned successfully", 
+          description: `${cloneForm.name} has been created${cloneForm.ownerEmail ? ` with RSVP emails routed to ${cloneForm.ownerEmail}` : ''}` 
+        });
+      } else {
+        const error = await response.json();
+        toast({ title: "Clone failed", description: error.message, variant: "destructive" });
       }
     } catch (error) {
       toast({ title: "Error", description: "Failed to clone template", variant: "destructive" });
@@ -341,7 +377,7 @@ export default function PlatformDashboard() {
             variant="outline"
             size="sm"
             className="flex-1"
-            onClick={() => cloneTemplate(template)}
+            onClick={() => openCloneDialog(template)}
           >
             <Copy className="w-4 h-4 mr-1" />
             Clone
@@ -444,6 +480,66 @@ export default function PlatformDashboard() {
                         Cancel
                       </Button>
                       <Button type="submit">Create Template</Button>
+                    </div>
+                  </form>
+                </DialogContent>
+              </Dialog>
+
+              {/* Clone Template Dialog */}
+              <Dialog open={cloneDialogOpen} onOpenChange={setCloneDialogOpen}>
+                <DialogContent>
+                  <DialogHeader>
+                    <DialogTitle>Clone Template</DialogTitle>
+                    <DialogDescription>
+                      Create a customized copy of "{cloneForm.sourceTemplate?.name}" for a specific customer.
+                      RSVP responses will be sent to the customer's email address.
+                    </DialogDescription>
+                  </DialogHeader>
+                  <form onSubmit={handleCloneTemplate} className="space-y-4">
+                    <div>
+                      <Label htmlFor="cloneName">Template Name</Label>
+                      <Input
+                        id="cloneName"
+                        value={cloneForm.name}
+                        onChange={(e) => setCloneForm({...cloneForm, name: e.target.value})}
+                        placeholder="e.g., John & Jane Wedding"
+                        required
+                        data-testid="input-clone-name"
+                      />
+                    </div>
+                    <div>
+                      <Label htmlFor="cloneSlug">URL Slug</Label>
+                      <Input
+                        id="cloneSlug"
+                        value={cloneForm.slug}
+                        onChange={(e) => setCloneForm({...cloneForm, slug: e.target.value.toLowerCase().replace(/[^a-z0-9-]/g, '-')})}
+                        placeholder="e.g., john-jane-2025"
+                        required
+                        data-testid="input-clone-slug"
+                      />
+                    </div>
+                    <div>
+                      <Label htmlFor="cloneOwnerEmail">Customer Email Address *</Label>
+                      <Input
+                        id="cloneOwnerEmail"
+                        type="email"
+                        value={cloneForm.ownerEmail}
+                        onChange={(e) => setCloneForm({...cloneForm, ownerEmail: e.target.value})}
+                        placeholder="customer@email.com"
+                        required
+                        data-testid="input-clone-email"
+                      />
+                      <p className="text-sm text-gray-600 mt-1">
+                        All RSVP notifications will be sent to this email address.
+                      </p>
+                    </div>
+                    <div className="flex justify-end gap-2">
+                      <Button type="button" variant="outline" onClick={() => setCloneDialogOpen(false)} data-testid="button-clone-cancel">
+                        Cancel
+                      </Button>
+                      <Button type="submit" data-testid="button-clone-submit">
+                        Clone Template
+                      </Button>
                     </div>
                   </form>
                 </DialogContent>
