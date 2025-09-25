@@ -1,18 +1,6 @@
-import { Pool, neonConfig } from '@neondatabase/serverless';
-import { drizzle } from 'drizzle-orm/neon-serverless';
+import { Pool } from 'pg';
+import { drizzle } from 'drizzle-orm/node-postgres';
 import * as schema from "../shared/schema.js";
-
-// Configure WebSocket for serverless environment
-if (typeof window === 'undefined') {
-  // We're in a Node.js environment (serverless function)
-  try {
-    const ws = require('ws');
-    neonConfig.webSocketConstructor = ws;
-  } catch (error) {
-    // Fallback: disable WebSocket if ws module is not available
-    console.log('WebSocket module not available, using fetch mode');
-  }
-}
 
 if (!process.env.DATABASE_URL) {
   throw new Error(
@@ -22,5 +10,8 @@ if (!process.env.DATABASE_URL) {
 
 console.log('🔗 Connecting to database with URL:', process.env.DATABASE_URL?.substring(0, 30) + '...');
 
-export const pool = new Pool({ connectionString: process.env.DATABASE_URL });
+export const pool = new Pool({ 
+  connectionString: process.env.DATABASE_URL,
+  ssl: false // Disable SSL for local development in Replit
+});
 export const db = drizzle({ client: pool, schema });
