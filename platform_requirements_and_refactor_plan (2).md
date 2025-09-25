@@ -13,8 +13,8 @@ Files and key paths discovered inside the archive:
 - `InviteSite/` (project root)
   - `InviteSite/client/` — frontend project
     - `client/src/config/wedding-config.ts` — single-source-of-truth configuration for the current template.
-    - `client/public/audio/wedding-music.mp3` — background music file.
-    - `client/public/wedding-photos-qr.png` — static asset.
+    - `public/audio/wedding-music.mp3` — background music file.
+    - `public/wedding-photos-qr.png` — static asset.
   - `InviteSite/package.json` — top-level scripts for server build/dev.
   - `InviteSite/client/package.json` — frontend dependencies and scripts (Vite, React/Tailwind assumed).
   - `InviteSite/drizzle.config.ts` — Drizzle ORM config (DB migrations/tools present).

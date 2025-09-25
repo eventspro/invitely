@@ -68,9 +68,8 @@
     },
     {
       "src": "/attached_assets/(.*)",
-      "dest": "/attached_assets/$1",
       "headers": {
-        "Cache-Control": "public, max-age=86400"
+        "Cache-Control": "public, max-age=31536000"
       }
     },
     {

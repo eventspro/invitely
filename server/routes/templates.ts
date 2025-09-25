@@ -192,7 +192,36 @@ export function registerTemplateRoutes(app: Express) {
       const { category = 'gallery' } = req.body;
       
       // Create image record in database with template scope
-      const imageUrl = `/api/images/serve/${req.file.filename}`;
+      let imageUrl: string;
+      
+      // Use R2 storage in production, local storage in development
+      if (process.env.VERCEL && process.env.CLOUDFLARE_R2_BUCKET_NAME) {
+        try {
+          const { r2Storage } = await import('../r2Storage.js');
+          if (r2Storage.isConfigured()) {
+            const fileBuffer = fs.readFileSync(req.file.path);
+            const r2Result = await r2Storage.uploadImage(
+              templateId,
+              fileBuffer,
+              req.file.originalname,
+              req.file.mimetype,
+              category
+            );
+            imageUrl = r2Result.url;
+            console.log(`☁️ Image uploaded to R2: ${r2Result.url}`);
+            
+            // Clean up local temp file
+            fs.unlinkSync(req.file.path);
+          } else {
+            imageUrl = `/api/images/serve/${req.file.filename}`;
+          }
+        } catch (r2Error) {
+          console.warn('⚠️ R2 upload failed, using local storage:', r2Error);
+          imageUrl = `/api/images/serve/${req.file.filename}`;
+        }
+      } else {
+        imageUrl = `/api/images/serve/${req.file.filename}`;
+      }
       
       console.log('💾 Creating image record in database...');
       const imageRecord = await storage.createImage({

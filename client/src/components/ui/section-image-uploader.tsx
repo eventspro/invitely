@@ -4,6 +4,7 @@ import { Button } from './button';
 import { Card, CardContent } from './card';
 import { cn } from '@/lib/utils';
 import { ImageUploader } from './image-uploader';
+import { SafeImage } from './safe-image';
 
 interface SectionImageUploaderProps {
   templateId: string;
@@ -63,68 +64,24 @@ export default function SectionImageUploader({
     if (existingImages.length === 1) {
       return (
         <div className="relative">
-          <img 
+          <SafeImage
             src={existingImages[0]} 
             alt={`${sectionTitle} image`}
             className="w-full h-64 object-cover rounded-lg"
-            onError={(e) => {
-              // If the default image fails to load, use a fallback
-              const target = e.target as HTMLImageElement;
-              if (target.src !== '/attached_assets/default-wedding-couple.jpg') {
-                target.src = '/attached_assets/default-wedding-couple.jpg';
-              } else {
-                // If even the fallback fails, show a placeholder
-                target.style.display = 'none';
-                const placeholder = target.parentElement?.querySelector('.image-placeholder') as HTMLElement;
-                if (placeholder) {
-                  placeholder.style.display = 'flex';
-                }
-              }
-            }}
+            showErrorMessage={true}
           />
-          <div 
-            className="image-placeholder w-full h-64 bg-gray-200 rounded-lg flex items-center justify-center text-gray-500"
-            style={{ display: 'none' }}
-          >
-            <div className="text-center">
-              <div className="text-4xl mb-2">🖼️</div>
-              <div>No image available</div>
-            </div>
-          </div>
         </div>
       );
     }
 
     return (
       <div className="relative">
-        <img 
+        <SafeImage
           src={existingImages[currentImageIndex]} 
           alt={`${sectionTitle} image ${currentImageIndex + 1}`}
           className="w-full h-64 object-cover rounded-lg"
-          onError={(e) => {
-            // If the default image fails to load, use a fallback
-            const target = e.target as HTMLImageElement;
-            if (target.src !== '/attached_assets/default-wedding-couple.jpg') {
-              target.src = '/attached_assets/default-wedding-couple.jpg';
-            } else {
-              // If even the fallback fails, show a placeholder
-              target.style.display = 'none';
-              const placeholder = target.parentElement?.querySelector('.image-placeholder') as HTMLElement;
-              if (placeholder) {
-                placeholder.style.display = 'flex';
-              }
-            }
-          }}
+          showErrorMessage={true}
         />
-        <div 
-          className="image-placeholder w-full h-64 bg-gray-200 rounded-lg flex items-center justify-center text-gray-500 absolute inset-0"
-          style={{ display: 'none' }}
-        >
-          <div className="text-center">
-            <div className="text-4xl mb-2">🖼️</div>
-            <div>No image available</div>
-          </div>
-        </div>
         
         {/* Navigation */}
         <Button

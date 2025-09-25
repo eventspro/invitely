@@ -2,7 +2,7 @@
 
 ## How to Add Your Music
 
-1. **Add your music file** to this folder (`client/public/audio/`)
+1. **Add your music file** to this folder (`public/audio/`)
 2. **Rename your file** to `wedding-music.mp3` (or update the file name in `hero-section.tsx`)
 3. **Supported formats**: MP3, WAV, OGG
 

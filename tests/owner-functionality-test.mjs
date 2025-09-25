@@ -8,7 +8,7 @@ import path from 'path';
 const TEST_CONFIG = {
   baseUrl: 'http://localhost:5001',
   templateId: 'armenian-classic-001',
-  testImage: path.join(process.cwd(), 'client/public/attached_assets', 'default-wedding-couple.jpg')
+  testImage: path.join(process.cwd(), 'attached_assets', 'default-wedding-couple.jpg')
 };
 
 console.log('🎨 Testing Template Owner Customization Features');

@@ -262,7 +262,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         // For demo purposes, serve a default image from attached_assets
         // Check multiple possible locations for the placeholder
         const possiblePaths = [
-          path.join(process.cwd(), 'client/public/attached_assets', 'default-wedding-couple.jpg'),
+          path.join(process.cwd(), 'attached_assets', 'default-wedding-couple.jpg'),
           path.join(process.cwd(), 'dist', 'attached_assets', 'default-wedding-couple.jpg'),
           path.join(process.cwd(), 'dist/attached_assets/default-wedding-couple.jpg')
         ];
@@ -403,7 +403,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const { id } = req.params;
       
       const filename = `template-preview-${id}.jpg`;
-      const filePath = path.join(process.cwd(), 'client/public/attached_assets', 'template_previews', filename);
+      const filePath = path.join(process.cwd(), 'attached_assets', 'template_previews', filename);
       
       // Check if file exists
       if (!fs.existsSync(filePath)) {
@@ -427,10 +427,24 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const { filename } = req.params;
       
-      const filePath = path.join(process.cwd(), 'client/public/attached_assets', filename);
+      // Try multiple possible locations for the asset
+      const possiblePaths = [
+        path.join(process.cwd(), 'client', 'public', 'attached_assets', filename),
+        path.join(process.cwd(), 'attached_assets', filename),
+        path.join(process.cwd(), 'dist', 'client', 'public', 'attached_assets', filename),
+      ];
       
-      // Check if file exists
-      if (!fs.existsSync(filePath)) {
+      let filePath: string | null = null;
+      for (const possiblePath of possiblePaths) {
+        if (fs.existsSync(possiblePath)) {
+          filePath = possiblePath;
+          break;
+        }
+      }
+      
+      if (!filePath) {
+        console.log(`❌ Asset not found: ${filename}`);
+        console.log('Searched paths:', possiblePaths);
         return res.status(404).json({ error: "Image not found" });
       }
       
@@ -441,14 +455,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
         '.jpeg': 'image/jpeg',
         '.png': 'image/png',
         '.webp': 'image/webp',
-        '.gif': 'image/gif'
+        '.gif': 'image/gif',
+        '.jfif': 'image/jpeg'
       };
       
       const contentType = contentTypes[ext] || 'application/octet-stream';
       
       res.setHeader('Content-Type', contentType);
-      res.setHeader('Cache-Control', 'public, max-age=86400'); // Cache for 1 day
+      res.setHeader('Cache-Control', 'public, max-age=31536000'); // Cache for 1 year
       
+      console.log(`✅ Serving asset: ${filename} from ${filePath}`);
       const stream = fs.createReadStream(filePath);
       stream.pipe(res);
       

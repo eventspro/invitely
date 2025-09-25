@@ -24,7 +24,10 @@ export const weddingConfig = {
     musicButton: "Երաժշտություն",
     playIcon: "▶️",
     pauseIcon: "⏸️",
-    images: ["/attached_assets/default-wedding-couple.jpg"], // Hero background images array
+    images: [
+      "/attached_assets/default-wedding-couple.jpg",
+      "/attached_assets/couple11.jpg"
+    ], // Hero background images array
   },
 
   // Countdown Section
@@ -140,7 +143,11 @@ export const weddingConfig = {
     downloadButton: "Ներբեռնել նկարները",
     uploadButton: "Ավելացնել նկար",
     comingSoonMessage: "Նկարների հղումը կհասանելի լինի հարսանիքից հետո",
-    images: ["/attached_assets/default-wedding-couple.jpg"], // Gallery images array
+    images: [
+      "/attached_assets/default-wedding-couple.jpg",
+      "/attached_assets/Blog_Banner_Left_Hand_Story_1755890185205.webp",
+      "/attached_assets/heart-tattoo.jfif"
+    ], // Gallery images array
   },
 
   // Navigation

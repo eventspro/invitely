@@ -193,16 +193,17 @@ export default function PhotosPage() {
               <div className="w-full space-y-6">
                 {/* Enhanced Image Uploader */}
                 <ImageUploader
+                  templateId="guest-photos"
+                  category="guest-photos"
                   maxFiles={Math.min(25, MAX_PHOTOS - uploadedPhotosCount)}
-                  maxFileSize={10485760} // 10MB
-                  onFilesUploaded={(files) => {
+                  onImagesUploaded={(files: string[]) => {
                     const newCount = uploadedPhotosCount + files.length;
                     setUploadedPhotosCount(newCount);
                     localStorage.setItem(`wedding-photos-count-${guestName}`, newCount.toString());
                     setUploadStatus(`${files.length} նկար(ներ) հաջողությամբ ավելացվեցին! Շնորհակալություն ${guestName}! (Ընդամենը: ${newCount})`);
                     setTimeout(() => setUploadStatus(""), 5000);
                   }}
-                  onFileRemoved={() => {
+                  onImageRemoved={() => {
                     // Handle file removal if needed
                   }}
                 />

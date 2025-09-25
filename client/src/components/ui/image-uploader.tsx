@@ -2,6 +2,7 @@ import React, { useState, useRef, useCallback } from 'react';
 import { Upload, X } from 'lucide-react';
 import { Button } from './button';
 import { Alert, AlertDescription } from './alert';
+import { SafeImage } from './safe-image';
 
 interface ImageFile {
   id: string;
@@ -243,10 +244,14 @@ export const ImageUploader: React.FC<ImageUploaderProps> = ({
             return (
               <div key={imageData?.id || `existing-${index}`} className="relative group">
                 <div className="aspect-square rounded-lg overflow-hidden bg-gray-100">
-                  <img
+                  <SafeImage
                     src={imageUrl}
                     alt={imageData?.filename || `Image ${index + 1}`}
-                    className="w-full h-full object-cover"
+                    className="w-full h-full"
+                    showErrorMessage={true}
+                    onError={() => {
+                      console.warn(`Failed to load image: ${imageUrl}`);
+                    }}
                   />
                 </div>
                 <Button
