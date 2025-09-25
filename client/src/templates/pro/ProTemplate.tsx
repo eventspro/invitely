@@ -15,9 +15,10 @@ import MapModal from "@/components/map-modal";
 
 interface ProTemplateProps {
   config: WeddingConfig;
+  templateId?: string;
 }
 
-export default function ProTemplate({ config }: ProTemplateProps) {
+export default function ProTemplate({ config, templateId }: ProTemplateProps) {
   const sections = config.sections || {};
 
   // Provide fallback values for missing config properties
@@ -62,7 +63,7 @@ export default function ProTemplate({ config }: ProTemplateProps) {
     },
     { 
       id: 'rsvp', 
-      component: <RsvpSection config={safeConfig} />, 
+      component: <RsvpSection config={safeConfig} templateId={templateId} />, 
       order: sections.rsvp?.order ?? 5,
       enabled: sections.rsvp?.enabled !== false 
     },

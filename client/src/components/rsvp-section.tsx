@@ -19,9 +19,10 @@ import { getHeadingFont, getBodyFont } from "@/utils/font-utils";
 
 interface RsvpSectionProps {
   config?: WeddingConfig;
+  templateId?: string;
 }
 
-export default function RsvpSection({ config = weddingConfig }: RsvpSectionProps) {
+export default function RsvpSection({ config = weddingConfig, templateId }: RsvpSectionProps) {
   const { toast } = useToast();
   const titleRef = useScrollAnimation('animate-fade-in-scale');
   const formRef = useScrollAnimation('animate-slide-up');
@@ -40,7 +41,9 @@ export default function RsvpSection({ config = weddingConfig }: RsvpSectionProps
 
   const rsvpMutation = useMutation({
     mutationFn: async (data: InsertRsvp) => {
-      const response = await apiRequest("POST", "/api/rsvp", data);
+      // Use template-specific endpoint if templateId is available
+      const endpoint = templateId ? `/api/templates/${templateId}/rsvp` : "/api/rsvp";
+      const response = await apiRequest("POST", endpoint, data);
       return response.json();
     },
     onSuccess: (data) => {

@@ -15,9 +15,10 @@ import MapModal from "@/components/map-modal";
 
 interface NatureTemplateProps {
   config: WeddingConfig;
+  templateId?: string;
 }
 
-export default function NatureTemplate({ config }: NatureTemplateProps) {
+export default function NatureTemplate({ config, templateId }: NatureTemplateProps) {
   const sections = config.sections || {};
 
   // Provide fallback values for missing config properties
@@ -39,7 +40,7 @@ export default function NatureTemplate({ config }: NatureTemplateProps) {
         {sections.calendar?.enabled !== false && <CalendarSection config={safeConfig} />}
         {sections.locations?.enabled !== false && <LocationsSection config={safeConfig} />}
         {sections.timeline?.enabled !== false && <TimelineSection config={safeConfig} />}
-        {sections.rsvp?.enabled !== false && <RsvpSection config={safeConfig} />}
+        {sections.rsvp?.enabled !== false && <RsvpSection config={safeConfig} templateId={templateId} />}
         {sections.photos?.enabled !== false && <PhotoSection config={safeConfig} />}
       </main>
       

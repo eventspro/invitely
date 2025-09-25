@@ -129,7 +129,7 @@ export default function TemplateRenderer() {
 
   return (
     <Suspense fallback={<LoadingScreen />}>
-      <TemplateComponent config={templateConfig.config} />
+      <TemplateComponent config={templateConfig.config} templateId={templateConfig.templateId} />
     </Suspense>
   );
 }
