@@ -10,7 +10,7 @@ export interface TemplateDefinition {
   description: string;
   defaultConfig: WeddingConfig;
   // Lazy-loaded template component
-  component: React.LazyExoticComponent<React.ComponentType<{ config: WeddingConfig }>>;
+  component: React.LazyExoticComponent<React.ComponentType<{ config: WeddingConfig; templateId?: string }>>;
   // Preview image for admin selection
   previewImage?: string;
   // Template features/capabilities
