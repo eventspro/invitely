@@ -2,7 +2,6 @@ import { Download, Camera, Upload } from "lucide-react";
 import { weddingConfig } from "@/config/wedding-config";
 import { WeddingConfig } from "@/templates/types";
 import weddingPhoto from "@assets/IMG_5671_1755890386133.jpeg";
-import { ObjectUploader } from "./ObjectUploader";
 import { useState } from "react";
 import { Swiper, SwiperSlide } from 'swiper/react';
 import { Navigation, Pagination, Autoplay } from 'swiper/modules';
@@ -14,9 +13,10 @@ import 'swiper/css/pagination';
 
 interface PhotoSectionProps {
   config?: WeddingConfig;
+  templateId?: string;
 }
 
-export default function PhotoSection({ config = weddingConfig }: PhotoSectionProps) {
+export default function PhotoSection({ config = weddingConfig, templateId }: PhotoSectionProps) {
   const [uploadStatus, setUploadStatus] = useState<string>("");
 
   // Get love story images - use uploaded images if available, fallback to default
@@ -29,32 +29,53 @@ export default function PhotoSection({ config = weddingConfig }: PhotoSectionPro
     alert(config.photos.comingSoonMessage);
   };
 
-  const handleGetUploadParameters = async () => {
+  const handleFileUpload = async (files: File[]) => {
     try {
-      const response = await fetch('/api/photos/upload', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ category: 'photos' }),
-      });
-      const data = await response.json();
-      return {
-        method: 'PUT' as const,
-        url: data.uploadURL,
-      };
-    } catch (error) {
-      console.error('Failed to get upload URL:', error);
-      throw error;
-    }
-  };
+      if (!templateId) {
+        console.error('Template ID is required for photo upload');
+        setUploadStatus("Սխալ: Template ID չի գտնվել");
+        return;
+      }
 
-  const handleUploadComplete = async (files: File[]) => {
-    try {
+      setUploadStatus(`Վերբեռնում է ${files.length} նկար...`);
+
+      const uploadPromises = Array.from(files).map(async (file) => {
+        if (!file.type.startsWith('image/')) {
+          throw new Error(`Չսպասարկվող ֆայլի տեսակ: ${file.type}`);
+        }
+
+        if (file.size > 10 * 1024 * 1024) { // 10MB limit
+          throw new Error(`Ֆայլը չափազանց մեծ է: ${file.name}`);
+        }
+
+        const formData = new FormData();
+        formData.append('image', file);
+        formData.append('category', 'gallery');
+        formData.append('templateId', templateId);
+
+        const response = await fetch('/api/photos/upload', {
+          method: 'POST',
+          body: formData,
+        });
+
+        if (!response.ok) {
+          const errorData = await response.json();
+          throw new Error(errorData.error || errorData.message || 'Վերբեռնման սխալ');
+        }
+
+        return await response.json();
+      });
+
+      const results = await Promise.all(uploadPromises);
+      console.log('Gallery upload results:', results);
+      
       setUploadStatus(`${files.length} նկար(ներ) հաջողությամբ ավելացվեցին! Շնորհակալություն:`);
       setTimeout(() => setUploadStatus(""), 4000);
+      
     } catch (error) {
-      console.error('Failed to complete upload:', error);
-      setUploadStatus("Սխալ վերբեռնելիս: Խնդրում ենք կրկին փորձել:");
-      setTimeout(() => setUploadStatus(""), 3000);
+      console.error('Failed to upload gallery photos:', error);
+      setUploadStatus(`Սխալ վերբեռնելիս: ${error instanceof Error ? error.message : 'Անհայտ սխալ'}`);
+      setTimeout(() => setUploadStatus(""), 5000);
     }
   };
 
@@ -77,6 +98,48 @@ export default function PhotoSection({ config = weddingConfig }: PhotoSectionPro
 
     return (
       <div className="relative overflow-hidden rounded-xl">
+        <style dangerouslySetInnerHTML={{
+          __html: `
+            .photo-swiper .swiper-button-next,
+            .photo-swiper .swiper-button-prev {
+              color: ${config.theme?.colors?.primary || '#3b82f6'} !important;
+              background: rgba(255, 255, 255, 0.9) !important;
+              width: 40px !important;
+              height: 40px !important;
+              border-radius: 50% !important;
+              box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15) !important;
+              transition: all 0.3s ease !important;
+            }
+            .photo-swiper .swiper-button-next:hover,
+            .photo-swiper .swiper-button-prev:hover {
+              background: ${config.theme?.colors?.primary || '#3b82f6'} !important;
+              color: white !important;
+              transform: scale(1.1) !important;
+            }
+            .photo-swiper .swiper-button-next:after,
+            .photo-swiper .swiper-button-prev:after {
+              font-size: 16px !important;
+              font-weight: bold !important;
+            }
+            .photo-swiper .swiper-pagination-bullet {
+              background: ${config.theme?.colors?.primary || '#3b82f6'} !important;
+              opacity: 0.5 !important;
+              width: 10px !important;
+              height: 10px !important;
+            }
+            .photo-swiper .swiper-pagination-bullet-active {
+              background: ${config.theme?.colors?.primary || '#3b82f6'} !important;
+              opacity: 1 !important;
+              transform: scale(1.3) !important;
+            }
+            @media (max-width: 767px) {
+              .photo-swiper .swiper-button-next,
+              .photo-swiper .swiper-button-prev {
+                display: none !important;
+              }
+            }
+          `
+        }} />
         <Swiper
           modules={[Navigation, Pagination, Autoplay]}
           spaceBetween={30}
@@ -100,7 +163,7 @@ export default function PhotoSection({ config = weddingConfig }: PhotoSectionPro
               },
             },
           }}
-          className="h-64 sm:h-80 rounded-xl"
+          className="h-64 sm:h-80 rounded-xl photo-swiper"
         >
           {loveStoryImages.map((imageUrl, index) => (
             <SwiperSlide key={index}>
@@ -157,16 +220,29 @@ export default function PhotoSection({ config = weddingConfig }: PhotoSectionPro
 
           {/* Action Buttons */}
           <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
-            <ObjectUploader
-              maxNumberOfFiles={10}
-              maxFileSize={10485760} // 10MB
-              onGetUploadParameters={handleGetUploadParameters}
-              onComplete={handleUploadComplete}
-              buttonClassName="text-white px-6 sm:px-8 py-3 sm:py-4 rounded-lg font-medium transition-colors duration-300 transform hover:scale-105 flex items-center text-sm sm:text-base hover:opacity-90"
+            <label 
+              htmlFor="gallery-upload"
+              className="text-white px-6 sm:px-8 py-3 sm:py-4 rounded-lg font-medium transition-colors duration-300 transform hover:scale-105 flex items-center text-sm sm:text-base hover:opacity-90 cursor-pointer"
+              style={{
+                backgroundColor: config.theme?.colors?.primary || '#333333'
+              }}
             >
               <Camera className="w-4 h-4 sm:w-5 sm:h-5 mr-2" />
               {config.photos.uploadButton}
-            </ObjectUploader>
+            </label>
+            <input
+              id="gallery-upload"
+              type="file"
+              multiple
+              accept="image/*"
+              onChange={(e) => {
+                const files = Array.from(e.target.files || []);
+                if (files.length > 0) {
+                  handleFileUpload(files);
+                }
+              }}
+              className="hidden"
+            />
             
             <button 
               onClick={openPhotoGallery}
