@@ -596,10 +596,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
         '.jpg': 'image/jpeg',
         '.jpeg': 'image/jpeg',
         '.png': 'image/png',
+        '.gif': 'image/gif',
         '.webp': 'image/webp',
-        '.gif': 'image/gif'
+        '.svg': 'image/svg+xml'
       };
-      
       const contentType = contentTypes[ext] || 'application/octet-stream';
       
       res.setHeader('Content-Type', contentType);

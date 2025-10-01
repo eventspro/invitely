@@ -46,26 +46,28 @@ templates/
 
 ### Development Workflow
 ```bash
-# Development server (Vite dev server with proxy to Express backend)
-npm run dev          # Frontend: localhost:5173, Backend: localhost:5001
+# Development server (Express server with Vite integration)
+npm run dev          # Runs Express server on localhost:5001 (serves both API + frontend)
 
 # Database operations  
 npm run db:push      # Push Drizzle schema changes to database
 npm run db:migrate   # Run migrations + seed default template via scripts/migrate-default-template.ts
+npm run db:generate  # Generate migration files from schema changes
 
 # Testing
 npx playwright test  # E2E tests with auto-start dev server
-npm run check        # TypeScript type checking
+npm run check        # TypeScript type checking across entire project
 
 # Production build
 npm run build        # Vite build + esbuild server bundle
 npm run vercel-build # Vercel-optimized build (same as npm run build)
 npm run preview      # Test production build locally
 
-# Template management scripts (in scripts/ directory)
+# Template management scripts (PowerShell-compatible)
 tsx scripts/create-{template}-template.ts    # Create new template instances
 tsx scripts/apply-armenian-to-all-templates.ts  # Apply Armenian localization
 tsx scripts/check-template-status.ts         # Verify template health
+tsx scripts/migrate-default-template.ts      # Initial template seeding
 ```
 
 ### API Route Patterns & Authentication
@@ -138,19 +140,6 @@ This platform specifically supports **Armenian weddings** with:
 - **Storage providers**: Cloudflare R2 (primary), Google Cloud Storage, AWS S3 (fallback)
 - **SSL Configuration**: Production database requires SSL with proper certificate validation
 - **Monitoring**: Health check at `/health`, request logging middleware
-
-## Common Development Tasks
-
-- **Adding new templates**: Create in `templates/`, register in `templates/index.ts`, add to database
-- **Schema changes**: Modify `shared/schema.ts`, run `npm run db:push`, test with validation
-- **Template customization**: Use admin panel at `/admin/dashboard` or update config via API
-- **Testing**: Focus on template rendering, RSVP validation, and authentication flows
-
-## Important Conventions
-- Always validate template configs against `WeddingConfig` type before database storage
-- Use `insertRsvpSchema` for RSVP validation (supports Armenian error messages)  
-- Template components must handle missing config properties with safe defaults
-- Database queries are template-scoped using `templateId` foreign keys
 
 ## Common Development Tasks
 
