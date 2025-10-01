@@ -149,21 +149,39 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   // Maintenance mode endpoints
   app.get("/api/maintenance", async (req, res) => {
+    const timeoutId = setTimeout(() => {
+      if (!res.headersSent) {
+        console.error('Maintenance status request timeout');
+        res.status(408).json({ message: "Request timeout", enabled: false });
+      }
+    }, 5000); // 5 second timeout
+
     try {
       console.log(`🔧 Checking maintenance status - DATABASE_URL exists: ${!!process.env.DATABASE_URL}`);
       
-      const status = await storage.getMaintenanceStatus();
+      const status = await Promise.race([
+        storage.getMaintenanceStatus(),
+        new Promise((_, reject) => setTimeout(() => reject(new Error('Database timeout')), 3000))
+      ]) as boolean;
+      
       console.log(`✅ Maintenance status retrieved: ${status}`);
-      res.json({ enabled: status });
+      clearTimeout(timeoutId);
+      if (!res.headersSent) {
+        res.json({ enabled: status });
+      }
     } catch (error) {
+      clearTimeout(timeoutId);
       console.error("❌ Get maintenance status error details:", error);
       console.error("❌ Error stack:", error instanceof Error ? error.stack : 'No stack available');
       console.error("❌ Database URL available:", !!process.env.DATABASE_URL);
-      res.status(500).json({ 
-        message: "Server error",
-        error: error instanceof Error ? error.message : 'Unknown error',
-        hasDatabase: !!process.env.DATABASE_URL
-      });
+      
+      if (!res.headersSent) {
+        // Return a safe fallback instead of 500 error
+        res.json({ 
+          enabled: false, // Safe default
+          warning: "Database unavailable, using fallback"
+        });
+      }
     }
   });
 
@@ -189,7 +207,114 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   // Image upload endpoints
 
-  // Upload image for a specific template
+  // Gallery/Love Story photo upload endpoint (R2-enabled)
+  app.post("/api/photos/upload", upload.single('image'), async (req, res) => {
+    try {
+      if (!req.file) {
+        return res.status(400).json({ error: 'No file uploaded' });
+      }
+      
+      const { templateId, category = 'gallery' } = req.body;
+        
+      if (!templateId) {
+        return res.status(400).json({ error: 'Template ID is required' });
+      }
+
+      console.log('📸 Gallery photo upload started:', {
+        filename: req.file.filename,
+        originalname: req.file.originalname,
+        size: req.file.size,
+        templateId,
+        category
+      });
+
+      let imageUrl = `/api/images/serve/${req.file.filename}`; // Default fallback
+      let useR2 = false;
+      
+      // Try R2 upload in production if configured
+      if (process.env.VERCEL) {
+        try {
+          if (process.env.CLOUDFLARE_R2_BUCKET_NAME && 
+              process.env.CLOUDFLARE_R2_ACCOUNT_ID &&
+              process.env.CLOUDFLARE_R2_ACCESS_KEY &&
+              process.env.CLOUDFLARE_R2_SECRET_KEY &&
+              process.env.CLOUDFLARE_R2_PUBLIC_URL) {
+            
+            const { r2Storage } = await import('./r2Storage.js');
+            if (r2Storage.isConfigured()) {
+              const fileBuffer = fs.readFileSync(req.file.path);
+              const r2Result = await r2Storage.uploadImage(
+                templateId,
+                fileBuffer,
+                req.file.originalname,
+                req.file.mimetype,
+                category
+              );
+              imageUrl = r2Result.url;
+              console.log(`☁️ Gallery image uploaded to R2: ${r2Result.url}`);
+              useR2 = true;
+              
+              // Clean up local temp file
+              fs.unlinkSync(req.file.path);
+            }
+          } else {
+            console.log('⚠️ R2 environment variables not configured for gallery upload');
+          }
+        } catch (r2Error) {
+          console.warn('⚠️ R2 gallery upload failed, using local storage:', r2Error);
+        }
+      }
+      
+      // Create image record in database
+      const imageRecord = await storage.createImage({
+        templateId,
+        url: imageUrl,
+        name: req.file.originalname,
+        category,
+        size: req.file.size.toString(),
+        mimeType: req.file.mimetype,
+        order: "0"
+      });
+      
+      console.log(`✅ Gallery image upload complete: ${req.file.filename} for template ${templateId}, R2: ${useR2}`);
+      
+      res.json({
+        id: imageRecord.id,
+        url: imageUrl,
+        name: req.file.originalname,
+        size: req.file.size,
+        category,
+        templateId
+      });
+      
+    } catch (error) {
+      console.error('💥 Gallery photo upload error:', error);
+      console.error("💥 Error stack:", error instanceof Error ? error.stack : 'No stack trace');
+      
+      if (req.file && req.file.path) {
+        try {
+          fs.unlinkSync(req.file.path);
+          console.log('🧹 Cleaned up gallery upload file');
+        } catch (cleanupError) {
+          console.error('🧹 Failed to cleanup gallery file:', cleanupError);
+        }
+      }
+      
+      // Ensure JSON response
+      res.setHeader('Content-Type', 'application/json');
+      const errorResponse = { 
+        success: false,
+        error: "Gallery photo upload failed", 
+        message: error instanceof Error ? error.message : 'Unknown error during gallery upload',
+        timestamp: new Date().toISOString()
+      };
+      
+      console.log('📤 Sending gallery error response:', errorResponse);
+      res.status(500).json(errorResponse);
+    }
+  });
+
+  // Upload image for a specific template (legacy endpoint)
   app.post("/api/images/upload", upload.single('image'), async (req, res) => {
     try {
       if (!req.file) {
@@ -226,12 +351,29 @@ export async function registerRoutes(app: Express): Promise<Server> {
       });
       
     } catch (error) {
-      console.error('Image upload error:', error);
-      if (req.file) {
-        // Clean up uploaded file if there's an error
-        fs.unlinkSync(req.file.path);
+      console.error('💥 Legacy image upload error:', error);
+      console.error("💥 Error stack:", error instanceof Error ? error.stack : 'No stack trace');
+      
+      if (req.file && req.file.path) {
+        try {
+          fs.unlinkSync(req.file.path);
+          console.log('🧹 Cleaned up legacy upload file');
+        } catch (cleanupError) {
+          console.error('🧹 Failed to cleanup legacy file:', cleanupError);
+        }
       }
-      res.status(500).json({ error: 'Failed to upload image' });
+      
+      // Ensure JSON response
+      res.setHeader('Content-Type', 'application/json');
+      const errorResponse = { 
+        success: false,
+        error: "Image upload failed", 
+        message: error instanceof Error ? error.message : 'Unknown error during image upload',
+        timestamp: new Date().toISOString()
+      };
+      
+      console.log('📤 Sending legacy error response:', errorResponse);
+      res.status(500).json(errorResponse);
     }
   });
 
@@ -455,8 +597,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         '.jpeg': 'image/jpeg',
         '.png': 'image/png',
         '.webp': 'image/webp',
-        '.gif': 'image/gif',
-        '.jfif': 'image/jpeg'
+        '.gif': 'image/gif'
       };
       
       const contentType = contentTypes[ext] || 'application/octet-stream';
@@ -476,16 +617,32 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   // Template endpoints
   app.get("/api/templates", async (req, res) => {
+    const timeoutId = setTimeout(() => {
+      if (!res.headersSent) {
+        console.error('Templates list request timeout');
+        res.status(408).json({ error: "Request timeout" });
+      }
+    }, 6000); // 6 second timeout
+
     try {
       console.log(`📋 Getting all templates`);
       
-      const templates = await storage.getAllTemplates();
+      const templates = await Promise.race([
+        storage.getAllTemplates(),
+        new Promise((_, reject) => setTimeout(() => reject(new Error('Database timeout')), 4000))
+      ]) as any[];
       
       console.log(`📊 Found ${templates.length} templates`);
-      res.json(templates);
+      clearTimeout(timeoutId);
+      if (!res.headersSent) {
+        res.json(templates);
+      }
     } catch (error) {
+      clearTimeout(timeoutId);
       console.error("❌ Failed to get templates:", error);
-      res.status(500).json({ error: "Failed to get templates" });
+      if (!res.headersSent) {
+        res.status(500).json({ error: "Failed to get templates" });
+      }
     }
   });
 

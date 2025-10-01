@@ -174,7 +174,7 @@ export default function TemplatesPage() {
       badgeColor: pricingPlan?.badgeColor,
       description: pricingPlan?.description || template.name,
       templateRoute: `/t/${template.slug}`,
-      popular: pricingPlan?.popular || false,
+      popular: (pricingPlan as any)?.popular || false,
       features
     };
   }) || [];
@@ -280,8 +280,8 @@ export default function TemplatesPage() {
                             {feature.icon}
                             <span>{feature.name}</span>
                           </div>
-                          {feature.description && (
-                            <p className="text-xs text-gray-500 mt-1">{feature.description}</p>
+                          {(feature as any).description && (
+                            <p className="text-xs text-gray-500 mt-1">{(feature as any).description}</p>
                           )}
                         </div>
                       </div>
