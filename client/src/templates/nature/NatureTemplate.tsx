@@ -39,7 +39,7 @@ export default function NatureTemplate({ config, templateId }: NatureTemplatePro
 
   return (
     <div className="min-h-screen text-gray-800" style={{
-      background: `linear-gradient(135deg, ${config.theme?.colors?.background || '#f7f8f7'} 0%, #ecfdf5 100%)`
+      background: `linear-gradient(135deg, ${config.theme?.colors?.background || safeConfig.theme?.colors?.background || '#f7f8f7'} 0%, ${config.theme?.colors?.background || safeConfig.theme?.colors?.background || '#f7f8f7'} 100%)`
     }}>
       <Navigation config={safeConfig} />
       <main>
@@ -54,7 +54,7 @@ export default function NatureTemplate({ config, templateId }: NatureTemplatePro
       
       {/* Footer */}
       <footer className="py-12" style={{
-        background: `linear-gradient(135deg, ${config.theme?.colors?.primary || '#166534'} 0%, ${config.theme?.colors?.secondary || '#15803d'} 100%)`,
+        background: `linear-gradient(135deg, ${config.theme?.colors?.primary || safeConfig.theme?.colors?.primary || '#4A3F35'} 0%, ${config.theme?.colors?.secondary || safeConfig.theme?.colors?.secondary || '#B8A99A'} 100%)`,
         color: 'white'
       }}>
         <div className="max-w-4xl mx-auto px-4 text-center">

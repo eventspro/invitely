@@ -39,7 +39,7 @@ export default function ClassicTemplate({ config, templateId }: ClassicTemplateP
 
   return (
     <div className="min-h-screen bg-rose-50 text-slate-800" style={{
-      background: `linear-gradient(135deg, ${config.theme?.colors?.background || '#fdf2f8'} 0%, #fce7f3 100%)`
+      background: `linear-gradient(135deg, ${config.theme?.colors?.background || safeConfig.theme?.colors?.background || '#fdf2f8'} 0%, ${config.theme?.colors?.background || safeConfig.theme?.colors?.background || '#fdf2f8'} 100%)`
     }}>
       <Navigation />
       <main>
@@ -54,7 +54,7 @@ export default function ClassicTemplate({ config, templateId }: ClassicTemplateP
       
       {/* Footer */}
       <footer className="py-12" style={{
-        background: `linear-gradient(135deg, ${config.theme?.colors?.primary || '#be185d'} 0%, ${config.theme?.colors?.secondary || '#e11d48'} 100%)`,
+        background: `linear-gradient(135deg, ${config.theme?.colors?.primary || safeConfig.theme?.colors?.primary || '#be185d'} 0%, ${config.theme?.colors?.secondary || safeConfig.theme?.colors?.secondary || '#e11d48'} 100%)`,
         color: 'white'
       }}>
         <div className="max-w-4xl mx-auto px-4 text-center">

@@ -39,7 +39,7 @@ export default function RomanticTemplate({ config, templateId }: RomanticTemplat
 
   return (
     <div className="min-h-screen text-rose-900" style={{
-      background: `linear-gradient(135deg, ${config.theme?.colors?.background || '#fdf2f8'} 0%, #fce7f3 100%)`
+      background: `linear-gradient(135deg, ${config.theme?.colors?.background || safeConfig.theme?.colors?.background || '#fdf2f8'} 0%, ${config.theme?.colors?.background || safeConfig.theme?.colors?.background || '#fdf2f8'} 100%)`
     }}>
       <Navigation config={safeConfig} />
       <main>
@@ -54,7 +54,7 @@ export default function RomanticTemplate({ config, templateId }: RomanticTemplat
       
       {/* Footer */}
       <footer className="py-12" style={{
-        background: `linear-gradient(135deg, ${config.theme?.colors?.primary || '#9f1239'} 0%, ${config.theme?.colors?.secondary || '#be123c'} 100%)`,
+        background: `linear-gradient(135deg, ${config.theme?.colors?.primary || safeConfig.theme?.colors?.primary || '#9f1239'} 0%, ${config.theme?.colors?.secondary || safeConfig.theme?.colors?.secondary || '#be123c'} 100%)`,
         color: 'white'
       }}>
         <div className="max-w-4xl mx-auto px-4 text-center">

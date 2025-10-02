@@ -54,7 +54,7 @@ export default function ElegantTemplate({ config, templateId }: ElegantTemplateP
       
       {/* Footer */}
       <footer className="py-12" style={{
-        background: `linear-gradient(135deg, ${config.theme?.colors?.primary || '#1e3a8a'} 0%, ${config.theme?.colors?.secondary || '#475569'} 100%)`,
+        background: `linear-gradient(135deg, ${config.theme?.colors?.primary || safeConfig.theme?.colors?.primary || '#1e3a8a'} 0%, ${config.theme?.colors?.secondary || safeConfig.theme?.colors?.secondary || '#475569'} 100%)`,
         color: 'white'
       }}>
         <div className="max-w-4xl mx-auto px-4 text-center">
