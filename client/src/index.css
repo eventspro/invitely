@@ -77,8 +77,20 @@
 }
 
 @layer components {
-  /* Dynamic text-charcoal override */
-  .text-charcoal {
+  /* Dynamic text-charcoal override - FORCE all text-charcoal usage to use dynamic colors */
+  .text-charcoal,
+  h1.text-charcoal,
+  h2.text-charcoal,
+  h3.text-charcoal,
+  h4.text-charcoal,
+  h5.text-charcoal,
+  h6.text-charcoal,
+  p.text-charcoal,
+  span.text-charcoal,
+  div.text-charcoal,
+  .armenian-text-forced.text-charcoal,
+  .text-charcoal.armenian-text-forced,
+  [class*="text-charcoal"]:not([class*="text-charcoal/"]) {
     color: var(--dynamic-text-color, var(--charcoal)) !important;
   }
   
