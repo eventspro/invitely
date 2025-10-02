@@ -344,7 +344,17 @@ export default function HeroSection({ config = weddingConfig }: HeroSectionProps
         <div className="mt-8 flex justify-center">
           <button
             onClick={toggleMusic}
-            className="bg-softGold hover:bg-softGold/90 text-white px-6 py-3 rounded-full shadow-lg transition-all duration-300 flex items-center space-x-2"
+            className="text-white px-6 py-3 rounded-full shadow-lg transition-all duration-300 flex items-center space-x-2"
+            style={{
+              backgroundColor: config.theme?.colors?.primary || '#831843',
+              borderColor: config.theme?.colors?.primary || '#831843'
+            }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.backgroundColor = `${config.theme?.colors?.primary || '#831843'}dd`;
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.backgroundColor = config.theme?.colors?.primary || '#831843';
+            }}
             data-testid="button-music-toggle"
           >
             {isPlaying ? (
