@@ -8,7 +8,7 @@ interface NavigationProps {
 export default function Navigation({ config = weddingConfig }: NavigationProps) {
   return (
     <nav 
-      className="fixed top-0 w-full z-50 bg-cream/95 backdrop-blur-sm shadow-sm"
+      className="fixed top-0 w-full z-50 bg-transparent backdrop-blur-sm"
       data-testid="navigation"
     >
       <div className="max-w-6xl mx-auto px-4 py-4">
@@ -16,7 +16,7 @@ export default function Navigation({ config = weddingConfig }: NavigationProps) 
         <div className="flex justify-center">
           <span className="text-xl font-serif font-bold text-charcoal flex items-center gap-2">
             <span>{config.couple?.groomName || "Groom"}</span>
-            <span className="text-softGold mx-1">∞</span>
+            <span className="mx-1" style={{ color: 'var(--accent-color, var(--primary-color, #831843))' }}>∞</span>
             <span>{config.couple?.brideName || "Bride"}</span>
           </span>
         </div>
