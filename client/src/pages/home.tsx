@@ -30,7 +30,7 @@ export default function Home() {
           <div className="ornament w-full h-8 mb-8 opacity-50"></div>
           <h3 className="text-2xl font-serif font-bold mb-4 flex items-center justify-center gap-3">
             <span>{weddingConfig.couple.groomName}</span>
-            <span className="text-softGold mx-1">∞</span>
+            <span className="mx-1" style={{ color: 'var(--accent-color, var(--primary-color, #831843))' }}>∞</span>
             <span>{weddingConfig.couple.brideName}</span>
           </h3>
           <p className="text-white/70 mb-6">{weddingConfig.footer.thankYouMessage}</p>

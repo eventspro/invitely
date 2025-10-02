@@ -32,6 +32,7 @@ export const defaultConfig: WeddingConfig = {
       secondary: "#be123c",    // Muted crimson  
       accent: "#a855f7",       // Soft purple
       background: "#fdf2f8",   // Very light rose
+      textColor: "#3c1a3c",    // Dark rose for text
     },
     fonts: {
       heading: "Playfair Display, serif",

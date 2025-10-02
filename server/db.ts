@@ -12,6 +12,9 @@ console.log('🔗 Connecting to database with URL:', process.env.DATABASE_URL?.s
 
 export const pool = new Pool({ 
   connectionString: process.env.DATABASE_URL,
-  ssl: false // Disable SSL for local development in Replit
+  ssl: process.env.NODE_ENV === 'production' ? { rejectUnauthorized: false } : false,
+  connectionTimeoutMillis: 10000,
+  idleTimeoutMillis: 30000,
+  max: 10
 });
 export const db = drizzle({ client: pool, schema });

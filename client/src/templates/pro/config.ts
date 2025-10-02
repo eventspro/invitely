@@ -26,6 +26,7 @@ export const defaultConfig: WeddingConfig = {
       secondary: "hsl(340, 20%, 80%)", // --sage-green converted to actual value
       accent: "hsl(340, 15%, 15%)", // --charcoal converted to actual value
       background: "hsl(340, 30%, 97%)", // --cream converted to actual value
+      textColor: "#2C2124", // Default charcoal text
     },
     fonts: {
       heading: "Playfair Display, serif",

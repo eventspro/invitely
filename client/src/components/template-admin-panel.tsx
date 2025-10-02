@@ -1296,12 +1296,12 @@ export default function TemplateAdminPanel() {
                           <Input
                             id="primaryColor"
                             type="color"
-                            value={template.config.theme?.colors?.primary || "#1e3a8a"}
+                            value={template.config.theme?.colors?.primary }
                             onChange={(e) => updateConfig("theme.colors.primary", e.target.value)}
                             className="w-16 h-10"
                           />
                           <Input
-                            value={template.config.theme?.colors?.primary || "#1e3a8a"}
+                            value={template.config.theme?.colors?.primary }
                             onChange={(e) => updateConfig("theme.colors.primary", e.target.value)}
                             placeholder="#1e3a8a"
                             className="flex-1"
@@ -1314,12 +1314,12 @@ export default function TemplateAdminPanel() {
                           <Input
                             id="secondaryColor"
                             type="color"
-                            value={template.config.theme?.colors?.secondary || "#ec4899"}
+                            value={template.config.theme?.colors?.secondary }
                             onChange={(e) => updateConfig("theme.colors.secondary", e.target.value)}
                             className="w-16 h-10"
                           />
                           <Input
-                            value={template.config.theme?.colors?.secondary || "#ec4899"}
+                            value={template.config.theme?.colors?.secondary }
                             onChange={(e) => updateConfig("theme.colors.secondary", e.target.value)}
                             placeholder="#ec4899"
                             className="flex-1"
@@ -1332,12 +1332,12 @@ export default function TemplateAdminPanel() {
                           <Input
                             id="accentColor"
                             type="color"
-                            value={template.config.theme?.colors?.accent || "#f59e0b"}
+                            value={template.config.theme?.colors?.accent }
                             onChange={(e) => updateConfig("theme.colors.accent", e.target.value)}
                             className="w-16 h-10"
                           />
                           <Input
-                            value={template.config.theme?.colors?.accent || "#f59e0b"}
+                            value={template.config.theme?.colors?.accent }
                             onChange={(e) => updateConfig("theme.colors.accent", e.target.value)}
                             placeholder="#f59e0b"
                             className="flex-1"
@@ -1350,12 +1350,12 @@ export default function TemplateAdminPanel() {
                           <Input
                             id="backgroundColor"
                             type="color"
-                            value={template.config.theme?.colors?.background || "#ffffff"}
+                            value={template.config.theme?.colors?.background }
                             onChange={(e) => updateConfig("theme.colors.background", e.target.value)}
                             className="w-16 h-10"
                           />
                           <Input
-                            value={template.config.theme?.colors?.background || "#ffffff"}
+                            value={template.config.theme?.colors?.background }
                             onChange={(e) => updateConfig("theme.colors.background", e.target.value)}
                             placeholder="#ffffff"
                             className="flex-1"
@@ -1433,13 +1433,13 @@ export default function TemplateAdminPanel() {
                 <div className="border-t pt-6">
                   <h4 className="font-semibold mb-4">Preview</h4>
                   <div className="p-6 border rounded-lg" style={{
-                    backgroundColor: template.config.theme?.colors?.background || "#ffffff",
+                    backgroundColor: template.config.theme?.colors?.background ,
                     fontFamily: `${template.config.theme?.fonts?.body || "Noto Sans Armenian"}, sans-serif`
                   }}>
                     <h3 
                       className="text-2xl font-bold mb-2"
                       style={{ 
-                        color: template.config.theme?.colors?.primary || "#1e3a8a",
+                        color: template.config.theme?.colors?.primary ,
                         fontFamily: `${template.config.theme?.fonts?.heading || "Noto Serif Armenian"}, serif`
                       }}
                     >
@@ -1451,7 +1451,7 @@ export default function TemplateAdminPanel() {
                     <button
                       className="px-6 py-2 text-white font-medium rounded-lg"
                       style={{
-                        backgroundColor: template.config.theme?.colors?.secondary || "#ec4899"
+                        backgroundColor: template.config.theme?.colors?.secondary 
                       }}
                     >
                       RSVP Now
@@ -1705,3 +1705,4 @@ export default function TemplateAdminPanel() {
     </div>
   );
 }
+

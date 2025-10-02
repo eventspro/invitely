@@ -33,6 +33,7 @@ export const weddingConfig = {
   // Countdown Section
   countdown: {
     subtitle: "Հարսանիքին մնացել է",
+    backgroundImage: "/attached_assets/image_1755881009663.png", // Romantic couple background for Armenian template
     labels: {
       days: "օր",
       hours: "ժամ",

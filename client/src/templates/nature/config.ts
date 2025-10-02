@@ -32,6 +32,7 @@ export const defaultConfig: WeddingConfig = {
       secondary: "#15803d",    // Forest green  
       accent: "#a3a3a3",       // Warm gray
       background: "#f7f8f7",   // Very light sage
+      textColor: "#2c3e2d",    // Dark forest green for text
     },
     fonts: {
       heading: "Playfair Display, serif",

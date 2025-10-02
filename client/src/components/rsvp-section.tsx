@@ -80,7 +80,7 @@ export default function RsvpSection({ config = weddingConfig, templateId }: Rsvp
 
   return (
     <section id="rsvp" className="py-12 sm:py-20" style={{
-      background: `linear-gradient(to right, ${config.theme?.colors?.accent || '#e8d5b7'}20 0%, ${config.theme?.colors?.background || '#faf5f0'}30 100%)`
+      background: `linear-gradient(to right, ${config.theme?.colors?.accent }20 0%, ${config.theme?.colors?.background }30 100%)`
     }}>
       <div className="max-w-2xl mx-auto px-4 sm:px-6 lg:px-8">
         <div ref={titleRef} className="text-center mb-12 sm:mb-16 animate-on-scroll">
@@ -88,16 +88,16 @@ export default function RsvpSection({ config = weddingConfig, templateId }: Rsvp
               style={{ 
                 fontFamily: getHeadingFont(config.theme?.fonts), 
                 fontWeight: '300',
-                color: config.theme?.colors?.primary || '#333333'
+                color: config.theme?.colors?.primary 
               }}
               data-testid="text-rsvp-title">
             {config.rsvp?.title}
           </h2>
           <div className="w-16 sm:w-24 h-0.5 mx-auto mb-6 sm:mb-8" style={{
-            backgroundColor: config.theme?.colors?.accent || '#e8d5b7'
+            backgroundColor: config.theme?.colors?.accent 
           }}></div>
           <p className="text-base sm:text-lg px-4" style={{
-            color: `${config.theme?.colors?.primary || '#333333'}70`
+            color: `${config.theme?.colors?.primary }70`
           }} data-testid="text-rsvp-description">
             {config.rsvp?.description}
           </p>
@@ -238,7 +238,7 @@ export default function RsvpSection({ config = weddingConfig, templateId }: Rsvp
                 type="submit" 
                 className="w-full text-white py-3 sm:py-4 font-medium transition-colors duration-300 transform hover:scale-105 text-sm sm:text-base hover:opacity-90"
                 style={{
-                  backgroundColor: config.theme?.colors?.accent || '#e8d5b7'
+                  backgroundColor: config.theme?.colors?.accent 
                 }}
                 disabled={rsvpMutation.isPending}
                 data-testid="button-submit-rsvp"
@@ -252,3 +252,4 @@ export default function RsvpSection({ config = weddingConfig, templateId }: Rsvp
     </section>
   );
 }
+

@@ -95,7 +95,7 @@ export default function TimelineSection({ config }: TimelineSectionProps) {
           >
             {sectionConfig.timeline?.title}
           </h2>
-          <div className="w-24 h-0.5 mx-auto mb-8" style={{ backgroundColor: themeColors?.primary || '#9b7353' }}></div>
+          <div className="w-24 h-0.5 mx-auto mb-8" style={{ backgroundColor: themeColors?.primary  }}></div>
         </div>
 
         {/* Timeline Cards */}
@@ -115,7 +115,7 @@ export default function TimelineSection({ config }: TimelineSectionProps) {
                 <div 
                   className="absolute top-0 right-0 w-20 h-20 rounded-bl-full"
                   style={{ 
-                    background: `linear-gradient(135deg, ${themeColors?.accent || '#e6c89c'}20 0%, ${themeColors?.primary || '#9b7353'}20 100%)`
+                    background: `linear-gradient(135deg, ${themeColors?.accent }20 0%, ${themeColors?.primary }20 100%)`
                   }}
                 ></div>
 
@@ -124,7 +124,7 @@ export default function TimelineSection({ config }: TimelineSectionProps) {
                   <div 
                     className="w-16 h-16 rounded-full flex items-center justify-center text-white shadow-lg group-hover:scale-110 transition-transform duration-300"
                     style={{ 
-                      background: `linear-gradient(135deg, ${themeColors?.primary || '#9b7353'} 0%, ${themeColors?.secondary || '#7c5e40'} 100%)`
+                      background: `linear-gradient(135deg, ${themeColors?.primary } 0%, ${themeColors?.secondary } 100%)`
                     }}
                   >
                     {getWeddingIcon(event, index)}
@@ -198,3 +198,4 @@ export default function TimelineSection({ config }: TimelineSectionProps) {
     </section>
   );
 }
+

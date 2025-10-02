@@ -81,13 +81,24 @@ export default function MainPage() {
 
   // Fetch templates from API
   useEffect(() => {
-    const fetchTemplates = async () => {
+    const fetchTemplates = async (retryCount = 0) => {
       try {
         setLoading(true);
-        const response = await fetch('/api/templates');
+        setError(null);
+        
+        const response = await fetch('/api/templates', {
+          headers: {
+            'Accept': 'application/json',
+            'Content-Type': 'application/json',
+          },
+          // Add timeout to prevent hanging
+          signal: AbortSignal.timeout(10000),
+        });
+        
         if (!response.ok) {
-          throw new Error('Failed to fetch templates');
+          throw new Error(`Failed to fetch templates: ${response.status} ${response.statusText}`);
         }
+        
         const apiTemplates: Template[] = await response.json();
         
         // Filter only main templates for display
@@ -123,6 +134,14 @@ export default function MainPage() {
         setTemplates(displayTemplates);
       } catch (err) {
         console.error('Error fetching templates:', err);
+        
+        // Retry logic for network errors
+        if (retryCount < 2 && (err instanceof TypeError || (err as any).name === 'AbortError')) {
+          console.log(`Retrying template fetch (attempt ${retryCount + 1})`);
+          setTimeout(() => fetchTemplates(retryCount + 1), 1000);
+          return;
+        }
+        
         setError('Failed to load templates');
         // Fall back to hardcoded templates if API fails
         setTemplates(fallbackTemplates);

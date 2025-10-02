@@ -105,3 +105,4 @@ export default function MapModal({ config = weddingConfig }: MapModalProps) {
     </Dialog>
   );
 }
+

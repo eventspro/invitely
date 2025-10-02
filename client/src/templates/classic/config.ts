@@ -207,7 +207,8 @@ export const defaultConfig: WeddingConfig = {
       primary: "#831843",      // Deep burgundy
       secondary: "#be185d",    // Muted rose  
       accent: "#6366f1",       // Soft indigo
-      background: "#fef7ff"    // Very light lavender
+      background: "#fef7ff",    // Very light lavender
+      textColor: "#2C2124"      // Default charcoal text
     },
     fonts: {
       heading: "Playfair Display",

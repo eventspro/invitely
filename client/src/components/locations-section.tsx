@@ -49,7 +49,7 @@ export default function LocationsSection({ config = weddingConfig }: LocationsSe
 
   return (
     <section id="locations" className="py-20" style={{
-      background: `linear-gradient(to right, ${config.theme?.colors?.secondary || '#7c8471'}10 0%, ${config.theme?.colors?.background || '#faf5f0'}20 100%)`
+      background: `linear-gradient(to right, ${config.theme?.colors?.secondary }10 0%, ${config.theme?.colors?.background }20 100%)`
     }}>
       <div className="max-w-6xl mx-auto px-4">
         <div ref={titleRef} className="text-center mb-16 animate-on-scroll">
@@ -57,13 +57,13 @@ export default function LocationsSection({ config = weddingConfig }: LocationsSe
               style={{ 
                 fontFamily: getHeadingFont(config.theme?.fonts), 
                 fontWeight: '300',
-                color: config.theme?.colors?.primary || '#333333'
+                color: config.theme?.colors?.primary 
               }}
               data-testid="text-locations-title">
             {config.locations?.sectionTitle}
           </h2>
           <div className="w-24 h-0.5 mx-auto" style={{
-            backgroundColor: config.theme?.colors?.accent || '#e8d5b7'
+            backgroundColor: config.theme?.colors?.accent 
           }}></div>
         </div>
         
@@ -86,28 +86,28 @@ export default function LocationsSection({ config = weddingConfig }: LocationsSe
                 />
                 <div className="p-6">
                   <div className="flex items-center mb-4">
-                    <div style={{ color: config.theme?.colors?.accent || '#e8d5b7' }}>
+                    <div style={{ color: config.theme?.colors?.accent  }}>
                       {getVenueIcon(venue.title)}
                     </div>
                     <h3 className="text-xl font-serif font-bold" style={{
-                      color: config.theme?.colors?.primary || '#333333'
+                      color: config.theme?.colors?.primary 
                     }} data-testid={`text-venue-title-${venue.id || index}`}>
                       {venue.title}
                     </h3>
                   </div>
                   <p className="mb-4" style={{
-                    color: `${config.theme?.colors?.primary || '#333333'}70`
+                    color: `${config.theme?.colors?.primary }70`
                   }} data-testid={`text-venue-name-${venue.id || index}`}>
                     {venue.name}
                   </p>
                   <p className="text-sm mb-4" style={{
-                    color: `${config.theme?.colors?.primary || '#333333'}60`
+                    color: `${config.theme?.colors?.primary }60`
                   }} data-testid={`text-venue-description-${venue.id || index}`}>
                     {venue.description}
                   </p>
                   {venue.address && (
                     <p className="text-xs mb-4" style={{
-                      color: `${config.theme?.colors?.primary || '#333333'}50`
+                      color: `${config.theme?.colors?.primary }50`
                     }} data-testid={`text-venue-address-${venue.id || index}`}>
                       📍 {venue.address}
                     </p>
@@ -116,7 +116,7 @@ export default function LocationsSection({ config = weddingConfig }: LocationsSe
                     onClick={() => openMap(venue.id || index.toString())}
                     className="text-white px-4 py-2 rounded-lg transition-colors duration-300 flex items-center hover:opacity-90"
                     style={{
-                      backgroundColor: config.theme?.colors?.accent || '#e8d5b7'
+                      backgroundColor: config.theme?.colors?.accent 
                     }}
                     data-testid={`button-venue-map-${venue.id || index}`}
                   >
@@ -131,7 +131,7 @@ export default function LocationsSection({ config = weddingConfig }: LocationsSe
         
         {venues.length === 0 && (
           <div className="text-center py-12">
-            <p style={{ color: config.theme?.colors?.primary || '#333333' }}>
+            <p style={{ color: config.theme?.colors?.primary  }}>
               No venues configured yet.
             </p>
           </div>
@@ -140,3 +140,4 @@ export default function LocationsSection({ config = weddingConfig }: LocationsSe
     </section>
   );
 }
+

@@ -13,29 +13,57 @@ export function registerTemplateRoutes(app: Express) {
   
   // Get template configuration by ID or slug
   app.get("/api/templates/:identifier/config", async (req, res) => {
+    const timeoutId = setTimeout(() => {
+      if (!res.headersSent) {
+        console.error(`Template config request timeout for: ${req.params.identifier}`);
+        res.status(408).json({ message: "Request timeout" });
+      }
+    }, 8000); // 8 second timeout for serverless
+
     try {
       const { identifier } = req.params;
+      console.log(`🔍 Searching for template with ID: ${identifier}`);
       
       // Try to get template by ID first, then by slug
-      let template = await storage.getTemplate(identifier);
+      let template = await Promise.race([
+        storage.getTemplate(identifier),
+        new Promise((_, reject) => setTimeout(() => reject(new Error('Database query timeout')), 5000))
+      ]) as any;
+      
       if (!template) {
-        template = await storage.getTemplateBySlug(identifier);
+        console.log(`❌ No template found with ID: ${identifier}`);
+        console.log(`🔍 Searching for template with slug: ${identifier}`);
+        template = await Promise.race([
+          storage.getTemplateBySlug(identifier),
+          new Promise((_, reject) => setTimeout(() => reject(new Error('Database query timeout')), 5000))
+        ]) as any;
       }
       
       if (!template) {
+        clearTimeout(timeoutId);
         return res.status(404).json({ message: "Template not found" });
       }
       
+      console.log(`✅ Found template: ${template.name} (ID: ${template.id})`);
+      
       // Return the stored config from database
-      res.json({
+      const response = {
         templateId: template.id,
         templateKey: template.templateKey,
         config: template.config,
         maintenance: template.maintenance
-      });
+      };
+      
+      clearTimeout(timeoutId);
+      if (!res.headersSent) {
+        res.json(response);
+      }
     } catch (error) {
+      clearTimeout(timeoutId);
       console.error("Get template config error:", error);
-      res.status(500).json({ message: "Server error" });
+      if (!res.headersSent) {
+        res.status(500).json({ message: "Server error" });
+      }
     }
   });
 
@@ -61,7 +89,8 @@ export function registerTemplateRoutes(app: Express) {
       
       const validatedData = insertRsvpSchema.parse({
         ...req.body,
-        templateId: template.id  // Use the actual template ID, not the slug
+        templateId: template.id,  // Use the actual template ID, not the slug
+        guestEmail: req.body.guestEmail || req.body.email  // Ensure guestEmail is filled from email if not provided
       });
       
       // Check if email already exists for this template (check both possible email fields)
@@ -201,35 +230,50 @@ export function registerTemplateRoutes(app: Express) {
       const { category = 'gallery' } = req.body;
       
       // Create image record in database with template scope
-      let imageUrl: string;
+      let imageUrl: string = `/api/images/serve/${req.file.filename}`; // Default fallback
       
-      // Use R2 storage in production, local storage in development
-      if (process.env.VERCEL && process.env.CLOUDFLARE_R2_BUCKET_NAME) {
+      // Use R2 storage in production if configured, otherwise use local storage
+      let useR2 = false;
+      
+      if (process.env.VERCEL) {
         try {
-          const { r2Storage } = await import('../r2Storage.js');
-          if (r2Storage.isConfigured()) {
-            const fileBuffer = fs.readFileSync(req.file.path);
-            const r2Result = await r2Storage.uploadImage(
-              templateId,
-              fileBuffer,
-              req.file.originalname,
-              req.file.mimetype,
-              category
-            );
-            imageUrl = r2Result.url;
-            console.log(`☁️ Image uploaded to R2: ${r2Result.url}`);
+          // Only try R2 if all required env vars are present
+          if (process.env.CLOUDFLARE_R2_BUCKET_NAME && 
+              process.env.CLOUDFLARE_R2_ACCOUNT_ID &&
+              process.env.CLOUDFLARE_R2_ACCESS_KEY &&
+              process.env.CLOUDFLARE_R2_SECRET_KEY &&
+              process.env.CLOUDFLARE_R2_PUBLIC_URL) {
             
-            // Clean up local temp file
-            fs.unlinkSync(req.file.path);
+            const { r2Storage } = await import('../r2Storage.js');
+            if (r2Storage.isConfigured()) {
+              const fileBuffer = fs.readFileSync(req.file.path);
+              const r2Result = await r2Storage.uploadImage(
+                templateId,
+                fileBuffer,
+                req.file.originalname,
+                req.file.mimetype,
+                category
+              );
+              imageUrl = r2Result.url;
+              console.log(`☁️ Image uploaded to R2: ${r2Result.url}`);
+              useR2 = true;
+              
+              // Clean up local temp file
+              fs.unlinkSync(req.file.path);
+            }
           } else {
-            imageUrl = `/api/images/serve/${req.file.filename}`;
+            console.log('⚠️ R2 environment variables not fully configured, using local storage');
           }
         } catch (r2Error) {
           console.warn('⚠️ R2 upload failed, using local storage:', r2Error);
-          imageUrl = `/api/images/serve/${req.file.filename}`;
         }
-      } else {
+      }
+      
+      // Fall back to local storage if R2 wasn't used
+      if (!useR2) {
+        // Always use the image serve API endpoint for consistency
         imageUrl = `/api/images/serve/${req.file.filename}`;
+        console.log(`💾 Using local storage with API serve: ${imageUrl}`);
       }
       
       console.log('💾 Creating image record in database...');
@@ -260,7 +304,8 @@ export function registerTemplateRoutes(app: Express) {
     } catch (error) {
       console.error("💥 Template photo upload error:", error);
       console.error("💥 Error stack:", error instanceof Error ? error.stack : 'No stack trace');
-      if (req.file) {
+      
+      if (req.file && req.file.path) {
         // Clean up uploaded file if there's an error
         try {
           fs.unlinkSync(req.file.path);
@@ -269,7 +314,20 @@ export function registerTemplateRoutes(app: Express) {
           console.error('🧹 Failed to cleanup file:', cleanupError);
         }
       }
-      res.status(500).json({ error: "Server error", message: error instanceof Error ? error.message : 'Unknown error' });
+      
+      // Ensure we always return JSON, not HTML
+      res.setHeader('Content-Type', 'application/json');
+      
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred during upload';
+      const errorResponse = { 
+        success: false,
+        error: "Image upload failed", 
+        message: errorMessage,
+        timestamp: new Date().toISOString()
+      };
+      
+      console.log('📤 Sending error response:', errorResponse);
+      res.status(500).json(errorResponse);
     }
   });
 

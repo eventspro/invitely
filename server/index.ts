@@ -167,9 +167,13 @@ app.use((req, res, next) => {
         });
         
         // Set timeout for server startup
-        setTimeout(() => {
+        const timeoutId = setTimeout(() => {
           reject(new Error('Server startup timeout'));
-        }, 30000); // 30 second timeout
+        }, 15000); // 15 second timeout for serverless
+        
+        serverInstance.on('listening', () => {
+          clearTimeout(timeoutId);
+        });
       });
     };
     

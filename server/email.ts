@@ -1,24 +1,32 @@
-import sgMail from "@sendgrid/mail";
 import type { Rsvp } from "../shared/schema.js";
 
-// Initialize SendGrid
+// Initialize Brevo with dynamic import
 let emailServiceInitialized = false;
 let emailServiceAvailable = false;
+let brevoClient: any = null;
+let brevo: any = null;
 
-function initializeEmailService(): boolean {
+async function initializeEmailService(): Promise<boolean> {
   if (!emailServiceInitialized) {
-    if (!process.env.SENDGRID_API_KEY) {
+    if (!process.env.BREVO_API_KEY) {
       console.warn(
-        "SENDGRID_API_KEY environment variable is not set. Email notifications will be disabled.",
+        "BREVO_API_KEY environment variable is not set. Email notifications will be disabled.",
       );
       emailServiceAvailable = false;
     } else {
       try {
-        sgMail.setApiKey(process.env.SENDGRID_API_KEY);
+        // Dynamic import for serverless compatibility
+        if (!brevo) {
+          brevo = await import('@getbrevo/brevo');
+        }
+        
+        const apiInstance = new brevo.TransactionalEmailsApi();
+        apiInstance.setApiKey(brevo.TransactionalEmailsApiApiKeys.apiKey, process.env.BREVO_API_KEY);
+        brevoClient = apiInstance;
         emailServiceAvailable = true;
-        console.log("✅ SendGrid email service initialized successfully");
+        console.log("✅ Brevo email service initialized successfully");
       } catch (error) {
-        console.error("Failed to initialize SendGrid:", error);
+        console.error("Failed to initialize Brevo:", error);
         emailServiceAvailable = false;
       }
     }
@@ -34,22 +42,23 @@ async function sendEmail(params: {
   text?: string;
   html?: string;
 }): Promise<boolean> {
-  if (!initializeEmailService()) {
+  if (!(await initializeEmailService()) || !brevoClient) {
     console.log("Email service not configured.");
     return false;
   }
 
   try {
-    await sgMail.send({
-      to: params.to,
-      from: params.from,
-      subject: params.subject,
-      text: params.text || "",
-      html: params.html || "",
-    });
+    const sendSmtpEmail = new brevo.SendSmtpEmail();
+    sendSmtpEmail.sender = { email: params.from, name: "Invitely" };
+    sendSmtpEmail.to = [{ email: params.to }];
+    sendSmtpEmail.subject = params.subject;
+    sendSmtpEmail.textContent = params.text || "";
+    sendSmtpEmail.htmlContent = params.html || "";
+    
+    await brevoClient.sendTransacEmail(sendSmtpEmail);
     return true;
   } catch (error) {
-    console.error("SendGrid email error:", error);
+    console.error("Brevo email error:", error);
     return false;
   }
 }
@@ -60,10 +69,10 @@ const COUPLE_EMAILS = [
   "tatevhovsepyan22@gmail.com",
 ];
 
-// Test function to verify email service is working
+// Test function to verify Brevo email service is working
 export async function testEmailService(): Promise<void> {
-  if (!initializeEmailService()) {
-    console.log("Email service not configured.");
+  if (!(await initializeEmailService())) {
+    console.log("Brevo email service not configured.");
     return;
   }
 
@@ -75,28 +84,28 @@ export async function testEmailService(): Promise<void> {
 
   for (const email of testEmails) {
     try {
-      console.log(`🧪 Testing email to: ${email}`);
+      console.log(`🧪 Testing Brevo email to: ${email}`);
       const success = await sendEmail({
-        from: "noreply@wedding-platform.com",
+        from: "noreply@invitely.am", // Use your verified domain
         to: email,
-        subject: "Test - Email Service Check",
-        text: `This is a test email for ${email}. If you receive this email, the email service is working correctly.`,
-        html: `<p>This is a test email for <strong>${email}</strong>. If you receive this email, the email service is working correctly.</p>`,
+        subject: "Test - Brevo Email Service Check",
+        text: `This is a test email for ${email}. If you receive this email, Brevo is working correctly.`,
+        html: `<p>This is a test email for <strong>${email}</strong>. If you receive this email, <strong>Brevo</strong> is working correctly.</p>`,
       });
       
       if (success) {
-        console.log(`✅ Test email sent successfully to ${email}`);
+        console.log(`✅ Brevo test email sent successfully to ${email}`);
       } else {
-        console.log(`❌ Test email failed for ${email}`);
+        console.log(`❌ Brevo test email failed for ${email}`);
       }
     } catch (error) {
-      console.error(`❌ Test email failed for ${email}:`, error);
+      console.error(`❌ Brevo test email failed for ${email}:`, error);
     }
   }
 }
 
 export async function sendRsvpNotificationEmails(rsvp: Rsvp): Promise<boolean> {
-  if (!initializeEmailService()) {
+  if (!(await initializeEmailService())) {
     console.log(
       "Email service not configured. Skipping RSVP notification emails.",
     );
@@ -109,7 +118,7 @@ export async function sendRsvpNotificationEmails(rsvp: Rsvp): Promise<boolean> {
 
     const emailPromises = COUPLE_EMAILS.map((email) =>
       sendEmail({
-        from: "noreply@wedding-platform.com",
+        from: "noreply@invitely.am", // Use your verified domain
         to: email,
         subject: `Նոր հաստատում հարսանիքի համար - ${rsvp.firstName} ${rsvp.lastName}`,
         text: `Նոր RSVP հաստատում\n\nԱնուն: ${rsvp.firstName} ${rsvp.lastName}\nԷլ․ հասցե: ${rsvp.email}\nՀյուրերի քանակ: ${rsvp.guestCount}\nՄասնակցություն: ${rsvp.attendance === "attending" ? "Կգա" : "Չի գալիս"}${rsvp.guestNames ? `\nՀյուրեր: ${rsvp.guestNames}` : ""}\n\nՀաստատվել է: ${rsvp.createdAt ? new Date(rsvp.createdAt).toLocaleString("hy-AM") : new Date().toLocaleString("hy-AM")}`,
@@ -160,7 +169,7 @@ export async function sendRsvpNotificationEmails(rsvp: Rsvp): Promise<boolean> {
 }
 
 export async function sendRsvpConfirmationEmail(rsvp: Rsvp): Promise<boolean> {
-  if (!initializeEmailService()) {
+  if (!(await initializeEmailService())) {
     console.log(
       "Email service not configured. Skipping RSVP confirmation email.",
     );
@@ -174,7 +183,7 @@ export async function sendRsvpConfirmationEmail(rsvp: Rsvp): Promise<boolean> {
         : "Ցավոք, որ չեք կարողանա գալ: Ցանկանում ենք ձեզ բարելավություն: 💙";
 
     const success = await sendEmail({
-      from: "noreply@wedding-platform.com",
+      from: "noreply@invitely.am", // Use your verified domain
       to: rsvp.email || "",
       subject: "Ձեր հաստատումը ստացվել է - Հարսանիք 10 Հոկտեմբեր 2025",
       text: `Սիրելի ${rsvp.firstName},\n\nՇնորհակալություն ձեր հաստատման համար:\n\n${attendanceText}\n\n${rsvp.attendance === "attending" ? "Ծիսակարգություն - Սուրբ Գրիգոր Լուսավորիչ Եկեղեցի, Ժամը 16:00\nՀանդես - BAYAZET HALL, Ժամը 19:00\n\nՄենք շատ ենք սիրում ձեզ և սպասում ենք այս հատուկ օրը ձեզ հետ կիսելուն:" : ""}\n\nՀարցերի դեպքում կապվեք մեզ հետ:\nharutavetisyan0@gmail.com | tatevhovsepyan22@gmail.com\n\nՀարգանքով,\nՀարութ և Տաթև`,
@@ -230,7 +239,7 @@ export async function sendRsvpConfirmationEmail(rsvp: Rsvp): Promise<boolean> {
 
 // Template-scoped email functions
 export async function sendTemplateRsvpNotificationEmails(rsvp: Rsvp, template: any): Promise<boolean> {
-  if (!initializeEmailService()) {
+  if (!(await initializeEmailService())) {
     console.log("Email service not configured. Skipping template RSVP notification emails.");
     return false;
   }
@@ -265,7 +274,7 @@ export async function sendTemplateRsvpNotificationEmails(rsvp: Rsvp, template: a
 
     const emailPromises = recipientEmails.map((emailAddr: string) =>
       sendEmail({
-        from: "noreply@wedding-platform.com",
+        from: "noreply@invitely.am", // Use your verified domain
         to: emailAddr,
         subject: `Նոր հաստատում հարսանիքի համար - ${rsvp.firstName} ${rsvp.lastName}`,
         text: `Նոր RSVP հաստատում\n\nԱնուն: ${rsvp.firstName} ${rsvp.lastName}\nԷլ․ հասցե: ${rsvp.email}\nՀյուրերի քանակ: ${rsvp.guestCount}\nՄասնակցություն: ${attendanceText}${guestInfo}\n\nՀաստատվել է: ${rsvp.createdAt ? new Date(rsvp.createdAt).toLocaleString("hy-AM") : new Date().toLocaleString("hy-AM")}`,
@@ -303,7 +312,7 @@ export async function sendTemplateRsvpNotificationEmails(rsvp: Rsvp, template: a
 }
 
 export async function sendTemplateRsvpConfirmationEmail(rsvp: Rsvp, template: any): Promise<boolean> {
-  if (!initializeEmailService()) {
+  if (!(await initializeEmailService())) {
     console.log("Email service not configured. Skipping template RSVP confirmation email.");
     return false;
   }
@@ -335,7 +344,7 @@ export async function sendTemplateRsvpConfirmationEmail(rsvp: Rsvp, template: an
     }
 
     const success = await sendEmail({
-      from: "noreply@wedding-platform.com",
+      from: "noreply@invitely.am", // Use your verified domain
       to: rsvp.email || "",
       subject: `Ձեր հաստատումը ստացվել է - ${coupleNames} - ${weddingDate}`,
       text: `Սիրելի ${rsvp.firstName},\n\nՇնորհակալություն ձեր հաստատման համար:\n\n${attendanceText}\n\n${rsvp.attendance === "attending" && locations.length > 0 ? locations.map((loc: any) => `${loc.title || "Venue"}: ${loc.name || "TBD"}${loc.time ? ` - ${loc.time}` : ""}`).join("\n") : ""}\n\nՀարգանքով,\n${coupleNames}`,

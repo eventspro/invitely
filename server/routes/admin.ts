@@ -220,7 +220,9 @@ export function registerAdminRoutes(app: Express) {
                 accent: templateKey === "nature" ? "#a3a3a3" : templateKey === "elegant" ? "#94a3b8" : 
                         templateKey === "romantic" ? "#a855f7" : "#6366f1",
                 background: templateKey === "nature" ? "#f7f8f7" : templateKey === "elegant" ? "#f1f5f9" : 
-                            templateKey === "romantic" ? "#fdf2f8" : "#fef7ff"
+                            templateKey === "romantic" ? "#fdf2f8" : "#fef7ff",
+                textColor: templateKey === "nature" ? "#2c3e2d" : templateKey === "elegant" ? "#1e293b" : 
+                          templateKey === "romantic" ? "#3c1a3c" : "#2C2124"
               },
               fonts: { heading: "Noto Serif Armenian, serif", body: "Noto Sans Armenian, sans-serif" }
             }

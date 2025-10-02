@@ -32,6 +32,7 @@ export const defaultConfig: WeddingConfig = {
       secondary: "#475569",    // Slate gray  
       accent: "#94a3b8",       // Silver gray
       background: "#f1f5f9",   // Very light slate
+      textColor: "#1e293b",    // Dark slate for text
     },
     fonts: {
       heading: "Playfair Display, serif",

@@ -213,6 +213,7 @@ export interface WeddingConfig {
       secondary?: string;
       accent?: string;
       background?: string;
+      textColor?: string;
     };
     fonts?: {
       heading?: string;
