@@ -89,7 +89,7 @@ export default function ProTemplate({ config, templateId }: ProTemplateProps) {
     .sort((a, b) => a.order - b.order);
 
   return (
-    <div className="min-h-screen bg-cream" style={{ color: config.theme?.colors?.textColor || '#2C2124' }}>
+    <div className="min-h-screen bg-cream" style={{ color: `${config.theme?.colors?.textColor || '#2C2124'} !important` }}>
       <Navigation config={safeConfig} />
       <main>
         {orderedSections.map((section, index) => (
