@@ -1,7 +1,7 @@
 // Nature Template Component
 // Based on Pro template structure with green/earth tone color scheme
 
-import React from "react";
+import React, { useEffect } from "react";
 import type { WeddingConfig } from "../types";
 import { defaultConfig as natureDefaultConfig } from "./config";
 import Navigation from "@/components/navigation";
@@ -36,6 +36,14 @@ export default function NatureTemplate({ config, templateId }: NatureTemplatePro
       fonts: config.theme?.fonts || natureDefaultConfig.theme?.fonts || {}
     }
   };
+
+  // Set CSS variables for dynamic color overrides
+  useEffect(() => {
+    const textColor = safeConfig.theme?.colors?.textColor;
+    if (textColor) {
+      document.documentElement.style.setProperty('--dynamic-text-color', textColor);
+    }
+  }, [safeConfig.theme?.colors?.textColor]);
 
   return (
     <div className="min-h-screen text-gray-800" style={{

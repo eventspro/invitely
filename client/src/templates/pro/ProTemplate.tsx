@@ -1,9 +1,8 @@
-// Pro Template Component
-// Wraps the existing home page components in a template structure
+﻿// Pro Template Component - the most comprehensive template with all existing home page components in a template structure
 
-import React from "react";
+import React, { useEffect } from "react";
 import type { WeddingConfig } from "../types";
-import { defaultConfig as proDefaultConfig } from "./config";
+import { defaultConfig } from "./config";
 import Navigation from "@/components/navigation";
 import HeroSection from "@/components/hero-section";
 import CountdownTimer from "@/components/countdown-timer";
@@ -21,19 +20,27 @@ interface ProTemplateProps {
 
 export default function ProTemplate({ config, templateId }: ProTemplateProps) {
   const sections = config.sections || {};
+  
+  // Set dynamic CSS variables for text colors
+  useEffect(() => {
+    const textColor = config.theme?.colors?.textColor || defaultConfig.theme?.colors?.textColor || '#2C2124';
+    document.documentElement.style.setProperty('--dynamic-text-color', textColor);
+    document.documentElement.style.setProperty('--dynamic-text-color-70', textColor + 'B3');
+    document.documentElement.style.setProperty('--dynamic-text-color-60', textColor + '99');
+  }, [config.theme?.colors?.textColor]);
 
   // Merge database config with default pro config, prioritizing file config for theme
   const safeConfig: WeddingConfig = {
     ...config,
-    couple: config.couple || { groomName: "Groom", brideName: "Bride" },
+    couple: config.couple || { groomName: "Groom", brideName: "Bride", combinedNames: "Groom & Bride" },
     footer: config.footer || { thankYouMessage: "Thank you for celebrating with us" },
     wedding: config.wedding || { displayDate: "Wedding Day" },
     // Use admin panel theme colors if available, otherwise fall back to pro defaults
     theme: {
-      ...proDefaultConfig.theme,
+      ...defaultConfig.theme,
       ...config.theme,
-      colors: config.theme?.colors || proDefaultConfig.theme?.colors || {},
-      fonts: config.theme?.fonts || proDefaultConfig.theme?.fonts || {}
+      colors: config.theme?.colors || defaultConfig.theme?.colors || {},
+      fonts: config.theme?.fonts || defaultConfig.theme?.fonts || {}
     }
   };
 

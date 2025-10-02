@@ -60,6 +60,25 @@ export const ArmenianFontProvider: React.FC<{ children: React.ReactNode }> = ({ 
         unicode-bidi: isolate !important;
       }
 
+      /* CRITICAL: Override ALL text-charcoal colors globally */
+      .text-charcoal {
+        color: var(--dynamic-text-color, #2C2124) !important;
+      }
+      
+      .text-charcoal\\/70 {
+        color: var(--dynamic-text-color-70, #2C212470) !important;
+      }
+      
+      .text-charcoal\\/60 {
+        color: var(--dynamic-text-color-60, #2C212460) !important;
+      }
+      
+      /* Override text-charcoal for Armenian text specifically */
+      .armenian-text-forced.text-charcoal,
+      .text-charcoal.armenian-text-forced {
+        color: var(--dynamic-text-color, #2C2124) !important;
+      }
+
       /* Force system fonts for all text elements */
       p, span, div, h1, h2, h3, h4, h5, h6, label, input, textarea, button {
         font-family: Arial Unicode MS, Lucida Grande, Sylfaen, Arial, sans-serif;

@@ -1,7 +1,7 @@
 // Elegant Template Component
 // Based on Pro template structure with blue/gold color scheme
 
-import React from "react";
+import React, { useEffect } from "react";
 import type { WeddingConfig } from "../types";
 import { defaultConfig as elegantDefaultConfig } from "./config";
 import Navigation from "@/components/navigation";
@@ -36,6 +36,14 @@ export default function ElegantTemplate({ config, templateId }: ElegantTemplateP
       fonts: config.theme?.fonts || elegantDefaultConfig.theme?.fonts || {}
     }
   };
+
+  // Set CSS variables for dynamic color overrides
+  useEffect(() => {
+    const textColor = safeConfig.theme?.colors?.textColor;
+    if (textColor) {
+      document.documentElement.style.setProperty('--dynamic-text-color', textColor);
+    }
+  }, [safeConfig.theme?.colors?.textColor]);
 
   return (
     <div className="min-h-screen bg-slate-50 text-slate-800" style={{

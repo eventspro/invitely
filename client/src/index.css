@@ -77,6 +77,21 @@
 }
 
 @layer components {
+  /* Dynamic text-charcoal override */
+  .text-charcoal {
+    color: var(--dynamic-text-color, var(--charcoal)) !important;
+  }
+  
+  .text-charcoal\/70 {
+    color: var(--dynamic-text-color-70, color-mix(in srgb, var(--dynamic-text-color, var(--charcoal)) 70%, transparent)) !important;
+  }
+  
+  .text-charcoal\/60 {
+    color: var(--dynamic-text-color-60, color-mix(in srgb, var(--dynamic-text-color, var(--charcoal)) 60%, transparent)) !important;
+  }
+}
+
+@layer components {
   .ornament {
     background-image: url("data:image/svg+xml,%3Csvg width='40' height='20' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M20 10 L10 5 L15 10 L10 15 L20 10 L30 15 L25 10 L30 5 Z' fill='%23E4A5B8' opacity='0.7'/%3E%3C/svg%3E");
     background-repeat: no-repeat;

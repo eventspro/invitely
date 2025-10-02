@@ -1,7 +1,7 @@
 // Romantic Template Component
 // Based on Pro template structure with pink/rose color scheme
 
-import React from "react";
+import React, { useEffect } from "react";
 import type { WeddingConfig } from "../types";
 import { defaultConfig as romanticDefaultConfig } from "./config";
 import Navigation from "@/components/navigation";
@@ -21,6 +21,14 @@ interface RomanticTemplateProps {
 
 export default function RomanticTemplate({ config, templateId }: RomanticTemplateProps) {
   const sections = config.sections || {};
+  
+  // Set dynamic CSS variables for text colors
+  useEffect(() => {
+    const textColor = config.theme?.colors?.textColor || romanticDefaultConfig.theme?.colors?.textColor || '#3c1a3c';
+    document.documentElement.style.setProperty('--dynamic-text-color', textColor);
+    document.documentElement.style.setProperty('--dynamic-text-color-70', textColor + 'B3');
+    document.documentElement.style.setProperty('--dynamic-text-color-60', textColor + '99');
+  }, [config.theme?.colors?.textColor]);
 
   // Merge database config with default romantic config, prioritizing file config for theme
   const safeConfig: WeddingConfig = {

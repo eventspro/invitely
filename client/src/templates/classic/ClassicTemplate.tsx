@@ -1,7 +1,7 @@
 // Classic Template Component
 // Updated to match other templates with modular components and Armenian font support
 
-import React from "react";
+import React, { useEffect } from "react";
 import type { WeddingConfig } from "../types";
 import { defaultConfig as classicDefaultConfig } from "./config";
 import Navigation from "@/components/navigation";
@@ -36,6 +36,14 @@ export default function ClassicTemplate({ config, templateId }: ClassicTemplateP
       fonts: config.theme?.fonts || classicDefaultConfig.theme?.fonts || {}
     }
   };
+
+  // Set CSS variables for dynamic color overrides
+  useEffect(() => {
+    const textColor = safeConfig.theme?.colors?.textColor;
+    if (textColor) {
+      document.documentElement.style.setProperty('--dynamic-text-color', textColor);
+    }
+  }, [safeConfig.theme?.colors?.textColor]);
 
   return (
     <div className="min-h-screen bg-rose-50 text-slate-800" style={{
