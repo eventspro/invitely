@@ -3,6 +3,7 @@
 
 import React from "react";
 import type { WeddingConfig } from "../types";
+import { defaultConfig as proDefaultConfig } from "./config";
 import Navigation from "@/components/navigation";
 import HeroSection from "@/components/hero-section";
 import CountdownTimer from "@/components/countdown-timer";
@@ -21,12 +22,19 @@ interface ProTemplateProps {
 export default function ProTemplate({ config, templateId }: ProTemplateProps) {
   const sections = config.sections || {};
 
-  // Provide fallback values for missing config properties
-  const safeConfig = {
+  // Merge database config with default pro config, prioritizing file config for theme
+  const safeConfig: WeddingConfig = {
     ...config,
     couple: config.couple || { groomName: "Groom", brideName: "Bride" },
     footer: config.footer || { thankYouMessage: "Thank you for celebrating with us" },
-    wedding: config.wedding || { displayDate: "Wedding Day" }
+    wedding: config.wedding || { displayDate: "Wedding Day" },
+    // Use admin panel theme colors if available, otherwise fall back to pro defaults
+    theme: {
+      ...proDefaultConfig.theme,
+      ...config.theme,
+      colors: config.theme?.colors || proDefaultConfig.theme?.colors || {},
+      fonts: config.theme?.fonts || proDefaultConfig.theme?.fonts || {}
+    }
   };
 
   // Define all available sections with their components
@@ -69,7 +77,7 @@ export default function ProTemplate({ config, templateId }: ProTemplateProps) {
     },
     { 
       id: 'photos', 
-      component: <PhotoSection config={safeConfig} />, 
+      component: <PhotoSection config={safeConfig} templateId={templateId} />, 
       order: sections.photos?.order ?? 6,
       enabled: sections.photos?.enabled !== false 
     },
@@ -97,7 +105,7 @@ export default function ProTemplate({ config, templateId }: ProTemplateProps) {
           <div className="ornament w-full h-8 mb-8 opacity-50"></div>
           <h3 className="text-2xl font-serif font-bold mb-4 flex items-center justify-center gap-3">
             <span>{safeConfig.couple.groomName}</span>
-            <span className="text-softGold mx-1">∞</span>
+            <span className="mx-1" style={{ color: config.theme?.colors?.accent || config.theme?.colors?.primary || '#831843' }}>∞</span>
             <span>{safeConfig.couple.brideName}</span>
           </h3>
           <p className="text-white/70 mb-6">{safeConfig.footer.thankYouMessage}</p>

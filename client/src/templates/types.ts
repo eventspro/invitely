@@ -29,6 +29,7 @@ export interface WeddingConfig {
   // Countdown Section
   countdown: {
     subtitle: string;
+    backgroundImage?: string; // Optional background image for countdown section
     labels: {
       days: string;
       hours: string;

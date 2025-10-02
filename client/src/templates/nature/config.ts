@@ -8,6 +8,12 @@ import type { WeddingConfig } from "../types";
 export const defaultConfig: WeddingConfig = {
   ...weddingConfig,
   
+  // Override countdown to remove background image for nature theme
+  countdown: {
+    ...weddingConfig.countdown,
+    backgroundImage: "", // No background image for nature template
+  },
+  
   // Add sections control (default: all enabled)
   sections: {
     hero: { enabled: true },

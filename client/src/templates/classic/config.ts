@@ -26,6 +26,7 @@ export const defaultConfig: WeddingConfig = {
   },
   countdown: {
     subtitle: "Until our big day",
+    backgroundImage: "", // Empty = no background image
     labels: {
       days: "Days",
       hours: "Hours", 
@@ -130,7 +131,7 @@ export const defaultConfig: WeddingConfig = {
     downloadButton: "Download",
     uploadButton: "Upload Photo",
     comingSoonMessage: "Photos coming soon",
-    images: ["/api/assets/default-wedding-couple.jpg"]
+    images: ["/attached_assets/default-wedding-couple.jpg"]
   },
   navigation: {
     home: "Home",
