@@ -195,10 +195,9 @@ export default function LocationImageUploader({
             step="any"
             value={currentLatitude || ''}
             onChange={(e) => {
-              const lat = parseFloat(e.target.value);
-              if (!isNaN(lat) && currentLongitude !== undefined) {
-                onCoordinatesUpdate(lat, currentLongitude);
-              }
+              const lat = parseFloat(e.target.value) || 0;
+              const lng = currentLongitude || 0;
+              onCoordinatesUpdate(lat, lng);
             }}
             placeholder="e.g., 40.7128"
             className="text-sm"
@@ -214,10 +213,9 @@ export default function LocationImageUploader({
             step="any"
             value={currentLongitude || ''}
             onChange={(e) => {
-              const lng = parseFloat(e.target.value);
-              if (!isNaN(lng) && currentLatitude !== undefined) {
-                onCoordinatesUpdate(currentLatitude, lng);
-              }
+              const lng = parseFloat(e.target.value) || 0;
+              const lat = currentLatitude || 0;
+              onCoordinatesUpdate(lat, lng);
             }}
             placeholder="e.g., -74.0060"
             className="text-sm"
