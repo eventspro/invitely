@@ -39,15 +39,16 @@ export default function ClassicTemplate({ config, templateId }: ClassicTemplateP
 
   // Set CSS variables for dynamic color overrides
   useEffect(() => {
-    const textColor = safeConfig.theme?.colors?.textColor;
+    const textColor = config.theme?.colors?.textColor || config.theme?.colors?.primary || classicDefaultConfig.theme?.colors?.textColor || classicDefaultConfig.theme?.colors?.primary;
     if (textColor) {
       document.documentElement.style.setProperty('--dynamic-text-color', textColor);
     }
-  }, [safeConfig.theme?.colors?.textColor]);
+  }, [safeConfig.theme?.colors?.textColor, safeConfig.theme?.colors?.primary]);
 
   return (
-    <div className="min-h-screen bg-rose-50 text-slate-800" style={{
-      background: `linear-gradient(135deg, ${config.theme?.colors?.background || safeConfig.theme?.colors?.background || '#fdf2f8'} 0%, ${config.theme?.colors?.background || safeConfig.theme?.colors?.background || '#fdf2f8'} 100%)`
+    <div className="min-h-screen bg-rose-50" style={{
+      background: (config.theme?.colors?.background || safeConfig.theme?.colors?.background) ? `linear-gradient(135deg, ${config.theme?.colors?.background || safeConfig.theme?.colors?.background} 0%, ${config.theme?.colors?.background || safeConfig.theme?.colors?.background} 100%)` : undefined,
+      color: safeConfig.theme?.colors?.textColor
     }}>
       <Navigation />
       <main>
@@ -62,14 +63,14 @@ export default function ClassicTemplate({ config, templateId }: ClassicTemplateP
       
       {/* Footer */}
       <footer className="py-12" style={{
-        background: `linear-gradient(135deg, ${config.theme?.colors?.primary || safeConfig.theme?.colors?.primary || '#be185d'} 0%, ${config.theme?.colors?.secondary || safeConfig.theme?.colors?.secondary || '#e11d48'} 100%)`,
+        background: (config.theme?.colors?.primary || safeConfig.theme?.colors?.primary) && (config.theme?.colors?.secondary || safeConfig.theme?.colors?.secondary) ? `linear-gradient(135deg, ${config.theme?.colors?.primary || safeConfig.theme?.colors?.primary} 0%, ${config.theme?.colors?.secondary || safeConfig.theme?.colors?.secondary} 100%)` : undefined,
         color: 'white'
       }}>
         <div className="max-w-4xl mx-auto px-4 text-center">
           <div className="ornament w-full h-8 mb-8 opacity-50"></div>
           <h3 className="text-2xl font-serif font-bold mb-4 flex items-center justify-center gap-3">
             <span>{safeConfig.couple.groomName}</span>
-            <span className="mx-1" style={{ color: config.theme?.colors?.accent || '#f59e0b' }}>∞</span>
+            <span className="mx-1" style={{ color: config.theme?.colors?.accent }}>∞</span>
             <span>{safeConfig.couple.brideName}</span>
           </h3>
           <p className="text-lg mb-8 opacity-90 max-w-2xl mx-auto leading-relaxed">

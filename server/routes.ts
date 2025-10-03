@@ -627,15 +627,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       console.log(`📋 Getting all templates`);
       
-      const templates = await Promise.race([
+      const allTemplates = await Promise.race([
         storage.getAllTemplates(),
         new Promise((_, reject) => setTimeout(() => reject(new Error('Database timeout')), 4000))
       ]) as any[];
       
-      console.log(`📊 Found ${templates.length} templates`);
+      // Filter to show only main templates (exclude clones)
+      const mainTemplates = allTemplates.filter(template => template.isMain === true);
+      
+      console.log(`📊 Found ${allTemplates.length} total templates, ${mainTemplates.length} main templates`);
       clearTimeout(timeoutId);
       if (!res.headersSent) {
-        res.json(templates);
+        res.json(mainTemplates);
       }
     } catch (error) {
       clearTimeout(timeoutId);

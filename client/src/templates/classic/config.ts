@@ -204,11 +204,11 @@ export const defaultConfig: WeddingConfig = {
   },
   theme: {
     colors: {
-      primary: "#831843",      // Deep burgundy
-      secondary: "#be185d",    // Muted rose  
-      accent: "#6366f1",       // Soft indigo
-      background: "#fef7ff",    // Very light lavender
-      textColor: "#2C2124"      // Default charcoal text
+      primary: "",      // Deep burgundy
+      secondary: "",    // Muted rose  
+      accent: "",       // Soft indigo
+      background: "",    // Very light lavender
+      textColor: ""      // Default charcoal text
     },
     fonts: {
       heading: "Playfair Display",

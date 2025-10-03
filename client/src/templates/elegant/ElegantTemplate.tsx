@@ -39,15 +39,16 @@ export default function ElegantTemplate({ config, templateId }: ElegantTemplateP
 
   // Set CSS variables for dynamic color overrides
   useEffect(() => {
-    const textColor = safeConfig.theme?.colors?.textColor;
+    const textColor = config.theme?.colors?.textColor || config.theme?.colors?.primary || elegantDefaultConfig.theme?.colors?.textColor || elegantDefaultConfig.theme?.colors?.primary;
     if (textColor) {
       document.documentElement.style.setProperty('--dynamic-text-color', textColor);
     }
-  }, [safeConfig.theme?.colors?.textColor]);
+  }, [safeConfig.theme?.colors?.textColor, safeConfig.theme?.colors?.primary]);
 
   return (
-    <div className="min-h-screen bg-slate-50 text-slate-800" style={{
-      background: `linear-gradient(135deg, ${config.theme?.colors?.background || '#f1f5f9'} 0%, #e2e8f0 100%)`
+    <div className="min-h-screen bg-slate-50" style={{
+      background: config.theme?.colors?.background ? `linear-gradient(135deg, ${config.theme?.colors?.background} 0%, ${config.theme?.colors?.background}50 100%)` : undefined,
+      color: safeConfig.theme?.colors?.textColor
     }}>
       <Navigation />
       <main>
@@ -62,14 +63,14 @@ export default function ElegantTemplate({ config, templateId }: ElegantTemplateP
       
       {/* Footer */}
       <footer className="py-12" style={{
-        background: `linear-gradient(135deg, ${config.theme?.colors?.primary || safeConfig.theme?.colors?.primary || '#1e3a8a'} 0%, ${config.theme?.colors?.secondary || safeConfig.theme?.colors?.secondary || '#475569'} 100%)`,
+        background: (config.theme?.colors?.primary || safeConfig.theme?.colors?.primary) && (config.theme?.colors?.secondary || safeConfig.theme?.colors?.secondary) ? `linear-gradient(135deg, ${config.theme?.colors?.primary || safeConfig.theme?.colors?.primary} 0%, ${config.theme?.colors?.secondary || safeConfig.theme?.colors?.secondary} 100%)` : undefined,
         color: 'white'
       }}>
         <div className="max-w-4xl mx-auto px-4 text-center">
           <div className="ornament w-full h-8 mb-8 opacity-50"></div>
           <h3 className="text-2xl font-serif font-bold mb-4 flex items-center justify-center gap-3">
             <span>{safeConfig.couple.groomName}</span>
-            <span className="mx-1" style={{ color: config.theme?.colors?.accent || '#94a3b8' }}>∞</span>
+            <span className="mx-1" style={{ color: config.theme?.colors?.accent }}>∞</span>
             <span>{safeConfig.couple.brideName}</span>
           </h3>
           <p className="text-lg mb-8 opacity-90 max-w-2xl mx-auto leading-relaxed">

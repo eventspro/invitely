@@ -213,16 +213,11 @@ export function registerAdminRoutes(app: Express) {
             },
             theme: {
               colors: {
-                primary: templateKey === "nature" ? "#166534" : templateKey === "elegant" ? "#1e3a8a" : 
-                         templateKey === "romantic" ? "#9f1239" : "#831843",
-                secondary: templateKey === "nature" ? "#15803d" : templateKey === "elegant" ? "#475569" : 
-                           templateKey === "romantic" ? "#be123c" : "#be185d",
-                accent: templateKey === "nature" ? "#a3a3a3" : templateKey === "elegant" ? "#94a3b8" : 
-                        templateKey === "romantic" ? "#a855f7" : "#6366f1",
-                background: templateKey === "nature" ? "#f7f8f7" : templateKey === "elegant" ? "#f1f5f9" : 
-                            templateKey === "romantic" ? "#fdf2f8" : "#fef7ff",
-                textColor: templateKey === "nature" ? "#2c3e2d" : templateKey === "elegant" ? "#1e293b" : 
-                          templateKey === "romantic" ? "#3c1a3c" : "#2C2124"
+                primary: "",
+                secondary: "", 
+                accent: "",
+                background: "",
+                textColor: ""
               },
               fonts: { heading: "Noto Serif Armenian, serif", body: "Noto Sans Armenian, sans-serif" }
             }

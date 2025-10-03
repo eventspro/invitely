@@ -88,7 +88,7 @@ export default function CalendarSection({ config = weddingConfig }: CalendarSect
       id="calendar"
       className="py-20"
       style={{
-        background: `linear-gradient(135deg, ${config.theme?.colors?.background } 0%, #ffffff 50%, ${config.theme?.colors?.background }20 100%)`
+        background: config.theme?.colors?.background ? `linear-gradient(135deg, ${config.theme?.colors?.background} 0%, ${config.theme?.colors?.background}10 50%, ${config.theme?.colors?.background}20 100%)` : undefined
       }}
     >
       <div className="max-w-5xl mx-auto px-4">
@@ -99,16 +99,16 @@ export default function CalendarSection({ config = weddingConfig }: CalendarSect
             style={{
               fontFamily: getHeadingFont(config.theme?.fonts),
               fontWeight: "300",
-              color: config.theme?.colors?.primary 
+              color: config.theme?.colors?.primary
             }}
           >
             {config.calendar?.title || "Our Wedding"}
           </h2>
           <div className="w-24 h-0.5 mx-auto mb-8" style={{
-            backgroundColor: config.theme?.colors?.accent 
+            backgroundColor: config.theme?.colors?.accent
           }}></div>
           <p className="max-w-3xl mx-auto text-lg leading-relaxed" style={{
-            color: `${config.theme?.colors?.primary }70`
+            color: config.theme?.colors?.primary ? `${config.theme?.colors?.primary}70` : undefined
           }}>
             {(config.calendar?.description || "Join us for our special day")
               .split("\n")
@@ -129,7 +129,7 @@ export default function CalendarSection({ config = weddingConfig }: CalendarSect
             className="w-full max-w-lg animate-on-scroll"
           >
             <div className="bg-white rounded-3xl shadow-2xl p-10 w-full" style={{
-              borderColor: `${config.theme?.colors?.primary }05`
+              borderColor: config.theme?.colors?.primary ? `${config.theme?.colors?.primary}05` : undefined
             }}>
               {/* Month Header */}
               <div className="text-center mb-8">
@@ -137,13 +137,13 @@ export default function CalendarSection({ config = weddingConfig }: CalendarSect
                   className="text-3xl font-serif mb-3"
                   style={{ 
                     fontFamily: getHeadingFont(config.theme?.fonts),
-                    color: config.theme?.colors?.primary 
+                    color: config.theme?.colors?.primary
                   }}
                 >
                   {config.calendar?.monthTitle || "Wedding Month"}
                 </h3>
                 <div className="w-16 h-0.5 mx-auto" style={{
-                  backgroundColor: config.theme?.colors?.accent 
+                  backgroundColor: config.theme?.colors?.accent
                 }}></div>
               </div>
 
@@ -154,7 +154,7 @@ export default function CalendarSection({ config = weddingConfig }: CalendarSect
                     key={index}
                     className="text-center text-sm font-semibold py-3"
                     style={{
-                      color: `${config.theme?.colors?.primary }60`
+                      color: config.theme?.colors?.primary ? `${config.theme?.colors?.primary}60` : undefined
                     }}
                   >
                     {day}
@@ -181,12 +181,12 @@ export default function CalendarSection({ config = weddingConfig }: CalendarSect
                         }
                       `}
                       style={day && day !== weddingDay ? {
-                        color: `${config.theme?.colors?.primary }70`,
+                        color: config.theme?.colors?.primary ? `${config.theme?.colors?.primary}70` : undefined,
                         backgroundColor: 'transparent'
                       } : {}}
                       onMouseEnter={(e) => {
                         if (day && day !== weddingDay) {
-                          e.currentTarget.style.backgroundColor = `${config.theme?.colors?.accent }10`;
+                          e.currentTarget.style.backgroundColor = config.theme?.colors?.accent ? `${config.theme?.colors?.accent}10` : '';
                         }
                       }}
                       onMouseLeave={(e) => {
@@ -204,7 +204,7 @@ export default function CalendarSection({ config = weddingConfig }: CalendarSect
                               className="w-8 h-8 fill-current animate-heartbeat"
                               style={{
                                 marginTop: "-5px",
-                                color: config.theme?.colors?.accent ,
+                                color: config.theme?.colors?.accent,
                                 filter:
                                   "drop-shadow(0 2px 4px rgba(0, 0, 0, 0.25))",
                               }}
@@ -220,7 +220,7 @@ export default function CalendarSection({ config = weddingConfig }: CalendarSect
                               className="absolute inset-0 flex items-center justify-center font-bold text-xs"
                               style={{ 
                                 marginTop: "-5px",
-                                color: config.theme?.colors?.primary 
+                                color: config.theme?.colors?.primary
                               }}
                             >
                               {day}
@@ -242,4 +242,3 @@ export default function CalendarSection({ config = weddingConfig }: CalendarSect
     </section>
   );
 }
-

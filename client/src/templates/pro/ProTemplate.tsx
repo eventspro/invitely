@@ -23,11 +23,13 @@ export default function ProTemplate({ config, templateId }: ProTemplateProps) {
   
   // Set dynamic CSS variables for text colors
   useEffect(() => {
-    const textColor = config.theme?.colors?.textColor || defaultConfig.theme?.colors?.textColor || '#2C2124';
-    document.documentElement.style.setProperty('--dynamic-text-color', textColor);
-    document.documentElement.style.setProperty('--dynamic-text-color-70', textColor + 'B3');
-    document.documentElement.style.setProperty('--dynamic-text-color-60', textColor + '99');
-  }, [config.theme?.colors?.textColor]);
+    const textColor = config.theme?.colors?.textColor || config.theme?.colors?.primary || defaultConfig.theme?.colors?.textColor || defaultConfig.theme?.colors?.primary;
+    if (textColor) {
+      document.documentElement.style.setProperty('--dynamic-text-color', textColor);
+      document.documentElement.style.setProperty('--dynamic-text-color-70', textColor + 'B3');
+      document.documentElement.style.setProperty('--dynamic-text-color-60', textColor + '99');
+    }
+  }, [config.theme?.colors?.textColor, config.theme?.colors?.primary]);
 
   // Merge database config with default pro config, prioritizing file config for theme
   const safeConfig: WeddingConfig = {
@@ -96,7 +98,7 @@ export default function ProTemplate({ config, templateId }: ProTemplateProps) {
     .sort((a, b) => a.order - b.order);
 
   return (
-    <div className="min-h-screen bg-cream" style={{ color: `${config.theme?.colors?.textColor || '#2C2124'} !important` }}>
+    <div className="min-h-screen bg-cream text-charcoal">
       <Navigation config={safeConfig} />
       <main>
         {orderedSections.map((section, index) => (
@@ -112,7 +114,7 @@ export default function ProTemplate({ config, templateId }: ProTemplateProps) {
           <div className="ornament w-full h-8 mb-8 opacity-50"></div>
           <h3 className="text-2xl font-serif font-bold mb-4 flex items-center justify-center gap-3">
             <span>{safeConfig.couple.groomName}</span>
-            <span className="mx-1" style={{ color: config.theme?.colors?.accent || config.theme?.colors?.primary || '#831843' }}>∞</span>
+            <span className="mx-1" style={{ color: config.theme?.colors?.accent || config.theme?.colors?.primary }}>∞</span>
             <span>{safeConfig.couple.brideName}</span>
           </h3>
           <p className="text-white/70 mb-6">{safeConfig.footer.thankYouMessage}</p>

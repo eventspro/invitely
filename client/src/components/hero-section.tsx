@@ -314,7 +314,7 @@ export default function HeroSection({ config = weddingConfig }: HeroSectionProps
           data-testid="text-couple-names"
         >
           <span>{config.couple?.groomName || 'Groom'}</span>
-          <span className="mx-1" style={{ color: config.theme?.colors?.accent || '#e8d5b7' }}>∞</span>
+          <span className="mx-1" style={{ color: config.theme?.colors?.accent }}>∞</span>
           <span>{config.couple?.brideName || 'Bride'}</span>
         </h1>
         <p
@@ -346,14 +346,14 @@ export default function HeroSection({ config = weddingConfig }: HeroSectionProps
             onClick={toggleMusic}
             className="text-white px-6 py-3 rounded-full shadow-lg transition-all duration-300 flex items-center space-x-2"
             style={{
-              backgroundColor: config.theme?.colors?.primary || '#831843',
-              borderColor: config.theme?.colors?.primary || '#831843'
+              backgroundColor: config.theme?.colors?.primary,
+              borderColor: config.theme?.colors?.primary
             }}
             onMouseEnter={(e) => {
-              e.currentTarget.style.backgroundColor = `${config.theme?.colors?.primary || '#831843'}dd`;
+              e.currentTarget.style.backgroundColor = config.theme?.colors?.primary ? `${config.theme?.colors?.primary}dd` : '';
             }}
             onMouseLeave={(e) => {
-              e.currentTarget.style.backgroundColor = config.theme?.colors?.primary || '#831843';
+              e.currentTarget.style.backgroundColor = config.theme?.colors?.primary || '';
             }}
             data-testid="button-music-toggle"
           >

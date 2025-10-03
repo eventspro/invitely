@@ -22,11 +22,11 @@ export const defaultConfig: WeddingConfig = {
   // Add theme configuration
   theme: {
     colors: {
-      primary: "hsl(340, 45%, 65%)", // --soft-gold converted to actual value
-      secondary: "hsl(340, 20%, 80%)", // --sage-green converted to actual value
-      accent: "hsl(340, 15%, 15%)", // --charcoal converted to actual value
-      background: "hsl(340, 30%, 97%)", // --cream converted to actual value
-      textColor: "#2C2124", // Default charcoal text
+      primary: "", // --soft-gold converted to actual value
+      secondary: "", // --sage-green converted to actual value
+      accent: "", // --charcoal converted to actual value
+      background: "", // --cream converted to actual value
+      textColor: "", // Default charcoal text
     },
     fonts: {
       heading: "Playfair Display, serif",

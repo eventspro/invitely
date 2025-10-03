@@ -328,7 +328,7 @@ export function AdminPanel() {
               
               {/* QR Code Actions */}
               <div className="space-y-3 flex-1">
-                <div className="text-sm" style={{ color: '#666666' }}>
+                <div className="text-sm text-gray-600">
                   <p><strong>URL:</strong> harutandtatev.com/photos</p>
                   <p className="mt-2">Print this QR code and place it at your wedding venue so guests can easily share their photos!</p>
                 </div>

@@ -1445,7 +1445,7 @@ export default function TemplateAdminPanel() {
                     >
                       {template.config.couple?.groomName || "Groom"} & {template.config.couple?.brideName || "Bride"}
                     </h3>
-                    <p className="mb-4" style={{ color: "#6b7280" }}>
+                    <p className="mb-4 text-gray-500">
                       Welcome to our wedding website! We're excited to celebrate with you.
                     </p>
                     <button

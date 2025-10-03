@@ -1,0 +1,1332 @@
+Attached HTML and CSS Context
+
+<h2 class="text-5xl md:text-6xl text-charcoal mb-8 armenian-text-forced" data-testid="text-timeline-title" style="font-family: &quot;Arial Unicode MS&quot;, &quot;Lucida Grande&quot;, Sylfaen, Arial, sans-serif !important; font-weight: 300;">Ծրագիր</h2>
+
+
+/* Inline style */
+element {
+  font-family: "Arial Unicode MS", "Lucida Grande", Sylfaen, Arial, sans-serif !important;
+  font-weight: 300;
+  font-family: "Arial Unicode MS", "Lucida Grande", Sylfaen, Arial, sans-serif !important;
+  font-weight: 300;
+}
+
+/* Matched Rule from user-agent */
+h2 {
+  display: block;
+  font-size: 1.5em;
+  margin-block-start: 0.83em;
+  margin-block-end: 0.83em;
+  margin-inline-start: 0px;
+  margin-inline-end: 0px;
+  font-weight: bold;
+}
+
+/* Matched Rule from user-agent */
+address, blockquote, center, div, figure, figcaption, footer, form, header, hr, legend, listing, main, p, plaintext, pre, summary, xmp, article, aside, h1, h2, h3, h4, h5, h6, hgroup, nav, section, search, table, caption, colgroup, col, thead, tbody, tfoot, tr, td, th, dir, dd, dl, dt, menu, ol, ul, li, bdi, output, [dir="ltr" i], [dir="rtl" i], [dir="auto" i] {
+  unicode-bidi: isolate;
+}
+
+/* Matched Rule from regular */
+*, *::before, *::after {
+  font-family: var(--armenian-sans);
+  font-family: var(--armenian-sans);
+}
+
+/* Matched Rule from regular */
+*, ::before, ::after {
+  --tw-border-spacing-x: 0;
+  --tw-border-spacing-y: 0;
+  --tw-translate-x: 0;
+  --tw-translate-y: 0;
+  --tw-rotate: 0;
+  --tw-skew-x: 0;
+  --tw-skew-y: 0;
+  --tw-scale-x: 1;
+  --tw-scale-y: 1;
+  --tw-scroll-snap-strictness: proximity;
+  --tw-ring-offset-width: 0px;
+  --tw-ring-offset-color: #fff;
+  --tw-ring-color: rgb(59 130 246 / 0.5);
+  --tw-ring-offset-shadow: 0 0 #0000;
+  --tw-ring-shadow: 0 0 #0000;
+  --tw-shadow: 0 0 #0000;
+  --tw-shadow-colored: 0 0 #0000;
+  --tw-border-spacing-x: 0;
+  --tw-border-spacing-y: 0;
+  --tw-translate-x: 0;
+  --tw-translate-y: 0;
+  --tw-rotate: 0;
+  --tw-skew-x: 0;
+  --tw-skew-y: 0;
+  --tw-scale-x: 1;
+  --tw-scale-y: 1;
+  --tw-scroll-snap-strictness: proximity;
+  --tw-ring-offset-width: 0px;
+  --tw-ring-offset-color: #fff;
+  --tw-ring-color: rgb(59 130 246 / 0.5);
+  --tw-ring-offset-shadow: 0 0 #0000;
+  --tw-ring-shadow: 0 0 #0000;
+  --tw-shadow: 0 0 #0000;
+  --tw-shadow-colored: 0 0 #0000;
+}
+
+/* Matched Rule from regular */
+*, ::before, ::after {
+  box-sizing: border-box;
+  border-width: 0;
+  border-style: solid;
+  border-color: #e5e7eb;
+  box-sizing: border-box;
+  border-top-width: 0px;
+  border-right-width: 0px;
+  border-bottom-width: 0px;
+  border-left-width: 0px;
+  border-top-style: solid;
+  border-right-style: solid;
+  border-bottom-style: solid;
+  border-left-style: solid;
+  border-top-color: rgb(229, 231, 235);
+  border-right-color: rgb(229, 231, 235);
+  border-bottom-color: rgb(229, 231, 235);
+  border-left-color: rgb(229, 231, 235);
+}
+
+/* Matched Rule from regular */
+* {
+  border-color: var(--border);
+}
+
+/* Matched Rule from regular */
+h1, h2, h3, h4, h5, h6 {
+  font-family: var(--armenian-serif);
+  font-family: var(--armenian-serif);
+}
+
+/* Matched Rule from regular */
+h1, h2, h3, h4, h5, h6 {
+  font-size: inherit;
+  font-weight: inherit;
+  font-size: inherit;
+  font-weight: inherit;
+}
+
+/* Matched Rule from regular */
+blockquote, dl, dd, h1, h2, h3, h4, h5, h6, hr, figure, p, pre {
+  margin: 0;
+  margin-top: 0px;
+  margin-right: 0px;
+  margin-bottom: 0px;
+  margin-left: 0px;
+}
+
+/* Matched Rule from regular */
+p, span, div, h1, h2, h3, h4, h5, h6, label, input, textarea, button {
+  font-family: Arial Unicode MS, Lucida Grande, Sylfaen, Arial, sans-serif;
+  font-family: "Arial Unicode MS", "Lucida Grande", Sylfaen, Arial, sans-serif;
+}
+
+/* Matched Rule from regular */
+.text-charcoal {
+  color: var(--dynamic-text-color, var(--charcoal)) !important;
+  color: var(--dynamic-text-color, var(--charcoal)) !important;
+}
+
+/* Matched Rule from regular */
+.mb-8 {
+  margin-bottom: 2rem;
+  margin-bottom: 2rem;
+}
+
+/* Matched Rule from regular */
+.text-5xl {
+  font-size: 3rem;
+  line-height: 1;
+  font-size: 3rem;
+  line-height: 1;
+}
+
+/* Matched Rule from regular */
+.text-charcoal {
+  color: var(--charcoal);
+  color: var(--charcoal);
+}
+
+/* Matched Rule from regular */
+.md\:text-6xl {
+  font-size: 3.75rem;
+  line-height: 1;
+  font-size: 3.75rem;
+  line-height: 1;
+}
+
+/* Matched Rule from regular */
+.armenian-text-forced, .armenian-text, [lang="hy"], [data-lang="armenian"] {
+  font-family: Arial Unicode MS, Lucida Grande, Sylfaen, Arial, sans-serif !important;
+  text-rendering: optimizeLegibility !important;
+  -webkit-font-smoothing: antialiased !important;
+  -moz-osx-font-smoothing: grayscale !important;
+  unicode-bidi: isolate !important;
+  font-family: "Arial Unicode MS", "Lucida Grande", Sylfaen, Arial, sans-serif !important;
+  text-rendering: optimizelegibility !important;
+  -webkit-font-smoothing: antialiased !important;
+  unicode-bidi: isolate !important;
+}
+
+/* Matched Rule from regular */
+.text-charcoal {
+  color: var(--dynamic-text-color, #2C2124) !important;
+  color: var(--dynamic-text-color, #2C2124) !important;
+}
+
+/* Matched Rule from regular */
+*:lang(hy) {
+  font-family: Arial Unicode MS, Lucida Grande, Sylfaen, Arial, sans-serif !important;
+  font-family: "Arial Unicode MS", "Lucida Grande", Sylfaen, Arial, sans-serif !important;
+}
+
+/* Matched Rule from regular */
+.armenian-text-forced.text-charcoal, .text-charcoal.armenian-text-forced {
+  color: var(--dynamic-text-color, #2C2124) !important;
+  color: var(--dynamic-text-color, #2C2124) !important;
+}
+
+/* Inherited from ancestor level 1 (user-agent) */
+div {
+  display: block;
+}
+
+/* Inherited from ancestor level 1 (user-agent) */
+address, blockquote, center, div, figure, figcaption, footer, form, header, hr, legend, listing, main, p, plaintext, pre, summary, xmp, article, aside, h1, h2, h3, h4, h5, h6, hgroup, nav, section, search, table, caption, colgroup, col, thead, tbody, tfoot, tr, td, th, dir, dd, dl, dt, menu, ol, ul, li, bdi, output, [dir="ltr" i], [dir="rtl" i], [dir="auto" i] {
+  unicode-bidi: isolate;
+}
+
+/* Inherited from ancestor level 1 (regular) */
+*, *::before, *::after {
+  font-family: var(--armenian-sans);
+  font-family: var(--armenian-sans);
+}
+
+/* Inherited from ancestor level 1 (regular) */
+*, ::before, ::after {
+  --tw-border-spacing-x: 0;
+  --tw-border-spacing-y: 0;
+  --tw-translate-x: 0;
+  --tw-translate-y: 0;
+  --tw-rotate: 0;
+  --tw-skew-x: 0;
+  --tw-skew-y: 0;
+  --tw-scale-x: 1;
+  --tw-scale-y: 1;
+  --tw-scroll-snap-strictness: proximity;
+  --tw-ring-offset-width: 0px;
+  --tw-ring-offset-color: #fff;
+  --tw-ring-color: rgb(59 130 246 / 0.5);
+  --tw-ring-offset-shadow: 0 0 #0000;
+  --tw-ring-shadow: 0 0 #0000;
+  --tw-shadow: 0 0 #0000;
+  --tw-shadow-colored: 0 0 #0000;
+  --tw-border-spacing-x: 0;
+  --tw-border-spacing-y: 0;
+  --tw-translate-x: 0;
+  --tw-translate-y: 0;
+  --tw-rotate: 0;
+  --tw-skew-x: 0;
+  --tw-skew-y: 0;
+  --tw-scale-x: 1;
+  --tw-scale-y: 1;
+  --tw-scroll-snap-strictness: proximity;
+  --tw-ring-offset-width: 0px;
+  --tw-ring-offset-color: #fff;
+  --tw-ring-color: rgb(59 130 246 / 0.5);
+  --tw-ring-offset-shadow: 0 0 #0000;
+  --tw-ring-shadow: 0 0 #0000;
+  --tw-shadow: 0 0 #0000;
+  --tw-shadow-colored: 0 0 #0000;
+}
+
+/* Inherited from ancestor level 1 (regular) */
+*, ::before, ::after {
+  box-sizing: border-box;
+  border-width: 0;
+  border-style: solid;
+  border-color: #e5e7eb;
+  box-sizing: border-box;
+  border-top-width: 0px;
+  border-right-width: 0px;
+  border-bottom-width: 0px;
+  border-left-width: 0px;
+  border-top-style: solid;
+  border-right-style: solid;
+  border-bottom-style: solid;
+  border-left-style: solid;
+  border-top-color: rgb(229, 231, 235);
+  border-right-color: rgb(229, 231, 235);
+  border-bottom-color: rgb(229, 231, 235);
+  border-left-color: rgb(229, 231, 235);
+}
+
+/* Inherited from ancestor level 1 (regular) */
+* {
+  border-color: var(--border);
+}
+
+/* Inherited from ancestor level 1 (regular) */
+p, span, div, h1, h2, h3, h4, h5, h6, label, input, textarea, button {
+  font-family: Arial Unicode MS, Lucida Grande, Sylfaen, Arial, sans-serif;
+  font-family: "Arial Unicode MS", "Lucida Grande", Sylfaen, Arial, sans-serif;
+}
+
+/* Inherited from ancestor level 1 (regular) */
+.mb-20 {
+  margin-bottom: 5rem;
+  margin-bottom: 5rem;
+}
+
+/* Inherited from ancestor level 1 (regular) */
+.animate-slide-up {
+  animation: slideUp 0.8s ease-out;
+  animation-duration: 0.8s;
+  animation-timing-function: ease-out;
+  animation-delay: 0s;
+  animation-iteration-count: 1;
+  animation-direction: normal;
+  animation-fill-mode: none;
+  animation-play-state: running;
+  animation-name: slideUp;
+  animation-timeline: auto;
+  animation-range-start: normal;
+  animation-range-end: normal;
+}
+
+/* Inherited from ancestor level 1 (regular) */
+.text-center {
+  text-align: center;
+  text-align: center;
+}
+
+/* Inherited from ancestor level 1 (regular) */
+.animate-slide-up {
+  animation: slideUp 0.8s ease-out;
+  animation-duration: 0.8s;
+  animation-timing-function: ease-out;
+  animation-delay: 0s;
+  animation-iteration-count: 1;
+  animation-direction: normal;
+  animation-fill-mode: none;
+  animation-play-state: running;
+  animation-name: slideUp;
+  animation-timeline: auto;
+  animation-range-start: normal;
+  animation-range-end: normal;
+}
+
+/* Inherited from ancestor level 1 (regular) */
+.animate-float {
+  animation: float 3s ease-in-out infinite;
+  animation-duration: 3s;
+  animation-timing-function: ease-in-out;
+  animation-delay: 0s;
+  animation-iteration-count: infinite;
+  animation-direction: normal;
+  animation-fill-mode: none;
+  animation-play-state: running;
+  animation-name: float;
+  animation-timeline: auto;
+  animation-range-start: normal;
+  animation-range-end: normal;
+}
+
+/* Inherited from ancestor level 1 (regular) */
+.animate-on-scroll {
+  opacity: 0;
+  transform: translateY(30px);
+  transition: all 0.8s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+  opacity: 0;
+  transform: translateY(30px);
+  transition-behavior: normal;
+  transition-duration: 0.8s;
+  transition-timing-function: cubic-bezier(0.25, 0.46, 0.45, 0.94);
+  transition-delay: 0s;
+  transition-property: all;
+}
+
+/* Inherited from ancestor level 1 (regular) */
+.armenian-text-forced, .armenian-text, [lang="hy"], [data-lang="armenian"] {
+  font-family: Arial Unicode MS, Lucida Grande, Sylfaen, Arial, sans-serif !important;
+  text-rendering: optimizeLegibility !important;
+  -webkit-font-smoothing: antialiased !important;
+  -moz-osx-font-smoothing: grayscale !important;
+  unicode-bidi: isolate !important;
+  font-family: "Arial Unicode MS", "Lucida Grande", Sylfaen, Arial, sans-serif !important;
+  text-rendering: optimizelegibility !important;
+  -webkit-font-smoothing: antialiased !important;
+  unicode-bidi: isolate !important;
+}
+
+/* Inherited from ancestor level 1 (regular) */
+*:lang(hy) {
+  font-family: Arial Unicode MS, Lucida Grande, Sylfaen, Arial, sans-serif !important;
+  font-family: "Arial Unicode MS", "Lucida Grande", Sylfaen, Arial, sans-serif !important;
+}
+
+/* Inherited from ancestor level 1 (regular) */
+.animate-on-scroll.animate-slide-up {
+  opacity: 1;
+  transform: translateY(0);
+  opacity: 1;
+  transform: translateY(0px);
+}
+
+/* Inherited from ancestor level 2 (user-agent) */
+div {
+  display: block;
+}
+
+/* Inherited from ancestor level 2 (user-agent) */
+address, blockquote, center, div, figure, figcaption, footer, form, header, hr, legend, listing, main, p, plaintext, pre, summary, xmp, article, aside, h1, h2, h3, h4, h5, h6, hgroup, nav, section, search, table, caption, colgroup, col, thead, tbody, tfoot, tr, td, th, dir, dd, dl, dt, menu, ol, ul, li, bdi, output, [dir="ltr" i], [dir="rtl" i], [dir="auto" i] {
+  unicode-bidi: isolate;
+}
+
+/* Inherited from ancestor level 2 (regular) */
+*, *::before, *::after {
+  font-family: var(--armenian-sans);
+  font-family: var(--armenian-sans);
+}
+
+/* Inherited from ancestor level 2 (regular) */
+*, ::before, ::after {
+  --tw-border-spacing-x: 0;
+  --tw-border-spacing-y: 0;
+  --tw-translate-x: 0;
+  --tw-translate-y: 0;
+  --tw-rotate: 0;
+  --tw-skew-x: 0;
+  --tw-skew-y: 0;
+  --tw-scale-x: 1;
+  --tw-scale-y: 1;
+  --tw-scroll-snap-strictness: proximity;
+  --tw-ring-offset-width: 0px;
+  --tw-ring-offset-color: #fff;
+  --tw-ring-color: rgb(59 130 246 / 0.5);
+  --tw-ring-offset-shadow: 0 0 #0000;
+  --tw-ring-shadow: 0 0 #0000;
+  --tw-shadow: 0 0 #0000;
+  --tw-shadow-colored: 0 0 #0000;
+  --tw-border-spacing-x: 0;
+  --tw-border-spacing-y: 0;
+  --tw-translate-x: 0;
+  --tw-translate-y: 0;
+  --tw-rotate: 0;
+  --tw-skew-x: 0;
+  --tw-skew-y: 0;
+  --tw-scale-x: 1;
+  --tw-scale-y: 1;
+  --tw-scroll-snap-strictness: proximity;
+  --tw-ring-offset-width: 0px;
+  --tw-ring-offset-color: #fff;
+  --tw-ring-color: rgb(59 130 246 / 0.5);
+  --tw-ring-offset-shadow: 0 0 #0000;
+  --tw-ring-shadow: 0 0 #0000;
+  --tw-shadow: 0 0 #0000;
+  --tw-shadow-colored: 0 0 #0000;
+}
+
+/* Inherited from ancestor level 2 (regular) */
+*, ::before, ::after {
+  box-sizing: border-box;
+  border-width: 0;
+  border-style: solid;
+  border-color: #e5e7eb;
+  box-sizing: border-box;
+  border-top-width: 0px;
+  border-right-width: 0px;
+  border-bottom-width: 0px;
+  border-left-width: 0px;
+  border-top-style: solid;
+  border-right-style: solid;
+  border-bottom-style: solid;
+  border-left-style: solid;
+  border-top-color: rgb(229, 231, 235);
+  border-right-color: rgb(229, 231, 235);
+  border-bottom-color: rgb(229, 231, 235);
+  border-left-color: rgb(229, 231, 235);
+}
+
+/* Inherited from ancestor level 2 (regular) */
+* {
+  border-color: var(--border);
+}
+
+/* Inherited from ancestor level 2 (regular) */
+p, span, div, h1, h2, h3, h4, h5, h6, label, input, textarea, button {
+  font-family: Arial Unicode MS, Lucida Grande, Sylfaen, Arial, sans-serif;
+  font-family: "Arial Unicode MS", "Lucida Grande", Sylfaen, Arial, sans-serif;
+}
+
+/* Inherited from ancestor level 2 (regular) */
+.mx-auto {
+  margin-left: auto;
+  margin-right: auto;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+/* Inherited from ancestor level 2 (regular) */
+.max-w-6xl {
+  max-width: 72rem;
+  max-width: 72rem;
+}
+
+/* Inherited from ancestor level 2 (regular) */
+.px-4 {
+  padding-left: 1rem;
+  padding-right: 1rem;
+  padding-left: 1rem;
+  padding-right: 1rem;
+}
+
+/* Inherited from ancestor level 2 (regular) */
+.armenian-text-forced, .armenian-text, [lang="hy"], [data-lang="armenian"] {
+  font-family: Arial Unicode MS, Lucida Grande, Sylfaen, Arial, sans-serif !important;
+  text-rendering: optimizeLegibility !important;
+  -webkit-font-smoothing: antialiased !important;
+  -moz-osx-font-smoothing: grayscale !important;
+  unicode-bidi: isolate !important;
+  font-family: "Arial Unicode MS", "Lucida Grande", Sylfaen, Arial, sans-serif !important;
+  text-rendering: optimizelegibility !important;
+  -webkit-font-smoothing: antialiased !important;
+  unicode-bidi: isolate !important;
+}
+
+/* Inherited from ancestor level 2 (regular) */
+*:lang(hy) {
+  font-family: Arial Unicode MS, Lucida Grande, Sylfaen, Arial, sans-serif !important;
+  font-family: "Arial Unicode MS", "Lucida Grande", Sylfaen, Arial, sans-serif !important;
+}
+
+/* Inherited from ancestor level 3 (user-agent) */
+article, aside, footer, header, hgroup, main, nav, search, section {
+  display: block;
+}
+
+/* Inherited from ancestor level 3 (user-agent) */
+address, blockquote, center, div, figure, figcaption, footer, form, header, hr, legend, listing, main, p, plaintext, pre, summary, xmp, article, aside, h1, h2, h3, h4, h5, h6, hgroup, nav, section, search, table, caption, colgroup, col, thead, tbody, tfoot, tr, td, th, dir, dd, dl, dt, menu, ol, ul, li, bdi, output, [dir="ltr" i], [dir="rtl" i], [dir="auto" i] {
+  unicode-bidi: isolate;
+}
+
+/* Inherited from ancestor level 3 (regular) */
+*, *::before, *::after {
+  font-family: var(--armenian-sans);
+  font-family: var(--armenian-sans);
+}
+
+/* Inherited from ancestor level 3 (regular) */
+*, ::before, ::after {
+  --tw-border-spacing-x: 0;
+  --tw-border-spacing-y: 0;
+  --tw-translate-x: 0;
+  --tw-translate-y: 0;
+  --tw-rotate: 0;
+  --tw-skew-x: 0;
+  --tw-skew-y: 0;
+  --tw-scale-x: 1;
+  --tw-scale-y: 1;
+  --tw-scroll-snap-strictness: proximity;
+  --tw-ring-offset-width: 0px;
+  --tw-ring-offset-color: #fff;
+  --tw-ring-color: rgb(59 130 246 / 0.5);
+  --tw-ring-offset-shadow: 0 0 #0000;
+  --tw-ring-shadow: 0 0 #0000;
+  --tw-shadow: 0 0 #0000;
+  --tw-shadow-colored: 0 0 #0000;
+  --tw-border-spacing-x: 0;
+  --tw-border-spacing-y: 0;
+  --tw-translate-x: 0;
+  --tw-translate-y: 0;
+  --tw-rotate: 0;
+  --tw-skew-x: 0;
+  --tw-skew-y: 0;
+  --tw-scale-x: 1;
+  --tw-scale-y: 1;
+  --tw-scroll-snap-strictness: proximity;
+  --tw-ring-offset-width: 0px;
+  --tw-ring-offset-color: #fff;
+  --tw-ring-color: rgb(59 130 246 / 0.5);
+  --tw-ring-offset-shadow: 0 0 #0000;
+  --tw-ring-shadow: 0 0 #0000;
+  --tw-shadow: 0 0 #0000;
+  --tw-shadow-colored: 0 0 #0000;
+}
+
+/* Inherited from ancestor level 3 (regular) */
+*, ::before, ::after {
+  box-sizing: border-box;
+  border-width: 0;
+  border-style: solid;
+  border-color: #e5e7eb;
+  box-sizing: border-box;
+  border-top-width: 0px;
+  border-right-width: 0px;
+  border-bottom-width: 0px;
+  border-left-width: 0px;
+  border-top-style: solid;
+  border-right-style: solid;
+  border-bottom-style: solid;
+  border-left-style: solid;
+  border-top-color: rgb(229, 231, 235);
+  border-right-color: rgb(229, 231, 235);
+  border-bottom-color: rgb(229, 231, 235);
+  border-left-color: rgb(229, 231, 235);
+}
+
+/* Inherited from ancestor level 3 (regular) */
+* {
+  border-color: var(--border);
+}
+
+/* Inherited from ancestor level 3 (regular) */
+.relative {
+  position: relative;
+  position: relative;
+}
+
+/* Inherited from ancestor level 3 (regular) */
+.overflow-hidden {
+  overflow: hidden;
+  overflow-x: hidden;
+  overflow-y: hidden;
+}
+
+/* Inherited from ancestor level 3 (regular) */
+.bg-gradient-to-br {
+  background-image: linear-gradient(to bottom right, var(--tw-gradient-stops));
+  background-image: linear-gradient(to bottom right, var(--tw-gradient-stops));
+}
+
+/* Inherited from ancestor level 3 (regular) */
+.py-24 {
+  padding-top: 6rem;
+  padding-bottom: 6rem;
+  padding-top: 6rem;
+  padding-bottom: 6rem;
+}
+
+/* Inherited from ancestor level 3 (regular) */
+.armenian-text-forced, .armenian-text, [lang="hy"], [data-lang="armenian"] {
+  font-family: Arial Unicode MS, Lucida Grande, Sylfaen, Arial, sans-serif !important;
+  text-rendering: optimizeLegibility !important;
+  -webkit-font-smoothing: antialiased !important;
+  -moz-osx-font-smoothing: grayscale !important;
+  unicode-bidi: isolate !important;
+  font-family: "Arial Unicode MS", "Lucida Grande", Sylfaen, Arial, sans-serif !important;
+  text-rendering: optimizelegibility !important;
+  -webkit-font-smoothing: antialiased !important;
+  unicode-bidi: isolate !important;
+}
+
+/* Inherited from ancestor level 3 (regular) */
+*:lang(hy) {
+  font-family: Arial Unicode MS, Lucida Grande, Sylfaen, Arial, sans-serif !important;
+  font-family: "Arial Unicode MS", "Lucida Grande", Sylfaen, Arial, sans-serif !important;
+}
+
+/* Inherited from ancestor level 4 (user-agent) */
+article, aside, footer, header, hgroup, main, nav, search, section {
+  display: block;
+}
+
+/* Inherited from ancestor level 4 (user-agent) */
+address, blockquote, center, div, figure, figcaption, footer, form, header, hr, legend, listing, main, p, plaintext, pre, summary, xmp, article, aside, h1, h2, h3, h4, h5, h6, hgroup, nav, section, search, table, caption, colgroup, col, thead, tbody, tfoot, tr, td, th, dir, dd, dl, dt, menu, ol, ul, li, bdi, output, [dir="ltr" i], [dir="rtl" i], [dir="auto" i] {
+  unicode-bidi: isolate;
+}
+
+/* Inherited from ancestor level 4 (regular) */
+*, *::before, *::after {
+  font-family: var(--armenian-sans);
+  font-family: var(--armenian-sans);
+}
+
+/* Inherited from ancestor level 4 (regular) */
+*, ::before, ::after {
+  --tw-border-spacing-x: 0;
+  --tw-border-spacing-y: 0;
+  --tw-translate-x: 0;
+  --tw-translate-y: 0;
+  --tw-rotate: 0;
+  --tw-skew-x: 0;
+  --tw-skew-y: 0;
+  --tw-scale-x: 1;
+  --tw-scale-y: 1;
+  --tw-scroll-snap-strictness: proximity;
+  --tw-ring-offset-width: 0px;
+  --tw-ring-offset-color: #fff;
+  --tw-ring-color: rgb(59 130 246 / 0.5);
+  --tw-ring-offset-shadow: 0 0 #0000;
+  --tw-ring-shadow: 0 0 #0000;
+  --tw-shadow: 0 0 #0000;
+  --tw-shadow-colored: 0 0 #0000;
+  --tw-border-spacing-x: 0;
+  --tw-border-spacing-y: 0;
+  --tw-translate-x: 0;
+  --tw-translate-y: 0;
+  --tw-rotate: 0;
+  --tw-skew-x: 0;
+  --tw-skew-y: 0;
+  --tw-scale-x: 1;
+  --tw-scale-y: 1;
+  --tw-scroll-snap-strictness: proximity;
+  --tw-ring-offset-width: 0px;
+  --tw-ring-offset-color: #fff;
+  --tw-ring-color: rgb(59 130 246 / 0.5);
+  --tw-ring-offset-shadow: 0 0 #0000;
+  --tw-ring-shadow: 0 0 #0000;
+  --tw-shadow: 0 0 #0000;
+  --tw-shadow-colored: 0 0 #0000;
+}
+
+/* Inherited from ancestor level 4 (regular) */
+*, ::before, ::after {
+  box-sizing: border-box;
+  border-width: 0;
+  border-style: solid;
+  border-color: #e5e7eb;
+  box-sizing: border-box;
+  border-top-width: 0px;
+  border-right-width: 0px;
+  border-bottom-width: 0px;
+  border-left-width: 0px;
+  border-top-style: solid;
+  border-right-style: solid;
+  border-bottom-style: solid;
+  border-left-style: solid;
+  border-top-color: rgb(229, 231, 235);
+  border-right-color: rgb(229, 231, 235);
+  border-bottom-color: rgb(229, 231, 235);
+  border-left-color: rgb(229, 231, 235);
+}
+
+/* Inherited from ancestor level 4 (regular) */
+* {
+  border-color: var(--border);
+}
+
+/* Inherited from ancestor level 4 (regular) */
+.armenian-text-forced, .armenian-text, [lang="hy"], [data-lang="armenian"] {
+  font-family: Arial Unicode MS, Lucida Grande, Sylfaen, Arial, sans-serif !important;
+  text-rendering: optimizeLegibility !important;
+  -webkit-font-smoothing: antialiased !important;
+  -moz-osx-font-smoothing: grayscale !important;
+  unicode-bidi: isolate !important;
+  font-family: "Arial Unicode MS", "Lucida Grande", Sylfaen, Arial, sans-serif !important;
+  text-rendering: optimizelegibility !important;
+  -webkit-font-smoothing: antialiased !important;
+  unicode-bidi: isolate !important;
+}
+
+/* Inherited from ancestor level 4 (regular) */
+*:lang(hy) {
+  font-family: Arial Unicode MS, Lucida Grande, Sylfaen, Arial, sans-serif !important;
+  font-family: "Arial Unicode MS", "Lucida Grande", Sylfaen, Arial, sans-serif !important;
+}
+
+/* Inherited from ancestor level 5 (user-agent) */
+div {
+  display: block;
+}
+
+/* Inherited from ancestor level 5 (user-agent) */
+address, blockquote, center, div, figure, figcaption, footer, form, header, hr, legend, listing, main, p, plaintext, pre, summary, xmp, article, aside, h1, h2, h3, h4, h5, h6, hgroup, nav, section, search, table, caption, colgroup, col, thead, tbody, tfoot, tr, td, th, dir, dd, dl, dt, menu, ol, ul, li, bdi, output, [dir="ltr" i], [dir="rtl" i], [dir="auto" i] {
+  unicode-bidi: isolate;
+}
+
+/* Inherited from ancestor level 5 (regular) */
+*, *::before, *::after {
+  font-family: var(--armenian-sans);
+  font-family: var(--armenian-sans);
+}
+
+/* Inherited from ancestor level 5 (regular) */
+*, ::before, ::after {
+  --tw-border-spacing-x: 0;
+  --tw-border-spacing-y: 0;
+  --tw-translate-x: 0;
+  --tw-translate-y: 0;
+  --tw-rotate: 0;
+  --tw-skew-x: 0;
+  --tw-skew-y: 0;
+  --tw-scale-x: 1;
+  --tw-scale-y: 1;
+  --tw-scroll-snap-strictness: proximity;
+  --tw-ring-offset-width: 0px;
+  --tw-ring-offset-color: #fff;
+  --tw-ring-color: rgb(59 130 246 / 0.5);
+  --tw-ring-offset-shadow: 0 0 #0000;
+  --tw-ring-shadow: 0 0 #0000;
+  --tw-shadow: 0 0 #0000;
+  --tw-shadow-colored: 0 0 #0000;
+  --tw-border-spacing-x: 0;
+  --tw-border-spacing-y: 0;
+  --tw-translate-x: 0;
+  --tw-translate-y: 0;
+  --tw-rotate: 0;
+  --tw-skew-x: 0;
+  --tw-skew-y: 0;
+  --tw-scale-x: 1;
+  --tw-scale-y: 1;
+  --tw-scroll-snap-strictness: proximity;
+  --tw-ring-offset-width: 0px;
+  --tw-ring-offset-color: #fff;
+  --tw-ring-color: rgb(59 130 246 / 0.5);
+  --tw-ring-offset-shadow: 0 0 #0000;
+  --tw-ring-shadow: 0 0 #0000;
+  --tw-shadow: 0 0 #0000;
+  --tw-shadow-colored: 0 0 #0000;
+}
+
+/* Inherited from ancestor level 5 (regular) */
+*, ::before, ::after {
+  box-sizing: border-box;
+  border-width: 0;
+  border-style: solid;
+  border-color: #e5e7eb;
+  box-sizing: border-box;
+  border-top-width: 0px;
+  border-right-width: 0px;
+  border-bottom-width: 0px;
+  border-left-width: 0px;
+  border-top-style: solid;
+  border-right-style: solid;
+  border-bottom-style: solid;
+  border-left-style: solid;
+  border-top-color: rgb(229, 231, 235);
+  border-right-color: rgb(229, 231, 235);
+  border-bottom-color: rgb(229, 231, 235);
+  border-left-color: rgb(229, 231, 235);
+}
+
+/* Inherited from ancestor level 5 (regular) */
+* {
+  border-color: var(--border);
+}
+
+/* Inherited from ancestor level 5 (regular) */
+p, span, div, h1, h2, h3, h4, h5, h6, label, input, textarea, button {
+  font-family: Arial Unicode MS, Lucida Grande, Sylfaen, Arial, sans-serif;
+  font-family: "Arial Unicode MS", "Lucida Grande", Sylfaen, Arial, sans-serif;
+}
+
+/* Inherited from ancestor level 5 (regular) */
+.min-h-screen {
+  min-height: 100vh;
+  min-height: 100vh;
+}
+
+/* Inherited from ancestor level 5 (regular) */
+.bg-cream {
+  background-color: var(--cream);
+  background-color: var(--cream);
+}
+
+/* Inherited from ancestor level 5 (regular) */
+.armenian-text-forced, .armenian-text, [lang="hy"], [data-lang="armenian"] {
+  font-family: Arial Unicode MS, Lucida Grande, Sylfaen, Arial, sans-serif !important;
+  text-rendering: optimizeLegibility !important;
+  -webkit-font-smoothing: antialiased !important;
+  -moz-osx-font-smoothing: grayscale !important;
+  unicode-bidi: isolate !important;
+  font-family: "Arial Unicode MS", "Lucida Grande", Sylfaen, Arial, sans-serif !important;
+  text-rendering: optimizelegibility !important;
+  -webkit-font-smoothing: antialiased !important;
+  unicode-bidi: isolate !important;
+}
+
+/* Inherited from ancestor level 5 (regular) */
+*:lang(hy) {
+  font-family: Arial Unicode MS, Lucida Grande, Sylfaen, Arial, sans-serif !important;
+  font-family: "Arial Unicode MS", "Lucida Grande", Sylfaen, Arial, sans-serif !important;
+}
+
+/* Inherited from ancestor level 6 (user-agent) */
+div {
+  display: block;
+}
+
+/* Inherited from ancestor level 6 (user-agent) */
+address, blockquote, center, div, figure, figcaption, footer, form, header, hr, legend, listing, main, p, plaintext, pre, summary, xmp, article, aside, h1, h2, h3, h4, h5, h6, hgroup, nav, section, search, table, caption, colgroup, col, thead, tbody, tfoot, tr, td, th, dir, dd, dl, dt, menu, ol, ul, li, bdi, output, [dir="ltr" i], [dir="rtl" i], [dir="auto" i] {
+  unicode-bidi: isolate;
+}
+
+/* Inherited from ancestor level 6 (regular) */
+*, *::before, *::after {
+  font-family: var(--armenian-sans);
+  font-family: var(--armenian-sans);
+}
+
+/* Inherited from ancestor level 6 (regular) */
+*, ::before, ::after {
+  --tw-border-spacing-x: 0;
+  --tw-border-spacing-y: 0;
+  --tw-translate-x: 0;
+  --tw-translate-y: 0;
+  --tw-rotate: 0;
+  --tw-skew-x: 0;
+  --tw-skew-y: 0;
+  --tw-scale-x: 1;
+  --tw-scale-y: 1;
+  --tw-scroll-snap-strictness: proximity;
+  --tw-ring-offset-width: 0px;
+  --tw-ring-offset-color: #fff;
+  --tw-ring-color: rgb(59 130 246 / 0.5);
+  --tw-ring-offset-shadow: 0 0 #0000;
+  --tw-ring-shadow: 0 0 #0000;
+  --tw-shadow: 0 0 #0000;
+  --tw-shadow-colored: 0 0 #0000;
+  --tw-border-spacing-x: 0;
+  --tw-border-spacing-y: 0;
+  --tw-translate-x: 0;
+  --tw-translate-y: 0;
+  --tw-rotate: 0;
+  --tw-skew-x: 0;
+  --tw-skew-y: 0;
+  --tw-scale-x: 1;
+  --tw-scale-y: 1;
+  --tw-scroll-snap-strictness: proximity;
+  --tw-ring-offset-width: 0px;
+  --tw-ring-offset-color: #fff;
+  --tw-ring-color: rgb(59 130 246 / 0.5);
+  --tw-ring-offset-shadow: 0 0 #0000;
+  --tw-ring-shadow: 0 0 #0000;
+  --tw-shadow: 0 0 #0000;
+  --tw-shadow-colored: 0 0 #0000;
+}
+
+/* Inherited from ancestor level 6 (regular) */
+*, ::before, ::after {
+  box-sizing: border-box;
+  border-width: 0;
+  border-style: solid;
+  border-color: #e5e7eb;
+  box-sizing: border-box;
+  border-top-width: 0px;
+  border-right-width: 0px;
+  border-bottom-width: 0px;
+  border-left-width: 0px;
+  border-top-style: solid;
+  border-right-style: solid;
+  border-bottom-style: solid;
+  border-left-style: solid;
+  border-top-color: rgb(229, 231, 235);
+  border-right-color: rgb(229, 231, 235);
+  border-bottom-color: rgb(229, 231, 235);
+  border-left-color: rgb(229, 231, 235);
+}
+
+/* Inherited from ancestor level 6 (regular) */
+* {
+  border-color: var(--border);
+}
+
+/* Inherited from ancestor level 6 (regular) */
+p, span, div, h1, h2, h3, h4, h5, h6, label, input, textarea, button {
+  font-family: Arial Unicode MS, Lucida Grande, Sylfaen, Arial, sans-serif;
+  font-family: "Arial Unicode MS", "Lucida Grande", Sylfaen, Arial, sans-serif;
+}
+
+/* Inherited from ancestor level 6 (regular) */
+.armenian-text-forced, .armenian-text, [lang="hy"], [data-lang="armenian"] {
+  font-family: Arial Unicode MS, Lucida Grande, Sylfaen, Arial, sans-serif !important;
+  text-rendering: optimizeLegibility !important;
+  -webkit-font-smoothing: antialiased !important;
+  -moz-osx-font-smoothing: grayscale !important;
+  unicode-bidi: isolate !important;
+  font-family: "Arial Unicode MS", "Lucida Grande", Sylfaen, Arial, sans-serif !important;
+  text-rendering: optimizelegibility !important;
+  -webkit-font-smoothing: antialiased !important;
+  unicode-bidi: isolate !important;
+}
+
+/* Inherited from ancestor level 6 (regular) */
+*:lang(hy) {
+  font-family: Arial Unicode MS, Lucida Grande, Sylfaen, Arial, sans-serif !important;
+  font-family: "Arial Unicode MS", "Lucida Grande", Sylfaen, Arial, sans-serif !important;
+}
+
+/* Inherited from ancestor level 7 (user-agent) */
+body {
+  display: block;
+  margin-top: 8px;
+  margin-right: 8px;
+  margin-bottom: 8px;
+  margin-left: 8px;
+}
+
+/* Inherited from ancestor level 7 (regular) */
+*, *::before, *::after {
+  font-family: var(--armenian-sans);
+  font-family: var(--armenian-sans);
+}
+
+/* Inherited from ancestor level 7 (regular) */
+*, ::before, ::after {
+  --tw-border-spacing-x: 0;
+  --tw-border-spacing-y: 0;
+  --tw-translate-x: 0;
+  --tw-translate-y: 0;
+  --tw-rotate: 0;
+  --tw-skew-x: 0;
+  --tw-skew-y: 0;
+  --tw-scale-x: 1;
+  --tw-scale-y: 1;
+  --tw-scroll-snap-strictness: proximity;
+  --tw-ring-offset-width: 0px;
+  --tw-ring-offset-color: #fff;
+  --tw-ring-color: rgb(59 130 246 / 0.5);
+  --tw-ring-offset-shadow: 0 0 #0000;
+  --tw-ring-shadow: 0 0 #0000;
+  --tw-shadow: 0 0 #0000;
+  --tw-shadow-colored: 0 0 #0000;
+  --tw-border-spacing-x: 0;
+  --tw-border-spacing-y: 0;
+  --tw-translate-x: 0;
+  --tw-translate-y: 0;
+  --tw-rotate: 0;
+  --tw-skew-x: 0;
+  --tw-skew-y: 0;
+  --tw-scale-x: 1;
+  --tw-scale-y: 1;
+  --tw-scroll-snap-strictness: proximity;
+  --tw-ring-offset-width: 0px;
+  --tw-ring-offset-color: #fff;
+  --tw-ring-color: rgb(59 130 246 / 0.5);
+  --tw-ring-offset-shadow: 0 0 #0000;
+  --tw-ring-shadow: 0 0 #0000;
+  --tw-shadow: 0 0 #0000;
+  --tw-shadow-colored: 0 0 #0000;
+}
+
+/* Inherited from ancestor level 7 (regular) */
+*, ::before, ::after {
+  box-sizing: border-box;
+  border-width: 0;
+  border-style: solid;
+  border-color: #e5e7eb;
+  box-sizing: border-box;
+  border-top-width: 0px;
+  border-right-width: 0px;
+  border-bottom-width: 0px;
+  border-left-width: 0px;
+  border-top-style: solid;
+  border-right-style: solid;
+  border-bottom-style: solid;
+  border-left-style: solid;
+  border-top-color: rgb(229, 231, 235);
+  border-right-color: rgb(229, 231, 235);
+  border-bottom-color: rgb(229, 231, 235);
+  border-left-color: rgb(229, 231, 235);
+}
+
+/* Inherited from ancestor level 7 (regular) */
+* {
+  border-color: var(--border);
+}
+
+/* Inherited from ancestor level 7 (regular) */
+html, body {
+  font-family: var(--armenian-sans);
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  font-family: var(--armenian-sans);
+  font-synthesis-weight: none;
+  font-synthesis-style: none;
+  font-synthesis-small-caps: none;
+  text-rendering: optimizelegibility;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* Inherited from ancestor level 7 (regular) */
+body {
+  visibility: visible !important;
+  visibility: visible !important;
+}
+
+/* Inherited from ancestor level 7 (regular) */
+body {
+  margin: 0;
+  line-height: inherit;
+  margin-top: 0px;
+  margin-right: 0px;
+  margin-bottom: 0px;
+  margin-left: 0px;
+  line-height: inherit;
+}
+
+/* Inherited from ancestor level 7 (regular) */
+body {
+  background-color: var(--background);
+  font-family: var(--font-sans);
+  color: var(--foreground);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  background-color: var(--cream);
+  color: var(--charcoal);
+  font-family: var(--font-sans);
+  -webkit-font-smoothing: antialiased;
+  background-color: var(--cream);
+  color: var(--charcoal);
+}
+
+/* Inherited from ancestor level 7 (regular) */
+.armenian-text-forced, .armenian-text, [lang="hy"], [data-lang="armenian"] {
+  font-family: Arial Unicode MS, Lucida Grande, Sylfaen, Arial, sans-serif !important;
+  text-rendering: optimizeLegibility !important;
+  -webkit-font-smoothing: antialiased !important;
+  -moz-osx-font-smoothing: grayscale !important;
+  unicode-bidi: isolate !important;
+  font-family: "Arial Unicode MS", "Lucida Grande", Sylfaen, Arial, sans-serif !important;
+  text-rendering: optimizelegibility !important;
+  -webkit-font-smoothing: antialiased !important;
+  unicode-bidi: isolate !important;
+}
+
+/* Inherited from ancestor level 7 (regular) */
+*:lang(hy) {
+  font-family: Arial Unicode MS, Lucida Grande, Sylfaen, Arial, sans-serif !important;
+  font-family: "Arial Unicode MS", "Lucida Grande", Sylfaen, Arial, sans-serif !important;
+}
+
+/* Inherited from ancestor level 8 (user-agent) */
+html {
+  display: block;
+}
+
+/* Inherited from ancestor level 8 (user-agent) */
+:root {
+  view-transition-name: root;
+}
+
+/* Inherited from ancestor level 8 (regular) */
+*, *::before, *::after {
+  font-family: var(--armenian-sans);
+  font-family: var(--armenian-sans);
+}
+
+/* Inherited from ancestor level 8 (regular) */
+*, ::before, ::after {
+  --tw-border-spacing-x: 0;
+  --tw-border-spacing-y: 0;
+  --tw-translate-x: 0;
+  --tw-translate-y: 0;
+  --tw-rotate: 0;
+  --tw-skew-x: 0;
+  --tw-skew-y: 0;
+  --tw-scale-x: 1;
+  --tw-scale-y: 1;
+  --tw-scroll-snap-strictness: proximity;
+  --tw-ring-offset-width: 0px;
+  --tw-ring-offset-color: #fff;
+  --tw-ring-color: rgb(59 130 246 / 0.5);
+  --tw-ring-offset-shadow: 0 0 #0000;
+  --tw-ring-shadow: 0 0 #0000;
+  --tw-shadow: 0 0 #0000;
+  --tw-shadow-colored: 0 0 #0000;
+  --tw-border-spacing-x: 0;
+  --tw-border-spacing-y: 0;
+  --tw-translate-x: 0;
+  --tw-translate-y: 0;
+  --tw-rotate: 0;
+  --tw-skew-x: 0;
+  --tw-skew-y: 0;
+  --tw-scale-x: 1;
+  --tw-scale-y: 1;
+  --tw-scroll-snap-strictness: proximity;
+  --tw-ring-offset-width: 0px;
+  --tw-ring-offset-color: #fff;
+  --tw-ring-color: rgb(59 130 246 / 0.5);
+  --tw-ring-offset-shadow: 0 0 #0000;
+  --tw-ring-shadow: 0 0 #0000;
+  --tw-shadow: 0 0 #0000;
+  --tw-shadow-colored: 0 0 #0000;
+}
+
+/* Inherited from ancestor level 8 (regular) */
+*, ::before, ::after {
+  box-sizing: border-box;
+  border-width: 0;
+  border-style: solid;
+  border-color: #e5e7eb;
+  box-sizing: border-box;
+  border-top-width: 0px;
+  border-right-width: 0px;
+  border-bottom-width: 0px;
+  border-left-width: 0px;
+  border-top-style: solid;
+  border-right-style: solid;
+  border-bottom-style: solid;
+  border-left-style: solid;
+  border-top-color: rgb(229, 231, 235);
+  border-right-color: rgb(229, 231, 235);
+  border-bottom-color: rgb(229, 231, 235);
+  border-left-color: rgb(229, 231, 235);
+}
+
+/* Inherited from ancestor level 8 (regular) */
+* {
+  border-color: var(--border);
+}
+
+/* Inherited from ancestor level 8 (regular) */
+html, body {
+  font-family: var(--armenian-sans);
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  font-family: var(--armenian-sans);
+  font-synthesis-weight: none;
+  font-synthesis-style: none;
+  font-synthesis-small-caps: none;
+  text-rendering: optimizelegibility;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* Inherited from ancestor level 8 (regular) */
+html, :host {
+  line-height: 1.5;
+  -webkit-text-size-adjust: 100%;
+  -moz-tab-size: 4;
+  -o-tab-size: 4;
+  tab-size: 4;
+  font-family: var(--font-sans);
+  font-feature-settings: normal;
+  font-variation-settings: normal;
+  -webkit-tap-highlight-color: transparent;
+  line-height: 1.5;
+  text-size-adjust: 100%;
+  tab-size: 4;
+  font-family: var(--font-sans);
+  font-feature-settings: normal;
+  font-variation-settings: normal;
+  -webkit-tap-highlight-color: transparent;
+}
+
+/* Inherited from ancestor level 8 (regular) */
+html {
+  scroll-behavior: smooth;
+  scroll-behavior: smooth;
+}
+
+/* Inherited from ancestor level 8 (regular) */
+:root {
+  --armenian-sans: system-ui, "Arial Unicode MS", "Lucida Grande", "Sylfaen", "Noto Sans Armenian", Arial, sans-serif;
+  --armenian-serif: "Times New Roman", "Georgia", "Sylfaen", "Noto Serif Armenian", serif;
+  --armenian-sans: system-ui, "Arial Unicode MS", "Lucida Grande", "Sylfaen", "Noto Sans Armenian", Arial, sans-serif;
+  --armenian-serif: "Times New Roman", "Georgia", "Sylfaen", "Noto Serif Armenian", serif;
+}
+
+/* Inherited from ancestor level 8 (regular) */
+.armenian-text, [lang="hy"] {
+  font-family: var(--armenian-sans) !important;
+  unicode-bidi: isolate;
+  direction: ltr;
+  unicode-bidi: isolate;
+  direction: ltr;
+  font-family: var(--armenian-sans) !important;
+}
+
+/* Inherited from ancestor level 8 (regular) */
+:root {
+  --background: hsl(340, 30%, 97%);
+  --foreground: hsl(340, 15%, 15%);
+  --card: hsl(0, 0%, 100%);
+  --card-foreground: hsl(340, 15%, 15%);
+  --popover: hsl(0, 0%, 100%);
+  --popover-foreground: hsl(340, 15%, 15%);
+  --primary: hsl(340, 45%, 65%);
+  --primary-foreground: hsl(0, 0%, 100%);
+  --secondary: hsl(340, 20%, 90%);
+  --secondary-foreground: hsl(340, 15%, 15%);
+  --muted: hsl(340, 15%, 92%);
+  --muted-foreground: hsl(340, 10%, 50%);
+  --accent: hsl(340, 25%, 88%);
+  --accent-foreground: hsl(340, 15%, 15%);
+  --destructive: hsl(0, 84%, 60%);
+  --destructive-foreground: hsl(0, 0%, 100%);
+  --border: hsl(340, 15%, 85%);
+  --input: hsl(340, 20%, 96%);
+  --ring: hsl(340, 45%, 65%);
+  --cream: hsl(340, 30%, 97%);
+  --soft-gold: hsl(340, 45%, 65%);
+  --sage-green: hsl(340, 20%, 80%);
+  --warm-beige: hsl(340, 25%, 88%);
+  --charcoal: hsl(340, 15%, 15%);
+  --light-gold: hsl(340, 30%, 85%);
+  --font-serif: 'Playfair Display', serif;
+  --font-sans: 'Inter', sans-serif;
+  --radius: 0.75rem;
+  --background: hsl(340, 30%, 97%);
+  --foreground: hsl(340, 15%, 15%);
+  --card: hsl(0, 0%, 100%);
+  --card-foreground: hsl(340, 15%, 15%);
+  --popover: hsl(0, 0%, 100%);
+  --popover-foreground: hsl(340, 15%, 15%);
+  --primary: hsl(340, 45%, 65%);
+  --primary-foreground: hsl(0, 0%, 100%);
+  --secondary: hsl(340, 20%, 90%);
+  --secondary-foreground: hsl(340, 15%, 15%);
+  --muted: hsl(340, 15%, 92%);
+  --muted-foreground: hsl(340, 10%, 50%);
+  --accent: hsl(340, 25%, 88%);
+  --accent-foreground: hsl(340, 15%, 15%);
+  --destructive: hsl(0, 84%, 60%);
+  --destructive-foreground: hsl(0, 0%, 100%);
+  --border: hsl(340, 15%, 85%);
+  --input: hsl(340, 20%, 96%);
+  --ring: hsl(340, 45%, 65%);
+  --cream: hsl(340, 30%, 97%);
+  --soft-gold: hsl(340, 45%, 65%);
+  --sage-green: hsl(340, 20%, 80%);
+  --warm-beige: hsl(340, 25%, 88%);
+  --charcoal: hsl(340, 15%, 15%);
+  --light-gold: hsl(340, 30%, 85%);
+  --font-serif: 'Playfair Display', serif;
+  --font-sans: 'Inter', sans-serif;
+  --radius: 0.75rem;
+}
+
+/* Inherited from ancestor level 8 (regular) */
+.armenian-text-forced, .armenian-text, [lang="hy"], [data-lang="armenian"] {
+  font-family: Arial Unicode MS, Lucida Grande, Sylfaen, Arial, sans-serif !important;
+  text-rendering: optimizeLegibility !important;
+  -webkit-font-smoothing: antialiased !important;
+  -moz-osx-font-smoothing: grayscale !important;
+  unicode-bidi: isolate !important;
+  font-family: "Arial Unicode MS", "Lucida Grande", Sylfaen, Arial, sans-serif !important;
+  text-rendering: optimizelegibility !important;
+  -webkit-font-smoothing: antialiased !important;
+  unicode-bidi: isolate !important;
+}
+
+/* Inherited from ancestor level 8 (regular) */
+*:lang(hy) {
+  font-family: Arial Unicode MS, Lucida Grande, Sylfaen, Arial, sans-serif !important;
+  font-family: "Arial Unicode MS", "Lucida Grande", Sylfaen, Arial, sans-serif !important;
+}
+
+/* Inherited from ancestor level 8 (regular) */
+:root {
+  --swiper-theme-color: #007aff;
+  --swiper-theme-color: #007aff;
+}
+
+/* Inherited from ancestor level 8 (regular) */
+:root {
+  --swiper-navigation-size: 44px;
+  --swiper-navigation-size: 44px;
+}
+
+/* Inherited from ancestor level 8 (regular) */
+:root {
+}

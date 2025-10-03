@@ -35,18 +35,18 @@ export const ArmenianFontProvider: React.FC<{ children: React.ReactNode }> = ({ 
       return processed;
     }
     
-    // Create and inject global Armenian font styles
-    const styleId = 'armenian-font-global-styles';
+    // Create and inject global Armenian font styles with timestamp to force refresh
+    const timestamp = Date.now();
+    const styleId = `armenian-font-global-styles-${timestamp}`;
     
-    // Remove existing styles if any
-    const existingStyle = document.getElementById(styleId);
-    if (existingStyle) {
-      existingStyle.remove();
-    }
+    // Remove ALL existing Armenian styles - force clean slate
+    const existingStyles = document.querySelectorAll(`[id*="armenian-font"], style[data-armenian]`);
+    existingStyles.forEach(style => style.remove());
 
-    // Create new style element
+    // Create new style element with data attribute for cleanup
     const style = document.createElement('style');
     style.id = styleId;
+    style.setAttribute('data-armenian', 'true');
     style.textContent = `
       /* Emergency Armenian font fixes */
       .armenian-text-forced,
@@ -60,23 +60,32 @@ export const ArmenianFontProvider: React.FC<{ children: React.ReactNode }> = ({ 
         unicode-bidi: isolate !important;
       }
 
-      /* CRITICAL: Override ALL text-charcoal colors globally */
+      /* CRITICAL: Override ALL text-charcoal colors globally - platform only */
       .text-charcoal {
-        color: var(--dynamic-text-color, #2C2124) !important;
+        color: var(--dynamic-text-color) !important;
       }
       
       .text-charcoal\\/70 {
-        color: var(--dynamic-text-color-70, #2C212470) !important;
+        color: var(--dynamic-text-color-70) !important;
       }
       
       .text-charcoal\\/60 {
-        color: var(--dynamic-text-color-60, #2C212460) !important;
+        color: var(--dynamic-text-color-60) !important;
       }
       
       /* Override text-charcoal for Armenian text specifically */
       .armenian-text-forced.text-charcoal,
       .text-charcoal.armenian-text-forced {
-        color: var(--dynamic-text-color, #2C2124) !important;
+        color: var(--dynamic-text-color) !important;
+      }
+      
+      /* Theme-aware countdown text colors */
+      .countdown-text.armenian-text {
+        color: var(--dynamic-text-color, white) !important;
+      }
+      
+      .countdown-text-muted.armenian-text {
+        color: var(--dynamic-text-color-70, rgba(255, 255, 255, 0.9)) !important;
       }
 
       /* Force system fonts for all text elements */
@@ -105,6 +114,9 @@ export const ArmenianFontProvider: React.FC<{ children: React.ReactNode }> = ({ 
 
     // Append to head
     document.head.appendChild(style);
+    
+    // Debug: Log the injected CSS
+    console.log('🔧 ArmenianFontProvider: Injected styles:', style.textContent.substring(0, 200) + '...');
 
     // Force apply fonts immediately
     forceArmenianFonts();
@@ -154,10 +166,9 @@ export const ArmenianFontProvider: React.FC<{ children: React.ReactNode }> = ({ 
       if (updateTimeout) {
         clearTimeout(updateTimeout);
       }
-      const styleElement = document.getElementById(styleId);
-      if (styleElement) {
-        styleElement.remove();
-      }
+      // Clean up all Armenian styles
+      const styleElements = document.querySelectorAll(`[id*="armenian-font"], style[data-armenian]`);
+      styleElements.forEach(style => style.remove());
       document.body.classList.remove('armenian-optimized');
       observer.disconnect();
     };

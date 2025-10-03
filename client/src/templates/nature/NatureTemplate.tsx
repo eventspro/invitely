@@ -39,15 +39,16 @@ export default function NatureTemplate({ config, templateId }: NatureTemplatePro
 
   // Set CSS variables for dynamic color overrides
   useEffect(() => {
-    const textColor = safeConfig.theme?.colors?.textColor;
+    const textColor = config.theme?.colors?.textColor || config.theme?.colors?.primary || natureDefaultConfig.theme?.colors?.textColor || natureDefaultConfig.theme?.colors?.primary;
     if (textColor) {
       document.documentElement.style.setProperty('--dynamic-text-color', textColor);
     }
-  }, [safeConfig.theme?.colors?.textColor]);
+  }, [safeConfig.theme?.colors?.textColor, safeConfig.theme?.colors?.primary]);
 
   return (
-    <div className="min-h-screen text-gray-800" style={{
-      background: `linear-gradient(135deg, ${config.theme?.colors?.background || safeConfig.theme?.colors?.background || '#f7f8f7'} 0%, ${config.theme?.colors?.background || safeConfig.theme?.colors?.background || '#f7f8f7'} 100%)`
+    <div className="min-h-screen" style={{
+      background: (config.theme?.colors?.background || safeConfig.theme?.colors?.background) ? `linear-gradient(135deg, ${config.theme?.colors?.background || safeConfig.theme?.colors?.background} 0%, ${config.theme?.colors?.background || safeConfig.theme?.colors?.background} 100%)` : undefined,
+      color: safeConfig.theme?.colors?.textColor
     }}>
       <Navigation config={safeConfig} />
       <main>
@@ -62,14 +63,14 @@ export default function NatureTemplate({ config, templateId }: NatureTemplatePro
       
       {/* Footer */}
       <footer className="py-12" style={{
-        background: `linear-gradient(135deg, ${config.theme?.colors?.primary || safeConfig.theme?.colors?.primary || '#4A3F35'} 0%, ${config.theme?.colors?.secondary || safeConfig.theme?.colors?.secondary || '#B8A99A'} 100%)`,
+        background: (config.theme?.colors?.primary || safeConfig.theme?.colors?.primary) && (config.theme?.colors?.secondary || safeConfig.theme?.colors?.secondary) ? `linear-gradient(135deg, ${config.theme?.colors?.primary || safeConfig.theme?.colors?.primary} 0%, ${config.theme?.colors?.secondary || safeConfig.theme?.colors?.secondary} 100%)` : undefined,
         color: 'white'
       }}>
         <div className="max-w-4xl mx-auto px-4 text-center">
           <div className="ornament w-full h-8 mb-8 opacity-50"></div>
           <h3 className="text-2xl font-serif font-bold mb-4 flex items-center justify-center gap-3">
             <span>{safeConfig.couple.groomName}</span>
-            <span className="mx-1" style={{ color: config.theme?.colors?.accent || '#a3a3a3' }}>🌿</span>
+            <span className="mx-1" style={{ color: config.theme?.colors?.accent }}>🌿</span>
             <span>{safeConfig.couple.brideName}</span>
           </h3>
           <p className="text-lg mb-8 opacity-90 max-w-2xl mx-auto leading-relaxed">

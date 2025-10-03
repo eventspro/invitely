@@ -31,12 +31,12 @@ export default function CountdownTimer({ config = weddingConfig }: CountdownTime
         {/* Wedding Date Display */}
         <div ref={titleRef} className="mb-8 animate-on-scroll">
           <h2
-            className="text-2xl md:text-3xl font-bold text-white mb-2"
+            className="text-2xl md:text-3xl font-bold mb-2 armenian-text countdown-text"
           >
             {config.wedding?.displayDate || 'Wedding Day'}
           </h2>
           <p
-            className="text-white/80 text-sm md:text-base"
+            className="text-sm md:text-base armenian-text countdown-text-muted"
           >
             {config.countdown?.subtitle || 'Countdown to the big day'}
           </p>
@@ -49,44 +49,44 @@ export default function CountdownTimer({ config = weddingConfig }: CountdownTime
         >
           <div className="text-center animate-on-scroll">
             <div
-              className="text-4xl md:text-6xl font-bold text-white mb-1"
+              className="text-4xl md:text-6xl font-bold countdown-numbers mb-1"
             >
               {days.toString().padStart(2, "0")}
             </div>
-            <div className="text-white/90 text-sm md:text-base">
+            <div className="text-sm md:text-base armenian-text countdown-text-muted">
               {config.countdown?.labels?.days || 'Days'}
             </div>
           </div>
 
           <div className="text-center animate-on-scroll">
             <div
-              className="text-4xl md:text-6xl font-bold text-white mb-1"
+              className="text-4xl md:text-6xl font-bold countdown-numbers mb-1"
             >
               {hours.toString().padStart(2, "0")}
             </div>
-            <div className="text-white/90 text-sm md:text-base">
+            <div className="text-sm md:text-base armenian-text countdown-text-muted">
               {config.countdown?.labels?.hours || 'Hours'}
             </div>
           </div>
 
           <div className="text-center animate-on-scroll">
             <div
-              className="text-4xl md:text-6xl font-bold text-white mb-1"
+              className="text-4xl md:text-6xl font-bold countdown-numbers mb-1"
             >
               {minutes.toString().padStart(2, "0")}
             </div>
-            <div className="text-white/90 text-sm md:text-base">
+            <div className="text-sm md:text-base armenian-text countdown-text-muted">
               {config.countdown?.labels?.minutes || 'Minutes'}
             </div>
           </div>
 
           <div className="text-center animate-on-scroll">
             <div
-              className="text-4xl md:text-6xl font-bold text-white mb-1"
+              className="text-4xl md:text-6xl font-bold countdown-numbers mb-1"
             >
               {seconds.toString().padStart(2, "0")}
             </div>
-            <div className="text-white/90 text-sm md:text-base">
+            <div className="text-sm md:text-base armenian-text countdown-text-muted">
               {config.countdown?.labels?.seconds || 'Seconds'}
             </div>
           </div>

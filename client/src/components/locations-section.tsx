@@ -49,7 +49,7 @@ export default function LocationsSection({ config = weddingConfig }: LocationsSe
 
   return (
     <section id="locations" className="py-20" style={{
-      background: `linear-gradient(to right, ${config.theme?.colors?.secondary }10 0%, ${config.theme?.colors?.background }20 100%)`
+      background: config.theme?.colors?.secondary && config.theme?.colors?.background ? `linear-gradient(to right, ${config.theme?.colors?.secondary}10 0%, ${config.theme?.colors?.background}20 100%)` : undefined
     }}>
       <div className="max-w-6xl mx-auto px-4">
         <div ref={titleRef} className="text-center mb-16 animate-on-scroll">
@@ -86,7 +86,7 @@ export default function LocationsSection({ config = weddingConfig }: LocationsSe
                 />
                 <div className="p-6">
                   <div className="flex items-center mb-4">
-                    <div style={{ color: config.theme?.colors?.accent  }}>
+                    <div style={{ color: config.theme?.colors?.accent }}>
                       {getVenueIcon(venue.title)}
                     </div>
                     <h3 className="text-xl font-serif font-bold" style={{
@@ -96,18 +96,18 @@ export default function LocationsSection({ config = weddingConfig }: LocationsSe
                     </h3>
                   </div>
                   <p className="mb-4" style={{
-                    color: `${config.theme?.colors?.primary }70`
+                    color: `${config.theme?.colors?.primary}70`
                   }} data-testid={`text-venue-name-${venue.id || index}`}>
                     {venue.name}
                   </p>
                   <p className="text-sm mb-4" style={{
-                    color: `${config.theme?.colors?.primary }60`
+                    color: `${config.theme?.colors?.primary}60`
                   }} data-testid={`text-venue-description-${venue.id || index}`}>
                     {venue.description}
                   </p>
                   {venue.address && (
                     <p className="text-xs mb-4" style={{
-                      color: `${config.theme?.colors?.primary }50`
+                      color: `${config.theme?.colors?.primary}50`
                     }} data-testid={`text-venue-address-${venue.id || index}`}>
                       📍 {venue.address}
                     </p>
@@ -131,7 +131,7 @@ export default function LocationsSection({ config = weddingConfig }: LocationsSe
         
         {venues.length === 0 && (
           <div className="text-center py-12">
-            <p style={{ color: config.theme?.colors?.primary  }}>
+            <p style={{ color: config.theme?.colors?.primary }}>
               No venues configured yet.
             </p>
           </div>

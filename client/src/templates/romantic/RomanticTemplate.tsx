@@ -24,11 +24,13 @@ export default function RomanticTemplate({ config, templateId }: RomanticTemplat
   
   // Set dynamic CSS variables for text colors
   useEffect(() => {
-    const textColor = config.theme?.colors?.textColor || romanticDefaultConfig.theme?.colors?.textColor || '#3c1a3c';
-    document.documentElement.style.setProperty('--dynamic-text-color', textColor);
-    document.documentElement.style.setProperty('--dynamic-text-color-70', textColor + 'B3');
-    document.documentElement.style.setProperty('--dynamic-text-color-60', textColor + '99');
-  }, [config.theme?.colors?.textColor]);
+    const textColor = config.theme?.colors?.textColor || config.theme?.colors?.primary || romanticDefaultConfig.theme?.colors?.textColor || romanticDefaultConfig.theme?.colors?.primary;
+    if (textColor) {
+      document.documentElement.style.setProperty('--dynamic-text-color', textColor);
+      document.documentElement.style.setProperty('--dynamic-text-color-70', textColor + 'B3');
+      document.documentElement.style.setProperty('--dynamic-text-color-60', textColor + '99');
+    }
+  }, [config.theme?.colors?.textColor, config.theme?.colors?.primary]);
 
   // Merge database config with default romantic config, prioritizing file config for theme
   const safeConfig: WeddingConfig = {
@@ -46,8 +48,9 @@ export default function RomanticTemplate({ config, templateId }: RomanticTemplat
   };
 
   return (
-    <div className="min-h-screen text-rose-900" style={{
-      background: `linear-gradient(135deg, ${config.theme?.colors?.background || safeConfig.theme?.colors?.background || '#fdf2f8'} 0%, ${config.theme?.colors?.background || safeConfig.theme?.colors?.background || '#fdf2f8'} 100%)`
+    <div className="min-h-screen" style={{
+      background: (config.theme?.colors?.background || safeConfig.theme?.colors?.background) ? `linear-gradient(135deg, ${config.theme?.colors?.background || safeConfig.theme?.colors?.background} 0%, ${config.theme?.colors?.background || safeConfig.theme?.colors?.background} 100%)` : undefined,
+      color: safeConfig.theme?.colors?.textColor
     }}>
       <Navigation config={safeConfig} />
       <main>
@@ -62,14 +65,14 @@ export default function RomanticTemplate({ config, templateId }: RomanticTemplat
       
       {/* Footer */}
       <footer className="py-12" style={{
-        background: `linear-gradient(135deg, ${config.theme?.colors?.primary || safeConfig.theme?.colors?.primary || '#9f1239'} 0%, ${config.theme?.colors?.secondary || safeConfig.theme?.colors?.secondary || '#be123c'} 100%)`,
+        background: (config.theme?.colors?.primary || safeConfig.theme?.colors?.primary) && (config.theme?.colors?.secondary || safeConfig.theme?.colors?.secondary) ? `linear-gradient(135deg, ${config.theme?.colors?.primary || safeConfig.theme?.colors?.primary} 0%, ${config.theme?.colors?.secondary || safeConfig.theme?.colors?.secondary} 100%)` : undefined,
         color: 'white'
       }}>
         <div className="max-w-4xl mx-auto px-4 text-center">
           <div className="ornament w-full h-8 mb-8 opacity-50"></div>
           <h3 className="text-2xl font-serif font-bold mb-4 flex items-center justify-center gap-3">
             <span>{safeConfig.couple.groomName}</span>
-            <span className="mx-1" style={{ color: config.theme?.colors?.accent || '#a855f7' }}>💕</span>
+            <span className="mx-1" style={{ color: config.theme?.colors?.accent }}>💕</span>
             <span>{safeConfig.couple.brideName}</span>
           </h3>
           <p className="text-lg mb-8 opacity-90 max-w-2xl mx-auto leading-relaxed">

@@ -89,13 +89,13 @@ export default function TimelineSection({ config }: TimelineSectionProps) {
             className="text-5xl md:text-6xl text-charcoal mb-8"
             style={{
               fontFamily: "Playfair Display, serif",
-              fontWeight: "300",
+              fontWeight: "300"
             }}
             data-testid="text-timeline-title"
           >
             {sectionConfig.timeline?.title}
           </h2>
-          <div className="w-24 h-0.5 mx-auto mb-8" style={{ backgroundColor: themeColors?.primary  }}></div>
+          <div className="w-24 h-0.5 mx-auto mb-8" style={{ backgroundColor: themeColors?.primary }}></div>
         </div>
 
         {/* Timeline Cards */}
@@ -115,7 +115,7 @@ export default function TimelineSection({ config }: TimelineSectionProps) {
                 <div 
                   className="absolute top-0 right-0 w-20 h-20 rounded-bl-full"
                   style={{ 
-                    background: `linear-gradient(135deg, ${themeColors?.accent }20 0%, ${themeColors?.primary }20 100%)`
+                    background: themeColors?.accent && themeColors?.primary ? `linear-gradient(135deg, ${themeColors.accent}20 0%, ${themeColors.primary}20 100%)` : undefined
                   }}
                 ></div>
 
@@ -124,7 +124,7 @@ export default function TimelineSection({ config }: TimelineSectionProps) {
                   <div 
                     className="w-16 h-16 rounded-full flex items-center justify-center text-white shadow-lg group-hover:scale-110 transition-transform duration-300"
                     style={{ 
-                      background: `linear-gradient(135deg, ${themeColors?.primary } 0%, ${themeColors?.secondary } 100%)`
+                      background: themeColors?.primary && themeColors?.secondary ? `linear-gradient(135deg, ${themeColors.primary} 0%, ${themeColors.secondary} 100%)` : undefined
                     }}
                   >
                     {getWeddingIcon(event, index)}
@@ -135,7 +135,9 @@ export default function TimelineSection({ config }: TimelineSectionProps) {
                 <div className="text-center space-y-4">
                   <div
                     className="text-3xl md:text-4xl font-light text-charcoal"
-                    style={{ fontFamily: getHeadingFont(sectionConfig.theme?.fonts) }}
+                    style={{ 
+                      fontFamily: getHeadingFont(sectionConfig.theme?.fonts)
+                    }}
                     data-testid={`timeline-time-${index}`}
                   >
                     {event.time}
@@ -150,7 +152,7 @@ export default function TimelineSection({ config }: TimelineSectionProps) {
 
                   {event.description && (
                     <div
-                      className="text-charcoal/70 text-sm leading-relaxed"
+                      className="text-sm leading-relaxed text-charcoal/70"
                       data-testid={`timeline-description-${index}`}
                     >
                       {event.description}
@@ -173,10 +175,10 @@ export default function TimelineSection({ config }: TimelineSectionProps) {
         {sectionConfig.timeline?.afterMessage && (
           <div className="mt-20 text-center">
             <div
-              className="text-2xl md:text-3xl text-charcoal mb-8"
+              className="text-2xl md:text-3xl mb-8 text-charcoal"
               style={{
                 fontFamily: getHeadingFont(sectionConfig.theme?.fonts),
-                fontWeight: "300",
+                fontWeight: "300"
               }}
               data-testid="timeline-thank-you"
             >
@@ -186,8 +188,10 @@ export default function TimelineSection({ config }: TimelineSectionProps) {
             <div className="w-24 h-0.5 bg-softGold mx-auto mb-8"></div>
 
             <div
-              className="text-charcoal/80 text-lg max-w-3xl mx-auto leading-relaxed bg-white/60 backdrop-blur-sm rounded-2xl p-8 shadow-lg border border-softGold/20"
-              style={{ whiteSpace: "pre-line" }}
+              className="text-lg max-w-3xl mx-auto leading-relaxed bg-white/60 backdrop-blur-sm rounded-2xl p-8 shadow-lg border border-softGold/20 text-charcoal/60"
+              style={{ 
+                whiteSpace: "pre-line"
+              }}
               data-testid="timeline-notes"
             >
               {sectionConfig.timeline?.afterMessage?.notes}
@@ -198,4 +202,3 @@ export default function TimelineSection({ config }: TimelineSectionProps) {
     </section>
   );
 }
-

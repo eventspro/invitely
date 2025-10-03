@@ -1,6 +1,8 @@
 import React, { useState } from "react";
-import { useLocation } from "wouter";
+import { useLocation, Link } from "wouter";
 import { useQuery } from "@tanstack/react-query";
+import { useTranslation } from "@/hooks/useLanguage";
+import LanguageSelector from "@/components/LanguageSelector";
 import { 
   Check, 
   X, 
@@ -142,6 +144,7 @@ interface Template {
 export default function TemplatesPage() {
   const [, navigate] = useLocation();
   const [selectedPlan, setSelectedPlan] = useState<string | null>(null);
+  const { translations: t } = useTranslation();
 
   // Fetch templates from API
   const { data: templates, isLoading, error } = useQuery<Template[]>({
@@ -150,7 +153,7 @@ export default function TemplatesPage() {
   });
 
   const handlePreview = (slug: string) => {
-    navigate(`/t/${slug}`);
+    navigate(slug);
   };
 
   const handleSelectPlan = (templateId: string) => {
@@ -193,6 +196,43 @@ export default function TemplatesPage() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-rose-50 via-white to-purple-50">
+      {/* Navigation */}
+      <nav className="bg-white/90 backdrop-blur-sm shadow-sm sticky top-0 z-50">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex justify-between items-center h-16">
+            <div className="flex items-center">
+              <Heart className="h-8 w-8 text-rose-500 mr-3" />
+              <Link to="/" className="text-xl font-bold text-gray-900 hover:text-rose-500 transition-colors">
+                WeddingSites
+              </Link>
+            </div>
+            <div className="hidden md:flex space-x-8">
+              <a href="/#features" className="text-gray-700 hover:text-rose-500 transition-colors">
+                {t.navigation.features}
+              </a>
+              <Link to="/templates" className="text-rose-500 font-medium">
+                {t.navigation.templates}
+              </Link>
+              <a href="/#pricing" className="text-gray-700 hover:text-rose-500 transition-colors">
+                {t.navigation.pricing}
+              </a>
+              <a href="/#contact" className="text-gray-700 hover:text-rose-500 transition-colors">
+                {t.navigation.contact}
+              </a>
+            </div>
+            <div className="flex items-center space-x-4">
+              <LanguageSelector />
+              <Link 
+                to="/"
+                className="bg-rose-500 hover:bg-rose-600 text-white px-4 py-2 rounded-lg transition-colors"
+              >
+                {t.hero.cta}
+              </Link>
+            </div>
+          </div>
+        </div>
+      </nav>
+
       {/* Hero Section */}
       <section className="pt-20 pb-16 px-4">
         <div className="max-w-7xl mx-auto text-center">
