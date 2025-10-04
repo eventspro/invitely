@@ -94,33 +94,35 @@ export default function CalendarSection({ config = weddingConfig }: CalendarSect
       <div className="max-w-5xl mx-auto px-4">
         {/* Section Header */}
         <div ref={titleRef} className="text-center mb-16 animate-on-scroll">
-          <h2
-            className="text-5xl md:text-6xl mb-8"
-            style={{
-              fontFamily: getHeadingFont(config.theme?.fonts),
-              fontWeight: "300",
-              color: config.theme?.colors?.primary
-            }}
-          >
-            {config.calendar?.title || "Our Wedding"}
-          </h2>
+          {config.calendar?.title && (
+            <h2
+              className="text-5xl md:text-6xl mb-8"
+              style={{
+                fontFamily: getHeadingFont(config.theme?.fonts),
+                fontWeight: "300",
+                color: config.theme?.colors?.primary
+              }}
+            >
+              {config.calendar.title}
+            </h2>
+          )}
           <div className="w-24 h-0.5 mx-auto mb-8" style={{
             backgroundColor: config.theme?.colors?.accent
           }}></div>
-          <p className="max-w-3xl mx-auto text-lg leading-relaxed" style={{
-            color: config.theme?.colors?.primary ? `${config.theme?.colors?.primary}70` : undefined
-          }}>
-            {(config.calendar?.description || "Join us for our special day")
-              .split("\n")
-              .map((line, index) => (
-                <span key={index}>
-                  {line}
-                  {index <
-                    (config.calendar?.description || "Join us for our special day").split("\n").length -
-                      1 && <br />}
-                </span>
-                ))}
-          </p>
+          {config.calendar?.description && (
+            <p className="max-w-3xl mx-auto text-lg leading-relaxed" style={{
+              color: config.theme?.colors?.primary ? `${config.theme?.colors?.primary}70` : undefined
+            }}>
+              {config.calendar.description
+                .split("\n")
+                .map((line, index) => (
+                  <span key={index}>
+                    {line}
+                    {index < config.calendar.description.split("\n").length - 1 && <br />}
+                  </span>
+                  ))}
+            </p>
+          )}
         </div>        {/* Calendar and Date Display */}
         <div className="flex justify-center max-w-6xl mx-auto">
           {/* Calendar */}
@@ -133,15 +135,17 @@ export default function CalendarSection({ config = weddingConfig }: CalendarSect
             }}>
               {/* Month Header */}
               <div className="text-center mb-8">
-                <h3
-                  className="text-3xl font-serif mb-3"
-                  style={{ 
-                    fontFamily: getHeadingFont(config.theme?.fonts),
-                    color: config.theme?.colors?.primary
-                  }}
-                >
-                  {config.calendar?.monthTitle || "Wedding Month"}
-                </h3>
+                {config.calendar?.monthTitle && (
+                  <h3
+                    className="text-3xl font-serif mb-3"
+                    style={{ 
+                      fontFamily: getHeadingFont(config.theme?.fonts),
+                      color: config.theme?.colors?.primary
+                    }}
+                  >
+                    {config.calendar.monthTitle}
+                  </h3>
+                )}
                 <div className="w-16 h-0.5 mx-auto" style={{
                   backgroundColor: config.theme?.colors?.accent
                 }}></div>

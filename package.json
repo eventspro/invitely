@@ -13,7 +13,11 @@
     "db:push": "drizzle-kit push",
     "db:migrate": "drizzle-kit push && tsx scripts/migrate-default-template.ts",
     "db:generate": "drizzle-kit generate",
-    "postbuild": "cp -r public/attached_assets dist/ 2>/dev/null || xcopy public\\attached_assets dist\\attached_assets /E /I /Q 2>nul || echo 'Assets copy completed'"
+    "postbuild": "cp -r public/attached_assets dist/ 2>/dev/null || xcopy public\\attached_assets dist\\attached_assets /E /I /Q 2>nul || echo 'Assets copy completed'",
+    "deploy:staging": "cross-env NODE_ENV=staging npm run build && vercel --local-config vercel.staging.json --prod",
+    "deploy:production": "cross-env NODE_ENV=production npm run build && vercel --local-config vercel.json --prod",
+    "staging:dev": "cross-env NODE_ENV=staging tsx server/index.ts",
+    "staging:build": "cross-env NODE_ENV=staging npm run build"
   },
   "dependencies": {
     "@aws-sdk/client-s3": "^3.895.0",

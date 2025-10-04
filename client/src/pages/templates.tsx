@@ -50,88 +50,104 @@ interface TemplatePlan {
 }
 
 // Template pricing plans mapped to actual template keys
-const templatePricingPlans = {
+const getTemplatePricingPlans = (t: any) => ({
   classic: {
     price: "10,000 AMD",
-    badge: "Simple & Elegant",
+    badge: t.templatePlansSection.planBadges.basic,
     badgeColor: "bg-gray-500",
-    description: "Perfect for simple, elegant weddings with essential features",
+    description: t.templatePlansSection.planDescriptions.basic,
     planType: "basic"
   },
   elegant: {
-    price: "15,000 AMD", 
-    badge: "Enhanced",
+    price: "17,000 AMD", 
+    badge: t.templatePlansSection.planBadges.standard,
     badgeColor: "bg-blue-500",
-    description: "Enhanced features with image slider and more venues",
+    description: t.templatePlansSection.planDescriptions.standard,
     planType: "standard"
   },
   romantic: {
-    price: "19,000 AMD",
-    badge: "Popular",
-    badgeColor: "bg-rose-500",
-    description: "Complete wedding solution with music and email features",
+    price: "23,000 AMD",
+    badge: t.templatePlansSection.planBadges.premium,
+    badgeColor: "bg-green-500",
+    description: t.templatePlansSection.planDescriptions.premium,
     planType: "premium",
     popular: true
   },
+  pro: {
+    price: "31,000 AMD",
+    badge: t.templatePlansSection.planBadges.deluxe, 
+    badgeColor: "bg-purple-500",
+    description: t.templatePlansSection.planDescriptions.deluxe,
+    planType: "advanced"
+  },
   nature: {
-    price: "24,000 AMD",
-    badge: "Advanced",
-    badgeColor: "bg-green-500", 
-    description: "Advanced features with photo gallery and guest management",
+    price: "37,000 AMD",
+    badge: "Luxury",
+    badgeColor: "bg-orange-500", 
+    description: t.templatePlansSection.planDescriptions.deluxe,
     planType: "deluxe"
   }
-};
+});
 
-const featuresByPlan = {
+const getFeaturesByPlan = (t: any) => ({
   basic: [
-    { name: "Hero Banner (Single Image)", icon: <Camera className="w-4 h-4" />, included: true },
-    { name: "Countdown Timer", icon: <Calendar className="w-4 h-4" />, included: true },
-    { name: "Wedding Calendar", icon: <Calendar className="w-4 h-4" />, included: true },
-    { name: "Venues (Max 2, No Google Maps)", icon: <MapPin className="w-4 h-4" />, included: true },
-    { name: "Planning Timeline (Max 2 Cards)", icon: <Calendar className="w-4 h-4" />, included: true },
-    { name: "RSVP Form", icon: <Users className="w-4 h-4" />, included: true },
-    { name: "Hero Image Slider", icon: <Camera className="w-4 h-4" />, included: false },
-    { name: "Google Maps Integration", icon: <MapPin className="w-4 h-4" />, included: false },
-    { name: "Background Music", icon: <Music className="w-4 h-4" />, included: false },
-    { name: "Email Notifications", icon: <Mail className="w-4 h-4" />, included: false }
+    { name: t.templatePlansSection.features["Wedding Timeline"], icon: <Calendar className="w-4 h-4" />, included: true },
+    { name: t.templatePlansSection.features["Couple Introduction"], icon: <Heart className="w-4 h-4" />, included: true },
+    { name: t.templatePlansSection.features["Wedding Locations"], icon: <MapPin className="w-4 h-4" />, included: true },
+    { name: t.templatePlansSection.features["RSVP Functionality"], icon: <Users className="w-4 h-4" />, included: false },
+    { name: t.templatePlansSection.features["Multiple Photo/Slider"], icon: <Camera className="w-4 h-4" />, included: false },
+    { name: t.templatePlansSection.features["Photo Gallery"], icon: <Camera className="w-4 h-4" />, included: false },
+    { name: t.templatePlansSection.features["Audio Player"], icon: <Music className="w-4 h-4" />, included: false },
+    { name: t.templatePlansSection.features["Admin Panel"], icon: <Settings className="w-4 h-4" />, included: false },
+    { name: t.templatePlansSection.features["QR Code Cards"], icon: <QrCode className="w-4 h-4" />, included: false }
   ],
   standard: [
-    { name: "Hero Banner (Single Image)", icon: <Camera className="w-4 h-4" />, included: true },
-    { name: "Hero Image Slider (2 Images)", icon: <Camera className="w-4 h-4" />, included: true },
-    { name: "Countdown Timer", icon: <Calendar className="w-4 h-4" />, included: true },
-    { name: "Wedding Calendar", icon: <Calendar className="w-4 h-4" />, included: true },
-    { name: "Venues (Max 3, No Google Maps)", icon: <MapPin className="w-4 h-4" />, included: true },
-    { name: "Planning Timeline (Max 3 Cards)", icon: <Calendar className="w-4 h-4" />, included: true },
-    { name: "RSVP Form", icon: <Users className="w-4 h-4" />, included: true },
-    { name: "Google Maps Integration", icon: <MapPin className="w-4 h-4" />, included: false },
-    { name: "Background Music", icon: <Music className="w-4 h-4" />, included: false },
-    { name: "Email Notifications", icon: <Mail className="w-4 h-4" />, included: false }
+    { name: t.templatePlansSection.features["Wedding Timeline"], icon: <Calendar className="w-4 h-4" />, included: true },
+    { name: t.templatePlansSection.features["Couple Introduction"], icon: <Heart className="w-4 h-4" />, included: true },
+    { name: t.templatePlansSection.features["Wedding Locations"], icon: <MapPin className="w-4 h-4" />, included: true },
+    { name: t.templatePlansSection.features["RSVP Functionality"], icon: <Users className="w-4 h-4" />, included: true },
+    { name: t.templatePlansSection.features["Multiple Photo/Slider"], icon: <Camera className="w-4 h-4" />, included: true },
+    { name: t.templatePlansSection.features["Photo Gallery"], icon: <Camera className="w-4 h-4" />, included: false },
+    { name: t.templatePlansSection.features["Audio Player"], icon: <Music className="w-4 h-4" />, included: false },
+    { name: t.templatePlansSection.features["Admin Panel"], icon: <Settings className="w-4 h-4" />, included: false },
+    { name: t.templatePlansSection.features["QR Code Cards"], icon: <QrCode className="w-4 h-4" />, included: false }
   ],
   premium: [
-    { name: "Hero Banner (Single Image)", icon: <Camera className="w-4 h-4" />, included: true },
-    { name: "Hero Image Slider (5 Images)", icon: <Camera className="w-4 h-4" />, included: true },
-    { name: "RSVP with Email Notifications", icon: <Mail className="w-4 h-4" />, included: true },
-    { name: "Background Music (Custom)", icon: <Music className="w-4 h-4" />, included: true },
-    { name: "Countdown Timer", icon: <Calendar className="w-4 h-4" />, included: true },
-    { name: "Wedding Calendar", icon: <Calendar className="w-4 h-4" />, included: true },
-    { name: "Venues (Max 4 Cards)", icon: <MapPin className="w-4 h-4" />, included: true },
-    { name: "Planning Timeline (Max 4 Cards)", icon: <Calendar className="w-4 h-4" />, included: true },
-    { name: "Google Maps Integration", icon: <MapPin className="w-4 h-4" />, included: false },
-    { name: "Photo Gallery", icon: <Camera className="w-4 h-4" />, included: false }
+    { name: t.templatePlansSection.features["Wedding Timeline"], icon: <Calendar className="w-4 h-4" />, included: true },
+    { name: t.templatePlansSection.features["Couple Introduction"], icon: <Heart className="w-4 h-4" />, included: true },
+    { name: t.templatePlansSection.features["Wedding Locations"], icon: <MapPin className="w-4 h-4" />, included: true },
+    { name: t.templatePlansSection.features["RSVP Functionality"], icon: <Users className="w-4 h-4" />, included: true },
+    { name: t.templatePlansSection.features["Multiple Photo/Slider"], icon: <Camera className="w-4 h-4" />, included: true },
+    { name: t.templatePlansSection.features["Audio Player"], icon: <Music className="w-4 h-4" />, included: true },
+    { name: t.templatePlansSection.features["Photo Gallery"], icon: <Camera className="w-4 h-4" />, included: false },
+    { name: t.templatePlansSection.features["Admin Panel"], icon: <Settings className="w-4 h-4" />, included: false },
+    { name: t.templatePlansSection.features["QR Code Cards"], icon: <QrCode className="w-4 h-4" />, included: false }
   ],
+  // Premium plan (31,000 AMD) - adds Admin Panel with Guest List Export
+  advanced: [
+    { name: t.templatePlansSection.features["Wedding Timeline"], icon: <Calendar className="w-4 h-4" />, included: true },
+    { name: t.templatePlansSection.features["Couple Introduction"], icon: <Heart className="w-4 h-4" />, included: true },
+    { name: t.templatePlansSection.features["Wedding Locations"], icon: <MapPin className="w-4 h-4" />, included: true },
+    { name: t.templatePlansSection.features["RSVP Functionality"], icon: <Users className="w-4 h-4" />, included: true },
+    { name: t.templatePlansSection.features["Multiple Photo/Slider"], icon: <Camera className="w-4 h-4" />, included: true },
+    { name: t.templatePlansSection.features["Audio Player"], icon: <Music className="w-4 h-4" />, included: true },
+    { name: t.templatePlansSection.features["Admin Panel (includes Guest List Export)"], icon: <Settings className="w-4 h-4" />, included: true },
+    { name: t.templatePlansSection.features["Photo Gallery"], icon: <Camera className="w-4 h-4" />, included: false },
+    { name: t.templatePlansSection.features["QR Code Cards"], icon: <QrCode className="w-4 h-4" />, included: false }
+  ],
+  // Ultimate plan (37,000 AMD) - includes everything
   deluxe: [
-    { name: "All Premium Features", icon: <Star className="w-4 h-4" />, included: true },
-    { name: "Photo Download (Password Protected)", icon: <Download className="w-4 h-4" />, included: true },
-    { name: "Photo Upload via Website", icon: <Upload className="w-4 h-4" />, included: true },
-    { name: "Guest Photo Gallery", icon: <Camera className="w-4 h-4" />, included: true },
-    { name: "Hero Image Slider (5 Images)", icon: <Camera className="w-4 h-4" />, included: true },
-    { name: "RSVP with Email Notifications", icon: <Mail className="w-4 h-4" />, included: true },
-    { name: "Background Music (Custom)", icon: <Music className="w-4 h-4" />, included: true },
-    { name: "Venues (Max 4 Cards)", icon: <MapPin className="w-4 h-4" />, included: true },
-    { name: "Planning Timeline (Max 4 Cards)", icon: <Calendar className="w-4 h-4" />, included: true },
-    { name: "Custom Admin Panel", icon: <Settings className="w-4 h-4" />, included: false }
+    { name: t.templatePlansSection.features["Wedding Timeline"], icon: <Calendar className="w-4 h-4" />, included: true },
+    { name: t.templatePlansSection.features["Couple Introduction"], icon: <Heart className="w-4 h-4" />, included: true },
+    { name: t.templatePlansSection.features["Wedding Locations"], icon: <MapPin className="w-4 h-4" />, included: true },
+    { name: t.templatePlansSection.features["RSVP Functionality"], icon: <Users className="w-4 h-4" />, included: true },
+    { name: t.templatePlansSection.features["Multiple Photo/Slider"], icon: <Camera className="w-4 h-4" />, included: true },
+    { name: t.templatePlansSection.features["Audio Player"], icon: <Music className="w-4 h-4" />, included: true },
+    { name: t.templatePlansSection.features["Admin Panel (includes Guest List Export)"], icon: <Settings className="w-4 h-4" />, included: true },
+    { name: t.templatePlansSection.features["Photo Gallery"], icon: <Camera className="w-4 h-4" />, included: true },
+    { name: t.templatePlansSection.features["QR Code Cards (100 cards included)"], icon: <QrCode className="w-4 h-4" />, included: true }
   ]
-};
+});
 
 interface Template {
   id: string;
@@ -164,7 +180,9 @@ export default function TemplatesPage() {
 
   // Create template plans from fetched data
   const templatePlans = templates?.map(template => {
+    const templatePricingPlans = getTemplatePricingPlans(t);
     const pricingPlan = templatePricingPlans[template.templateKey as keyof typeof templatePricingPlans];
+    const featuresByPlan = getFeaturesByPlan(t);
     const features = featuresByPlan[pricingPlan?.planType as keyof typeof featuresByPlan] || [];
     
     return {
@@ -236,28 +254,29 @@ export default function TemplatesPage() {
       {/* Hero Section */}
       <section className="pt-20 pb-16 px-4">
         <div className="max-w-7xl mx-auto text-center">
-          <h1 className="text-5xl md:text-6xl font-bold bg-gradient-to-r from-rose-500 via-purple-500 to-pink-500 bg-clip-text text-transparent mb-6">
-            Wedding Website Templates
+          <div className="text-center mb-16">
+          <h1 className="text-5xl font-bold mb-6 bg-gradient-to-r from-rose-600 via-purple-600 to-blue-600 bg-clip-text text-transparent">
+            {t.templatesPage.title}
           </h1>
           <p className="text-xl text-gray-600 max-w-3xl mx-auto mb-8">
-            Choose the perfect template for your special day. From simple elegance to full-featured luxury, 
-            we have everything you need to create your dream wedding website.
+            {t.templatesPage.subtitle}
           </p>
           <div className="flex items-center justify-center gap-4 text-sm text-gray-500">
             <div className="flex items-center gap-2">
               <Check className="w-4 h-4 text-green-500" />
-              <span>Mobile Responsive</span>
+              <span>{t.templatesPage.features.responsive}</span>
             </div>
             <div className="flex items-center gap-2">
               <Check className="w-4 h-4 text-green-500" />
-              <span>Easy Customization</span>
+              <span>{t.templatesPage.features.customization}</span>
             </div>
             <div className="flex items-center gap-2">
               <Check className="w-4 h-4 text-green-500" />
-              <span>Quick Setup</span>
+              <span>{t.templatesPage.features.setup}</span>
             </div>
           </div>
         </div>
+      </div>
       </section>
 
       {/* Loading State */}
@@ -266,7 +285,7 @@ export default function TemplatesPage() {
           <div className="max-w-7xl mx-auto">
             <div className="flex items-center justify-center py-20">
               <Loader2 className="w-8 h-8 animate-spin text-rose-500" />
-              <span className="ml-3 text-lg text-gray-600">Loading templates...</span>
+              <span className="ml-3 text-lg text-gray-600">{t.templatesPage.loading}</span>
             </div>
           </div>
         </section>
@@ -408,30 +427,30 @@ export default function TemplatesPage() {
       {/* FAQ Section */}
       <section className="py-20 px-4 bg-gradient-to-br from-purple-50 to-pink-50">
         <div className="max-w-4xl mx-auto text-center">
-          <h2 className="text-4xl font-bold mb-12">Frequently Asked Questions</h2>
+          <h2 className="text-4xl font-bold mb-12">{t.templatesPage.faqTitle}</h2>
           
           <div className="grid md:grid-cols-2 gap-8 text-left">
             <div className="space-y-6">
               <div>
-                <h3 className="text-xl font-semibold mb-2">Can I upgrade my plan later?</h3>
-                <p className="text-gray-600">Yes! You can upgrade to a higher tier at any time. We'll only charge the difference.</p>
+                <h3 className="text-xl font-semibold mb-2">{t.templatesPage.faqItems[0].question}</h3>
+                <p className="text-gray-600">{t.templatesPage.faqItems[0].answer}</p>
               </div>
               
               <div>
-                <h3 className="text-xl font-semibold mb-2">How long does setup take?</h3>
-                <p className="text-gray-600">Most templates can be set up and customized within 24-48 hours after payment.</p>
+                <h3 className="text-xl font-semibold mb-2">{t.templatesPage.faqItems[1].question}</h3>
+                <p className="text-gray-600">{t.templatesPage.faqItems[1].answer}</p>
               </div>
             </div>
             
             <div className="space-y-6">
               <div>
-                <h3 className="text-xl font-semibold mb-2">What's included in the QR cards?</h3>
-                <p className="text-gray-600">20 beautifully designed physical cards with QR codes linking to your photo gallery for easy guest photo sharing.</p>
+                <h3 className="text-xl font-semibold mb-2">{t.templatesPage.faqItems[2].question}</h3>
+                <p className="text-gray-600">{t.templatesPage.faqItems[2].answer}</p>
               </div>
               
               <div>
-                <h3 className="text-xl font-semibold mb-2">Is technical support included?</h3>
-                <p className="text-gray-600">Yes! All plans include email support, with phone support available for Premium and above.</p>
+                <h3 className="text-xl font-semibold mb-2">{t.templatesPage.faqItems[3].question}</h3>
+                <p className="text-gray-600">{t.templatesPage.faqItems[3].answer}</p>
               </div>
             </div>
           </div>

@@ -30,16 +30,20 @@ export default function CountdownTimer({ config = weddingConfig }: CountdownTime
       <div className="relative z-10 max-w-4xl mx-auto px-4 text-center">
         {/* Wedding Date Display */}
         <div ref={titleRef} className="mb-8 animate-on-scroll">
-          <h2
-            className="text-2xl md:text-3xl font-bold mb-2 armenian-text countdown-text"
-          >
-            {config.wedding?.displayDate || 'Wedding Day'}
-          </h2>
-          <p
-            className="text-sm md:text-base armenian-text countdown-text-muted"
-          >
-            {config.countdown?.subtitle || 'Countdown to the big day'}
-          </p>
+          {config.wedding?.displayDate && (
+            <h2
+              className="text-2xl md:text-3xl font-bold mb-2 armenian-text countdown-text"
+            >
+              {config.wedding.displayDate}
+            </h2>
+          )}
+          {config.countdown?.subtitle && (
+            <p
+              className="text-sm md:text-base armenian-text countdown-text-muted"
+            >
+              {config.countdown.subtitle}
+            </p>
+          )}
         </div>
 
         {/* Countdown Numbers */}
@@ -53,9 +57,11 @@ export default function CountdownTimer({ config = weddingConfig }: CountdownTime
             >
               {days.toString().padStart(2, "0")}
             </div>
-            <div className="text-sm md:text-base armenian-text countdown-text-muted">
-              {config.countdown?.labels?.days || 'Days'}
-            </div>
+            {config.countdown?.labels?.days && (
+              <div className="text-sm md:text-base armenian-text countdown-text-muted">
+                {config.countdown.labels.days}
+              </div>
+            )}
           </div>
 
           <div className="text-center animate-on-scroll">
@@ -64,9 +70,11 @@ export default function CountdownTimer({ config = weddingConfig }: CountdownTime
             >
               {hours.toString().padStart(2, "0")}
             </div>
-            <div className="text-sm md:text-base armenian-text countdown-text-muted">
-              {config.countdown?.labels?.hours || 'Hours'}
-            </div>
+            {config.countdown?.labels?.hours && (
+              <div className="text-sm md:text-base armenian-text countdown-text-muted">
+                {config.countdown.labels.hours}
+              </div>
+            )}
           </div>
 
           <div className="text-center animate-on-scroll">
@@ -75,9 +83,11 @@ export default function CountdownTimer({ config = weddingConfig }: CountdownTime
             >
               {minutes.toString().padStart(2, "0")}
             </div>
-            <div className="text-sm md:text-base armenian-text countdown-text-muted">
-              {config.countdown?.labels?.minutes || 'Minutes'}
-            </div>
+            {config.countdown?.labels?.minutes && (
+              <div className="text-sm md:text-base armenian-text countdown-text-muted">
+                {config.countdown.labels.minutes}
+              </div>
+            )}
           </div>
 
           <div className="text-center animate-on-scroll">
@@ -86,9 +96,11 @@ export default function CountdownTimer({ config = weddingConfig }: CountdownTime
             >
               {seconds.toString().padStart(2, "0")}
             </div>
-            <div className="text-sm md:text-base armenian-text countdown-text-muted">
-              {config.countdown?.labels?.seconds || 'Seconds'}
-            </div>
+            {config.countdown?.labels?.seconds && (
+              <div className="text-sm md:text-base armenian-text countdown-text-muted">
+                {config.countdown.labels.seconds}
+              </div>
+            )}
           </div>
         </div>
       </div>

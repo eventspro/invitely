@@ -24,10 +24,10 @@ export default function HeroSection({ config = weddingConfig }: HeroSectionProps
   const touchEndX = useRef<number | null>(null);
   const isDragging = useRef(false);
 
-  // Armenian text optimization
-  const invitationText = config.hero?.invitation || 'Հրավիրում ենք մեր հարսանիքին';
-  const welcomeText = config.hero?.welcomeMessage || 'Join us as we celebrate our love and begin our journey together as husband and wife.';
-  const musicButtonText = config.hero?.musicButton || 'Play Music';
+  // Armenian text optimization - only use actual values, no fallbacks
+  const invitationText = config.hero?.invitation || '';
+  const welcomeText = config.hero?.welcomeMessage || '';
+  const musicButtonText = config.hero?.musicButton || '';
   
   const invitationRef = useArmenianFont<HTMLParagraphElement>(invitationText, config.theme?.fonts?.body);
   const welcomeRef = useArmenianFont<HTMLParagraphElement>(welcomeText, config.theme?.fonts?.body);
@@ -308,71 +308,81 @@ export default function HeroSection({ config = weddingConfig }: HeroSectionProps
       <div className="max-w-4xl mx-auto px-4 text-center relative z-10 animate-fade-in mt-16">
         <div className="ornament w-full h-8 mb-8"></div>
 
-        <h1
-          className="text-4xl md:text-6xl font-serif font-bold text-white mb-4 flex items-center justify-center flex-wrap gap-3 drop-shadow-lg"
-          style={{ fontFamily: getHeadingFont(config.theme?.fonts) }}
-          data-testid="text-couple-names"
-        >
-          <span>{config.couple?.groomName || 'Groom'}</span>
-          <span className="mx-1" style={{ color: config.theme?.colors?.accent }}>∞</span>
-          <span>{config.couple?.brideName || 'Bride'}</span>
-        </h1>
-        <p
-          ref={invitationRef}
-          className="text-xl md:text-2xl text-white/90 mb-8 font-light drop-shadow-lg"
-          style={{ 
-            fontFamily: getBodyFont(config.theme?.fonts),
-            ...(containsArmenianText(invitationText) ? getArmenianTextStyles(config.theme?.fonts?.body) : {})
-          }}
-          data-testid="text-invitation"
-        >
-          {invitationText}
-        </p>
-        <p
-          ref={welcomeRef}
-          className="text-lg md:text-xl text-white/80 max-w-2xl mx-auto leading-relaxed drop-shadow-lg"
-          style={{ 
-            fontFamily: getBodyFont(config.theme?.fonts),
-            ...(containsArmenianText(welcomeText) ? getArmenianTextStyles(config.theme?.fonts?.body) : {})
-          }}
-          data-testid="text-welcome-message"
-        >
-          {welcomeText}
-        </p>
+        {(config.couple?.groomName || config.couple?.brideName) && (
+          <h1
+            className="text-4xl md:text-6xl font-serif font-bold text-white mb-4 flex items-center justify-center flex-wrap gap-3 drop-shadow-lg"
+            style={{ fontFamily: getHeadingFont(config.theme?.fonts) }}
+            data-testid="text-couple-names"
+          >
+            {config.couple?.groomName && <span>{config.couple.groomName}</span>}
+            {config.couple?.groomName && config.couple?.brideName && (
+              <span className="mx-1" style={{ color: config.theme?.colors?.accent }}>∞</span>
+            )}
+            {config.couple?.brideName && <span>{config.couple.brideName}</span>}
+          </h1>
+        )}
+        {invitationText && (
+          <p
+            ref={invitationRef}
+            className="text-xl md:text-2xl text-white/90 mb-8 font-light drop-shadow-lg"
+            style={{ 
+              fontFamily: getBodyFont(config.theme?.fonts),
+              ...(containsArmenianText(invitationText) ? getArmenianTextStyles(config.theme?.fonts?.body) : {})
+            }}
+            data-testid="text-invitation"
+          >
+            {invitationText}
+          </p>
+        )}
+        {welcomeText && (
+          <p
+            ref={welcomeRef}
+            className="text-lg md:text-xl text-white/80 max-w-2xl mx-auto leading-relaxed drop-shadow-lg"
+            style={{ 
+              fontFamily: getBodyFont(config.theme?.fonts),
+              ...(containsArmenianText(welcomeText) ? getArmenianTextStyles(config.theme?.fonts?.body) : {})
+            }}
+            data-testid="text-welcome-message"
+          >
+            {welcomeText}
+          </p>
+        )}
 
         {/* Music Player */}
-        <div className="mt-8 flex justify-center">
-          <button
-            onClick={toggleMusic}
-            className="text-white px-6 py-3 rounded-full shadow-lg transition-all duration-300 flex items-center space-x-2"
-            style={{
-              backgroundColor: config.theme?.colors?.primary,
-              borderColor: config.theme?.colors?.primary
-            }}
-            onMouseEnter={(e) => {
-              e.currentTarget.style.backgroundColor = config.theme?.colors?.primary ? `${config.theme?.colors?.primary}dd` : '';
-            }}
-            onMouseLeave={(e) => {
-              e.currentTarget.style.backgroundColor = config.theme?.colors?.primary || '';
-            }}
-            data-testid="button-music-toggle"
-          >
-            {isPlaying ? (
-              <Pause className="w-5 h-5" />
-            ) : (
-              <Play className="w-5 h-5" />
-            )}
-            <span 
-              ref={musicButtonRef}
-              style={{ 
-                fontFamily: getBodyFont(config.theme?.fonts),
-                ...(containsArmenianText(musicButtonText) ? getArmenianTextStyles(config.theme?.fonts?.body) : {})
+        {musicButtonText && (
+          <div className="mt-8 flex justify-center">
+            <button
+              onClick={toggleMusic}
+              className="text-white px-6 py-3 rounded-full shadow-lg transition-all duration-300 flex items-center space-x-2"
+              style={{
+                backgroundColor: config.theme?.colors?.primary,
+                borderColor: config.theme?.colors?.primary
               }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.backgroundColor = config.theme?.colors?.primary ? `${config.theme?.colors?.primary}dd` : '';
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.backgroundColor = config.theme?.colors?.primary || '';
+              }}
+              data-testid="button-music-toggle"
             >
-              {musicButtonText}
-            </span>
-          </button>
-        </div>
+              {isPlaying ? (
+                <Pause className="w-5 h-5" />
+              ) : (
+                <Play className="w-5 h-5" />
+              )}
+              <span 
+                ref={musicButtonRef}
+                style={{ 
+                  fontFamily: getBodyFont(config.theme?.fonts),
+                  ...(containsArmenianText(musicButtonText) ? getArmenianTextStyles(config.theme?.fonts?.body) : {})
+                }}
+              >
+                {musicButtonText}
+              </span>
+            </button>
+          </div>
+        )}
 
         <div className="ornament w-full h-8 mt-8"></div>
       </div>
