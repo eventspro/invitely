@@ -2,6 +2,7 @@ import "dotenv/config";
 import express, { type Request, Response, NextFunction } from "express";
 import { registerRoutes } from "./routes.js";
 import { registerAdminRoutes } from "./routes/admin.js";
+import { registerMusicUploadRoutes } from "./routes/music-upload.js";
 import { apiLimiter } from "./middleware/rateLimiter.js";
 import path from "path";
 
@@ -133,6 +134,9 @@ app.use((req, res, next) => {
     
     // Register admin routes
     registerAdminRoutes(app);
+    
+    // Register music upload routes (presigned URLs for fast uploads)
+    registerMusicUploadRoutes(app);
 
     app.use((err: any, _req: Request, res: Response, _next: NextFunction) => {
       const status = err.status || err.statusCode || 500;

@@ -1544,9 +1544,9 @@ export default function TemplateAdminPanel() {
                         const file = e.target.files?.[0];
                         if (!file) return;
 
-                        // Vercel serverless body cap ~4.5MB; enforce 4MB client-side
+                        // Validate file size (4MB max)
                         if (file.size > 4 * 1024 * 1024) {
-                          alert('File size must be less than 4MB (Vercel limit)');
+                          alert('File size must be less than 4MB');
                           return;
                         }
 
@@ -1557,30 +1557,46 @@ export default function TemplateAdminPanel() {
                         }
 
                         try {
-                          const formData = new FormData();
-                          formData.append('music', file);
-
                           const token = localStorage.getItem("admin-token");
-                          const response = await fetch(`/api/templates/${template.id}/music/upload`, {
+                          
+                          // Step 1: Get presigned upload URL
+                          const presignedResponse = await fetch(`/api/templates/${template.id}/music/presigned-url`, {
                             method: 'POST',
                             headers: {
+                              'Content-Type': 'application/json',
                               Authorization: `Bearer ${token}`,
                             },
-                            body: formData,
+                            body: JSON.stringify({
+                              filename: file.name,
+                              contentType: file.type,
+                            }),
                           });
 
-                          if (!response.ok) {
-                            throw new Error('Upload failed');
+                          if (!presignedResponse.ok) {
+                            throw new Error('Failed to get upload URL');
                           }
 
-                          const data = await response.json();
+                          const { uploadUrl, servingUrl } = await presignedResponse.json();
                           
-                          // Update config with new music URL
+                          // Step 2: Upload directly to R2 storage (fast!)
+                          const uploadResponse = await fetch(uploadUrl, {
+                            method: 'PUT',
+                            headers: {
+                              'Content-Type': file.type,
+                            },
+                            body: file,
+                          });
+
+                          if (!uploadResponse.ok) {
+                            throw new Error('Upload to storage failed');
+                          }
+                          
+                          // Step 3: Update config with new music URL
                           const newConfig = {
                             ...template.config,
                             music: {
                               ...template.config.music,
-                              audioUrl: data.url,
+                              audioUrl: servingUrl,
                               enabled: true,
                             }
                           };
