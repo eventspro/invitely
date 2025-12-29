@@ -11,6 +11,8 @@ This is a **multi-tenant Armenian wedding platform** enabling couples to create 
 - **Storage**: Multi-provider object storage abstraction (Cloudflare R2, Google Cloud, AWS S3) with presigned URLs
 - **Email Service**: Brevo integration for RSVP notifications with template-scoped routing
 - **Authentication**: JWT-based auth with separate systems for template admins vs. platform admins
+- **SSL/TLS Security**: Enterprise-grade SSL-safe media serving with HTTP 206 range request support
+- **SEO Integration**: Schema.org structured data, multilingual sitemap, and dynamic meta tags
 
 ## Key Development Patterns
 
@@ -93,6 +95,12 @@ Routes in `server/routes/` follow RESTful conventions with multi-layered authent
 - Development mode automatically bypasses authentication (`NODE_ENV=development` or `VERCEL=1`)
 - Creates mock users for testing admin functionality locally
 
+**SSL-Safe Media Serving:**
+- `/api/images/serve/:filename` - SSL-safe image serving with proper Content-Length headers
+- `/api/audio/serve/:filename` - HTTP 206 range request support for audio streaming, incognito mode compatible
+- Enhanced CORS headers, HSTS enforcement, and comprehensive security headers
+- Incognito mode detection: `req.get('DNT') === '1' || req.get('Sec-GPC') === '1'`
+
 **File Handling:**
 - `/uploads/*`, `/attached_assets/*` - Proper MIME type handling and caching headers
 - Multi-provider storage abstraction (Cloudflare R2 primary, Google Cloud/AWS S3 fallback) with presigned URLs
@@ -129,17 +137,48 @@ This platform specifically supports **Armenian weddings** with:
 
 ### Testing & Quality Assurance
 - **E2E Testing**: Playwright with auto-server startup (`npx playwright test`)
-- **Test Coverage**: Template rendering, RSVP validation, admin auth flows, mobile responsiveness
+- **SSL Protocol Testing**: PowerShell scripts (`test-ssl-audio-fixes.ps1`, `test-ssl-fixes.ps1`) + Node.js (`test-ssl-image-endpoint.js`)
+- **RSVP Testing**: PowerShell scripts for duplicate prevention and validation (`tests/rsvp-test.ps1`)
+- **SSL Validation**: Range request (HTTP 206), CORS headers, incognito mode compatibility, security headers
 - **Performance**: Page load time limits (<10s), console error detection, network error filtering
 - **Validation**: Comprehensive Zod schemas with Armenian bilingual error messages
+
+### SSL/TLS Critical Patterns
+**Media Serving Must-Haves:**
+```typescript
+// Critical SSL headers for audio/image serving
+res.setHeader('Content-Length', fileSize.toString()); // CRITICAL for SSL handshake
+res.setHeader('Accept-Ranges', 'bytes');
+res.setHeader('Strict-Transport-Security', 'max-age=31536000; includeSubDomains; preload');
+res.setHeader('Access-Control-Allow-Origin', '*');
+```
+
+**Range Request Handler:**
+```typescript
+const range = req.headers.range;
+if (range) {
+  const parts = range.replace(/bytes=/, "").split("-");
+  const start = parseInt(parts[0], 10);
+  const end = parts[1] ? parseInt(parts[1], 10) : fileSize - 1;
+  res.status(206); // Partial Content
+  res.setHeader('Content-Range', `bytes ${start}-${end}/${fileSize}`);
+}
+```
 
 ### Deployment & Environment
 - **Vercel deployment** with `vercel.json` configuration for SPA routing
 - **Environment variables**: `DATABASE_URL`, `JWT_SECRET`, `BREVO_API_KEY`, admin credentials
-- **Asset handling**: Static assets in `attached_assets/` served via Vercel routes
+- **Asset handling**: Static assets in `attached_assets/` served via Vercel routes with API route priority
 - **Storage providers**: Cloudflare R2 (primary), Google Cloud Storage, AWS S3 (fallback)
 - **SSL Configuration**: Production database requires SSL with proper certificate validation
 - **Monitoring**: Health check at `/health`, request logging middleware
+- **SEO**: `robots.txt`, `sitemap.xml`, and `SEOMetadata` component with Schema.org structured data
+
+### Incident Management & Documentation
+- **Incident Reports**: Structured reports in `incidents/resolved/` with root cause analysis
+- **Daily Summaries**: `incidents/YYYY/incident-summary-YYYY-MM-DD.md` for tracking fixes
+- **Technical Documentation**: Comprehensive SSL/TLS fixes documented in `SSL_*_ENDPOINT_FIXES.md`
+- **Prevention Measures**: Proactive monitoring patterns and testing automation guidelines
 
 ## Common Development Tasks
 
@@ -147,6 +186,16 @@ This platform specifically supports **Armenian weddings** with:
 - **Schema changes**: Modify `shared/schema.ts`, run `npm run db:push`, test with validation
 - **Template customization**: Use admin panel at `/admin/dashboard` or update config via API
 - **Testing**: Focus on template rendering, RSVP validation, and authentication flows
+- **SSL Media Issues**: Use PowerShell test scripts to validate SSL headers and range requests
+- **Incident Documentation**: Create structured reports following `incidents/INCIDENT_TEMPLATE.md`
+
+## Critical SSL/TLS Development Patterns
+When working with media serving endpoints:
+1. **Always set Content-Length** before streaming data (critical for SSL handshake)
+2. **Handle range requests** properly with HTTP 206 Partial Content for audio/video
+3. **Include CORS headers** for cross-origin access and incognito mode compatibility
+4. **Test with PowerShell scripts** in `test-ssl-*-fixes.ps1` for comprehensive validation
+5. **Use Vercel route prioritization** - API routes before static serving for SSL-safe handling
 
 ## Important Conventions
 - Always validate template configs against `WeddingConfig` type before database storage
@@ -160,3 +209,5 @@ This platform specifically supports **Armenian weddings** with:
 - **File uploads**: Multi-provider abstraction supports Cloudflare R2, Google Cloud Storage and AWS S3
 - **Build system**: Vite with manual chunks for vendor, router, and UI components
 - **Error handling**: Development runtime error overlay via Replit plugin
+- **SSL Testing**: Use PowerShell for Windows (`test-ssl-*.ps1`) or Node.js (`test-ssl-*.js`) for cross-platform
+- **Staging Environment**: `npm run deploy:staging` with `vercel.staging.json` configuration

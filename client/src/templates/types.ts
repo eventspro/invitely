@@ -141,7 +141,29 @@ export interface WeddingConfig {
 
   // Email Configuration
   email: {
-    recipients: string[];
+    ownerEmail?: string; // Primary email for RSVP notifications
+    recipients: string[]; // Additional recipients
+    senderName?: string; // Display name for sender
+    replyTo?: string; // Reply-to email address
+    templates?: {
+      notification?: {
+        subject?: string;
+        header?: string;
+        footer?: string;
+      };
+      confirmation?: {
+        subject?: string;
+        greeting?: string;
+        attendingMessage?: string;
+        notAttendingMessage?: string;
+        footer?: string;
+      };
+    };
+    theme?: {
+      primaryColor?: string;
+      secondaryColor?: string;
+      fontFamily?: string;
+    };
   };
 
   // Maintenance Mode Configuration

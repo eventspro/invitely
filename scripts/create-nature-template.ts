@@ -161,7 +161,7 @@ async function createNatureTemplate() {
 
     console.log("✅ Nature template created successfully!");
     console.log("Template ID:", newTemplate[0].id);
-    console.log("Template URL: /t/forest-lily-nature");
+    console.log("Template URL: /forest-lily-nature");
     
   } catch (error) {
     console.error("❌ Error creating nature template:", error);

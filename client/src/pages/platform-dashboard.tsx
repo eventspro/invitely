@@ -190,7 +190,8 @@ export default function PlatformDashboard() {
 
   const openCloneDialog = (sourceTemplate: Template) => {
     const clonedName = `${sourceTemplate.name} (Clone)`;
-    const clonedSlug = `${sourceTemplate.slug}-clone-${Date.now()}`.toLowerCase();
+    // Generate a shorter, more user-friendly slug
+    const clonedSlug = `${sourceTemplate.slug}-copy`.toLowerCase();
     
     setCloneForm({
       name: clonedName,
@@ -233,7 +234,10 @@ export default function PlatformDashboard() {
         });
       } else {
         const error = await response.json();
-        toast({ title: "Clone failed", description: error.message, variant: "destructive" });
+        const errorMessage = response.status === 409 || error.message?.includes('already taken') || error.message?.includes('slug') ? 
+          `The URL "${cloneForm.slug}" is already taken. Please choose a different URL path.` : 
+          error.message || "Failed to clone template";
+        toast({ title: "Clone failed", description: errorMessage, variant: "destructive" });
       }
     } catch (error) {
       toast({ title: "Error", description: "Failed to clone template", variant: "destructive" });
@@ -358,7 +362,7 @@ export default function PlatformDashboard() {
 
         {/* Actions */}
         <div className="flex gap-2">
-          <Link href={`/t/${template.slug}`}>
+          <Link href={`/${template.slug}`}>
             <Button variant="outline" size="sm" className="flex-1">
               <Eye className="w-4 h-4 mr-1" />
               View
@@ -508,15 +512,28 @@ export default function PlatformDashboard() {
                       />
                     </div>
                     <div>
-                      <Label htmlFor="cloneSlug">URL Slug</Label>
-                      <Input
-                        id="cloneSlug"
-                        value={cloneForm.slug}
-                        onChange={(e) => setCloneForm({...cloneForm, slug: e.target.value.toLowerCase().replace(/[^a-z0-9-]/g, '-')})}
-                        placeholder="e.g., john-jane-2025"
-                        required
-                        data-testid="input-clone-slug"
-                      />
+                      <Label htmlFor="cloneSlug">Custom URL Path</Label>
+                      <div className="flex items-center space-x-2">
+                        <span className="text-sm text-gray-500">4ever.am/</span>
+                        <Input
+                          id="cloneSlug"
+                          value={cloneForm.slug}
+                          onChange={(e) => {
+                            const value = e.target.value.toLowerCase().replace(/[^a-z0-9-]/g, '-').replace(/--+/g, '-');
+                            setCloneForm({...cloneForm, slug: value});
+                          }}
+                          placeholder="john-jane or alex-maria-2025"
+                          required
+                          data-testid="input-clone-slug"
+                          className={cloneForm.slug && !/^[a-z0-9-]+$/.test(cloneForm.slug) ? "border-red-300" : ""}
+                        />
+                      </div>
+                      <p className="text-sm text-gray-600 mt-1">
+                        Choose a custom URL for the wedding website. Use names like "john-jane" or "alex-maria-2025".
+                        {cloneForm.slug && !/^[a-z0-9-]+$/.test(cloneForm.slug) && (
+                          <span className="text-red-500 block">Only lowercase letters, numbers, and hyphens allowed.</span>
+                        )}
+                      </p>
                     </div>
                     <div>
                       <Label htmlFor="cloneOwnerEmail">Customer Email Address *</Label>

@@ -244,6 +244,22 @@ export function registerAdminRoutes(app: Express) {
       
       console.log("📝 Template data to validate:", JSON.stringify(templateData, null, 2));
       
+      // Validate slug format
+      const slugRegex = /^[a-z0-9-]+$/;
+      if (!slugRegex.test(templateData.slug)) {
+        return res.status(400).json({ 
+          message: "Invalid URL format. Use only lowercase letters, numbers, and hyphens." 
+        });
+      }
+
+      // Check if slug already exists
+      const existingTemplate = await storage.getTemplateBySlug(templateData.slug);
+      if (existingTemplate) {
+        return res.status(409).json({ 
+          message: `The URL "${templateData.slug}" is already taken. Please choose a different URL path.` 
+        });
+      }
+      
       const validatedData = insertTemplateSchema.parse(templateData);
       const newTemplate = await storage.createTemplate(validatedData);
       

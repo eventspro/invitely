@@ -194,7 +194,7 @@ export default function TemplatesPage() {
       badge: pricingPlan?.badge,
       badgeColor: pricingPlan?.badgeColor,
       description: pricingPlan?.description || template.name,
-      templateRoute: `/t/${template.slug}`,
+      templateRoute: `/${template.slug}`,
       popular: (pricingPlan as any)?.popular || false,
       features
     };
@@ -255,7 +255,7 @@ export default function TemplatesPage() {
       <section className="pt-20 pb-16 px-4">
         <div className="max-w-7xl mx-auto text-center">
           <div className="text-center mb-16">
-          <h1 className="text-5xl font-bold mb-6 bg-gradient-to-r from-rose-600 via-purple-600 to-blue-600 bg-clip-text text-transparent">
+          <h1 className="text-5xl font-bold mb-6 bg-gradient-to-r from-rose-600 via-purple-600 to-blue-600 bg-clip-text text-transparent leading-tight">
             {t.templatesPage.title}
           </h1>
           <p className="text-xl text-gray-600 max-w-3xl mx-auto mb-8">

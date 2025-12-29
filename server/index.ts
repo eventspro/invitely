@@ -37,24 +37,34 @@ if (process.env.NODE_ENV === 'production') {
   // Trust proxy for Vercel
   app.set('trust proxy', 1);
   
-  // Security headers
+  // Enhanced HTTPS redirect and SSL-safe headers
   app.use((req, res, next) => {
-    // HTTPS redirect (handled by Vercel, but good to have)
-    if (req.header('x-forwarded-proto') !== 'https') {
-      res.redirect(`https://${req.header('host')}${req.url}`);
-      return;
+    // Force HTTPS redirect with proper status code
+    const proto = req.header('x-forwarded-proto') || req.protocol || 'http';
+    if (proto !== 'https') {
+      const httpsUrl = `https://${req.header('host')}${req.originalUrl}`;
+      console.log(`🔒 Forcing HTTPS redirect: ${req.originalUrl} -> ${httpsUrl}`);
+      return res.redirect(301, httpsUrl);
     }
     
-    // Security headers
+    // Enhanced security headers for SSL compatibility
+    res.setHeader('Strict-Transport-Security', 'max-age=31536000; includeSubDomains; preload');
     res.setHeader('X-Frame-Options', 'DENY');
     res.setHeader('X-Content-Type-Options', 'nosniff');
     res.setHeader('X-XSS-Protection', '1; mode=block');
-    res.setHeader('Referrer-Policy', 'origin-when-cross-origin');
-    res.setHeader('Permissions-Policy', 'camera=(), microphone=(), geolocation=()');
+    res.setHeader('Referrer-Policy', 'strict-origin-when-cross-origin');
+    res.setHeader('Permissions-Policy', 'camera=(), microphone=(), geolocation=(), payment=()');
+    
+    // SSL-specific headers
+    res.setHeader('X-DNS-Prefetch-Control', 'off');
+    res.setHeader('X-Download-Options', 'noopen');
     
     next();
   });
 }
+
+// Add compression middleware for better performance and SSL compatibility  
+// Note: Compression is handled by Vercel in production, but adding for local testing
 
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: false, limit: '10mb' }));

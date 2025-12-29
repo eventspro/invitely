@@ -41,6 +41,8 @@ async function sendEmail(params: {
   subject: string;
   text?: string;
   html?: string;
+  replyTo?: string;
+  senderName?: string;
 }): Promise<boolean> {
   if (!(await initializeEmailService()) || !brevoClient) {
     console.log("Email service not configured.");
@@ -49,11 +51,19 @@ async function sendEmail(params: {
 
   try {
     const sendSmtpEmail = new brevo.SendSmtpEmail();
-    sendSmtpEmail.sender = { email: params.from, name: "Invitely" };
+    sendSmtpEmail.sender = { 
+      email: params.from, 
+      name: params.senderName || "Invitely" 
+    };
     sendSmtpEmail.to = [{ email: params.to }];
     sendSmtpEmail.subject = params.subject;
     sendSmtpEmail.textContent = params.text || "";
     sendSmtpEmail.htmlContent = params.html || "";
+    
+    // Add reply-to if provided
+    if (params.replyTo) {
+      sendSmtpEmail.replyTo = { email: params.replyTo };
+    }
     
     await brevoClient.sendTransacEmail(sendSmtpEmail);
     return true;
@@ -86,7 +96,7 @@ export async function testEmailService(): Promise<void> {
     try {
       console.log(`🧪 Testing Brevo email to: ${email}`);
       const success = await sendEmail({
-        from: "noreply@invitely.am", // Use your verified domain
+        from: "noreply@4ever.am", // Use your verified domain
         to: email,
         subject: "Test - Brevo Email Service Check",
         text: `This is a test email for ${email}. If you receive this email, Brevo is working correctly.`,
@@ -118,7 +128,7 @@ export async function sendRsvpNotificationEmails(rsvp: Rsvp): Promise<boolean> {
 
     const emailPromises = COUPLE_EMAILS.map((email) =>
       sendEmail({
-        from: "noreply@invitely.am", // Use your verified domain
+        from: "noreply@4ever.am", // Use your verified domain
         to: email,
         subject: `Նոր հաստատում հարսանիքի համար - ${rsvp.firstName} ${rsvp.lastName}`,
         text: `Նոր RSVP հաստատում\n\nԱնուն: ${rsvp.firstName} ${rsvp.lastName}\nԷլ․ հասցե: ${rsvp.email}\nՀյուրերի քանակ: ${rsvp.guestCount}\nՄասնակցություն: ${rsvp.attendance === "attending" ? "Կգա" : "Չի գալիս"}${rsvp.guestNames ? `\nՀյուրեր: ${rsvp.guestNames}` : ""}\n\nՀաստատվել է: ${rsvp.createdAt ? new Date(rsvp.createdAt).toLocaleString("hy-AM") : new Date().toLocaleString("hy-AM")}`,
@@ -183,7 +193,7 @@ export async function sendRsvpConfirmationEmail(rsvp: Rsvp): Promise<boolean> {
         : "Ցավոք, որ չեք կարողանա գալ: Ցանկանում ենք ձեզ բարելավություն: 💙";
 
     const success = await sendEmail({
-      from: "noreply@invitely.am", // Use your verified domain
+      from: "noreply@4ever.am", // Use your verified domain
       to: rsvp.email || "",
       subject: "Ձեր հաստատումը ստացվել է - Հարսանիք 10 Հոկտեմբեր 2025",
       text: `Սիրելի ${rsvp.firstName},\n\nՇնորհակալություն ձեր հաստատման համար:\n\n${attendanceText}\n\n${rsvp.attendance === "attending" ? "Ծիսակարգություն - Սուրբ Գրիգոր Լուսավորիչ Եկեղեցի, Ժամը 16:00\nՀանդես - BAYAZET HALL, Ժամը 19:00\n\nՄենք շատ ենք սիրում ձեզ և սպասում ենք այս հատուկ օրը ձեզ հետ կիսելուն:" : ""}\n\nՀարցերի դեպքում կապվեք մեզ հետ:\nharutavetisyan0@gmail.com | tatevhovsepyan22@gmail.com\n\nՀարգանքով,\nՀարութ և Տաթև`,
@@ -237,7 +247,7 @@ export async function sendRsvpConfirmationEmail(rsvp: Rsvp): Promise<boolean> {
   }
 }
 
-// Template-scoped email functions
+// Template-scoped email functions with customizable templates
 export async function sendTemplateRsvpNotificationEmails(rsvp: Rsvp, template: any): Promise<boolean> {
   if (!(await initializeEmailService())) {
     console.log("Email service not configured. Skipping template RSVP notification emails.");
@@ -250,9 +260,12 @@ export async function sendTemplateRsvpNotificationEmails(rsvp: Rsvp, template: a
     const wedding = config.wedding || {};
     const email = config.email || {};
     
-    // Priority order: template ownerEmail > config recipients > fallback couple emails
+    // Priority order: config ownerEmail > template ownerEmail > config recipients > fallback couple emails
     let recipientEmails = [];
-    if (template.ownerEmail) {
+    if (email.ownerEmail) {
+      recipientEmails = [email.ownerEmail];
+      console.log(`📧 Using config owner email: ${email.ownerEmail}`);
+    } else if (template.ownerEmail) {
       recipientEmails = [template.ownerEmail];
       console.log(`📧 Using template owner email: ${template.ownerEmail}`);
     } else if (email.recipients && email.recipients.length > 0) {
@@ -269,31 +282,51 @@ export async function sendTemplateRsvpNotificationEmails(rsvp: Rsvp, template: a
     const coupleNames = couple.combinedNames || `${couple.groomName || "Groom"} & ${couple.brideName || "Bride"}`;
     const weddingDate = wedding.displayDate || wedding.date || "Wedding Day";
     
+    // Get customizable email content
+    const emailTemplates = email.templates?.notification || {};
+    const emailTheme = email.theme || {};
+    const primaryColor = emailTheme.primaryColor || "#E4A5B8";
+    const secondaryColor = emailTheme.secondaryColor || "#666";
+    const fontFamily = emailTheme.fontFamily || "Arial";
+    const senderName = email.senderName || `${coupleNames} Wedding`;
+    
+    // Build subject with variable substitution
+    let subject = emailTemplates.subject || "Նոր հաստատում հարսանիքի համար - {guestName}";
+    subject = subject
+      .replace("{guestName}", `${rsvp.firstName} ${rsvp.lastName}`)
+      .replace("{coupleNames}", coupleNames)
+      .replace("{weddingDate}", weddingDate);
+    
+    const headerMessage = emailTemplates.header || `Նոր հաստատում ${coupleNames} հարսանիքի համար`;
+    const footerMessage = emailTemplates.footer || `Տեմփլեյթ: ${template.name || template.templateKey}`;
+    
     const attendanceText = rsvp.attendance === "attending" ? "Կգա" : "Չի գալիս";
     const guestInfo = rsvp.guestNames ? `\nՀյուրեր: ${rsvp.guestNames}` : "";
 
     const emailPromises = recipientEmails.map((emailAddr: string) =>
       sendEmail({
-        from: "noreply@invitely.am", // Use your verified domain
+        from: "noreply@4ever.am", // Use your verified domain
         to: emailAddr,
-        subject: `Նոր հաստատում հարսանիքի համար - ${rsvp.firstName} ${rsvp.lastName}`,
-        text: `Նոր RSVP հաստատում\n\nԱնուն: ${rsvp.firstName} ${rsvp.lastName}\nԷլ․ հասցե: ${rsvp.email}\nՀյուրերի քանակ: ${rsvp.guestCount}\nՄասնակցություն: ${attendanceText}${guestInfo}\n\nՀաստատվել է: ${rsvp.createdAt ? new Date(rsvp.createdAt).toLocaleString("hy-AM") : new Date().toLocaleString("hy-AM")}`,
+        subject: subject,
+        senderName: senderName,
+        replyTo: email.replyTo,
+        text: `${headerMessage}\n\nԱնուն: ${rsvp.firstName} ${rsvp.lastName}\nԷլ․ հասցե: ${rsvp.email}\nՀյուրերի քանակ: ${rsvp.guestCount}\nՄասնակցություն: ${attendanceText}${guestInfo}\n\nՀաստատվել է: ${rsvp.createdAt ? new Date(rsvp.createdAt).toLocaleString("hy-AM") : new Date().toLocaleString("hy-AM")}\n\n${footerMessage}`,
         html: `
-          <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; background-color: white;">
-            <h2 style="color: #333; text-align: center; font-weight: normal;">Նոր հաստատում ${coupleNames} հարսանիքի համար</h2>
+          <div style="font-family: ${fontFamily}, Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; background-color: white;">
+            <h2 style="color: ${primaryColor}; text-align: center; font-weight: normal; margin-bottom: 20px;">${headerMessage}</h2>
             
             <div style="background-color: #f9f9f9; padding: 20px; border-radius: 8px; margin: 20px 0; border: 1px solid #e0e0e0;">
-              <h3 style="color: #333; margin-bottom: 15px; font-weight: normal;">Հյուրի տվյալներ</h3>
-              <p style="margin: 8px 0;"><strong>Անուն:</strong> ${rsvp.firstName} ${rsvp.lastName}</p>
-              <p style="margin: 8px 0;"><strong>Էլ․ հասցե:</strong> ${rsvp.email}</p>
-              <p style="margin: 8px 0;"><strong>Հյուրերի քանակ:</strong> ${rsvp.guestCount}</p>
-              <p style="margin: 8px 0;"><strong>Մասնակցություն:</strong> ${attendanceText}</p>
-              ${guestInfo}
+              <h3 style="color: ${secondaryColor}; margin-bottom: 15px; font-weight: normal;">Հյուրի տվյալներ</h3>
+              <p style="margin: 8px 0; color: ${secondaryColor};"><strong>Անուն:</strong> ${rsvp.firstName} ${rsvp.lastName}</p>
+              <p style="margin: 8px 0; color: ${secondaryColor};"><strong>Էլ․ հասցե:</strong> ${rsvp.email}</p>
+              <p style="margin: 8px 0; color: ${secondaryColor};"><strong>Հյուրերի քանակ:</strong> ${rsvp.guestCount}</p>
+              <p style="margin: 8px 0; color: ${secondaryColor};"><strong>Մասնակցություն:</strong> ${attendanceText}</p>
+              ${guestInfo ? `<p style="margin: 8px 0; color: ${secondaryColor};"><strong>Հյուրերի անունները:</strong> ${rsvp.guestNames}</p>` : ""}
             </div>
             
             <div style="text-align: center; margin-top: 30px; padding-top: 20px; border-top: 1px solid #ddd;">
               <p style="color: #666; font-size: 14px; margin: 0;">Հաստատվել է: ${rsvp.createdAt ? new Date(rsvp.createdAt).toLocaleString("hy-AM") : new Date().toLocaleString("hy-AM")}</p>
-              <p style="color: #666; font-size: 12px; margin-top: 10px;">Տեմփլեյթ: ${template.name || template.templateKey}</p>
+              ${footerMessage ? `<p style="color: #666; font-size: 12px; margin-top: 10px;">${footerMessage}</p>` : ""}
             </div>
           </div>
         `,
@@ -322,60 +355,94 @@ export async function sendTemplateRsvpConfirmationEmail(rsvp: Rsvp, template: an
     const couple = config.couple || {};
     const wedding = config.wedding || {};
     const locations = config.locations || [];
+    const email = config.email || {};
     
     const coupleNames = couple.combinedNames || `${couple.groomName || "Groom"} & ${couple.brideName || "Bride"}`;
     const weddingDate = wedding.displayDate || wedding.date || "Wedding Day";
     
-    const attendanceText = rsvp.attendance === "attending"
-      ? "Շատ ուրախ ենք, որ կգաք մեր հարսանիքին! 💕"
-      : "Ցավոք, որ չեք կարողանա գալ: Ցանկանում ենք ձեզ բարելավություն: 💙";
+    // Get customizable email content
+    const emailTemplates = email.templates?.confirmation || {};
+    const emailTheme = email.theme || {};
+    const primaryColor = emailTheme.primaryColor || "#E4A5B8";
+    const secondaryColor = emailTheme.secondaryColor || "#666";
+    const fontFamily = emailTheme.fontFamily || "Arial";
+    const senderName = email.senderName || `${coupleNames} Wedding`;
+    const replyTo = email.replyTo;
+    
+    // Build subject with variable substitution
+    let subject = emailTemplates.subject || "Ձեր հաստատումը ստացվել է - {coupleNames} - {weddingDate}";
+    subject = subject
+      .replace("{guestName}", rsvp.firstName)
+      .replace("{coupleNames}", coupleNames)
+      .replace("{weddingDate}", weddingDate);
+    
+    // Build greeting message
+    let greeting = emailTemplates.greeting || "Սիրելի {guestName}, Շնորհակալություն ձեր հաստատման համար:";
+    greeting = greeting.replace("{guestName}", rsvp.firstName);
+    
+    // Get attendance-specific messages
+    const attendingMessage = rsvp.attendance === "attending" 
+      ? (emailTemplates.attendingMessage || "Շատ ուրախ ենք, որ կգաք մեր հարսանիքին! 💕")
+      : (emailTemplates.notAttendingMessage || "Ցավոք, որ չեք կարողանա գալ: Ցանկանում ենք ձեզ բարելավություն: 💙");
+    
+    const footerMessage = emailTemplates.footer || "Հարգանքով, {coupleNames}";
+    const finalFooter = footerMessage.replace("{coupleNames}", coupleNames);
 
     // Build location information from template config
     let locationInfo = "";
-    if (rsvp.attendance === "attending" && locations.length > 0) {
-      locationInfo = locations.map((loc: any, index: number) => {
+    if (rsvp.attendance === "attending" && locations.venues && locations.venues.length > 0) {
+      locationInfo = locations.venues.map((loc: any, index: number) => {
         const emoji = index === 0 ? "📍" : "🍾";
         return `
-          <h3 style="color: #E4A5B8; margin-bottom: 10px;">${emoji} ${loc.title || `Location ${index + 1}`}</h3>
+          <h3 style="color: ${primaryColor}; margin-bottom: 10px;">${emoji} ${loc.title || `Location ${index + 1}`}</h3>
           <p><strong>${loc.name || "Venue"}</strong><br/>
           ${loc.time ? `Ժամը ${loc.time}` : ""}${loc.address ? `<br/>${loc.address}` : ""}</p>
         `;
       }).join("");
     }
 
-    const success = await sendEmail({
-      from: "noreply@invitely.am", // Use your verified domain
+    // Create email with optional Reply-To
+    const emailData: any = {
+      from: "noreply@4ever.am", // Use your verified domain
       to: rsvp.email || "",
-      subject: `Ձեր հաստատումը ստացվել է - ${coupleNames} - ${weddingDate}`,
-      text: `Սիրելի ${rsvp.firstName},\n\nՇնորհակալություն ձեր հաստատման համար:\n\n${attendanceText}\n\n${rsvp.attendance === "attending" && locations.length > 0 ? locations.map((loc: any) => `${loc.title || "Venue"}: ${loc.name || "TBD"}${loc.time ? ` - ${loc.time}` : ""}`).join("\n") : ""}\n\nՀարգանքով,\n${coupleNames}`,
+      subject: subject,
+      senderName: senderName,
+      text: `${greeting}\n\n${attendingMessage}\n\n${rsvp.attendance === "attending" && locations.venues && locations.venues.length > 0 ? locations.venues.map((loc: any) => `${loc.title || "Venue"}: ${loc.name || "TBD"}${loc.time ? ` - ${loc.time}` : ""}`).join("\n") : ""}\n\n${finalFooter}`,
       html: `
-        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
+        <div style="font-family: ${fontFamily}, Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
           <div style="text-align: center; margin-bottom: 30px;">
-            <h1 style="color: #E4A5B8; font-style: italic;">${coupleNames}</h1>
-            <p style="color: #666; font-size: 18px;">${weddingDate}</p>
+            <h1 style="color: ${primaryColor}; font-style: italic;">${coupleNames}</h1>
+            <p style="color: ${secondaryColor}; font-size: 18px;">${weddingDate}</p>
           </div>
           
           <div style="background-color: #f9f9f9; padding: 25px; border-radius: 15px; text-align: center;">
-            <h2 style="color: #333; margin-bottom: 15px;">Շնորհակալություն ${rsvp.firstName}ը!</h2>
-            <p style="font-size: 16px; line-height: 1.6; color: #555;">${attendanceText}</p>
+            <h2 style="color: ${secondaryColor}; margin-bottom: 15px;">${greeting}</h2>
+            <p style="font-size: 16px; line-height: 1.6; color: ${secondaryColor};">${attendingMessage}</p>
             
             ${rsvp.attendance === "attending" && locationInfo ? `
               <div style="margin: 20px 0; padding: 15px; background-color: white; border-radius: 10px;">
                 ${locationInfo}
               </div>
               
-              <p style="color: #666; font-size: 14px; margin-top: 20px;">
+              <p style="color: ${secondaryColor}; font-size: 14px; margin-top: 20px;">
                 Մենք սպասում ենք այս հատուկ օրը ձեզ հետ կիսելուն: 💐
               </p>
             ` : ""}
           </div>
           
           <div style="text-align: center; margin-top: 20px; color: #999; font-size: 12px;">
-            <p>Հարգանքով, ${coupleNames}</p>
+            <p>${finalFooter}</p>
           </div>
         </div>
       `,
-    });
+    };
+
+    // Add reply-to if configured
+    if (replyTo) {
+      emailData.replyTo = replyTo;
+    }
+
+    const success = await sendEmail(emailData);
 
     if (success) {
       console.log(`Template RSVP confirmation email sent to: ${rsvp.email} for template ${template.id}`);

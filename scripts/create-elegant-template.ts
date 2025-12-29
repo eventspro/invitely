@@ -161,7 +161,7 @@ async function createElegantTemplate() {
 
     console.log("✅ Elegant template created successfully!");
     console.log("Template ID:", newTemplate[0].id);
-    console.log("Template URL: /t/alexander-isabella-elegant");
+    console.log("Template URL: /alexander-isabella-elegant");
     
   } catch (error) {
     console.error("❌ Error creating elegant template:", error);

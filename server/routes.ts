@@ -11,6 +11,8 @@ import {
 import path from "path";
 import fs from "fs";
 import multer from "multer";
+import https from "https";
+import { URL } from "url";
 
 // Import new route modules
 import authRoutes from './routes/auth.js';
@@ -377,10 +379,31 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Serve uploaded images
+  // Serve uploaded images with SSL/TLS safety
   app.get("/api/images/serve/:filename", (req, res) => {
+    const startTime = Date.now();
+    const { filename } = req.params;
+    const clientIP = req.ip || req.connection.remoteAddress || 'unknown';
+    const userAgent = req.get('User-Agent') || 'unknown';
+    const isIncognito = req.get('DNT') === '1' || req.get('Sec-GPC') === '1' || 
+                       userAgent.includes('HeadlessChrome') || 
+                       !req.get('Accept-Language');
+    
+    console.log(`🖼️ Image request: ${filename} from ${clientIP} (incognito: ${isIncognito})`);
+    
     try {
-      const { filename } = req.params;
+      // HTTPS enforcement - critical for SSL issues
+      if (process.env.NODE_ENV === 'production' && req.get('x-forwarded-proto') !== 'https') {
+        const httpsUrl = `https://${req.get('host')}${req.originalUrl}`;
+        console.log(`🔒 Redirecting HTTP to HTTPS: ${httpsUrl}`);
+        return res.redirect(301, httpsUrl);
+      }
+      
+      // Validate filename to prevent directory traversal
+      if (!filename || filename.includes('..') || filename.includes('/') || filename.includes('\\')) {
+        console.log(`❌ Invalid filename: ${filename}`);
+        return res.status(400).json({ error: 'Invalid filename' });
+      }
       
       // Check if this is a template-scoped image (new format: templateId-image-timestamp-random.ext)
       const templateMatch = filename.match(/^([a-f0-9-]{36})-/);
@@ -421,18 +444,38 @@ export async function registerRoutes(app: Express): Promise<Server> {
         }
         
         if (placeholderPath) {
-          const ext = path.extname(placeholderPath).toLowerCase();
-          const contentType = ext === '.jpg' || ext === '.jpeg' ? 'image/jpeg' : 
-                             ext === '.png' ? 'image/png' : 
-                             ext === '.webp' ? 'image/webp' : 'image/jpeg';
-          
-          res.setHeader('Content-Type', contentType);
-          res.setHeader('Cache-Control', 'public, max-age=86400');
-          return res.sendFile(placeholderPath);
+          return serveImageFile(req, res, placeholderPath, 'default-wedding-couple.jpg', startTime, isIncognito);
         }
         
+        console.log(`❌ SSL Error - Image not found: ${filename} from ${clientIP}`);
         return res.status(404).json({ error: "Image not found and no placeholder available" });
       }
+      
+      return serveImageFile(req, res, filePath, filename, startTime, isIncognito);
+      
+    } catch (error) {
+      const duration = Date.now() - startTime;
+      console.error(`❌ SSL Error serving image ${filename}: ${error instanceof Error ? error.message : String(error)} (${duration}ms, incognito: ${isIncognito})`);
+      
+      // Set proper error headers to prevent SSL issues
+      res.setHeader('Content-Type', 'application/json');
+      res.setHeader('Cache-Control', 'no-cache');
+      res.setHeader('Connection', 'close'); // Important for SSL error recovery
+      
+      res.status(500).json({ 
+        error: "Failed to serve image", 
+        timestamp: new Date().toISOString(),
+        requestId: `${Date.now()}-${Math.random().toString(36).substr(2, 9)}`
+      });
+    }
+  });
+  
+  // Helper function to serve image files with SSL-safe headers
+  function serveImageFile(req: any, res: any, filePath: string, filename: string, startTime: number, isIncognito: boolean) {
+    try {
+      // Get file stats for Content-Length (important for SSL)
+      const stats = fs.statSync(filePath);
+      const fileSize = stats.size;
       
       // Determine content type based on file extension
       const ext = path.extname(filename).toLowerCase();
@@ -441,22 +484,82 @@ export async function registerRoutes(app: Express): Promise<Server> {
         '.jpeg': 'image/jpeg',
         '.png': 'image/png',
         '.webp': 'image/webp',
-        '.gif': 'image/gif'
+        '.gif': 'image/gif',
+        '.svg': 'image/svg+xml',
+        '.bmp': 'image/bmp',
+        '.tiff': 'image/tiff',
+        '.tif': 'image/tiff'
       };
       
       const contentType = contentTypes[ext] || 'application/octet-stream';
       
+      // Set SSL-safe headers BEFORE sending data
       res.setHeader('Content-Type', contentType);
-      res.setHeader('Cache-Control', 'public, max-age=86400'); // Cache for 1 day
+      res.setHeader('Content-Length', fileSize.toString()); // Critical for SSL
+      res.setHeader('Accept-Ranges', 'bytes');
+      res.setHeader('Cache-Control', 'public, max-age=86400, immutable');
+      res.setHeader('Last-Modified', stats.mtime.toUTCString());
+      res.setHeader('ETag', `"${stats.mtime.getTime()}-${fileSize}"`);
       
+      // CORS headers for cross-origin requests
+      res.setHeader('Access-Control-Allow-Origin', '*');
+      res.setHeader('Access-Control-Allow-Methods', 'GET, HEAD, OPTIONS');
+      res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Cache-Control');
+      
+      // Security headers
+      res.setHeader('X-Content-Type-Options', 'nosniff');
+      res.setHeader('X-Frame-Options', 'SAMEORIGIN');
+      
+      // Compression headers (let middleware handle actual compression)
+      res.setHeader('Vary', 'Accept-Encoding');
+      
+      // Handle conditional requests
+      const ifModifiedSince = req.get('If-Modified-Since');
+      const ifNoneMatch = req.get('If-None-Match');
+      
+      if (ifModifiedSince && new Date(ifModifiedSince) >= stats.mtime) {
+        res.status(304).end();
+        const duration = Date.now() - startTime;
+        console.log(`✅ 304 Not Modified: ${filename} (${duration}ms, incognito: ${isIncognito})`);
+        return;
+      }
+      
+      if (ifNoneMatch && ifNoneMatch === `"${stats.mtime.getTime()}-${fileSize}"`) {
+        res.status(304).end();
+        const duration = Date.now() - startTime;
+        console.log(`✅ 304 Not Modified (ETag): ${filename} (${duration}ms, incognito: ${isIncognito})`);
+        return;
+      }
+      
+      // Create read stream with error handling
       const stream = fs.createReadStream(filePath);
+      
+      stream.on('error', (streamError) => {
+        const duration = Date.now() - startTime;
+        console.error(`❌ Stream error for ${filename}: ${streamError.message} (${duration}ms, incognito: ${isIncognito})`);
+        
+        if (!res.headersSent) {
+          res.status(500).json({ error: 'Failed to read image file' });
+        }
+      });
+      
+      stream.on('end', () => {
+        const duration = Date.now() - startTime;
+        console.log(`✅ Image served: ${filename} (${fileSize} bytes, ${duration}ms, incognito: ${isIncognito})`);
+      });
+      
+      // Pipe the stream to response
       stream.pipe(res);
       
     } catch (error) {
-      console.error("Error serving image:", error);
-      res.status(500).json({ error: "Failed to serve image" });
+      const duration = Date.now() - startTime;
+      console.error(`❌ Error in serveImageFile for ${filename}: ${error instanceof Error ? error.message : String(error)} (${duration}ms, incognito: ${isIncognito})`);
+      
+      if (!res.headersSent) {
+        res.status(500).json({ error: 'Failed to serve image file' });
+      }
     }
-  });
+  }
 
   // Get images for a template (query parameter version for frontend compatibility)
   app.get("/api/images", async (req, res) => {
@@ -802,6 +905,270 @@ export async function registerRoutes(app: Express): Promise<Server> {
       console.error("❌ Failed to get RSVPs:", error);
       res.status(500).json({ error: "Failed to get RSVPs" });
     }
+  });
+
+  // SSL-Safe Audio Serving Endpoint with Range Request Support (Proxy Method)
+  async function serveAudioFile(filename: string, req: any, res: any) {
+    const startTime = Date.now();
+    const userAgent = req.get('User-Agent') || 'unknown';
+    const clientIP = req.ip || req.connection?.remoteAddress || 'unknown';
+    
+    // Enhanced incognito mode detection for audio requests
+    const isIncognito = req.get('DNT') === '1' || req.get('Sec-GPC') === '1' || 
+                       userAgent.includes('HeadlessChrome') || 
+                       !req.get('Accept-Language') ||
+                       userAgent.includes('Private');
+
+    console.log(`🎵 Audio request: ${filename} from ${clientIP} (incognito: ${isIncognito}, UA: ${userAgent})`);
+
+    try {
+      // Validate filename to prevent directory traversal
+      if (!filename || filename.includes('..') || filename.includes('/') || filename.includes('\\')) {
+        console.log(`❌ Invalid audio filename: ${filename}`);
+        res.setHeader('Content-Type', 'application/json');
+        res.setHeader('Cache-Control', 'no-cache');
+        res.setHeader('Connection', 'close');
+        return res.status(400).json({ error: 'Invalid filename' });
+      }
+
+      // Use Vercel's internal static serving but proxy through our endpoint for SSL-safe headers
+      const staticAssetUrl = `/attached_assets/${filename}`;
+      console.log(`🎵 Proxying static asset: ${staticAssetUrl}`);
+      
+      // Check if we can access the file locally first (for development)
+      const possiblePaths = [
+        path.join(process.cwd(), 'public', 'attached_assets', filename),
+        path.join(process.cwd(), 'public', 'audio', filename),
+        path.join(process.cwd(), 'attached_assets', filename)
+      ];
+
+      let filePath;
+      for (const testPath of possiblePaths) {
+        if (fs.existsSync(testPath)) {
+          filePath = testPath;
+          break;
+        }
+      }
+
+      if (!filePath) {
+        console.log(`❌ Audio file not found: ${filename} (checked ${possiblePaths.length} locations)`);
+        res.setHeader('Content-Type', 'application/json');
+        res.setHeader('Cache-Control', 'no-cache');
+        res.setHeader('Connection', 'close');
+        return res.status(404).json({ error: 'Audio file not found' });
+      }
+
+      const stats = fs.statSync(filePath);
+      const fileSize = stats.size;
+      
+      // Get content type based on file extension
+      const ext = path.extname(filename).toLowerCase();
+      let contentType = 'audio/mpeg'; // Default for MP3
+      if (ext === '.mp4') contentType = 'audio/mp4';
+      else if (ext === '.wav') contentType = 'audio/wav';
+      else if (ext === '.ogg') contentType = 'audio/ogg';
+      else if (ext === '.m4a') contentType = 'audio/mp4';
+      else if (ext === '.flac') contentType = 'audio/flac';
+
+      // Parse range header for partial content requests (critical for audio streaming)
+      const range = req.headers.range;
+      console.log(`🎵 Range header: ${range || 'none'} for ${filename}`);
+
+      if (range) {
+        // Handle range requests (HTTP 206 Partial Content)
+        const parts = range.replace(/bytes=/, "").split("-");
+        const start = parseInt(parts[0], 10);
+        const end = parts[1] ? parseInt(parts[1], 10) : fileSize - 1;
+        const chunksize = (end - start) + 1;
+
+        console.log(`🎵 Serving range: ${start}-${end}/${fileSize} (${chunksize} bytes) for ${filename}`);
+
+        // Critical SSL headers for range requests - set BEFORE any data transmission
+        res.setHeader('Content-Range', `bytes ${start}-${end}/${fileSize}`);
+        res.setHeader('Accept-Ranges', 'bytes');
+        res.setHeader('Content-Length', chunksize.toString()); // CRITICAL for SSL
+        res.setHeader('Content-Type', contentType);
+        
+        // Enhanced SSL-safe headers for audio streaming
+        res.setHeader('Cache-Control', 'public, max-age=31536000, immutable');
+        res.setHeader('Last-Modified', stats.mtime.toUTCString());
+        res.setHeader('ETag', `"${stats.mtime.getTime()}-${fileSize}"`);
+        
+        // Security headers
+        res.setHeader('X-Content-Type-Options', 'nosniff');
+        res.setHeader('X-Frame-Options', 'SAMEORIGIN');
+        
+        // CORS headers for cross-origin audio access
+        res.setHeader('Access-Control-Allow-Origin', '*');
+        res.setHeader('Access-Control-Allow-Methods', 'GET, HEAD, OPTIONS');
+        res.setHeader('Access-Control-Allow-Headers', 'Range, Content-Type, Cache-Control');
+        res.setHeader('Access-Control-Expose-Headers', 'Content-Range, Accept-Ranges, Content-Length');
+        
+        // Additional headers for audio streaming reliability
+        res.setHeader('Vary', 'Accept-Encoding, Range');
+        
+        // Handle conditional requests
+        const ifModifiedSince = req.get('If-Modified-Since');
+        const ifNoneMatch = req.get('If-None-Match');
+        
+        if (ifModifiedSince && new Date(ifModifiedSince) >= stats.mtime) {
+          res.status(304).end();
+          return;
+        }
+        
+        if (ifNoneMatch && ifNoneMatch === `"${stats.mtime.getTime()}-${fileSize}"`) {
+          res.status(304).end();
+          return;
+        }
+
+        // Set status to 206 Partial Content
+        res.status(206);
+
+        // Create read stream for the requested range
+        const stream = fs.createReadStream(filePath, { start, end });
+        
+        stream.on('error', (streamError) => {
+          console.error(`❌ Audio stream error for ${filename}: ${streamError.message} (incognito: ${isIncognito})`);
+          if (!res.headersSent) {
+            res.setHeader('Connection', 'close');
+            res.status(500).json({ error: 'Failed to stream audio file' });
+          }
+        });
+
+        stream.on('end', () => {
+          const duration = Date.now() - startTime;
+          console.log(`✅ Audio range served: ${filename} (${chunksize} bytes, ${duration}ms, incognito: ${isIncognito})`);
+        });
+
+        // Pipe the stream to response
+        stream.pipe(res);
+
+      } else {
+        // Serve complete file (no range header)
+        console.log(`🎵 Serving complete audio file: ${filename} (${fileSize} bytes)`);
+
+        // Critical SSL headers for complete file - set BEFORE any data transmission
+        res.setHeader('Content-Type', contentType);
+        res.setHeader('Content-Length', fileSize.toString()); // CRITICAL for SSL
+        res.setHeader('Accept-Ranges', 'bytes');
+        res.setHeader('Cache-Control', 'public, max-age=31536000, immutable');
+        res.setHeader('Last-Modified', stats.mtime.toUTCString());
+        res.setHeader('ETag', `"${stats.mtime.getTime()}-${fileSize}"`);
+
+        // CORS headers for cross-origin audio access
+        res.setHeader('Access-Control-Allow-Origin', '*');
+        res.setHeader('Access-Control-Allow-Methods', 'GET, HEAD, OPTIONS');
+        res.setHeader('Access-Control-Allow-Headers', 'Range, Content-Type, Cache-Control');
+        res.setHeader('Access-Control-Expose-Headers', 'Accept-Ranges, Content-Length');
+
+        // Security headers
+        res.setHeader('X-Content-Type-Options', 'nosniff');
+        res.setHeader('X-Frame-Options', 'SAMEORIGIN');
+        res.setHeader('Vary', 'Accept-Encoding');
+
+        // Handle conditional requests for caching efficiency
+        const ifModifiedSince = req.get('If-Modified-Since');
+        const ifNoneMatch = req.get('If-None-Match');
+
+        if (ifModifiedSince && new Date(ifModifiedSince) >= stats.mtime) {
+          res.status(304).end();
+          return;
+        }
+
+        if (ifNoneMatch && ifNoneMatch === `"${stats.mtime.getTime()}-${fileSize}"`) {
+          res.status(304).end();
+          return;
+        }
+
+        // Create read stream for complete file
+        const stream = fs.createReadStream(filePath);
+
+        stream.on('error', (streamError) => {
+          console.error(`❌ Audio stream error for ${filename}: ${streamError.message} (incognito: ${isIncognito})`);
+          if (!res.headersSent) {
+            res.setHeader('Connection', 'close');
+            res.status(500).json({ error: 'Failed to read audio file' });
+          }
+        });
+
+        stream.on('end', () => {
+          const duration = Date.now() - startTime;
+          console.log(`✅ Complete audio served: ${filename} (${fileSize} bytes, ${duration}ms, incognito: ${isIncognito})`);
+        });
+
+        // Pipe the stream to response
+        stream.pipe(res);
+      }
+
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+      console.error(`❌ SSL Error serving audio ${filename}: ${errorMessage} (incognito: ${isIncognito})`);
+      
+      if (!res.headersSent) {
+        res.setHeader('Content-Type', 'application/json');
+        res.setHeader('Cache-Control', 'no-cache');
+        res.setHeader('Connection', 'close'); // Important for SSL error recovery
+        res.status(500).json({ 
+          error: 'Failed to serve audio file',
+          message: process.env.NODE_ENV === 'development' ? errorMessage : 'Internal server error'
+        });
+      }
+    }
+  }
+
+  // Test audio endpoint to verify route registration
+  app.get("/api/audio/test", (req, res) => {
+    console.log("🎵 Audio test endpoint hit");
+    res.json({ message: "Audio endpoint is working", timestamp: new Date().toISOString() });
+  });
+
+  // Debug endpoint to list available files
+  app.get("/api/audio/list", (req, res) => {
+    console.log("🎵 Audio list endpoint hit");
+    try {
+      const possiblePaths = [
+        path.join(process.cwd(), 'public', 'attached_assets'),
+        path.join(process.cwd(), 'public', 'audio'),
+        path.join(process.cwd(), 'attached_assets')
+      ];
+      
+      const files: any[] = [];
+      for (const dir of possiblePaths) {
+        if (fs.existsSync(dir)) {
+          const dirFiles = fs.readdirSync(dir).filter(f => f.endsWith('.mp3'));
+          files.push({ path: dir, files: dirFiles, exists: true });
+        } else {
+          files.push({ path: dir, files: [], exists: false });
+        }
+      }
+      
+      res.json({ 
+        message: "Audio files scan", 
+        timestamp: new Date().toISOString(),
+        directories: files,
+        cwd: process.cwd()
+      });
+    } catch (error) {
+      res.status(500).json({ error: error instanceof Error ? error.message : 'Unknown error' });
+    }
+  });
+
+  // Audio serving endpoint with SSL-safe range request support
+  app.get("/api/audio/serve/:filename", (req, res) => {
+    console.log(`🎵 Audio serve endpoint hit for file: ${req.params.filename}`);
+    console.log(`🎵 Full URL: ${req.originalUrl}`);
+    console.log(`🎵 Method: ${req.method}`);
+    const { filename } = req.params;
+    serveAudioFile(filename, req, res);
+  });
+
+  // Handle OPTIONS preflight requests for CORS
+  app.options("/api/audio/serve/:filename", (req, res) => {
+    res.setHeader('Access-Control-Allow-Origin', '*');
+    res.setHeader('Access-Control-Allow-Methods', 'GET, HEAD, OPTIONS');
+    res.setHeader('Access-Control-Allow-Headers', 'Range, Content-Type, Cache-Control');
+    res.setHeader('Access-Control-Max-Age', '86400');
+    res.status(200).end();
   });
 
   const httpServer = createServer(app);

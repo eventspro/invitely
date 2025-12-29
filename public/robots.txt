@@ -1,0 +1,33 @@
+# Robots.txt for 4ever.am Wedding Platform
+
+User-agent: *
+Allow: /
+
+# Allow all wedding templates and main pages
+Allow: /templates
+Allow: /photos
+Allow: /harut-tatev
+Allow: /michael-sarah-classic
+Allow: /alexander-isabella-elegant
+Allow: /david-rose-romantic
+Allow: /forest-lily-nature
+
+# Block admin and private areas
+Disallow: /admin/
+Disallow: /api/
+Disallow: /uploads/
+Disallow: /_next/
+Disallow: /.well-known/
+
+# Allow important assets
+Allow: /assets/
+Allow: /attached_assets/
+Allow: /template_previews/
+Allow: /manifest.json
+Allow: /favicon.png
+
+# Sitemap location
+Sitemap: https://4ever.am/sitemap.xml
+
+# Crawl-delay (optional - be respectful)
+Crawl-delay: 1

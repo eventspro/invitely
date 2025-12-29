@@ -15,19 +15,8 @@ export default function CountdownTimer({ config = weddingConfig }: CountdownTime
   const countdownRef = useStaggeredAnimation(150);
 
   return (
-    <section id="countdown" className="relative py-20 overflow-hidden">
-      {/* Romantic Background Image */}
-      <div
-        className="absolute inset-0 bg-cover bg-center bg-no-repeat"
-        style={{
-          backgroundImage: "url('@assets/image_1755881009663.png')",
-        }}
-      >
-        {/* Dark overlay for better text readability */}
-        <div className="absolute inset-0 bg-black/40"></div>
-      </div>
-
-      <div className="relative z-10 max-w-4xl mx-auto px-4 text-center">
+    <section id="countdown" className="py-20">
+      <div className="max-w-4xl mx-auto px-4 text-center">
         {/* Wedding Date Display */}
         <div ref={titleRef} className="mb-8 animate-on-scroll">
           {config.wedding?.displayDate && (

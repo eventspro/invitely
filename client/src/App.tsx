@@ -23,6 +23,7 @@ import LoadingScreen from "@/components/loading-screen";
 import PlatformDashboard from "@/pages/platform-dashboard";
 import TemplateRenderer from "@/components/template-renderer";
 import TemplateAdminPanel from "@/components/template-admin-panel";
+import TemplateIdentifierGuard from "@/components/TemplateIdentifierGuard";
 
 function Router() {
   return (
@@ -74,10 +75,9 @@ function Router() {
       
       {/* Dynamic template routes */}
       <Route path="/template/:templateId" component={TemplateRenderer} />
-      <Route path="/t/:slug" component={TemplateRenderer} />
       
-      {/* Template identifier route (for template slugs/IDs not prefixed with /t/) */}
-      <Route path="/:templateIdentifier" component={TemplateRenderer} />
+      {/* Template identifier route (clean URLs without prefix) */}
+      <Route path="/:templateIdentifier" component={TemplateIdentifierGuard} />
       
       {/* Catch-all */}
       <Route component={NotFound} />

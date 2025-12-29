@@ -192,7 +192,7 @@ async function createClassicTemplate() {
 
     console.log("✅ Classic template created successfully!");
     console.log(`📋 Template ID: ${result.id}`);
-    console.log(`🔗 URL: /t/${result.slug}`);
+    console.log(`🔗 URL: /${result.slug}`);
     console.log(`📧 Owner: ${result.ownerEmail}`);
 
   } catch (error) {

@@ -161,7 +161,7 @@ async function createRomanticTemplate() {
 
     console.log("✅ Romantic template created successfully!");
     console.log("Template ID:", newTemplate[0].id);
-    console.log("Template URL: /t/david-rose-romantic");
+    console.log("Template URL: /david-rose-romantic");
     
   } catch (error) {
     console.error("❌ Error creating romantic template:", error);

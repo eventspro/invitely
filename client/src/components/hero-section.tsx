@@ -7,7 +7,9 @@ import { useArmenianFont } from "@/hooks/useArmenianFont";
 import couplePhoto from "@assets/couple11.jpg";
 import detailPhoto from "@assets/Blog_Banner_Left_Hand_Story_1755890185205.webp";
 import heartImage from "@assets/heart-tattoo.jfif";
-import weddingMusic from "@assets/Indila - Love Story_1756335711694.mp3";
+
+// SSL-safe audio URL using our backend endpoint
+const weddingMusicUrl = "/api/audio/serve/Indila - Love Story_1756335711694.mp3";
 
 interface HeroSectionProps {
   config?: WeddingConfig;
@@ -176,8 +178,8 @@ export default function HeroSection({ config = weddingConfig }: HeroSectionProps
   useEffect(() => {
     // Create audio element
     audioRef.current = new Audio();
-    // Using Indila - Love Story for background music
-    audioRef.current.src = weddingMusic;
+    // Using SSL-safe audio endpoint for background music
+    audioRef.current.src = weddingMusicUrl;
 
     audioRef.current.loop = true;
     audioRef.current.volume = 0.3; // Set volume to 30%
@@ -265,7 +267,17 @@ export default function HeroSection({ config = weddingConfig }: HeroSectionProps
               prevSlide();
               handleUserInteraction();
             }}
-            className="absolute left-4 top-1/2 transform -translate-y-1/2 z-20 bg-white/20 hover:bg-white/30 backdrop-blur-sm text-white p-3 rounded-full transition-all duration-300 opacity-70 hover:opacity-100 hidden md:block"
+            className="absolute left-4 top-1/2 transform -translate-y-1/2 z-20 backdrop-blur-sm p-3 rounded-full transition-all duration-300 opacity-70 hover:opacity-100 hidden md:block"
+            style={{
+              backgroundColor: config.theme?.colors?.primary ? `${config.theme.colors.primary}33` : 'rgba(255, 255, 255, 0.2)',
+              color: config.theme?.colors?.primary ? 'white' : 'white'
+            }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.backgroundColor = config.theme?.colors?.primary ? `${config.theme.colors.primary}4D` : 'rgba(255, 255, 255, 0.3)';
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.backgroundColor = config.theme?.colors?.primary ? `${config.theme.colors.primary}33` : 'rgba(255, 255, 255, 0.2)';
+            }}
             aria-label="Previous image"
           >
             <ChevronLeft className="w-6 h-6" />
@@ -276,7 +288,17 @@ export default function HeroSection({ config = weddingConfig }: HeroSectionProps
               nextSlide();
               handleUserInteraction();
             }}
-            className="absolute right-4 top-1/2 transform -translate-y-1/2 z-20 bg-white/20 hover:bg-white/30 backdrop-blur-sm text-white p-3 rounded-full transition-all duration-300 opacity-70 hover:opacity-100 hidden md:block"
+            className="absolute right-4 top-1/2 transform -translate-y-1/2 z-20 backdrop-blur-sm p-3 rounded-full transition-all duration-300 opacity-70 hover:opacity-100 hidden md:block"
+            style={{
+              backgroundColor: config.theme?.colors?.primary ? `${config.theme.colors.primary}33` : 'rgba(255, 255, 255, 0.2)',
+              color: config.theme?.colors?.primary ? 'white' : 'white'
+            }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.backgroundColor = config.theme?.colors?.primary ? `${config.theme.colors.primary}4D` : 'rgba(255, 255, 255, 0.3)';
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.backgroundColor = config.theme?.colors?.primary ? `${config.theme.colors.primary}33` : 'rgba(255, 255, 255, 0.2)';
+            }}
             aria-label="Next image"
           >
             <ChevronRight className="w-6 h-6" />
@@ -294,11 +316,22 @@ export default function HeroSection({ config = weddingConfig }: HeroSectionProps
                 goToSlide(index);
                 handleUserInteraction();
               }}
-              className={`w-3 h-3 rounded-full transition-all duration-300 ${
-                index === currentSlide 
-                  ? 'bg-white shadow-lg' 
-                  : 'bg-white/50 hover:bg-white/70'
-              }`}
+              className="w-3 h-3 rounded-full transition-all duration-300 shadow-lg"
+              style={{
+                backgroundColor: index === currentSlide 
+                  ? (config.theme?.colors?.primary || 'white')
+                  : (config.theme?.colors?.primary ? `${config.theme.colors.primary}80` : 'rgba(255, 255, 255, 0.5)')
+              }}
+              onMouseEnter={(e) => {
+                if (index !== currentSlide) {
+                  e.currentTarget.style.backgroundColor = config.theme?.colors?.primary ? `${config.theme.colors.primary}B3` : 'rgba(255, 255, 255, 0.7)';
+                }
+              }}
+              onMouseLeave={(e) => {
+                if (index !== currentSlide) {
+                  e.currentTarget.style.backgroundColor = config.theme?.colors?.primary ? `${config.theme.colors.primary}80` : 'rgba(255, 255, 255, 0.5)';
+                }
+              }}
               aria-label={`Go to slide ${index + 1}`}
             />
           ))}

@@ -19,6 +19,9 @@ interface PhotoSectionProps {
 export default function PhotoSection({ config = weddingConfig, templateId }: PhotoSectionProps) {
   const [uploadStatus, setUploadStatus] = useState<string>("");
 
+  // Set Swiper theme color based on config
+  const swiperThemeColor = config.theme?.colors?.primary || '#007aff';
+
   // Get love story images - use uploaded images if available, fallback to default
   const loveStoryImages = config.photos?.images && config.photos.images.length > 0 
     ? config.photos.images 
@@ -122,6 +125,11 @@ export default function PhotoSection({ config = weddingConfig, templateId }: Pho
             },
           }}
           className="h-64 sm:h-80 rounded-xl"
+          style={{
+            '--swiper-theme-color': swiperThemeColor,
+            '--swiper-navigation-color': swiperThemeColor,
+            '--swiper-pagination-color': swiperThemeColor
+          } as React.CSSProperties}
         >
           {loveStoryImages.map((imageUrl, index) => (
             <SwiperSlide key={index}>
@@ -138,7 +146,14 @@ export default function PhotoSection({ config = weddingConfig, templateId }: Pho
   };
 
   return (
-    <section className="py-12 sm:py-20">
+    <section 
+      className="py-12 sm:py-20"
+      style={{
+        '--swiper-theme-color': swiperThemeColor,
+        '--swiper-navigation-color': swiperThemeColor,
+        '--swiper-pagination-color': swiperThemeColor
+      } as React.CSSProperties}
+    >
       <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
         <h2 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl mb-6 sm:mb-8 leading-tight" 
             style={{ 

@@ -1671,6 +1671,251 @@ export default function TemplateAdminPanel() {
 
           {/* Settings Tab */}
           <TabsContent value="settings" className="space-y-6">
+            {/* Email Settings */}
+            <Card>
+              <CardHeader>
+                <CardTitle>
+                  <Mail className="w-5 h-5 inline mr-2" />
+                  Email Settings
+                </CardTitle>
+                <CardDescription>Configure email notifications and customization for this template</CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-6">
+                <div>
+                  <Label htmlFor="ownerEmail">Owner Email Address</Label>
+                  <Input
+                    id="ownerEmail"
+                    type="email"
+                    value={template.config.email?.ownerEmail || ""}
+                    onChange={(e) => updateConfig("email.ownerEmail", e.target.value)}
+                    placeholder="owner@4ever.am"
+                  />
+                  <p className="text-sm text-gray-600 mt-1">
+                    Primary email address to receive RSVP notifications. This overrides the default notification recipients.
+                  </p>
+                </div>
+
+                <div>
+                  <Label htmlFor="additionalRecipients">Additional Recipients (Optional)</Label>
+                  <Textarea
+                    id="additionalRecipients"
+                    value={template.config.email?.recipients?.join(", ") || ""}
+                    onChange={(e) => {
+                      const emails = e.target.value
+                        .split(",")
+                        .map(email => email.trim())
+                        .filter(email => email.length > 0);
+                      updateConfig("email.recipients", emails);
+                    }}
+                    placeholder="email1@example.com, email2@example.com"
+                    rows={2}
+                  />
+                  <p className="text-sm text-gray-600 mt-1">
+                    Additional email addresses to receive RSVP notifications. Separate multiple emails with commas.
+                  </p>
+                </div>
+
+                <div className="border-t pt-6">
+                  <h4 className="font-semibold mb-4">Email Branding</h4>
+                  
+                  <div className="space-y-4">
+                    <div>
+                      <Label htmlFor="senderName">Sender Name</Label>
+                      <Input
+                        id="senderName"
+                        value={template.config.email?.senderName || ""}
+                        onChange={(e) => updateConfig("email.senderName", e.target.value)}
+                        placeholder="Wedding Invitation"
+                      />
+                      <p className="text-sm text-gray-600 mt-1">
+                        The name that appears as the email sender (e.g., "John & Jane Wedding")
+                      </p>
+                    </div>
+
+                    <div>
+                      <Label htmlFor="replyToEmail">Reply-To Email (Optional)</Label>
+                      <Input
+                        id="replyToEmail"
+                        type="email"
+                        value={template.config.email?.replyTo || ""}
+                        onChange={(e) => updateConfig("email.replyTo", e.target.value)}
+                        placeholder="contact@4ever.am"
+                      />
+                      <p className="text-sm text-gray-600 mt-1">
+                        Email address where guests can reply to notifications
+                      </p>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="border-t pt-6">
+                  <h4 className="font-semibold mb-4">RSVP Notification Email</h4>
+                  
+                  <div className="space-y-4">
+                    <div>
+                      <Label htmlFor="notificationSubject">Email Subject</Label>
+                      <Input
+                        id="notificationSubject"
+                        value={template.config.email?.templates?.notification?.subject || ""}
+                        onChange={(e) => updateConfig("email.templates.notification.subject", e.target.value)}
+                        placeholder="New RSVP Response - {guestName}"
+                      />
+                      <p className="text-sm text-gray-600 mt-1">
+                        Available variables: {"{guestName}"}, {"{weddingDate}"}, {"{coupleNames}"}
+                      </p>
+                    </div>
+
+                    <div>
+                      <Label htmlFor="notificationHeader">Header Message</Label>
+                      <Textarea
+                        id="notificationHeader"
+                        value={template.config.email?.templates?.notification?.header || ""}
+                        onChange={(e) => updateConfig("email.templates.notification.header", e.target.value)}
+                        placeholder="You have a new RSVP response for your wedding!"
+                        rows={2}
+                      />
+                    </div>
+
+                    <div>
+                      <Label htmlFor="notificationFooter">Footer Message</Label>
+                      <Textarea
+                        id="notificationFooter"
+                        value={template.config.email?.templates?.notification?.footer || ""}
+                        onChange={(e) => updateConfig("email.templates.notification.footer", e.target.value)}
+                        placeholder="Manage your wedding responses at your admin dashboard."
+                        rows={2}
+                      />
+                    </div>
+                  </div>
+                </div>
+
+                <div className="border-t pt-6">
+                  <h4 className="font-semibold mb-4">Guest Confirmation Email</h4>
+                  
+                  <div className="space-y-4">
+                    <div>
+                      <Label htmlFor="confirmationSubject">Email Subject</Label>
+                      <Input
+                        id="confirmationSubject"
+                        value={template.config.email?.templates?.confirmation?.subject || ""}
+                        onChange={(e) => updateConfig("email.templates.confirmation.subject", e.target.value)}
+                        placeholder="Thank you for your RSVP - {coupleNames} - {weddingDate}"
+                      />
+                    </div>
+
+                    <div>
+                      <Label htmlFor="confirmationGreeting">Greeting Message</Label>
+                      <Textarea
+                        id="confirmationGreeting"
+                        value={template.config.email?.templates?.confirmation?.greeting || ""}
+                        onChange={(e) => updateConfig("email.templates.confirmation.greeting", e.target.value)}
+                        placeholder="Dear {guestName}, thank you for your RSVP!"
+                        rows={2}
+                      />
+                    </div>
+
+                    <div>
+                      <Label htmlFor="attendingMessage">Message for Attending Guests</Label>
+                      <Textarea
+                        id="attendingMessage"
+                        value={template.config.email?.templates?.confirmation?.attendingMessage || ""}
+                        onChange={(e) => updateConfig("email.templates.confirmation.attendingMessage", e.target.value)}
+                        placeholder="We're so excited that you'll be joining us for our special day! 💕"
+                        rows={3}
+                      />
+                    </div>
+
+                    <div>
+                      <Label htmlFor="notAttendingMessage">Message for Non-Attending Guests</Label>
+                      <Textarea
+                        id="notAttendingMessage"
+                        value={template.config.email?.templates?.confirmation?.notAttendingMessage || ""}
+                        onChange={(e) => updateConfig("email.templates.confirmation.notAttendingMessage", e.target.value)}
+                        placeholder="We're sorry you can't make it, but we understand. We'll be thinking of you! 💙"
+                        rows={3}
+                      />
+                    </div>
+
+                    <div>
+                      <Label htmlFor="confirmationFooter">Footer Message</Label>
+                      <Textarea
+                        id="confirmationFooter"
+                        value={template.config.email?.templates?.confirmation?.footer || ""}
+                        onChange={(e) => updateConfig("email.templates.confirmation.footer", e.target.value)}
+                        placeholder="If you have any questions, feel free to contact us."
+                        rows={2}
+                      />
+                    </div>
+                  </div>
+                </div>
+
+                <div className="border-t pt-6">
+                  <h4 className="font-semibold mb-4">Email Theme</h4>
+                  
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                      <Label htmlFor="emailPrimaryColor">Primary Email Color</Label>
+                      <div className="flex gap-2 items-center">
+                        <Input
+                          id="emailPrimaryColor"
+                          type="color"
+                          value={template.config.email?.theme?.primaryColor || template.config.theme?.colors?.primary || "#E4A5B8"}
+                          onChange={(e) => updateConfig("email.theme.primaryColor", e.target.value)}
+                          className="w-16 h-10"
+                        />
+                        <Input
+                          value={template.config.email?.theme?.primaryColor || template.config.theme?.colors?.primary || "#E4A5B8"}
+                          onChange={(e) => updateConfig("email.theme.primaryColor", e.target.value)}
+                          placeholder="#E4A5B8"
+                          className="flex-1"
+                        />
+                      </div>
+                    </div>
+
+                    <div>
+                      <Label htmlFor="emailSecondaryColor">Secondary Email Color</Label>
+                      <div className="flex gap-2 items-center">
+                        <Input
+                          id="emailSecondaryColor"
+                          type="color"
+                          value={template.config.email?.theme?.secondaryColor || template.config.theme?.colors?.secondary || "#666666"}
+                          onChange={(e) => updateConfig("email.theme.secondaryColor", e.target.value)}
+                          className="w-16 h-10"
+                        />
+                        <Input
+                          value={template.config.email?.theme?.secondaryColor || template.config.theme?.colors?.secondary || "#666666"}
+                          onChange={(e) => updateConfig("email.theme.secondaryColor", e.target.value)}
+                          placeholder="#666666"
+                          className="flex-1"
+                        />
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="mt-4">
+                    <Label htmlFor="emailFont">Email Font Family</Label>
+                    <select
+                      id="emailFont"
+                      value={template.config.email?.theme?.fontFamily || "Arial"}
+                      onChange={(e) => updateConfig("email.theme.fontFamily", e.target.value)}
+                      className="w-full p-2 border border-gray-300 rounded-md"
+                    >
+                      <option value="Arial">Arial (Universal)</option>
+                      <option value="Helvetica">Helvetica (Clean)</option>
+                      <option value="Georgia">Georgia (Elegant)</option>
+                      <option value="Times">Times (Classic)</option>
+                      <option value="Verdana">Verdana (Readable)</option>
+                      <option value="Tahoma">Tahoma (Modern)</option>
+                    </select>
+                    <p className="text-sm text-gray-600 mt-1">
+                      Choose a web-safe font that works across all email clients
+                    </p>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* General Settings */}
             <Card>
               <CardHeader>
                 <CardTitle>Template Settings</CardTitle>
