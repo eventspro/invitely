@@ -1546,13 +1546,13 @@ export default function TemplateAdminPanel() {
 
                         // Validate file size (4MB max)
                         if (file.size > 4 * 1024 * 1024) {
-                          alert('File size must be less than 4MB');
+                          toast({ title: "File too large", description: "File size must be less than 4MB", variant: "destructive" });
                           return;
                         }
 
                         // Validate file type
                         if (!file.type.includes('audio')) {
-                          alert('Please upload an audio file (MP3)');
+                          toast({ title: "Invalid file type", description: "Please upload an audio file (MP3)", variant: "destructive" });
                           return;
                         }
 
@@ -1588,10 +1588,10 @@ export default function TemplateAdminPanel() {
                           };
                           setTemplate(prev => prev ? { ...prev, config: newConfig } : null);
 
-                          alert('Music uploaded successfully!');
+                          toast({ title: "Success", description: "Music uploaded successfully!" });
                         } catch (error) {
                           console.error('Music upload error:', error);
-                          alert('Failed to upload music. Please try again.');
+                          toast({ title: "Upload failed", description: "Failed to upload music. Please try again.", variant: "destructive" });
                         }
                       }}
                     />
@@ -1644,10 +1644,10 @@ export default function TemplateAdminPanel() {
                               };
                               setTemplate(prev => prev ? { ...prev, config: newConfig } : null);
 
-                              alert('Music removed successfully!');
+                              toast({ title: "Success", description: "Music removed successfully!" });
                             } catch (error) {
                               console.error('Music deletion error:', error);
-                              alert('Failed to remove music. Please try again.');
+                              toast({ title: "Delete failed", description: "Failed to remove music. Please try again.", variant: "destructive" });
                             }
                           }}
                         >
