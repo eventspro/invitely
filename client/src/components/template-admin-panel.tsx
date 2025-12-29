@@ -329,7 +329,7 @@ export default function TemplateAdminPanel() {
               </div>
             </div>
             <div className="flex gap-2">
-              <Link href={`/t/${template.slug}`}>
+              <Link href={`/${template.slug}`}>
                 <Button variant="outline">
                   <ExternalLink className="w-4 h-4 mr-2" />
                   View Live
