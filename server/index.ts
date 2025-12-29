@@ -2,6 +2,7 @@ import "dotenv/config";
 import express, { type Request, Response, NextFunction } from "express";
 import { registerRoutes } from "./routes.js";
 import { registerAdminRoutes } from "./routes/admin.js";
+import { apiLimiter } from "./middleware/rateLimiter.js";
 import path from "path";
 
 // Simple logging function
@@ -68,6 +69,9 @@ if (process.env.NODE_ENV === 'production') {
 
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: false, limit: '10mb' }));
+
+// Apply general API rate limiting (100 requests per 15 minutes)
+app.use('/api', apiLimiter);
 
 // Health check endpoint for deployment monitoring
 app.get('/health', (req, res) => {

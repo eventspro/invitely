@@ -4,6 +4,7 @@ import { storage } from "../storage.js";
 import { insertRsvpSchema, updateTemplateSchema } from "../../shared/schema.js";
 import { z } from "zod";
 import { authenticateUser, requireAdminPanelAccess } from "../middleware/auth.js";
+import { rsvpLimiter, uploadLimiter } from "../middleware/rateLimiter.js";
 import { sendTemplateRsvpNotificationEmails, sendTemplateRsvpConfirmationEmail } from "../email.js";
 import multer from "multer";
 import path from "path";
@@ -67,8 +68,8 @@ export function registerTemplateRoutes(app: Express) {
     }
   });
 
-  // Template-scoped RSVP submission
-  app.post("/api/templates/:templateId/rsvp", async (req, res) => {
+  // Template-scoped RSVP submission (with rate limiting)
+  app.post("/api/templates/:templateId/rsvp", rsvpLimiter, async (req, res) => {
     try {
       const { templateId } = req.params;
       

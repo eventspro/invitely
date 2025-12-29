@@ -10,10 +10,10 @@ interface SEOMetadataProps {
 export default function SEOMetadata({ config, templateName, isMainPage = false }: SEOMetadataProps) {
   const couple = config.couple || {};
   const wedding = config.wedding || {};
-  const locations = config.locations || [];
+  const locations = config.locations?.venues || [];
   
   // Generate structured data for wedding event
-  const weddingEvent = {
+  const weddingEvent: any = {
     "@context": "https://schema.org",
     "@type": "Event",
     "name": `${couple.groomName || "Groom"} & ${couple.brideName || "Bride"} Wedding`,
@@ -32,8 +32,8 @@ export default function SEOMetadata({ config, templateName, isMainPage = false }
         "name": couple.brideName || "Bride"
       }
     ],
-    "url": `https://4ever.am/${config.slug || ''}`,
-    "image": config.hero?.backgroundImage || "https://4ever.am/attached_assets/default-wedding-couple.jpg"
+    "url": `https://4ever.am/${templateName || ''}`,
+    "image": config.hero?.images?.[0] || "https://4ever.am/attached_assets/default-wedding-couple.jpg"
   };
 
   // Add location if available
@@ -61,9 +61,9 @@ export default function SEOMetadata({ config, templateName, isMainPage = false }
   const openGraphData = {
     title: pageTitle,
     description: pageDescription,
-    url: isMainPage ? "https://4ever.am" : `https://4ever.am/${config.slug || ''}`,
+    url: isMainPage ? "https://4ever.am" : `https://4ever.am/${templateName || ''}`,
     type: isMainPage ? "website" : "event",
-    image: config.hero?.backgroundImage || "https://4ever.am/attached_assets/default-wedding-couple.jpg",
+    image: config.hero?.images?.[0] || "https://4ever.am/attached_assets/default-wedding-couple.jpg",
     site_name: "4ever.am",
     locale: "hy_AM"
   };
@@ -116,7 +116,7 @@ export default function SEOMetadata({ config, templateName, isMainPage = false }
       existingTag.setAttribute('content', content);
     });
 
-  }, [pageTitle, pageDescription, openGraphData.image, config.slug]);
+  }, [pageTitle, pageDescription, openGraphData.image, templateName]);
 
   return (
     <>

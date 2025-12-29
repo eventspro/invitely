@@ -1,3 +1,5 @@
+export type LanguageConfig = typeof en;
+
 export const en = {
   // Navigation
   navigation: {

@@ -75,25 +75,42 @@ tsx scripts/migrate-default-template.ts      # Initial template seeding
 ### API Route Patterns & Authentication
 Routes in `server/routes/` follow RESTful conventions with multi-layered authentication:
 
+**Route Organization:**
+- `server/routes/templates.ts` - Template configuration, RSVP submission, image management
+- `server/routes/admin-panel.ts` - Template owner dashboard, analytics, photo management
+- `server/routes/admin.ts` - Platform admin endpoints (order processing, user management)
+- `server/routes/auth.ts` - Authentication endpoints (login, registration, password reset)
+- `server/routes/platform-admin.ts` - Platform-level administration
+
+**Authentication Middleware** (defined in `server/middleware/auth.ts`):
+- `authenticateUser` - Validates JWT token, extracts user from token payload
+- `requireAdminPanelAccess` - Verifies template ownership via orders table (Ultimate plan)
+- `optionalAuth` - Allows both authenticated and guest access
+- Auth functions: `hashPassword()`, `comparePassword()`, `generateToken()`, `verifyToken()`
+
 **Public Routes:**
 - `GET /api/templates/:identifier/config` - Fetch by ID or slug (public access)
 - `POST /api/templates/:templateId/rsvp` - RSVP submission with email routing (validates with insertRsvpSchema, includes duplicate detection)
 
 **Template Admin Routes** (require Ultimate plan purchase):
-- `GET /api/templates/:templateId/rsvps` - Get all RSVPs for template
+- `GET /api/admin-panel/:templateId/dashboard` - Dashboard stats and analytics
+- `GET /api/admin-panel/:templateId/rsvps` - Get all RSVPs with filtering
+- `GET /api/admin-panel/:templateId/rsvps/export` - Export RSVPs to Excel
 - `POST /api/templates/:templateId/photos/upload` - Multi-provider image upload with presigned URLs
 - `GET /api/templates/:templateId/images` - List template-scoped images
 - `DELETE /api/templates/:templateId/images/:imageId` - Delete template image
 - `POST /api/templates/:templateId/maintenance` - Toggle maintenance mode
-- Protected by `requireAdminPanelAccess` middleware - JWT-based auth linking to orders table
+- Protected by `authenticateUser` + `requireAdminPanelAccess` middleware chain
 
 **Platform Admin Routes:**
 - `/api/admin/*` - Separate management system authentication
 - User management, order processing, template creation
+- Uses separate authentication system from template admins
 
 **Development Auth Bypass:**
 - Development mode automatically bypasses authentication (`NODE_ENV=development` or `VERCEL=1`)
 - Creates mock users for testing admin functionality locally
+- Middleware checks for development environment before validating tokens
 
 **SSL-Safe Media Serving:**
 - `/api/images/serve/:filename` - SSL-safe image serving with proper Content-Length headers
@@ -121,12 +138,29 @@ Routes in `server/routes/` follow RESTful conventions with multi-layered authent
 
 ### Critical Files to Understand
 - `shared/schema.ts` - Complete database schema with Zod validation (275+ lines)
+  - Tables: templates, managementUsers, orders, userAdminPanels, rsvps, guestPhotos, images
+  - All validation schemas with Armenian bilingual error messages
 - `client/src/templates/types.ts` - WeddingConfig interface (200+ lines of config options)
+  - Defines all customizable template properties (colors, fonts, sections, content)
+- `client/src/templates/index.ts` - Template registry with lazy loading
+  - Central registry of all available templates
+  - `loadTemplateConfig()` function for dynamic config imports
 - `server/index.ts` - Express server setup with environment validation and error handling
+  - SSL/HTTPS redirect logic for production
+  - Security headers (HSTS, CORS, CSP)
+- `server/middleware/auth.ts` - Authentication middleware and JWT handling
+  - Token generation/verification, password hashing
+  - Multi-layered access control (user, template admin, platform admin)
 - `server/email.ts` - Brevo email service with template-scoped routing and Armenian localization
+  - RSVP notifications with 3-tier recipient priority
 - `server/routes/templates.ts` - Template management, RSVP processing, and admin endpoints
+  - Core template CRUD operations and public API
+- `server/routes/admin-panel.ts` - Template owner dashboard and analytics
+  - RSVP management, photo management, Google Drive integration
 - `vite.config.ts` - Development proxy, build chunking, and path resolution
+  - Manual chunks for optimal loading (vendor, router, UI)
 - `vercel.json` - Serverless deployment configuration with asset routing
+  - Route prioritization (API before static), caching headers
 
 ### Armenian Localization
 This platform specifically supports **Armenian weddings** with:
@@ -137,8 +171,17 @@ This platform specifically supports **Armenian weddings** with:
 
 ### Testing & Quality Assurance
 - **E2E Testing**: Playwright with auto-server startup (`npx playwright test`)
+  - Tests in `tests/e2e/`, runs on Chromium, Firefox, and Webkit
+  - Configured to auto-start dev server, reuse server for faster iteration
+  - Reporter generates HTML reports in `playwright-report/`
 - **SSL Protocol Testing**: PowerShell scripts (`test-ssl-audio-fixes.ps1`, `test-ssl-fixes.ps1`) + Node.js (`test-ssl-image-endpoint.js`)
+  - Validates Content-Length headers, range requests, CORS
+  - Tests incognito mode compatibility and security headers
 - **RSVP Testing**: PowerShell scripts for duplicate prevention and validation (`tests/rsvp-test.ps1`)
+  - Tests duplicate detection logic, email validation, template-scoped isolation
+- **API Testing**: PowerShell and Node.js scripts in `tests/api/`
+  - Template configuration, owner functionality, production endpoints
+- **Unit/Integration**: `tests/unit/` and `tests/integration/` for component-level testing
 - **SSL Validation**: Range request (HTTP 206), CORS headers, incognito mode compatibility, security headers
 - **Performance**: Page load time limits (<10s), console error detection, network error filtering
 - **Validation**: Comprehensive Zod schemas with Armenian bilingual error messages
@@ -167,12 +210,20 @@ if (range) {
 
 ### Deployment & Environment
 - **Vercel deployment** with `vercel.json` configuration for SPA routing
+  - Production: `npm run deploy:production` with `vercel.json`
+  - Staging: `npm run deploy:staging` with `vercel.staging.json`
 - **Environment variables**: `DATABASE_URL`, `JWT_SECRET`, `BREVO_API_KEY`, admin credentials
+  - Setup script: `setup-env.bat` for Windows environment configuration
 - **Asset handling**: Static assets in `attached_assets/` served via Vercel routes with API route priority
+  - Route prioritization: API routes matched before static file serving
+  - Caching headers: 31536000s (1 year) for assets, 86400s (1 day) for previews
 - **Storage providers**: Cloudflare R2 (primary), Google Cloud Storage, AWS S3 (fallback)
+  - Implemented in `server/objectStorage.ts` and `server/r2Storage.ts`
 - **SSL Configuration**: Production database requires SSL with proper certificate validation
+  - Trust proxy enabled for Vercel (301 redirect for HTTPS enforcement)
 - **Monitoring**: Health check at `/health`, request logging middleware
 - **SEO**: `robots.txt`, `sitemap.xml`, and `SEOMetadata` component with Schema.org structured data
+  - Multilingual sitemap with proper hreflang tags
 
 ### Incident Management & Documentation
 - **Incident Reports**: Structured reports in `incidents/resolved/` with root cause analysis
