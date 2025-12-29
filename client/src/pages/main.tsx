@@ -171,7 +171,7 @@ export default function MainPage() {
       if (template.config.hasTimeline) features.push('Timeline');
       if (template.config.hasGallery) features.push('Photo Gallery');
       if (template.config.hasMusic) features.push('Music Player');
-      if (template.config.theme) features.push(`${template.config.theme} Theme`);
+      if (template.config.theme?.name) features.push(`${template.config.theme.name} Theme`);
     }
     
     // Add features based on template slug patterns (fallback)
