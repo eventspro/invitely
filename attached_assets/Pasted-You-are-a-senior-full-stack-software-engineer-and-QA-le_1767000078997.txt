@@ -1,0 +1,129 @@
+You are a senior full-stack software engineer and QA lead.
+
+I have uploaded a ZIP folder containing the full source code of this project.
+
+Your task is to fully analyze the entire project, including frontend, backend, assets, configuration, and integrations, and prepare it to be production-ready.
+
+✅ Core Objectives
+
+Full Project Audit
+
+Review every file and folder
+
+Understand intended functionality from code, UI, and structure
+
+Identify incomplete, broken, or missing logic
+
+Bug Detection & Fixing
+
+Identify all existing bugs
+
+Fix them without breaking any existing working functionality
+
+Ensure no regressions
+
+Missing & Broken Functionality
+
+Identify all missing, partially implemented, or non-working features
+
+Fully implement and fix them
+
+Ensure every feature behaves logically and consistently
+
+Buttons & UI Interactions
+
+Every button must work and perform a meaningful action
+
+No dead buttons, placeholders, or console-only actions
+
+All interactions must give proper user feedback (navigation, modals, messages, redirects, etc.)
+
+Payments & Contact Rules (Very Important)
+
+❌ DO NOT implement any online payment system
+
+Remove or disable any existing payment gateway logic
+
+✅ All contact and payment actions must redirect or link to:
+
+Instagram
+
+Telegram
+
+Facebook
+
+Ensure these links are properly configured and functional
+
+Images & Assets
+
+Identify all missing, broken, or incorrectly referenced images
+
+Fix paths, replace missing assets if needed
+
+Ensure all images load correctly in production
+
+Functionality Completion
+
+No feature should be:
+
+Half-implemented
+
+Broken
+
+Non-responsive
+
+Everything visible in the UI must work as expected
+
+QA & Testing
+
+Perform full QA testing:
+
+UI/UX testing
+
+Functional testing
+
+Edge cases
+
+Error handling
+
+Fix all discovered issues
+
+Ensure clean console (no critical errors or warnings)
+
+Production Readiness
+
+Ensure:
+
+Clean, readable, and maintainable code
+
+Proper error handling
+
+Stable behavior across all flows
+
+The project must be ready for production deployment when finished
+
+🛑 Constraints
+
+Do NOT remove features unless absolutely necessary
+
+Do NOT introduce new paid services or APIs
+
+Preserve original project intent and design
+
+Prefer fixing and completing over rewriting
+
+📋 Final Deliverables
+
+Fully working project
+
+All bugs fixed
+
+All buttons functional
+
+All images loading
+
+No online payment system
+
+Social media–based contact/payment flow
+
+QA-tested and production-ready
