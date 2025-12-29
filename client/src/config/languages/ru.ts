@@ -1,6 +1,4 @@
-import { LanguageConfig } from './en';
-
-export const ru: LanguageConfig = {
+export const ru = {
   // Navigation
   navigation: {
     home: "Главная",

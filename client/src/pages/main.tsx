@@ -23,8 +23,11 @@ import {
   Download,
   Upload,
   QrCode,
-  Settings
+  Settings,
+  Send,
+  MessageCircle
 } from "lucide-react";
+import { SiInstagram, SiTelegram, SiFacebook } from "react-icons/si";
 import { Link } from "wouter";
 import { useTranslation, useLocaleFormat } from "@/hooks/useLanguage";
 import LanguageSelector from "@/components/LanguageSelector";
@@ -434,9 +437,13 @@ export default function MainPage() {
             </div>
             <div className="flex items-center space-x-4">
               <LanguageSelector />
-              <button className="bg-softGold hover:bg-softGold/90 text-white px-4 py-2 rounded-lg transition-colors">
+              <a 
+                href="#contact" 
+                className="bg-softGold hover:bg-softGold/90 text-white px-4 py-2 rounded-lg transition-colors"
+                data-testid="button-start-today"
+              >
                 {t.hero.cta}
-              </button>
+              </a>
             </div>
           </div>
         </div>
@@ -788,13 +795,38 @@ export default function MainPage() {
             <p className="text-xl text-white/80 mb-8 max-w-3xl mx-auto">
               {t.contactSection.subtitle}
             </p>
-            <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
-              <button className="bg-softGold hover:bg-softGold/90 text-white px-8 py-4 rounded-lg text-lg font-medium transition-colors">
-                Start Now
-              </button>
-              <button className="border-2 border-white text-white hover:bg-white hover:text-charcoal px-8 py-4 rounded-lg text-lg font-medium transition-colors">
-                Contact Us
-              </button>
+            <p className="text-lg text-white/70 mb-6">Contact us on social media to get started</p>
+            <div className="flex flex-col sm:flex-row gap-4 justify-center items-center flex-wrap">
+              <a 
+                href="https://www.instagram.com/weddingsites_am" 
+                target="_blank" 
+                rel="noopener noreferrer"
+                className="bg-gradient-to-r from-purple-600 via-pink-500 to-orange-400 hover:opacity-90 text-white px-8 py-4 rounded-lg text-lg font-medium transition-all flex items-center gap-3"
+                data-testid="link-instagram-contact"
+              >
+                <SiInstagram className="w-6 h-6" />
+                Instagram
+              </a>
+              <a 
+                href="https://t.me/weddingsites_am" 
+                target="_blank" 
+                rel="noopener noreferrer"
+                className="bg-[#0088cc] hover:bg-[#0088cc]/90 text-white px-8 py-4 rounded-lg text-lg font-medium transition-colors flex items-center gap-3"
+                data-testid="link-telegram-contact"
+              >
+                <SiTelegram className="w-6 h-6" />
+                Telegram
+              </a>
+              <a 
+                href="https://www.facebook.com/weddingsites.am" 
+                target="_blank" 
+                rel="noopener noreferrer"
+                className="bg-[#1877f2] hover:bg-[#1877f2]/90 text-white px-8 py-4 rounded-lg text-lg font-medium transition-colors flex items-center gap-3"
+                data-testid="link-facebook-contact"
+              >
+                <SiFacebook className="w-6 h-6" />
+                Facebook
+              </a>
             </div>
           </div>
         </div>
@@ -832,12 +864,40 @@ export default function MainPage() {
               </ul>
             </div>
             <div>
-              <h4 className="font-semibold mb-4">Contact</h4>
-              <ul className="space-y-2 text-white/70">
-                <li>Email: info@weddingsites.com</li>
-                <li>Phone: +1 (555) 123-4567</li>
-                <li>Support: support@weddingsites.com</li>
-              </ul>
+              <h4 className="font-semibold mb-4">Contact Us</h4>
+              <p className="text-white/70 mb-4">Reach out on social media</p>
+              <div className="flex gap-4">
+                <a 
+                  href="https://www.instagram.com/weddingsites_am" 
+                  target="_blank" 
+                  rel="noopener noreferrer"
+                  className="text-white/70 hover:text-white transition-colors"
+                  data-testid="link-instagram-footer"
+                  aria-label="Instagram"
+                >
+                  <SiInstagram className="w-6 h-6" />
+                </a>
+                <a 
+                  href="https://t.me/weddingsites_am" 
+                  target="_blank" 
+                  rel="noopener noreferrer"
+                  className="text-white/70 hover:text-white transition-colors"
+                  data-testid="link-telegram-footer"
+                  aria-label="Telegram"
+                >
+                  <SiTelegram className="w-6 h-6" />
+                </a>
+                <a 
+                  href="https://www.facebook.com/weddingsites.am" 
+                  target="_blank" 
+                  rel="noopener noreferrer"
+                  className="text-white/70 hover:text-white transition-colors"
+                  data-testid="link-facebook-footer"
+                  aria-label="Facebook"
+                >
+                  <SiFacebook className="w-6 h-6" />
+                </a>
+              </div>
             </div>
           </div>
           <div className="border-t border-white/20 mt-8 pt-8 text-center text-white/70">

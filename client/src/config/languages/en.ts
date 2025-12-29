@@ -208,6 +208,22 @@ export const en = {
     }
   },
 
+  // Social Media Links - For Contact & Payment
+  socialMedia: {
+    instagram: {
+      url: "https://www.instagram.com/weddingsites_am",
+      label: "Instagram"
+    },
+    telegram: {
+      url: "https://t.me/weddingsites_am",
+      label: "Telegram"
+    },
+    facebook: {
+      url: "https://www.facebook.com/weddingsites.am",
+      label: "Facebook"
+    }
+  },
+
   // Footer Section
   footer: {
     tagline: "Beautiful wedding websites for your special day",
@@ -226,10 +242,8 @@ export const en = {
       mobileResponsive: "Mobile Responsive"
     },
     contact: {
-      title: "Contact",
-      email: "Email: info@weddingsites.com",
-      phone: "Phone: +1 (555) 123-4567",
-      support: "Support: support@weddingsites.com"
+      title: "Contact Us",
+      followUs: "Follow us on social media"
     },
     copyright: "© 2025 WeddingSites. All rights reserved."
   },
