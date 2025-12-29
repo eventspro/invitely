@@ -169,7 +169,7 @@ export const requireAdminPanelAccess = async (req: AuthenticatedRequest, res: Re
 
     if (!adminPanel) {
       // Production bypass to unblock platform-admin initiated uploads while we align token scopes
-      if (process.env.VERCEL === '1') {
+      if (process.env.VERCEL) {
         console.log('🔓 Vercel mode: bypassing admin panel access check');
         req.adminPanel = {
           id: 'vercel-bypass',
