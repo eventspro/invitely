@@ -187,7 +187,8 @@ export function registerTemplateRoutes(app: Express) {
       }
     }),
     limits: {
-      fileSize: 10 * 1024 * 1024 // 10MB limit
+      // Vercel serverless hard limit is ~4.5MB; keep buffer below that
+      fileSize: 4 * 1024 * 1024 // 4MB limit to stay under Vercel body cap
     },
     fileFilter: (req: any, file: any, cb: any) => {
       // Accept both images and audio files

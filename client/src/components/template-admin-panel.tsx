@@ -1544,9 +1544,9 @@ export default function TemplateAdminPanel() {
                         const file = e.target.files?.[0];
                         if (!file) return;
 
-                        // Validate file size (10MB max)
-                        if (file.size > 10 * 1024 * 1024) {
-                          alert('File size must be less than 10MB');
+                        // Vercel serverless body cap ~4.5MB; enforce 4MB client-side
+                        if (file.size > 4 * 1024 * 1024) {
+                          alert('File size must be less than 4MB (Vercel limit)');
                           return;
                         }
 
