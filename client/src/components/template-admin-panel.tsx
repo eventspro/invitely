@@ -1557,46 +1557,32 @@ export default function TemplateAdminPanel() {
                         }
 
                         try {
+                          const formData = new FormData();
+                          formData.append('music', file);
+
                           const token = localStorage.getItem("admin-token");
                           
-                          // Step 1: Get presigned upload URL
-                          const presignedResponse = await fetch(`/api/templates/${template.id}/music/presigned-url`, {
+                          // Stream upload through server to R2 (fast, no CORS issues)
+                          const response = await fetch(`/api/templates/${template.id}/music/stream-upload`, {
                             method: 'POST',
                             headers: {
-                              'Content-Type': 'application/json',
                               Authorization: `Bearer ${token}`,
                             },
-                            body: JSON.stringify({
-                              filename: file.name,
-                              contentType: file.type,
-                            }),
+                            body: formData,
                           });
 
-                          if (!presignedResponse.ok) {
-                            throw new Error('Failed to get upload URL');
+                          if (!response.ok) {
+                            throw new Error('Upload failed');
                           }
 
-                          const { uploadUrl, servingUrl } = await presignedResponse.json();
+                          const data = await response.json();
                           
-                          // Step 2: Upload directly to R2 storage (fast!)
-                          const uploadResponse = await fetch(uploadUrl, {
-                            method: 'PUT',
-                            headers: {
-                              'Content-Type': file.type,
-                            },
-                            body: file,
-                          });
-
-                          if (!uploadResponse.ok) {
-                            throw new Error('Upload to storage failed');
-                          }
-                          
-                          // Step 3: Update config with new music URL
+                          // Update config with new music URL
                           const newConfig = {
                             ...template.config,
                             music: {
                               ...template.config.music,
-                              audioUrl: servingUrl,
+                              audioUrl: data.url,
                               enabled: true,
                             }
                           };
