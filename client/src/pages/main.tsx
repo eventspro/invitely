@@ -114,15 +114,15 @@ export default function MainPage() {
           
           // Try to match specific templates to their preview images based on actual slugs
           if (template.slug.includes('harut')) {
-            previewImage = '/template_previews/template-preview-1.jpg';
+            previewImage = '/template_previews/img1.jpg';
           } else if (template.slug.includes('forest') || template.slug.includes('lily')) {
-            previewImage = '/template_previews/template-preview-2.jpg';
+            previewImage = '/template_previews/img2.jpg';
           } else if (template.slug.includes('michael') || template.slug.includes('sarah')) {
-            previewImage = '/template_previews/template-preview-3.jpg';
+            previewImage = '/template_previews/img4.jpg';
           } else if (template.slug.includes('alexander') || template.slug.includes('isabella')) {
-            previewImage = '/template_previews/template-preview-4.jpg';
+            previewImage = '/template_previews/img4.avif';
           } else if (template.slug.includes('david') || template.slug.includes('rose')) {
-            previewImage = '/template_previews/template-preview-5.jpg';
+            previewImage = '/template_previews/img5.jpeg';
           }
           
           return {
