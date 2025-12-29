@@ -67,4 +67,27 @@ export function registerMusicUploadRoutes(app: Express) {
       res.status(500).json({ error: 'Failed to upload music' });
     }
   });
+  
+  // Delete music from R2 storage
+  app.delete("/api/templates/:templateId/music/:filename", uploadLimiter, authenticateUser, requireAdminPanelAccess, async (req, res) => {
+    try {
+      const { templateId, filename } = req.params;
+      
+      console.log(`🗑️ Deleting music from R2: ${filename}`);
+      
+      // Delete from R2 storage
+      await r2Storage.deleteImage(templateId, filename, 'music');
+      
+      console.log(`✅ Music deleted from R2: ${filename}`);
+      
+      res.json({
+        success: true,
+        message: 'Music deleted successfully'
+      });
+      
+    } catch (error) {
+      console.error('Music deletion error:', error);
+      res.status(500).json({ error: 'Failed to delete music' });
+    }
+  });
 }

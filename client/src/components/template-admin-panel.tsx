@@ -1611,6 +1611,48 @@ export default function TemplateAdminPanel() {
                         <audio controls className="h-10">
                           <source src={template.config.music.audioUrl} type="audio/mpeg" />
                         </audio>
+                        <Button
+                          variant="destructive"
+                          size="sm"
+                          onClick={async () => {
+                            if (!confirm('Are you sure you want to remove this music?')) return;
+                            
+                            try {
+                              const filename = template.config.music?.audioUrl?.split('/').pop();
+                              if (!filename) return;
+                              
+                              const token = localStorage.getItem("admin-token");
+                              const response = await fetch(`/api/templates/${template.id}/music/${filename}`, {
+                                method: 'DELETE',
+                                headers: {
+                                  Authorization: `Bearer ${token}`,
+                                },
+                              });
+
+                              if (!response.ok) {
+                                throw new Error('Delete failed');
+                              }
+
+                              // Update config to remove music URL
+                              const newConfig = {
+                                ...template.config,
+                                music: {
+                                  ...template.config.music,
+                                  audioUrl: undefined,
+                                  enabled: false,
+                                }
+                              };
+                              setTemplate(prev => prev ? { ...prev, config: newConfig } : null);
+
+                              alert('Music removed successfully!');
+                            } catch (error) {
+                              console.error('Music deletion error:', error);
+                              alert('Failed to remove music. Please try again.');
+                            }
+                          }}
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </Button>
                       </div>
                     </div>
                   )}
