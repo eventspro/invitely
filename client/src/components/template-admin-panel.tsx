@@ -1560,8 +1560,12 @@ export default function TemplateAdminPanel() {
                           const formData = new FormData();
                           formData.append('music', file);
 
+                          const token = localStorage.getItem("admin-token");
                           const response = await fetch(`/api/templates/${template.id}/music/upload`, {
                             method: 'POST',
+                            headers: {
+                              Authorization: `Bearer ${token}`,
+                            },
                             body: formData,
                           });
 
