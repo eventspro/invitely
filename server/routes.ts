@@ -936,11 +936,26 @@ export async function registerRoutes(app: Express): Promise<Server> {
       console.log(`🎵 Proxying static asset: ${staticAssetUrl}`);
       
       // Check if we can access the file locally first (for development)
+      // Include uploads directory for user-uploaded music files
+      const uploadsDir = process.env.VERCEL ? '/tmp/uploads' : path.join(process.cwd(), 'uploads');
       const possiblePaths = [
         path.join(process.cwd(), 'public', 'attached_assets', filename),
         path.join(process.cwd(), 'public', 'audio', filename),
-        path.join(process.cwd(), 'attached_assets', filename)
+        path.join(process.cwd(), 'attached_assets', filename),
+        // Check in uploads directory (including subdirectories)
+        path.join(uploadsDir, filename)
       ];
+
+      // Also check in template-specific upload directories
+      if (fs.existsSync(uploadsDir)) {
+        const subdirs = fs.readdirSync(uploadsDir).filter(item => {
+          const itemPath = path.join(uploadsDir, item);
+          return fs.statSync(itemPath).isDirectory();
+        });
+        subdirs.forEach(subdir => {
+          possiblePaths.push(path.join(uploadsDir, subdir, filename));
+        });
+      }
 
       let filePath;
       for (const testPath of possiblePaths) {
