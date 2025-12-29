@@ -8,8 +8,8 @@ import couplePhoto from "@assets/couple11.jpg";
 import detailPhoto from "@assets/Blog_Banner_Left_Hand_Story_1755890185205.webp";
 import heartImage from "@assets/heart-tattoo.jfif";
 
-// SSL-safe audio URL using our backend endpoint
-const weddingMusicUrl = "/api/audio/serve/Indila - Love Story_1756335711694.mp3";
+// SSL-safe audio URL using our backend endpoint - now configurable via template config
+const defaultMusicUrl = "/api/audio/serve/Indila - Love Story_1756335711694.mp3";
 
 interface HeroSectionProps {
   config?: WeddingConfig;
@@ -176,13 +176,21 @@ export default function HeroSection({ config = weddingConfig }: HeroSectionProps
   };
 
   useEffect(() => {
+    // Check if music is enabled in config
+    const musicEnabled = config.sections?.music?.enabled !== false && config.music?.enabled !== false;
+    if (!musicEnabled) {
+      setAudioLoaded(false);
+      return;
+    }
+
     // Create audio element
     audioRef.current = new Audio();
-    // Using SSL-safe audio endpoint for background music
-    audioRef.current.src = weddingMusicUrl;
+    // Using SSL-safe audio endpoint - use custom music URL or default
+    const musicUrl = config.music?.audioUrl || defaultMusicUrl;
+    audioRef.current.src = musicUrl;
 
     audioRef.current.loop = true;
-    audioRef.current.volume = 0.3; // Set volume to 30%
+    audioRef.current.volume = config.music?.volume || 0.3; // Use configured volume or default to 30%
 
     audioRef.current.addEventListener("canplaythrough", () => {
       setAudioLoaded(true);
@@ -199,7 +207,7 @@ export default function HeroSection({ config = weddingConfig }: HeroSectionProps
         audioRef.current = null;
       }
     };
-  }, []);
+  }, [config.music?.audioUrl, config.music?.enabled, config.music?.volume, config.sections?.music?.enabled]);
 
   const toggleMusic = async () => {
     if (!audioRef.current) return;

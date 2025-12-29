@@ -16,7 +16,8 @@ import {
   MapPin,
   Clock4,
   Users,
-  Camera
+  Camera,
+  Music
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import type { WeddingConfig } from '@/templates/types';
@@ -45,6 +46,7 @@ const DEFAULT_SECTIONS: Omit<SectionConfig, 'enabled' | 'order'>[] = [
   { id: 'timeline', name: 'Timeline', title: 'Wedding Timeline', icon: Clock4 },
   { id: 'rsvp', name: 'RSVP Form', title: 'Guest Registration', icon: Users },
   { id: 'photos', name: 'Photo Gallery', title: 'Wedding Photos', icon: Camera },
+  { id: 'music', name: 'Background Music', title: 'Wedding Music', icon: Music },
 ];
 
 export function SectionManager({ config, onConfigChange, className }: SectionManagerProps) {

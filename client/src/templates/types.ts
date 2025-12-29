@@ -179,6 +179,14 @@ export interface WeddingConfig {
     enterPassword: string;
   };
 
+  // Music Configuration
+  music?: {
+    enabled: boolean;
+    audioUrl?: string; // URL to the wedding music MP3
+    volume?: number; // Volume level (0-1)
+    autoplay?: boolean; // Auto-play on page load
+  };
+
   // Template-specific sections control
   sections?: {
     hero?: { enabled: boolean; order?: number };
@@ -188,6 +196,7 @@ export interface WeddingConfig {
     timeline?: { enabled: boolean; order?: number };
     rsvp?: { enabled: boolean; order?: number };
     photos?: { enabled: boolean; order?: number };
+    music?: { enabled: boolean; order?: number };
   };
 
   // UI Elements & Icons

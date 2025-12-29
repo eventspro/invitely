@@ -31,7 +31,8 @@ import {
   ChevronUp,
   ChevronDown,
   Copy,
-  Calendar
+  Calendar,
+  Music
 } from "lucide-react";
 import type { WeddingConfig } from "@/templates/types";
 import { ImageUploader } from "@/components/ui/image-uploader";
@@ -351,6 +352,7 @@ export default function TemplateAdminPanel() {
             <TabsTrigger value="content">Content</TabsTrigger>
             <TabsTrigger value="theme">Theme</TabsTrigger>
             <TabsTrigger value="sections">Sections</TabsTrigger>
+            <TabsTrigger value="music">Music</TabsTrigger>
             <TabsTrigger value="images">Images</TabsTrigger>
             <TabsTrigger value="rsvps">RSVPs ({template.stats.totalRsvps})</TabsTrigger>
             <TabsTrigger value="settings">Settings</TabsTrigger>
@@ -1481,6 +1483,165 @@ export default function TemplateAdminPanel() {
                     setTemplate(prev => prev ? { ...prev, config: newConfig } : null);
                   }}
                 />
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          {/* Music Tab */}
+          <TabsContent value="music" className="space-y-6">
+            <Card>
+              <CardHeader>
+                <div className="flex items-center gap-2">
+                  <Music className="w-5 h-5" />
+                  <CardTitle>Background Music</CardTitle>
+                </div>
+                <CardDescription>
+                  Upload and configure background music for your wedding website
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-6">
+                {/* Music Enable/Disable */}
+                <div className="flex items-center justify-between p-4 bg-muted/50 rounded-lg">
+                  <div className="space-y-1">
+                    <h4 className="font-medium">Enable Background Music</h4>
+                    <p className="text-sm text-muted-foreground">
+                      Allow guests to play background music on your wedding website
+                    </p>
+                  </div>
+                  <label className="relative inline-flex items-center cursor-pointer">
+                    <input
+                      type="checkbox"
+                      className="sr-only peer"
+                      checked={template.config.music?.enabled !== false}
+                      onChange={(e) => {
+                        const newConfig = {
+                          ...template.config,
+                          music: {
+                            ...template.config.music,
+                            enabled: e.target.checked,
+                          }
+                        };
+                        setTemplate(prev => prev ? { ...prev, config: newConfig } : null);
+                      }}
+                    />
+                    <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-pink-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-pink-600"></div>
+                  </label>
+                </div>
+
+                {/* Music Upload */}
+                <div className="space-y-4">
+                  <div>
+                    <Label htmlFor="music-upload">Upload Music (MP3)</Label>
+                    <p className="text-sm text-muted-foreground mb-2">
+                      Upload a background music file in MP3 format (max 10MB)
+                    </p>
+                    <input
+                      id="music-upload"
+                      type="file"
+                      accept="audio/mp3,audio/mpeg"
+                      className="w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-pink-50 file:text-pink-700 hover:file:bg-pink-100"
+                      onChange={async (e) => {
+                        const file = e.target.files?.[0];
+                        if (!file) return;
+
+                        // Validate file size (10MB max)
+                        if (file.size > 10 * 1024 * 1024) {
+                          alert('File size must be less than 10MB');
+                          return;
+                        }
+
+                        // Validate file type
+                        if (!file.type.includes('audio')) {
+                          alert('Please upload an audio file (MP3)');
+                          return;
+                        }
+
+                        try {
+                          const formData = new FormData();
+                          formData.append('music', file);
+
+                          const response = await fetch(`/api/templates/${template.id}/music/upload`, {
+                            method: 'POST',
+                            body: formData,
+                          });
+
+                          if (!response.ok) {
+                            throw new Error('Upload failed');
+                          }
+
+                          const data = await response.json();
+                          
+                          // Update config with new music URL
+                          const newConfig = {
+                            ...template.config,
+                            music: {
+                              ...template.config.music,
+                              audioUrl: data.url,
+                              enabled: true,
+                            }
+                          };
+                          setTemplate(prev => prev ? { ...prev, config: newConfig } : null);
+
+                          alert('Music uploaded successfully!');
+                        } catch (error) {
+                          console.error('Music upload error:', error);
+                          alert('Failed to upload music. Please try again.');
+                        }
+                      }}
+                    />
+                  </div>
+
+                  {/* Current Music Display */}
+                  {template.config.music?.audioUrl && (
+                    <div className="p-4 bg-green-50 border border-green-200 rounded-lg">
+                      <div className="flex items-center gap-3">
+                        <Music className="w-5 h-5 text-green-600" />
+                        <div className="flex-1">
+                          <h5 className="font-medium text-green-900">Music Uploaded</h5>
+                          <p className="text-sm text-green-700">
+                            {template.config.music.audioUrl.split('/').pop()}
+                          </p>
+                        </div>
+                        <audio controls className="h-10">
+                          <source src={template.config.music.audioUrl} type="audio/mpeg" />
+                        </audio>
+                      </div>
+                    </div>
+                  )}
+                </div>
+
+                {/* Music Settings */}
+                <div className="space-y-4">
+                  <div>
+                    <Label htmlFor="music-volume">Volume Level ({Math.round((template.config.music?.volume || 0.3) * 100)}%)</Label>
+                    <input
+                      id="music-volume"
+                      type="range"
+                      min="0"
+                      max="100"
+                      value={(template.config.music?.volume || 0.3) * 100}
+                      onChange={(e) => {
+                        const newConfig = {
+                          ...template.config,
+                          music: {
+                            enabled: template.config.music?.enabled ?? true,
+                            ...template.config.music,
+                            volume: parseInt(e.target.value) / 100,
+                          }
+                        };
+                        setTemplate(prev => prev ? { ...prev, config: newConfig } : null);
+                      }}
+                      className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer slider"
+                    />
+                  </div>
+                </div>
+
+                <div className="pt-4">
+                  <Button onClick={saveTemplate} disabled={saving}>
+                    <Save className="w-4 h-4 mr-2" />
+                    {saving ? "Saving..." : "Save Music Settings"}
+                  </Button>
+                </div>
               </CardContent>
             </Card>
           </TabsContent>

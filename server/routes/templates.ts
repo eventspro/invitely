@@ -332,6 +332,94 @@ export function registerTemplateRoutes(app: Express) {
     }
   });
 
+  // Template-scoped music upload endpoint
+  app.post("/api/templates/:templateId/music/upload", uploadLimiter, authenticateUser, requireAdminPanelAccess, templateUpload.single('music'), async (req, res) => {
+    try {
+      console.log('🎵 Music upload endpoint hit, templateId:', req.params.templateId);
+      console.log('🎵 File received:', !!req.file);
+      
+      const { templateId } = req.params;
+      
+      if (!req.file) {
+        console.log('❌ No music file uploaded');
+        return res.status(400).json({ error: 'No music file uploaded' });
+      }
+      
+      // Validate audio file type
+      if (!req.file.mimetype.includes('audio')) {
+        console.log('❌ Invalid file type:', req.file.mimetype);
+        if (req.file.path) fs.unlinkSync(req.file.path);
+        return res.status(400).json({ error: 'File must be an audio file (MP3)' });
+      }
+      
+      // Validate file size (10MB max)
+      const maxSize = 10 * 1024 * 1024; // 10MB
+      if (req.file.size > maxSize) {
+        console.log('❌ File too large:', req.file.size);
+        if (req.file.path) fs.unlinkSync(req.file.path);
+        return res.status(400).json({ error: 'File size must be less than 10MB' });
+      }
+      
+      console.log('📁 Music file details:', {
+        filename: req.file.filename,
+        originalname: req.file.originalname,
+        size: req.file.size,
+        mimetype: req.file.mimetype,
+        path: req.file.path
+      });
+      
+      const template = await storage.getTemplate(templateId);
+      if (!template) {
+        console.log('❌ Template not found:', templateId);
+        if (req.file.path) fs.unlinkSync(req.file.path);
+        return res.status(404).json({ message: "Template not found" });
+      }
+      
+      console.log('✅ Template found:', template.name);
+      
+      // For music, we'll use the audio serving endpoint
+      const audioUrl = `/api/audio/serve/${req.file.filename}`;
+      
+      console.log(`🎵 Music uploaded: ${req.file.filename} for template ${templateId}`);
+      
+      const response = {
+        success: true,
+        url: audioUrl,
+        name: req.file.originalname,
+        size: req.file.size,
+        templateId
+      };
+      
+      console.log('📤 Sending music upload response:', response);
+      res.json(response);
+      
+    } catch (error) {
+      console.error("💥 Music upload error:", error);
+      console.error("💥 Error stack:", error instanceof Error ? error.stack : 'No stack trace');
+      
+      if (req.file && req.file.path) {
+        try {
+          fs.unlinkSync(req.file.path);
+          console.log('🧹 Cleaned up uploaded file');
+        } catch (cleanupError) {
+          console.error('🧹 Failed to cleanup file:', cleanupError);
+        }
+      }
+      
+      res.setHeader('Content-Type', 'application/json');
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred during upload';
+      const errorResponse = { 
+        success: false,
+        error: "Music upload failed", 
+        message: errorMessage,
+        timestamp: new Date().toISOString()
+      };
+      
+      console.log('📤 Sending error response:', errorResponse);
+      res.status(500).json(errorResponse);
+    }
+  });
+
   // Template maintenance toggle
   app.post("/api/templates/:templateId/maintenance", authenticateUser, requireAdminPanelAccess, async (req, res) => {
     try {
