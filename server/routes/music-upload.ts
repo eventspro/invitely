@@ -57,7 +57,7 @@ export function registerMusicUploadRoutes(app: Express) {
       
       res.json({
         success: true,
-        url: `/api/audio/serve/${result.filename}`,
+        url: result.url, // Use R2 public URL directly
         filename: result.filename,
         size: req.file.size
       });
