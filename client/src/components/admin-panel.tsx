@@ -251,7 +251,7 @@ export function AdminPanel() {
             Admin Panel
           </h1>
           <p className="text-charcoal-600">
-            Հարություն & Տաթև Wedding Website Control
+            Wedding Website Control Panel
           </p>
         </div>
 

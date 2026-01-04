@@ -151,6 +151,36 @@ export const weddingConfig = {
     ], // Gallery images array
   },
 
+  // Photo Sharing Configuration (Guest Photo Upload)
+  photoSharing: {
+    enabled: true,
+    pageTitle: "Հարութ & Տաթև",
+    pageSubtitle: "Wedding Photos 📸",
+    welcomeCard: {
+      title: "Հարութ & Տաթև",
+      subtitle: "Wedding Photos 📸",
+      description: "Share your beautiful memories from our special day",
+      nameLabel: "Your Name / Ձեր անունը",
+      namePlaceholder: "Enter your name",
+      submitButton: "Start Sharing Photos 🎉",
+    },
+    uploadSection: {
+      welcomeMessage: "Welcome, {guestName}!",
+      backButton: "Back to Wedding Site",
+      progressTitle: "Upload Progress",
+      progressDescription: "{uploadedCount} of {maxPhotos} photos uploaded",
+      maxPhotosLabel: "Photos Uploaded",
+      uploadCompleteMessage: "🎉 Thank you! You've reached the maximum of {maxPhotos} photos. Your memories have been saved!",
+      uploadSuccessMessage: "{count} նկար(ներ) հաջողությամբ ավելացվեցին! Շնորհակալություն {guestName}! (Ընդամենը: {totalCount})",
+      uploadErrorMessage: "Սխալ վերբեռնելիս: Խնդրում ենք կրկին փորձել:",
+      uploadInstructions: "Click or drag photos to upload. You can upload up to {maxPhotos} photos.",
+    },
+    limits: {
+      maxPhotos: 25,
+      maxFileSize: 10, // MB
+    },
+  },
+
   // Navigation
   navigation: {
     home: "Գլխավոր",

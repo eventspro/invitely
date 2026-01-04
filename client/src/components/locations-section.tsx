@@ -16,8 +16,30 @@ export default function LocationsSection({ config = weddingConfig }: LocationsSe
     window.dispatchEvent(event);
   };
 
-  const getVenueIcon = (title: string) => {
-    const lowerTitle = title.toLowerCase();
+  const getIconComponent = (iconName: string) => {
+    const iconMap: { [key: string]: JSX.Element } = {
+      'Church': <Church className="text-2xl mr-3" />,
+      'Utensils': <Utensils className="text-2xl mr-3" />,
+      'MapPin': <MapPin className="text-2xl mr-3" />,
+      'Calendar': <Calendar className="text-2xl mr-3" />,
+      'Music': <Music className="text-2xl mr-3" />,
+      'Camera': <Camera className="text-2xl mr-3" />,
+      'Heart': <Heart className="text-2xl mr-3" />,
+      'Users': <Users className="text-2xl mr-3" />,
+      'Star': <Star className="text-2xl mr-3" />,
+      'Home': <Home className="text-2xl mr-3" />,
+    };
+    return iconMap[iconName] || <Heart className="text-2xl mr-3" />;
+  };
+
+  const getVenueIcon = (venue: any) => {
+    // Use custom icon if provided
+    if (venue.icon) {
+      return getIconComponent(venue.icon);
+    }
+    
+    // Fallback to auto-detection based on title
+    const lowerTitle = venue.title.toLowerCase();
     if (lowerTitle.includes('ceremony') || lowerTitle.includes('եկեղեցի') || lowerTitle.includes('church')) {
       return <Church className="text-2xl mr-3" />;
     } else if (lowerTitle.includes('reception') || lowerTitle.includes('ճաշարան') || lowerTitle.includes('restaurant') || lowerTitle.includes('dinner')) {
@@ -87,7 +109,7 @@ export default function LocationsSection({ config = weddingConfig }: LocationsSe
                 <div className="p-6">
                   <div className="flex items-center mb-4">
                     <div style={{ color: config.theme?.colors?.accent }}>
-                      {getVenueIcon(venue.title)}
+                      {getVenueIcon(venue)}
                     </div>
                     <h3 className="text-xl font-serif font-bold" style={{
                       color: config.theme?.colors?.primary 

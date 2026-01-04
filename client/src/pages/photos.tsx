@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -7,13 +7,69 @@ import { Camera, Heart, Home, Upload } from "lucide-react";
 import { Link } from "wouter";
 import { ObjectUploader } from "@/components/ObjectUploader";
 import { ImageUploader } from "@/components/ui/image-uploader";
+import { weddingConfig } from "@/config/wedding-config";
+import type { WeddingConfig } from "@/templates/types";
 
 export default function PhotosPage() {
+  const [config, setConfig] = useState<WeddingConfig>(weddingConfig as WeddingConfig);
   const [guestName, setGuestName] = useState("");
   const [nameSubmitted, setNameSubmitted] = useState(false);
   const [uploadStatus, setUploadStatus] = useState<string>("");
   const [uploadedPhotosCount, setUploadedPhotosCount] = useState(0);
-  const MAX_PHOTOS = 25;
+
+  // Load template configuration from URL or default
+  useEffect(() => {
+    const loadTemplateConfig = async () => {
+      try {
+        // Try to get template ID from URL or localStorage
+        const params = new URLSearchParams(window.location.search);
+        const templateId = params.get('template') || localStorage.getItem('currentTemplateId');
+        
+        if (templateId) {
+          const response = await fetch(`/api/templates/${templateId}/config`);
+          if (response.ok) {
+            const data = await response.json();
+            setConfig(data.config as WeddingConfig);
+          }
+        }
+      } catch (error) {
+        console.error('Failed to load template config:', error);
+      }
+    };
+
+    loadTemplateConfig();
+  }, []);
+
+  const photoSharingConfig = config.photoSharing || {
+    enabled: true,
+    pageTitle: config.couple.combinedNames,
+    pageSubtitle: "Wedding Photos 📸",
+    welcomeCard: {
+      title: config.couple.combinedNames,
+      subtitle: "Wedding Photos 📸",
+      description: "Share your beautiful memories from our special day",
+      nameLabel: "Your Name / Ձեր անունը",
+      namePlaceholder: "Enter your name",
+      submitButton: "Start Sharing Photos 🎉",
+    },
+    uploadSection: {
+      welcomeMessage: "Welcome, {guestName}!",
+      backButton: "Back to Wedding Site",
+      progressTitle: "Upload Progress",
+      progressDescription: "{uploadedCount} of {maxPhotos} photos uploaded",
+      maxPhotosLabel: "Photos Uploaded",
+      uploadCompleteMessage: "🎉 Thank you! You've reached the maximum of {maxPhotos} photos. Your memories have been saved!",
+      uploadSuccessMessage: "{count} նկար(ներ) հաջողությամբ ավելացվեցին! Շնորհակալություն {guestName}! (Ընդամենը: {totalCount})",
+      uploadErrorMessage: "Սխալ վերբեռնելիս: Խնդրում ենք կրկին փորձել:",
+      uploadInstructions: "Click or drag photos to upload. You can upload up to {maxPhotos} photos.",
+    },
+    limits: {
+      maxPhotos: 25,
+      maxFileSize: 10,
+    },
+  };
+
+  const MAX_PHOTOS = photoSharingConfig.limits.maxPhotos;
 
   // Get upload parameters using existing API
   const handleGetUploadParameters = async () => {
@@ -41,11 +97,16 @@ export default function PhotosPage() {
       // Store the count in localStorage for persistence
       localStorage.setItem(`wedding-photos-count-${guestName}`, newCount.toString());
       
-      setUploadStatus(`${files.length} նկար(ներ) հաջողությամբ ավելացվեցին! Շնորհակալություն ${guestName}! (Ընդամենը: ${newCount})`);
+      const successMessage = photoSharingConfig.uploadSection.uploadSuccessMessage
+        .replace('{count}', files.length.toString())
+        .replace('{guestName}', guestName)
+        .replace('{totalCount}', newCount.toString());
+      
+      setUploadStatus(successMessage);
       setTimeout(() => setUploadStatus(""), 5000);
     } catch (error) {
       console.error('Failed to complete upload:', error);
-      setUploadStatus("Սխալ վերբեռնելիս: Խնդրում ենք կրկին փորձել:");
+      setUploadStatus(photoSharingConfig.uploadSection.uploadErrorMessage);
       setTimeout(() => setUploadStatus(""), 4000);
     }
   };
@@ -73,22 +134,22 @@ export default function PhotosPage() {
               <Heart className="w-16 h-16 mx-auto text-softGold animate-heartbeat" />
             </div>
             <CardTitle className="text-2xl" style={{ fontFamily: "Playfair Display, serif" }}>
-              Հարություն & Տաթև
+              {photoSharingConfig.welcomeCard.title}
             </CardTitle>
-            <CardTitle className="text-xl text-softGold mb-2">Wedding Photos 📸</CardTitle>
+            <CardTitle className="text-xl text-softGold mb-2">{photoSharingConfig.welcomeCard.subtitle}</CardTitle>
             <CardDescription>
-              Share your beautiful memories from our special day
+              {photoSharingConfig.welcomeCard.description}
             </CardDescription>
           </CardHeader>
           <CardContent>
             <form onSubmit={handleNameSubmit} className="space-y-4">
               <div>
                 <label className="text-sm font-medium mb-2 block">
-                  Your Name / Ձեր անունը
+                  {photoSharingConfig.welcomeCard.nameLabel}
                 </label>
                 <Input
                   type="text"
-                  placeholder="Enter your name"
+                  placeholder={photoSharingConfig.welcomeCard.namePlaceholder}
                   value={guestName}
                   onChange={(e) => setGuestName(e.target.value)}
                   required
@@ -97,7 +158,7 @@ export default function PhotosPage() {
                 />
               </div>
               <Button type="submit" className="w-full bg-softGold hover:bg-softGold/90">
-                Start Sharing Photos 🎉
+                {photoSharingConfig.welcomeCard.submitButton}
               </Button>
             </form>
           </CardContent>
@@ -111,16 +172,16 @@ export default function PhotosPage() {
       {/* Header */}
       <div className="text-center mb-6 pt-4">
         <h1 className="text-3xl font-bold text-charcoal mb-2" style={{ fontFamily: "Playfair Display, serif" }}>
-          Հարություն & Տաթև
+          {photoSharingConfig.pageTitle}
         </h1>
-        <p className="text-softGold text-lg">Wedding Photos 📸</p>
-        <p className="text-charcoal/70 mt-2">Welcome, {guestName}!</p>
+        <p className="text-softGold text-lg">{photoSharingConfig.pageSubtitle}</p>
+        <p className="text-charcoal/70 mt-2">{photoSharingConfig.uploadSection.welcomeMessage.replace('{guestName}', guestName)}</p>
         
         {/* Back to Main Site */}
         <Link href="/">
           <Button variant="outline" size="sm" className="mt-2">
             <Home className="w-4 h-4 mr-1" />
-            Back to Wedding Site
+            {photoSharingConfig.uploadSection.backButton}
           </Button>
         </Link>
       </div>
@@ -128,15 +189,15 @@ export default function PhotosPage() {
       {/* Upload Progress Bar */}
       <Card className="mb-6">
         <CardHeader className="text-center pb-2">
-          <CardTitle className="text-lg">Upload Progress</CardTitle>
+          <CardTitle className="text-lg">{photoSharingConfig.uploadSection.progressTitle}</CardTitle>
           <CardDescription>
-            {uploadedPhotosCount} of {MAX_PHOTOS} photos uploaded
+            {photoSharingConfig.uploadSection.progressDescription.replace('{uploadedCount}', uploadedPhotosCount.toString()).replace('{maxPhotos}', MAX_PHOTOS.toString())}
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="space-y-2">
             <div className="flex justify-between text-sm text-charcoal/70">
-              <span>Photos Uploaded</span>
+              <span>{photoSharingConfig.uploadSection.maxPhotosLabel}</span>
               <span>{uploadedPhotosCount}/{MAX_PHOTOS}</span>
             </div>
             <Progress 
@@ -148,7 +209,7 @@ export default function PhotosPage() {
           {uploadedPhotosCount >= MAX_PHOTOS ? (
             <div className="text-center p-3 bg-green-50 border border-green-200 rounded-lg">
               <p className="text-green-700 font-medium">
-                🎉 Maximum photos reached! Thank you for sharing your memories!
+                {photoSharingConfig.uploadSection.uploadCompleteMessage.replace('{maxPhotos}', MAX_PHOTOS.toString())}
               </p>
             </div>
           ) : (
@@ -200,7 +261,11 @@ export default function PhotosPage() {
                     const newCount = uploadedPhotosCount + files.length;
                     setUploadedPhotosCount(newCount);
                     localStorage.setItem(`wedding-photos-count-${guestName}`, newCount.toString());
-                    setUploadStatus(`${files.length} նկար(ներ) հաջողությամբ ավելացվեցին! Շնորհակալություն ${guestName}! (Ընդամենը: ${newCount})`);
+                    const successMessage = photoSharingConfig.uploadSection.uploadSuccessMessage
+                      .replace('{count}', files.length.toString())
+                      .replace('{guestName}', guestName)
+                      .replace('{totalCount}', newCount.toString());
+                    setUploadStatus(successMessage);
                     setTimeout(() => setUploadStatus(""), 5000);
                   }}
                   onImageRemoved={() => {

@@ -3,6 +3,7 @@ import express, { type Request, Response, NextFunction } from "express";
 import { registerRoutes } from "./routes.js";
 import { registerAdminRoutes } from "./routes/admin.js";
 import { registerMusicUploadRoutes } from "./routes/music-upload.js";
+import { registerManifestRoutes } from "./routes/manifest.js";
 import { apiLimiter } from "./middleware/rateLimiter.js";
 import path from "path";
 
@@ -137,6 +138,9 @@ app.use((req, res, next) => {
     
     // Register music upload routes (presigned URLs for fast uploads)
     registerMusicUploadRoutes(app);
+    
+    // Register manifest routes (dynamic manifest.json generation)
+    registerManifestRoutes(app);
 
     app.use((err: any, _req: Request, res: Response, _next: NextFunction) => {
       const status = err.status || err.statusCode || 500;
@@ -168,36 +172,47 @@ app.use((req, res, next) => {
       // On Vercel, routing is handled by vercel.json
     }
 
-    // Simplified server.listen call with timeout handling
-    const startServer = () => {
-      return new Promise<void>((resolve, reject) => {
-        const serverInstance = server.listen(env.port, "0.0.0.0", () => {
-          log(`Server running on port ${env.port} in ${env.nodeEnv} mode`);
-          resolve();
+    // Export for Vercel serverless or start server for local development
+    if (process.env.VERCEL) {
+      // On Vercel, just export the app - don't start a server
+      log('Running on Vercel - exporting handler');
+    } else {
+      // Local development - start the server
+      const startServer = () => {
+        return new Promise<void>((resolve, reject) => {
+          const serverInstance = server.listen(env.port, "0.0.0.0", () => {
+            log(`Server running on port ${env.port} in ${env.nodeEnv} mode`);
+            resolve();
+          });
+          
+          serverInstance.on('error', (error: any) => {
+            if (error.code === 'EADDRINUSE') {
+              reject(new Error(`Port ${env.port} is already in use`));
+            } else {
+              reject(error);
+            }
+          });
+          
+          // Set timeout for server startup
+          const timeoutId = setTimeout(() => {
+            reject(new Error('Server startup timeout'));
+          }, 15000); // 15 second timeout for serverless
+          
+          serverInstance.on('listening', () => {
+            clearTimeout(timeoutId);
+          });
         });
-        
-        serverInstance.on('error', (error: any) => {
-          if (error.code === 'EADDRINUSE') {
-            reject(new Error(`Port ${env.port} is already in use`));
-          } else {
-            reject(error);
-          }
-        });
-        
-        // Set timeout for server startup
-        const timeoutId = setTimeout(() => {
-          reject(new Error('Server startup timeout'));
-        }, 15000); // 15 second timeout for serverless
-        
-        serverInstance.on('listening', () => {
-          clearTimeout(timeoutId);
-        });
-      });
-    };
-    
-    await startServer();
+      };
+      
+      await startServer();
+    }
   } catch (error) {
     console.error('Failed to start server:', error);
-    process.exit(1);
+    if (!process.env.VERCEL) {
+      process.exit(1);
+    }
   }
 })();
+
+// Export the Express app for Vercel
+export default app;

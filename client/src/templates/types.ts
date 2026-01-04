@@ -54,6 +54,7 @@ export interface WeddingConfig {
       title: string; // e.g., "Ceremony", "Reception", "Cocktail Hour"
       name: string;
       description: string;
+      icon?: string; // Custom icon for the location card (e.g., "Church", "Utensils", "Heart", "Music", "Camera", "Home", "Star", "MapPin")
       mapButton: string;
       mapIcon: string; // Configurable map icon text/symbol
       image?: string; // Location image URL
@@ -121,6 +122,36 @@ export interface WeddingConfig {
     comingSoonMessage: string;
     images?: string[]; // Array of love story image URLs
     galleryImages?: string[]; // Array of gallery image URLs
+  };
+
+  // Photo Sharing Configuration (Guest Photo Upload)
+  photoSharing?: {
+    enabled: boolean; // Enable/disable photo sharing feature
+    pageTitle: string; // Main title for photo sharing page
+    pageSubtitle: string; // Subtitle/emoji for page
+    welcomeCard: {
+      title: string; // Card title (couple names)
+      subtitle: string; // Card subtitle (e.g., "Wedding Photos 📸")
+      description: string; // Welcome message
+      nameLabel: string; // Label for name input
+      namePlaceholder: string; // Placeholder for name input
+      submitButton: string; // Submit button text
+    };
+    uploadSection: {
+      welcomeMessage: string; // Welcome message with guest name
+      backButton: string; // Back to main site button text
+      progressTitle: string; // Upload progress card title
+      progressDescription: string; // Progress description template
+      maxPhotosLabel: string; // Max photos label
+      uploadCompleteMessage: string; // Message when max photos reached
+      uploadSuccessMessage: string; // Success message template
+      uploadErrorMessage: string; // Error message
+      uploadInstructions: string; // Instructions for uploading
+    };
+    limits: {
+      maxPhotos: number; // Maximum photos per guest
+      maxFileSize: number; // Max file size in MB
+    };
   };
 
   // Navigation

@@ -254,14 +254,21 @@ export default function HeroSection({ config = weddingConfig }: HeroSectionProps
         {heroImages.map((image, index) => (
           <div
             key={index}
-            className={`absolute inset-0 w-full h-full bg-cover bg-center bg-no-repeat transition-opacity duration-1000 ${
+            className={`absolute inset-0 w-full h-full transition-opacity duration-1000 ${
               index === currentSlide ? 'opacity-100' : 'opacity-0'
             }`}
-            style={{
-              backgroundImage: `url(${image})`
-            }}
             data-testid={index === 0 ? "bg-main-couple" : `bg-hero-${index}`}
-          />
+          >
+            <img
+              src={image}
+              alt={`Hero banner ${index + 1}`}
+              className="absolute inset-0 w-full h-full object-cover object-center"
+              style={{
+                objectFit: 'cover',
+                objectPosition: 'center',
+              }}
+            />
+          </div>
         ))}
         {/* Overlay for better text readability */}
         <div className="absolute inset-0 bg-black/30"></div>

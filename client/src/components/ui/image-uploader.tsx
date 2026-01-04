@@ -20,6 +20,7 @@ interface ImageUploaderProps {
   acceptedTypes?: string[];
   className?: string;
   disabled?: boolean;
+  allowDeleteWithoutId?: boolean; // Allow deleting images even without database ID
 }
 
 export const ImageUploader: React.FC<ImageUploaderProps> = ({
@@ -31,7 +32,8 @@ export const ImageUploader: React.FC<ImageUploaderProps> = ({
   maxFiles = 10,
   acceptedTypes = ['image/jpeg', 'image/png', 'image/webp', 'image/gif'],
   className = '',
-  disabled = false
+  disabled = false,
+  allowDeleteWithoutId = true, // Default to true for better UX
 }) => {
   const [images, setImages] = useState<ImageFile[]>([]);
   const [uploading, setUploading] = useState(false);
@@ -42,7 +44,19 @@ export const ImageUploader: React.FC<ImageUploaderProps> = ({
   React.useEffect(() => {
     const loadImages = async () => {
       try {
-        const response = await fetch(`/api/templates/${templateId}/images?category=${category}`);
+        const token = localStorage.getItem('admin-token');
+        const headers: HeadersInit = {
+          'Content-Type': 'application/json',
+        };
+        
+        if (token) {
+          headers['Authorization'] = `Bearer ${token}`;
+        }
+        
+        const response = await fetch(`/api/templates/${templateId}/images?category=${category}`, {
+          headers
+        });
+        
         if (response.ok) {
           const imageData = await response.json();
           setImages(imageData);
@@ -60,7 +74,7 @@ export const ImageUploader: React.FC<ImageUploaderProps> = ({
   const uploadFiles = useCallback(async (files: FileList) => {
     if (!files.length) return;
 
-    if (existingImages.length + files.length > maxFiles) {
+    if (images.length + files.length > maxFiles) {
       setError(`Կարող եք ավելացնել ամենաշատը ${maxFiles} նկար`);
       return;
     }
@@ -69,6 +83,8 @@ export const ImageUploader: React.FC<ImageUploaderProps> = ({
     setError(null);
 
     try {
+      const token = localStorage.getItem('admin-token');
+      
       const uploadPromises = Array.from(files).map(async (file) => {
         if (!acceptedTypes.includes(file.type)) {
           throw new Error(`Չսպասարկվող ֆայլի տեսակ: ${file.type}`);
@@ -82,8 +98,14 @@ export const ImageUploader: React.FC<ImageUploaderProps> = ({
         formData.append('image', file);
         formData.append('category', category);
 
+        const headers: HeadersInit = {};
+        if (token) {
+          headers['Authorization'] = `Bearer ${token}`;
+        }
+
         const response = await fetch(`/api/templates/${templateId}/photos/upload`, {
           method: 'POST',
+          headers,
           body: formData,
         });
 
@@ -115,11 +137,18 @@ export const ImageUploader: React.FC<ImageUploaderProps> = ({
 
   const removeImage = useCallback(async (imageId: string) => {
     try {
+      const token = localStorage.getItem('admin-token');
+      const headers: HeadersInit = {
+        'Content-Type': 'application/json',
+      };
+      
+      if (token) {
+        headers['Authorization'] = `Bearer ${token}`;
+      }
+      
       const response = await fetch(`/api/templates/${templateId}/images/${imageId}`, {
         method: 'DELETE',
-        headers: {
-          'Content-Type': 'application/json',
-        },
+        headers,
       });
 
       if (response.ok) {
@@ -133,12 +162,19 @@ export const ImageUploader: React.FC<ImageUploaderProps> = ({
         }
       } else {
         const errorData = await response.json();
-        setError(errorData.error || 'Ջնջման սխալ');
+        setError(errorData.error || errorData.message || 'Ջնջման սխալ');
       }
     } catch (err) {
-      setError('Ջնջման սխալ');
+      setError(err instanceof Error ? err.message : 'Ջնջման սխալ');
+      console.error('Delete image error:', err);
     }
   }, [images, templateId, onImageRemoved]);
+
+  // Remove image by URL (for images not in database)
+  const removeImageByUrl = useCallback((imageUrl: string) => {
+    // Just notify parent to remove from config
+    onImageRemoved?.(imageUrl);
+  }, [onImageRemoved]);
 
   const handleDrag = useCallback((e: React.DragEvent) => {
     e.preventDefault();
@@ -235,6 +271,38 @@ export const ImageUploader: React.FC<ImageUploaderProps> = ({
         )}
       </div>
 
+      {images.length > 0 && (
+        <div className="mt-4 grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+          {images.map((image) => (
+            <div key={image.id} className="relative group">
+              <div className="aspect-square rounded-lg overflow-hidden bg-gray-100">
+                <SafeImage
+                  src={image.url}
+                  alt={image.filename}
+                  className="w-full h-full"
+                  showErrorMessage={true}
+                  onError={() => {
+                    console.warn(`Failed to load image: ${image.url}`);
+                  }}
+                />
+              </div>
+              <Button
+                variant="destructive"
+                size="sm"
+                className="absolute top-2 right-2 h-6 w-6 p-0 opacity-0 group-hover:opacity-100 transition-opacity"
+                disabled={disabled || uploading}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  removeImage(image.id);
+                }}
+              >
+                <X className="h-3 w-3" />
+              </Button>
+            </div>
+          ))}
+        </div>
+      )}
+
       {existingImages.length > 0 && (
         <div className="mt-4 grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
           {existingImages.map((imageUrl, index) => {
@@ -258,11 +326,15 @@ export const ImageUploader: React.FC<ImageUploaderProps> = ({
                   variant="destructive"
                   size="sm"
                   className="absolute top-2 right-2 h-6 w-6 p-0 opacity-0 group-hover:opacity-100 transition-opacity"
-                  disabled={disabled}
+                  disabled={disabled || uploading}
                   onClick={(e) => {
                     e.stopPropagation();
                     if (imageData) {
+                      // Image exists in database, delete properly
                       removeImage(imageData.id);
+                    } else if (allowDeleteWithoutId) {
+                      // Image only in config, just remove from UI
+                      removeImageByUrl(imageUrl);
                     }
                   }}
                 >

@@ -42,6 +42,8 @@ export default function ElegantTemplate({ config, templateId }: ElegantTemplateP
     const textColor = config.theme?.colors?.textColor || config.theme?.colors?.primary || elegantDefaultConfig.theme?.colors?.textColor || elegantDefaultConfig.theme?.colors?.primary;
     if (textColor) {
       document.documentElement.style.setProperty('--dynamic-text-color', textColor);
+      document.documentElement.style.setProperty('--dynamic-text-color-70', textColor + 'B3');
+      document.documentElement.style.setProperty('--dynamic-text-color-60', textColor + '99');
     }
   }, [safeConfig.theme?.colors?.textColor, safeConfig.theme?.colors?.primary]);
 
