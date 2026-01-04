@@ -54,7 +54,6 @@ export interface WeddingConfig {
       title: string; // e.g., "Ceremony", "Reception", "Cocktail Hour"
       name: string;
       description: string;
-      icon?: string; // Custom icon for the location card (e.g., "Church", "Utensils", "Heart", "Music", "Camera", "Home", "Star", "MapPin")
       mapButton: string;
       mapIcon: string; // Configurable map icon text/symbol
       image?: string; // Location image URL

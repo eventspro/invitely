@@ -172,47 +172,36 @@ app.use((req, res, next) => {
       // On Vercel, routing is handled by vercel.json
     }
 
-    // Export for Vercel serverless or start server for local development
-    if (process.env.VERCEL) {
-      // On Vercel, just export the app - don't start a server
-      log('Running on Vercel - exporting handler');
-    } else {
-      // Local development - start the server
-      const startServer = () => {
-        return new Promise<void>((resolve, reject) => {
-          const serverInstance = server.listen(env.port, "0.0.0.0", () => {
-            log(`Server running on port ${env.port} in ${env.nodeEnv} mode`);
-            resolve();
-          });
-          
-          serverInstance.on('error', (error: any) => {
-            if (error.code === 'EADDRINUSE') {
-              reject(new Error(`Port ${env.port} is already in use`));
-            } else {
-              reject(error);
-            }
-          });
-          
-          // Set timeout for server startup
-          const timeoutId = setTimeout(() => {
-            reject(new Error('Server startup timeout'));
-          }, 15000); // 15 second timeout for serverless
-          
-          serverInstance.on('listening', () => {
-            clearTimeout(timeoutId);
-          });
+    // Simplified server.listen call with timeout handling
+    const startServer = () => {
+      return new Promise<void>((resolve, reject) => {
+        const serverInstance = server.listen(env.port, "0.0.0.0", () => {
+          log(`Server running on port ${env.port} in ${env.nodeEnv} mode`);
+          resolve();
         });
-      };
-      
-      await startServer();
-    }
+        
+        serverInstance.on('error', (error: any) => {
+          if (error.code === 'EADDRINUSE') {
+            reject(new Error(`Port ${env.port} is already in use`));
+          } else {
+            reject(error);
+          }
+        });
+        
+        // Set timeout for server startup
+        const timeoutId = setTimeout(() => {
+          reject(new Error('Server startup timeout'));
+        }, 15000); // 15 second timeout for serverless
+        
+        serverInstance.on('listening', () => {
+          clearTimeout(timeoutId);
+        });
+      });
+    };
+    
+    await startServer();
   } catch (error) {
     console.error('Failed to start server:', error);
-    if (!process.env.VERCEL) {
-      process.exit(1);
-    }
+    process.exit(1);
   }
 })();
-
-// Export the Express app for Vercel
-export default app;

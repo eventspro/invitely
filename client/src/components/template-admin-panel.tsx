@@ -659,44 +659,18 @@ export default function TemplateAdminPanel() {
                           />
                         </div>
                         <div>
-                          <Label htmlFor={`location-icon-${index}`}>Location Icon</Label>
-                          <select
-                            id={`location-icon-${index}`}
-                            value={venue.icon || ""}
+                          <Label htmlFor={`location-name-${index}`}>Venue Name</Label>
+                          <Input
+                            id={`location-name-${index}`}
+                            value={venue.name}
                             onChange={(e) => {
                               const currentVenues = [...(template.config.locations?.venues || [])];
-                              currentVenues[index] = { ...currentVenues[index], icon: e.target.value };
+                              currentVenues[index] = { ...currentVenues[index], name: e.target.value };
                               updateConfig("locations.venues", currentVenues);
                             }}
-                            className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
-                          >
-                            <option value="">Auto (based on title)</option>
-                            <option value="Church">⛪ Church</option>
-                            <option value="Utensils">🍴 Utensils (Restaurant)</option>
-                            <option value="Heart">❤️ Heart</option>
-                            <option value="Music">🎵 Music (Party/Dance)</option>
-                            <option value="Camera">📷 Camera (Photos)</option>
-                            <option value="Home">🏠 Home (Hotel/Accommodation)</option>
-                            <option value="Star">⭐ Star (Cocktail)</option>
-                            <option value="MapPin">📍 Map Pin</option>
-                            <option value="Calendar">📅 Calendar</option>
-                            <option value="Users">👥 Users (Guests)</option>
-                          </select>
+                            placeholder="e.g., St. Ann Church"
+                          />
                         </div>
-                      </div>
-                      
-                      <div>
-                        <Label htmlFor={`location-name-${index}`}>Venue Name</Label>
-                        <Input
-                          id={`location-name-${index}`}
-                          value={venue.name}
-                          onChange={(e) => {
-                            const currentVenues = [...(template.config.locations?.venues || [])];
-                            currentVenues[index] = { ...currentVenues[index], name: e.target.value };
-                            updateConfig("locations.venues", currentVenues);
-                          }}
-                          placeholder="e.g., St. Ann Church"
-                        />
                       </div>
                       
                       <div>
