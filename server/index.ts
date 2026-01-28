@@ -7,201 +7,190 @@ import { registerManifestRoutes } from "./routes/manifest.js";
 import { apiLimiter } from "./middleware/rateLimiter.js";
 import path from "path";
 
-// Simple logging function
+/* -------------------------------------------------------------------------- */
+/* Helpers */
+/* -------------------------------------------------------------------------- */
+
 const log = (message: string) => {
   console.log(`[${new Date().toISOString()}] ${message}`);
 };
 
-// Environment variable validation
 function validateEnvironment() {
-  const requiredEnvVars = ['PORT'];
-  const missingVars = requiredEnvVars.filter(envVar => !process.env[envVar]);
-  
+  const requiredEnvVars = ["PORT"];
+  const missingVars = requiredEnvVars.filter(v => !process.env[v]);
+
   if (missingVars.length > 0) {
-    console.warn(`Warning: Missing environment variables: ${missingVars.join(', ')}. Using defaults where possible.`);
+    console.warn(
+      `Warning: Missing environment variables: ${missingVars.join(", ")}`
+    );
   }
-  
-  // Set NODE_ENV default if not provided
+
   if (!process.env.NODE_ENV) {
-    process.env.NODE_ENV = 'production';
+    process.env.NODE_ENV = "production";
   }
-  
+
   return {
-    port: parseInt(process.env.PORT || '5001', 10),
+    port: parseInt(process.env.PORT || "5001", 10),
     nodeEnv: process.env.NODE_ENV,
-    isProduction: process.env.NODE_ENV === 'production'
+    isProduction: process.env.NODE_ENV === "production",
+    isVercel: !!process.env.VERCEL,
   };
 }
 
-const app = express();
+/* -------------------------------------------------------------------------- */
+/* App setup */
+/* -------------------------------------------------------------------------- */
 
-// Security middleware for production
-if (process.env.NODE_ENV === 'production') {
-  // Trust proxy for Vercel
-  app.set('trust proxy', 1);
-  
-  // Enhanced HTTPS redirect and SSL-safe headers
+const app = express();
+const env = validateEnvironment();
+
+/* -------------------------------------------------------------------------- */
+/* HTTPS enforcement — VERCEL ONLY */
+/* -------------------------------------------------------------------------- */
+/**
+ * IMPORTANT:
+ * - Vercel terminates SSL and sets `x-forwarded-proto=https`
+ * - Local production does NOT have SSL
+ * - Therefore HTTPS redirects must NEVER run locally
+ */
+if (env.isProduction && env.isVercel) {
+  app.set("trust proxy", 1);
+
   app.use((req, res, next) => {
-    // Force HTTPS redirect with proper status code
-    const proto = req.header('x-forwarded-proto') || req.protocol || 'http';
-    if (proto !== 'https') {
-      const httpsUrl = `https://${req.header('host')}${req.originalUrl}`;
-      console.log(`🔒 Forcing HTTPS redirect: ${req.originalUrl} -> ${httpsUrl}`);
+    const proto = req.header("x-forwarded-proto");
+    if (proto !== "https") {
+      const httpsUrl = `https://${req.headers.host}${req.originalUrl}`;
+      log(`🔒 HTTPS redirect (Vercel): ${req.originalUrl}`);
       return res.redirect(301, httpsUrl);
     }
-    
-    // Enhanced security headers for SSL compatibility
-    res.setHeader('Strict-Transport-Security', 'max-age=31536000; includeSubDomains; preload');
-    res.setHeader('X-Frame-Options', 'DENY');
-    res.setHeader('X-Content-Type-Options', 'nosniff');
-    res.setHeader('X-XSS-Protection', '1; mode=block');
-    res.setHeader('Referrer-Policy', 'strict-origin-when-cross-origin');
-    res.setHeader('Permissions-Policy', 'camera=(), microphone=(), geolocation=(), payment=()');
-    
-    // SSL-specific headers
-    res.setHeader('X-DNS-Prefetch-Control', 'off');
-    res.setHeader('X-Download-Options', 'noopen');
-    
     next();
   });
 }
 
-// Add compression middleware for better performance and SSL compatibility  
-// Note: Compression is handled by Vercel in production, but adding for local testing
+/* -------------------------------------------------------------------------- */
+/* Middleware */
+/* -------------------------------------------------------------------------- */
 
-app.use(express.json({ limit: '10mb' }));
-app.use(express.urlencoded({ extended: false, limit: '10mb' }));
+app.use(express.json({ limit: "10mb" }));
+app.use(express.urlencoded({ extended: false, limit: "10mb" }));
 
-// Apply general API rate limiting (100 requests per 15 minutes)
-app.use('/api', apiLimiter);
+app.use("/api", apiLimiter);
 
-// Health check endpoint for deployment monitoring
-app.get('/health', (req, res) => {
-  res.status(200).json({ 
-    status: 'ok', 
+/* -------------------------------------------------------------------------- */
+/* Health & test */
+/* -------------------------------------------------------------------------- */
+
+app.get("/health", (_req, res) => {
+  res.json({
+    status: "ok",
+    environment: env.nodeEnv,
+    vercel: env.isVercel,
     timestamp: new Date().toISOString(),
-    environment: process.env.NODE_ENV || 'production',
-    version: '1.0.0'
   });
 });
 
-// Test endpoint to verify server and database connection
-app.get('/api/test', (req, res) => {
-  res.status(200).json({
-    message: 'Server is running',
-    timestamp: new Date().toISOString(),
-    environment: process.env.NODE_ENV,
+app.get("/api/test", (_req, res) => {
+  res.json({
+    message: "Server is running",
+    environment: env.nodeEnv,
     hasDatabase: !!process.env.DATABASE_URL,
-    databaseUrlPrefix: process.env.DATABASE_URL?.substring(0, 20) + '...'
   });
 });
+
+/* -------------------------------------------------------------------------- */
+/* API logging */
+/* -------------------------------------------------------------------------- */
 
 app.use((req, res, next) => {
   const start = Date.now();
-  const path = req.path;
-  let capturedJsonResponse: Record<string, any> | undefined = undefined;
+  let capturedJson: any;
 
-  const originalResJson = res.json;
-  res.json = function (bodyJson, ...args) {
-    capturedJsonResponse = bodyJson;
-    return originalResJson.apply(res, [bodyJson, ...args]);
+  const originalJson = res.json;
+  res.json = function (body, ...args) {
+    capturedJson = body;
+    return originalJson.call(this, body, ...args);
   };
 
   res.on("finish", () => {
-    const duration = Date.now() - start;
-    if (path.startsWith("/api")) {
-      let logLine = `${req.method} ${path} ${res.statusCode} in ${duration}ms`;
-      if (capturedJsonResponse) {
-        logLine += ` :: ${JSON.stringify(capturedJsonResponse)}`;
-      }
-
-      if (logLine.length > 80) {
-        logLine = logLine.slice(0, 79) + "…";
-      }
-
-      log(logLine);
+    if (req.path.startsWith("/api")) {
+      const duration = Date.now() - start;
+      log(
+        `${req.method} ${req.path} ${res.statusCode} in ${duration}ms${
+          capturedJson ? " :: " + JSON.stringify(capturedJson) : ""
+        }`
+      );
     }
   });
 
   next();
 });
 
+/* -------------------------------------------------------------------------- */
+/* Bootstrap */
+/* -------------------------------------------------------------------------- */
+
 (async () => {
   try {
-    // Validate environment variables first
-    const env = validateEnvironment();
-    
     const server = await registerRoutes(app);
-    
-    // Register admin routes
+
     registerAdminRoutes(app);
-    
-    // Register music upload routes (presigned URLs for fast uploads)
     registerMusicUploadRoutes(app);
-    
-    // Register manifest routes (dynamic manifest.json generation)
     registerManifestRoutes(app);
 
-    app.use((err: any, _req: Request, res: Response, _next: NextFunction) => {
-      const status = err.status || err.statusCode || 500;
-      const message = err.message || "Internal Server Error";
+    app.use(
+      (err: any, _req: Request, res: Response, _next: NextFunction) => {
+        console.error("Server error:", err);
+        res.status(err.status || 500).json({
+          message: err.message || "Internal Server Error",
+        });
+      }
+    );
 
-      res.status(status).json({ message });
-      console.error('Server error:', err);
-    });
+    /* ---------------------------------------------------------------------- */
+    /* Frontend handling */
+    /* ---------------------------------------------------------------------- */
 
-    // Use NODE_ENV directly for better production detection
     if (env.nodeEnv === "development") {
-      // Only import vite in development to avoid bundling it in production
       const { setupVite } = await import("./vite.js");
       await setupVite(app, server);
     } else {
-      // In production on Vercel, static files are handled by Vercel routing
-      // Only set up the catch-all for SPA routing if needed
-      
-      // Serve static files only if running locally in production mode
-      if (!process.env.VERCEL) {
+      /**
+       * Production local (NOT Vercel):
+       * - Serve built assets
+       * - SPA fallback
+       */
+      if (!env.isVercel) {
         const staticPath = path.join(process.cwd(), "dist/public");
         app.use(express.static(staticPath));
-        
-        // Handle SPA routing - serve index.html for non-API routes
+
         app.get("*", (_req, res) => {
           res.sendFile(path.join(staticPath, "index.html"));
         });
       }
-      // On Vercel, routing is handled by vercel.json
     }
 
-    // Simplified server.listen call with timeout handling
-    const startServer = () => {
-      return new Promise<void>((resolve, reject) => {
-        const serverInstance = server.listen(env.port, "0.0.0.0", () => {
-          log(`Server running on port ${env.port} in ${env.nodeEnv} mode`);
-          resolve();
-        });
-        
-        serverInstance.on('error', (error: any) => {
-          if (error.code === 'EADDRINUSE') {
-            reject(new Error(`Port ${env.port} is already in use`));
-          } else {
-            reject(error);
-          }
-        });
-        
-        // Set timeout for server startup
-        const timeoutId = setTimeout(() => {
-          reject(new Error('Server startup timeout'));
-        }, 15000); // 15 second timeout for serverless
-        
-        serverInstance.on('listening', () => {
-          clearTimeout(timeoutId);
-        });
+    /* ---------------------------------------------------------------------- */
+    /* Start server */
+    /* ---------------------------------------------------------------------- */
+
+    await new Promise<void>((resolve, reject) => {
+      const instance = server.listen(env.port, "0.0.0.0", () => {
+        log(
+          `Server running on port ${env.port} (${env.nodeEnv}, vercel=${env.isVercel})`
+        );
+        resolve();
       });
-    };
-    
-    await startServer();
-  } catch (error) {
-    console.error('Failed to start server:', error);
+
+      instance.on("error", (err: any) => {
+        if (err.code === "EADDRINUSE") {
+          reject(new Error(`Port ${env.port} is already in use`));
+        } else {
+          reject(err);
+        }
+      });
+    });
+  } catch (err) {
+    console.error("Failed to start server:", err);
     process.exit(1);
   }
 })();
