@@ -19,6 +19,10 @@ import authRoutes from './routes/auth.js';
 import adminPanelRoutes from './routes/admin-panel.js';
 import platformAdminRoutes from './routes/platform-admin.js';
 import { registerTemplateRoutes } from './routes/templates.js';
+import { registerTranslationsRoutes } from './routes/translations.js';
+import { registerPricingRoutes } from './routes/pricing.js';
+import { registerTranslationKeysRoutes } from './routes/translation-keys.js';
+import { registerPlatformSettingsRoutes } from './routes/platform-settings.js';
 
 // Configure multer for file uploads
 const uploadsDir = process.env.VERCEL ? '/tmp/uploads' : path.join(process.cwd(), 'uploads');
@@ -108,6 +112,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
   
   // Register template routes (for template-specific endpoints)
   registerTemplateRoutes(app);
+  
+  // Register translations routes
+  registerTranslationsRoutes(app);
+  
+  // Register pricing routes
+  registerPricingRoutes(app);
+  
+  // Register translation keys routes
+  registerTranslationKeysRoutes(app);
+  
+  // Register platform settings routes
+  registerPlatformSettingsRoutes(app);
   
   // Legacy RSVP endpoint - redirect to template-scoped endpoint
   app.post("/api/rsvp", async (req, res) => {
@@ -1178,6 +1194,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Register translations routes
+  registerTranslationsRoutes(app);
+
   // Audio serving endpoint with SSL-safe range request support
   app.get("/api/audio/serve/:filename", (req, res) => {
     console.log(`🎵 Audio serve endpoint hit for file: ${req.params.filename}`);
@@ -1199,4 +1218,3 @@ export async function registerRoutes(app: Express): Promise<Server> {
   const httpServer = createServer(app);
   return httpServer;
 }
-

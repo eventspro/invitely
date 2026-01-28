@@ -22,7 +22,10 @@ import {
   XCircle,
   Eye,
   Calendar,
-  Mail
+  Mail,
+  Globe,
+  DollarSign,
+  Wrench
 } from "lucide-react";
 import { getTemplateList } from "@/templates";
 
@@ -35,6 +38,7 @@ interface Template {
   maintenance: boolean;
   sourceTemplateId?: string;
   isMain: boolean;
+  templateVersion?: number;
   createdAt: string;
   updatedAt: string;
   stats: {
@@ -318,7 +322,13 @@ export default function PlatformDashboard() {
 
   const availableTemplates = getTemplateList();
   
-  // Separate main templates from cloned ones
+  // Separate templates by version and type
+  const v1MainTemplates = templates.filter(template => template.isMain && !template.templateVersion || template.templateVersion === 1);
+  const v1ClonedTemplates = templates.filter(template => !template.isMain && (!template.templateVersion || template.templateVersion === 1));
+  const v2MainTemplates = templates.filter(template => template.isMain && template.templateVersion === 2);
+  const v2ClonedTemplates = templates.filter(template => !template.isMain && template.templateVersion === 2);
+  
+  // Legacy - for backwards compatibility
   const mainTemplates = templates.filter(template => template.isMain);
   const clonedTemplates = templates.filter(template => !template.isMain);
 
@@ -419,6 +429,12 @@ export default function PlatformDashboard() {
               <p className="text-gray-600">Manage wedding invitation templates</p>
             </div>
             <div className="flex gap-4">
+              <Button variant="outline" className="bg-white" asChild>
+                <Link href="/platform/translations">
+                  <Globe className="w-4 h-4 mr-2" />
+                  Translations
+                </Link>
+              </Button>
               <Dialog open={createDialogOpen} onOpenChange={setCreateDialogOpen}>
                 <DialogTrigger asChild>
                   <Button>
@@ -566,69 +582,246 @@ export default function PlatformDashboard() {
         </div>
       </div>
 
-      {/* Templates with Tabs */}
+      {/* Platform Management Tabs */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <Tabs defaultValue="main" className="space-y-6">
+        <Tabs defaultValue="templates" className="space-y-6">
           <div className="flex justify-between items-center">
             <TabsList>
-              <TabsTrigger value="main" className="flex items-center gap-2">
+              <TabsTrigger value="templates" className="flex items-center gap-2">
                 <Calendar className="w-4 h-4" />
-                Main Templates ({mainTemplates.length})
+                Templates
               </TabsTrigger>
-              <TabsTrigger value="cloned" className="flex items-center gap-2">
-                <Copy className="w-4 h-4" />
-                Cloned Templates ({clonedTemplates.length})
+              <TabsTrigger value="translations" className="flex items-center gap-2">
+                <Globe className="w-4 h-4" />
+                Translations
+              </TabsTrigger>
+              <TabsTrigger value="pricing" className="flex items-center gap-2">
+                <DollarSign className="w-4 h-4" />
+                Pricing
+              </TabsTrigger>
+              <TabsTrigger value="settings" className="flex items-center gap-2">
+                <Wrench className="w-4 h-4" />
+                Settings
               </TabsTrigger>
             </TabsList>
           </div>
 
-          <TabsContent value="main" className="space-y-6">
-            <div className="flex justify-between items-center">
-              <div>
-                <h2 className="text-2xl font-bold text-gray-900">Main Templates</h2>
-                <p className="text-gray-600">Base templates and original configurations</p>
+          {/* Templates Tab */}
+          <TabsContent value="templates" className="space-y-6">
+            <Tabs defaultValue="v1-main" className="space-y-6">
+              <div className="flex justify-between items-center">
+                <TabsList>
+                  <TabsTrigger value="v1-main" className="flex items-center gap-2">
+                    <Calendar className="w-4 h-4" />
+                    Templates V1 - Main ({v1MainTemplates.length})
+                  </TabsTrigger>
+                  <TabsTrigger value="v1-cloned" className="flex items-center gap-2">
+                    <Copy className="w-4 h-4" />
+                    Templates V1 - Cloned ({v1ClonedTemplates.length})
+                  </TabsTrigger>
+                  <TabsTrigger value="v2-main" className="flex items-center gap-2 bg-blue-500 text-white data-[state=active]:bg-blue-600">
+                    <Calendar className="w-4 h-4" />
+                    Templates V2 - Main ({v2MainTemplates.length})
+                  </TabsTrigger>
+                  <TabsTrigger value="v2-cloned" className="flex items-center gap-2 bg-blue-500 text-white data-[state=active]:bg-blue-600">
+                    <Copy className="w-4 h-4" />
+                    Templates V2 - Cloned ({v2ClonedTemplates.length})
+                  </TabsTrigger>
+                </TabsList>
               </div>
-            </div>
-            
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {mainTemplates.map(renderTemplateCard)}
-            </div>
 
-            {mainTemplates.length === 0 && (
-              <div className="text-center py-12">
-                <Calendar className="w-16 h-16 text-gray-400 mx-auto mb-4" />
-                <h3 className="text-lg font-semibold text-gray-900 mb-2">No main templates yet</h3>
-                <p className="text-gray-600 mb-4">Create your first wedding invitation template to get started.</p>
-                <Button onClick={() => setCreateDialogOpen(true)}>
-                  <Plus className="w-4 h-4 mr-2" />
-                  Create Your First Template
-                </Button>
-              </div>
-            )}
+              {/* V1 Main Templates */}
+              <TabsContent value="v1-main" className="space-y-6">
+                <div className="flex justify-between items-center">
+                  <div>
+                    <h2 className="text-2xl font-bold text-gray-900">Templates V1 - Main</h2>
+                    <p className="text-gray-600">Classic template system with component-based layout</p>
+                  </div>
+                </div>
+                
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                  {v1MainTemplates.map(renderTemplateCard)}
+                </div>
+
+                {v1MainTemplates.length === 0 && (
+                  <div className="text-center py-12">
+                    <Calendar className="w-16 h-16 text-gray-400 mx-auto mb-4" />
+                    <h3 className="text-lg font-semibold text-gray-900 mb-2">No V1 main templates yet</h3>
+                    <p className="text-gray-600 mb-4">Create your first wedding invitation template to get started.</p>
+                    <Button onClick={() => setCreateDialogOpen(true)}>
+                      <Plus className="w-4 h-4 mr-2" />
+                      Create Your First Template
+                    </Button>
+                  </div>
+                )}
+              </TabsContent>
+
+              {/* V1 Cloned Templates */}
+              <TabsContent value="v1-cloned" className="space-y-6">
+                <div className="flex justify-between items-center">
+                  <div>
+                    <h2 className="text-2xl font-bold text-gray-900">Templates V1 - Cloned</h2>
+                    <p className="text-gray-600">Customized V1 versions created from main templates</p>
+                  </div>
+                </div>
+                
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                  {v1ClonedTemplates.map(renderTemplateCard)}
+                </div>
+
+                {v1ClonedTemplates.length === 0 && (
+                  <div className="text-center py-12">
+                    <Copy className="w-16 h-16 text-gray-400 mx-auto mb-4" />
+                    <h3 className="text-lg font-semibold text-gray-900 mb-2">No V1 cloned templates yet</h3>
+                    <p className="text-gray-600 mb-4">Clone existing V1 templates to create customized versions for different clients.</p>
+                    {v1MainTemplates.length > 0 && (
+                      <p className="text-gray-500 text-sm">Use the "Clone" button on any V1 main template to get started.</p>
+                    )}
+                  </div>
+                )}
+              </TabsContent>
+
+              {/* V2 Main Templates */}
+              <TabsContent value="v2-main" className="space-y-6">
+                <div className="flex justify-between items-center">
+                  <div>
+                    <h2 className="text-2xl font-bold text-gray-900">Templates V2 - Main</h2>
+                    <p className="text-gray-600">Next-generation template system with enhanced features</p>
+                  </div>
+                </div>
+                
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                  {v2MainTemplates.map(renderTemplateCard)}
+                </div>
+
+                {v2MainTemplates.length === 0 && (
+                  <div className="text-center py-12">
+                    <Calendar className="w-16 h-16 text-blue-400 mx-auto mb-4" />
+                    <h3 className="text-lg font-semibold text-gray-900 mb-2">No V2 main templates yet</h3>
+                    <p className="text-gray-600 mb-4">V2 templates are coming soon with enhanced features and improved performance.</p>
+                  </div>
+                )}
+              </TabsContent>
+
+              {/* V2 Cloned Templates */}
+              <TabsContent value="v2-cloned" className="space-y-6">
+                <div className="flex justify-between items-center">
+                  <div>
+                    <h2 className="text-2xl font-bold text-gray-900">Templates V2 - Cloned</h2>
+                    <p className="text-gray-600">Customized V2 versions created from main templates</p>
+                  </div>
+                </div>
+                
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                  {v2ClonedTemplates.map(renderTemplateCard)}
+                </div>
+
+                {v2ClonedTemplates.length === 0 && (
+                  <div className="text-center py-12">
+                    <Copy className="w-16 h-16 text-blue-400 mx-auto mb-4" />
+                    <h3 className="text-lg font-semibold text-gray-900 mb-2">No V2 cloned templates yet</h3>
+                    <p className="text-gray-600 mb-4">Clone V2 templates once they are available to create customized versions.</p>
+                  </div>
+                )}
+              </TabsContent>
+            </Tabs>
           </TabsContent>
 
-          <TabsContent value="cloned" className="space-y-6">
-            <div className="flex justify-between items-center">
-              <div>
-                <h2 className="text-2xl font-bold text-gray-900">Cloned Templates</h2>
-                <p className="text-gray-600">Customized versions created from main templates</p>
-              </div>
-            </div>
-            
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {clonedTemplates.map(renderTemplateCard)}
-            </div>
+          {/* Translations Tab */}
+          <TabsContent value="translations" className="space-y-6">
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Globe className="w-5 h-5" />
+                  Platform Translations
+                </CardTitle>
+                <CardDescription>
+                  Manage multi-language translations for the platform
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="text-center py-12">
+                  <Globe className="w-16 h-16 text-gray-400 mx-auto mb-4" />
+                  <h3 className="text-lg font-semibold text-gray-900 mb-2">Translations Management</h3>
+                  <p className="text-gray-600 mb-4">
+                    Translation system is ready. The API endpoints are available at:
+                  </p>
+                  <div className="text-left max-w-2xl mx-auto space-y-2 text-sm text-gray-600 bg-gray-50 p-4 rounded">
+                    <p><strong>JSONB Translations:</strong> <code>/api/translations</code></p>
+                    <p><strong>Translation Keys:</strong> <code>/api/translation-keys</code> (252 keys)</p>
+                    <p><strong>Translation Values:</strong> <code>/api/translation-values</code> (325 values)</p>
+                  </div>
+                  <p className="text-sm text-gray-500 mt-4">
+                    UI for managing translations coming soon
+                  </p>
+                </div>
+              </CardContent>
+            </Card>
+          </TabsContent>
 
-            {clonedTemplates.length === 0 && (
-              <div className="text-center py-12">
-                <Copy className="w-16 h-16 text-gray-400 mx-auto mb-4" />
-                <h3 className="text-lg font-semibold text-gray-900 mb-2">No cloned templates yet</h3>
-                <p className="text-gray-600 mb-4">Clone existing templates to create customized versions for different clients.</p>
-                {mainTemplates.length > 0 && (
-                  <p className="text-gray-500 text-sm">Use the "Clone" button on any main template to get started.</p>
-                )}
-              </div>
-            )}
+          {/* Pricing Tab */}
+          <TabsContent value="pricing" className="space-y-6">
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <DollarSign className="w-5 h-5" />
+                  Pricing Plans
+                </CardTitle>
+                <CardDescription>
+                  Manage subscription plans and features
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="text-center py-12">
+                  <DollarSign className="w-16 h-16 text-gray-400 mx-auto mb-4" />
+                  <h3 className="text-lg font-semibold text-gray-900 mb-2">Pricing Management</h3>
+                  <p className="text-gray-600 mb-4">
+                    Pricing system is configured with 5 plans and 9 features:
+                  </p>
+                  <div className="text-left max-w-2xl mx-auto space-y-2 text-sm text-gray-600 bg-gray-50 p-4 rounded">
+                    <p><strong>Plans:</strong> Basic, Essential, Professional, Premium, Ultimate</p>
+                    <p><strong>Features:</strong> 9 configurable features</p>
+                    <p><strong>Associations:</strong> 45 plan-feature mappings</p>
+                    <p className="mt-3"><strong>API:</strong> <code>/api/pricing-plans</code>, <code>/api/plan-features</code></p>
+                  </div>
+                  <p className="text-sm text-gray-500 mt-4">
+                    UI for managing pricing coming soon
+                  </p>
+                </div>
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          {/* Settings Tab */}
+          <TabsContent value="settings" className="space-y-6">
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Wrench className="w-5 h-5" />
+                  Platform Settings
+                </CardTitle>
+                <CardDescription>
+                  Configure platform-wide settings
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="text-center py-12">
+                  <Wrench className="w-16 h-16 text-gray-400 mx-auto mb-4" />
+                  <h3 className="text-lg font-semibold text-gray-900 mb-2">Platform Configuration</h3>
+                  <p className="text-gray-600 mb-4">
+                    Key-value configuration store for platform settings
+                  </p>
+                  <div className="text-left max-w-2xl mx-auto space-y-2 text-sm text-gray-600 bg-gray-50 p-4 rounded">
+                    <p><strong>Settings API:</strong> <code>/api/platform-settings</code></p>
+                    <p><strong>Bulk Update:</strong> <code>/api/platform-settings/bulk</code></p>
+                    <p className="mt-3">Available settings: maintenance_mode, default_language, email_notifications, etc.</p>
+                  </div>
+                  <p className="text-sm text-gray-500 mt-4">
+                    UI for managing settings coming soon
+                  </p>
+                </div>
+              </CardContent>
+            </Card>
           </TabsContent>
         </Tabs>
       </div>

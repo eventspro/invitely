@@ -255,7 +255,8 @@ export const en = {
     title: "Ready to Create Your Wedding Website?",
     subtitle: "Get started today and create a beautiful website for your special day",
     startNow: "Start Now",
-    contactUs: "Contact Us"
+    contactUs: "Contact Us",
+    socialMedia: "Reach out on social media"
   },
 
   // Pricing Plans Section

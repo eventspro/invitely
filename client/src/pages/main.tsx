@@ -104,8 +104,13 @@ export default function MainPage() {
         
         const apiTemplates: Template[] = await response.json();
         
-        // Filter only main templates for display
-        const mainTemplates = apiTemplates.filter(template => template.isMain);
+        // Filter only Template 1-5 (main templates that exist)
+        const allowedTemplateNames = ['Template 1', 'Template 2', 'Template 3', 'Template 4', 'Template 5'];
+        const mainTemplates = apiTemplates.filter(template => 
+          template.isMain && allowedTemplateNames.includes(template.name)
+        );
+        
+        console.log('📋 Filtered templates:', mainTemplates.map(t => ({ name: t.name, slug: t.slug, isMain: t.isMain })));
         
         // Convert API templates to display format - USE ACTUAL TEMPLATE DATA
         const displayTemplates = mainTemplates.map((template, index) => {
@@ -272,101 +277,102 @@ export default function MainPage() {
   const templatePlans: TemplatePlan[] = [
     {
       id: "basic",
-      name: "Basic",
-      price: "10,000 AMD",
-      description: "Perfect for intimate weddings with essential features",
+      name: t.pricingPlans.plans.basic.name,
+      price: t.pricingPlans.plans.basic.price,
+      description: t.pricingPlans.plans.basic.description,
+      badge: t.pricingPlans.plans.basic.badge,
       templateRoute: "/michael-sarah-classic",
       features: [
-        { name: "Wedding Timeline", icon: <Calendar className="w-4 h-4" />, included: true },
-        { name: "Couple Introduction", icon: <Heart className="w-4 h-4" />, included: true },
-        { name: "Wedding Locations", icon: <MapPin className="w-4 h-4" />, included: true },
-        { name: "RSVP Functionality", icon: <Mail className="w-4 h-4" />, included: true },
-        { name: "Guest List Export", icon: <Download className="w-4 h-4" />, included: true },
-        { name: "Photo Gallery", icon: <Camera className="w-4 h-4" />, included: false },
-        { name: "Audio Player", icon: <Music className="w-4 h-4" />, included: false },
-        { name: "Admin Panel", icon: <Settings className="w-4 h-4" />, included: false },
-        { name: "QR Code Cards", icon: <QrCode className="w-4 h-4" />, included: false }
+        { name: t.pricingPlans.features.weddingTimeline, icon: <Calendar className="w-4 h-4" />, included: true },
+        { name: t.pricingPlans.features.coupleIntroduction, icon: <Heart className="w-4 h-4" />, included: true },
+        { name: t.pricingPlans.features.weddingLocations, icon: <MapPin className="w-4 h-4" />, included: true },
+        { name: t.pricingPlans.features.rsvpFunctionality, icon: <Mail className="w-4 h-4" />, included: true },
+        { name: t.pricingPlans.features.guestListExport, icon: <Download className="w-4 h-4" />, included: true },
+        { name: t.pricingPlans.features.photoGallery, icon: <Camera className="w-4 h-4" />, included: false },
+        { name: t.pricingPlans.features.audioPlayer, icon: <Music className="w-4 h-4" />, included: false },
+        { name: t.pricingPlans.features.adminPanel, icon: <Settings className="w-4 h-4" />, included: false },
+        { name: t.pricingPlans.features.qrCodeCards, icon: <QrCode className="w-4 h-4" />, included: false }
       ]
     },
     {
       id: "essential",
-      name: "Essential",
-      price: "17,000 AMD",
-      badge: "Great Value",
+      name: t.pricingPlans.plans.essential.name,
+      price: t.pricingPlans.plans.essential.price,
+      badge: t.pricingPlans.plans.essential.badge,
       badgeColor: "bg-blue-500",
-      description: "Enhanced features for modern couples",
+      description: t.pricingPlans.plans.essential.description,
       templateRoute: "/forest-lily-nature",
       features: [
-        { name: "Wedding Timeline", icon: <Calendar className="w-4 h-4" />, included: true },
-        { name: "Couple Introduction", icon: <Heart className="w-4 h-4" />, included: true },
-        { name: "Wedding Locations", icon: <MapPin className="w-4 h-4" />, included: true },
-        { name: "RSVP Functionality", icon: <Mail className="w-4 h-4" />, included: true },
-        { name: "Guest List Export", icon: <Download className="w-4 h-4" />, included: true },
-        { name: "Photo Gallery", icon: <Camera className="w-4 h-4" />, included: true },
-        { name: "Audio Player", icon: <Music className="w-4 h-4" />, included: true },
-        { name: "Admin Panel", icon: <Settings className="w-4 h-4" />, included: false },
-        { name: "QR Code Cards", icon: <QrCode className="w-4 h-4" />, included: false }
+        { name: t.pricingPlans.features.weddingTimeline, icon: <Calendar className="w-4 h-4" />, included: true },
+        { name: t.pricingPlans.features.coupleIntroduction, icon: <Heart className="w-4 h-4" />, included: true },
+        { name: t.pricingPlans.features.weddingLocations, icon: <MapPin className="w-4 h-4" />, included: true },
+        { name: t.pricingPlans.features.rsvpFunctionality, icon: <Mail className="w-4 h-4" />, included: true },
+        { name: t.pricingPlans.features.guestListExport, icon: <Download className="w-4 h-4" />, included: true },
+        { name: t.pricingPlans.features.photoGallery, icon: <Camera className="w-4 h-4" />, included: true },
+        { name: t.pricingPlans.features.audioPlayer, icon: <Music className="w-4 h-4" />, included: true },
+        { name: t.pricingPlans.features.adminPanel, icon: <Settings className="w-4 h-4" />, included: false },
+        { name: t.pricingPlans.features.qrCodeCards, icon: <QrCode className="w-4 h-4" />, included: false }
       ]
     },
     {
       id: "professional",
-      name: "Professional",
-      price: "23,000 AMD",
-      badge: "Most Popular",
+      name: t.pricingPlans.plans.professional.name,
+      price: t.pricingPlans.plans.professional.price,
+      badge: t.pricingPlans.plans.professional.badge,
       badgeColor: "bg-green-500",
       popular: true,
-      description: "Complete wedding website solution",
+      description: t.pricingPlans.plans.professional.description,
       templateRoute: "/david-rose-romantic",
       features: [
-        { name: "Wedding Timeline", icon: <Calendar className="w-4 h-4" />, included: true },
-        { name: "Couple Introduction", icon: <Heart className="w-4 h-4" />, included: true },
-        { name: "Wedding Locations", icon: <MapPin className="w-4 h-4" />, included: true },
-        { name: "RSVP Functionality", icon: <Mail className="w-4 h-4" />, included: true },
-        { name: "Guest List Export", icon: <Download className="w-4 h-4" />, included: true },
-        { name: "Photo Gallery", icon: <Camera className="w-4 h-4" />, included: true },
-        { name: "Audio Player", icon: <Music className="w-4 h-4" />, included: true },
-        { name: "Admin Panel", icon: <Settings className="w-4 h-4" />, included: true },
-        { name: "QR Code Cards", icon: <QrCode className="w-4 h-4" />, included: false }
+        { name: t.pricingPlans.features.weddingTimeline, icon: <Calendar className="w-4 h-4" />, included: true },
+        { name: t.pricingPlans.features.coupleIntroduction, icon: <Heart className="w-4 h-4" />, included: true },
+        { name: t.pricingPlans.features.weddingLocations, icon: <MapPin className="w-4 h-4" />, included: true },
+        { name: t.pricingPlans.features.rsvpFunctionality, icon: <Mail className="w-4 h-4" />, included: true },
+        { name: t.pricingPlans.features.guestListExport, icon: <Download className="w-4 h-4" />, included: true },
+        { name: t.pricingPlans.features.photoGallery, icon: <Camera className="w-4 h-4" />, included: true },
+        { name: t.pricingPlans.features.audioPlayer, icon: <Music className="w-4 h-4" />, included: true },
+        { name: t.pricingPlans.features.adminPanel, icon: <Settings className="w-4 h-4" />, included: true },
+        { name: t.pricingPlans.features.qrCodeCards, icon: <QrCode className="w-4 h-4" />, included: false }
       ]
     },
     {
       id: "premium",
-      name: "Premium",
-      price: "31,000 AMD",
-      badge: "Advanced",
+      name: t.pricingPlans.plans.premium.name,
+      price: t.pricingPlans.plans.premium.price,
+      badge: t.pricingPlans.plans.premium.badge,
       badgeColor: "bg-purple-500",
-      description: "Premium features for luxury weddings",
+      description: t.pricingPlans.plans.premium.description,
       templateRoute: "/alexander-isabella-elegant",
       features: [
-        { name: "Wedding Timeline", icon: <Calendar className="w-4 h-4" />, included: true },
-        { name: "Couple Introduction", icon: <Heart className="w-4 h-4" />, included: true },
-        { name: "Wedding Locations", icon: <MapPin className="w-4 h-4" />, included: true },
-        { name: "RSVP Functionality", icon: <Mail className="w-4 h-4" />, included: true },
-        { name: "Guest List Export", icon: <Download className="w-4 h-4" />, included: true },
-        { name: "Photo Gallery", icon: <Camera className="w-4 h-4" />, included: true },
-        { name: "Audio Player", icon: <Music className="w-4 h-4" />, included: true },
-        { name: "Admin Panel", icon: <Settings className="w-4 h-4" />, included: true },
-        { name: "QR Code Cards", icon: <QrCode className="w-4 h-4" />, included: true, description: "50 cards included" }
+        { name: t.pricingPlans.features.weddingTimeline, icon: <Calendar className="w-4 h-4" />, included: true },
+        { name: t.pricingPlans.features.coupleIntroduction, icon: <Heart className="w-4 h-4" />, included: true },
+        { name: t.pricingPlans.features.weddingLocations, icon: <MapPin className="w-4 h-4" />, included: true },
+        { name: t.pricingPlans.features.rsvpFunctionality, icon: <Mail className="w-4 h-4" />, included: true },
+        { name: t.pricingPlans.features.guestListExport, icon: <Download className="w-4 h-4" />, included: true },
+        { name: t.pricingPlans.features.photoGallery, icon: <Camera className="w-4 h-4" />, included: true },
+        { name: t.pricingPlans.features.audioPlayer, icon: <Music className="w-4 h-4" />, included: true },
+        { name: t.pricingPlans.features.adminPanel, icon: <Settings className="w-4 h-4" />, included: true },
+        { name: t.pricingPlans.features.qrCodeCards50, icon: <QrCode className="w-4 h-4" />, included: true }
       ]
     },
     {
       id: "ultimate",
-      name: "Ultimate",
-      price: "37,000 AMD",
-      badge: "Luxury",
+      name: t.pricingPlans.plans.ultimate.name,
+      price: t.pricingPlans.plans.ultimate.price,
+      badge: t.pricingPlans.plans.ultimate.badge,
       badgeColor: "bg-gradient-to-r from-yellow-400 to-orange-500",
-      description: "The complete luxury wedding experience",
+      description: t.pricingPlans.plans.ultimate.description,
       templateRoute: "/harut-tatev",
       features: [
-        { name: "Wedding Timeline", icon: <Calendar className="w-4 h-4" />, included: true },
-        { name: "Couple Introduction", icon: <Heart className="w-4 h-4" />, included: true },
-        { name: "Wedding Locations", icon: <MapPin className="w-4 h-4" />, included: true },
-        { name: "RSVP Functionality", icon: <Mail className="w-4 h-4" />, included: true },
-        { name: "Guest List Export", icon: <Download className="w-4 h-4" />, included: true },
-        { name: "Photo Gallery", icon: <Camera className="w-4 h-4" />, included: true },
-        { name: "Audio Player", icon: <Music className="w-4 h-4" />, included: true },
-        { name: "Admin Panel", icon: <Settings className="w-4 h-4" />, included: true },
-        { name: "QR Code Cards", icon: <QrCode className="w-4 h-4" />, included: true, description: "100 cards included" }
+        { name: t.pricingPlans.features.weddingTimeline, icon: <Calendar className="w-4 h-4" />, included: true },
+        { name: t.pricingPlans.features.coupleIntroduction, icon: <Heart className="w-4 h-4" />, included: true },
+        { name: t.pricingPlans.features.weddingLocations, icon: <MapPin className="w-4 h-4" />, included: true },
+        { name: t.pricingPlans.features.rsvpFunctionality, icon: <Mail className="w-4 h-4" />, included: true },
+        { name: t.pricingPlans.features.guestListExport, icon: <Download className="w-4 h-4" />, included: true },
+        { name: t.pricingPlans.features.photoGallery, icon: <Camera className="w-4 h-4" />, included: true },
+        { name: t.pricingPlans.features.audioPlayer, icon: <Music className="w-4 h-4" />, included: true },
+        { name: t.pricingPlans.features.adminPanel, icon: <Settings className="w-4 h-4" />, included: true },
+        { name: t.pricingPlans.features.qrCodeCards100, icon: <QrCode className="w-4 h-4" />, included: true }
       ]
     }
   ];
@@ -467,13 +473,13 @@ export default function MainPage() {
                 to="/templates"
                 className="bg-softGold hover:bg-softGold/90 text-white px-8 py-4 rounded-lg text-lg font-medium transition-all duration-300 transform hover:scale-105 flex items-center"
               >
-                {t.hero.viewTemplates} <ArrowRight className="ml-2 h-5 w-5" />
+                {t.hero.ctaButton || t.hero.viewTemplates} <ArrowRight className="ml-2 h-5 w-5" />
               </Link>
               <a 
                 href="#templates"
                 className="border-2 border-charcoal text-charcoal hover:bg-charcoal hover:text-white px-8 py-4 rounded-lg text-lg font-medium transition-all duration-300 transform hover:scale-105 flex items-center"
               >
-                {t.common.viewMore} <Eye className="ml-2 h-5 w-5" />
+                {t.hero.viewTemplatesButton || t.common.viewMore} <Eye className="ml-2 h-5 w-5" />
               </a>
             </div>
           </div>
@@ -842,30 +848,30 @@ export default function MainPage() {
                 <span className="text-lg font-bold">WeddingSites</span>
               </div>
               <p className="text-white/70">
-                Beautiful wedding websites for your special day
+                {t.footer.tagline}
               </p>
             </div>
             <div>
               <h4 className="font-semibold mb-4">{t.footer.services.title}</h4>
               <ul className="space-y-2 text-white/70">
-                <li>Wedding Websites</li>
-                <li>Template Design</li>
-                <li>Custom Development</li>
-                <li>Support</li>
+                <li>{t.footer.services.weddingWebsites}</li>
+                <li>{t.footer.services.templateDesign}</li>
+                <li>{t.footer.services.customDevelopment}</li>
+                <li>{t.footer.services.support}</li>
               </ul>
             </div>
             <div>
-              <h4 className="font-semibold mb-4">Features</h4>
+              <h4 className="font-semibold mb-4">{t.footer.features.title}</h4>
               <ul className="space-y-2 text-white/70">
-                <li>Armenian Support</li>
-                <li>RSVP Management</li>
-                <li>Photo Galleries</li>
-                <li>Mobile Responsive</li>
+                <li>{t.footer.features.armenianSupport}</li>
+                <li>{t.footer.features.rsvpManagement}</li>
+                <li>{t.footer.features.photoGalleries}</li>
+                <li>{t.footer.features.mobileResponsive}</li>
               </ul>
             </div>
             <div>
-              <h4 className="font-semibold mb-4">Contact Us</h4>
-              <p className="text-white/70 mb-4">Reach out on social media</p>
+              <h4 className="font-semibold mb-4">{t.footer.contact.title}</h4>
+              <p className="text-white/70 mb-4">{t.contactSection.socialMedia}</p>
               <div className="flex gap-4">
                 <a 
                   href="https://www.instagram.com/weddingsites_am" 

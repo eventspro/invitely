@@ -101,6 +101,82 @@ export const activityLogs = pgTable("activity_logs", {
   createdAt: timestamp("created_at").default(sql`now()`),
 });
 
+// Translations table for multi-language support
+export const translations = pgTable("translations", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  language: text("language").notNull().unique(), // e.g., 'hy' for Armenian, 'en' for English
+  config: jsonb("config").notNull(), // Translation data for all sections
+  isActive: boolean("is_active").default(true),
+  version: integer("version").default(1),
+  createdAt: timestamp("created_at").default(sql`now()`),
+  updatedAt: timestamp("updated_at").default(sql`now()`),
+});
+
+// Production translation system tables (granular key-value approach)
+export const translationKeys = pgTable("translation_keys", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  key: text("key").notNull().unique(), // e.g., 'hero.title', 'pricing.basic.name'
+  section: text("section"), // e.g., 'hero', 'pricing', 'faq'
+  description: text("description"), // Human-readable description
+  createdAt: timestamp("created_at").default(sql`now()`),
+  updatedAt: timestamp("updated_at").default(sql`now()`),
+});
+
+export const translationValues = pgTable("translation_values", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  keyId: varchar("key_id").notNull().references(() => translationKeys.id, { onDelete: "cascade" }),
+  language: text("language").notNull(), // 'hy', 'en', etc.
+  value: text("value").notNull(), // The translated text
+  createdAt: timestamp("created_at").default(sql`now()`),
+  updatedAt: timestamp("updated_at").default(sql`now()`),
+});
+
+// Pricing plans table
+export const pricingPlans = pgTable("pricing_plans", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  name: text("name").notNull(), // 'basic', 'essential', 'professional', etc.
+  displayName: text("display_name").notNull(), // Human-readable name
+  price: decimal("price", { precision: 10, scale: 2 }).notNull(),
+  currency: text("currency").default("AMD"),
+  badge: text("badge"), // 'Most Popular', 'Best Value', etc.
+  description: text("description"),
+  isActive: boolean("is_active").default(true),
+  displayOrder: integer("display_order").default(0),
+  createdAt: timestamp("created_at").default(sql`now()`),
+  updatedAt: timestamp("updated_at").default(sql`now()`),
+});
+
+// Plan features table
+export const planFeatures = pgTable("plan_features", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  name: text("name").notNull().unique(), // 'rsvpFunctionality', 'photoGallery', etc.
+  displayName: text("display_name").notNull(),
+  description: text("description"),
+  category: text("category"), // 'core', 'media', 'admin', etc.
+  createdAt: timestamp("created_at").default(sql`now()`),
+  updatedAt: timestamp("updated_at").default(sql`now()`),
+});
+
+// Association table: which features belong to which plans
+export const planFeatureAssociations = pgTable("plan_feature_associations", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  planId: varchar("plan_id").references(() => pricingPlans.id, { onDelete: "cascade" }),
+  featureId: varchar("feature_id").references(() => planFeatures.id, { onDelete: "cascade" }),
+  isIncluded: boolean("is_included").default(true),
+  value: text("value"), // For features with specific values (e.g., "50 cards", "100 cards")
+  createdAt: timestamp("created_at").default(sql`now()`),
+});
+
+// Platform settings table
+export const platformSettings = pgTable("platform_settings", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  key: text("key").notNull().unique(), // 'maintenance_mode', 'default_language', etc.
+  value: jsonb("value").notNull(), // Flexible JSON value
+  description: text("description"),
+  createdAt: timestamp("created_at").default(sql`now()`),
+  updatedAt: timestamp("updated_at").default(sql`now()`),
+});
+
 export const templates = pgTable("templates", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
   name: text("name").notNull(),
@@ -112,6 +188,7 @@ export const templates = pgTable("templates", {
   maintenancePassword: text("maintenance_password"),
   sourceTemplateId: varchar("source_template_id"),
   isMain: boolean("is_main").default(false),
+  templateVersion: integer("template_version").default(1), // Version for template configs
   createdAt: timestamp("created_at").default(sql`now()`),
   updatedAt: timestamp("updated_at").default(sql`now()`),
 });
@@ -252,6 +329,56 @@ export const insertRsvpSchema = createInsertSchema(rsvps).omit({
   }),
 });
 
+// Translation schemas
+export const insertTranslationSchema = z.object({
+  language: z.string().min(1, "Language code is required (e.g., 'hy', 'en')"),
+  config: z.any(), // JSONB config for translations
+  isActive: z.boolean().optional(),
+  version: z.number().optional(),
+});
+
+export const updateTranslationSchema = z.object({
+  config: z.any().optional(),
+  isActive: z.boolean().optional(),
+  version: z.number().optional(),
+});
+
+// Pricing plans and features schemas
+export const insertPricingPlanSchema = createInsertSchema(pricingPlans).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
+export const insertPlanFeatureSchema = createInsertSchema(planFeatures).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
+export const insertPlanFeatureAssociationSchema = createInsertSchema(planFeatureAssociations).omit({
+  id: true,
+  createdAt: true,
+});
+
+export const insertTranslationKeySchema = createInsertSchema(translationKeys).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
+export const insertTranslationValueSchema = createInsertSchema(translationValues).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
+export const insertPlatformSettingSchema = createInsertSchema(platformSettings).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
 // Type exports
 export type InsertUser = z.infer<typeof insertUserSchema>;
 export type User = typeof managementUsers.$inferSelect;
@@ -261,6 +388,9 @@ export type InsertOrder = z.infer<typeof insertOrderSchema>;
 export type UserAdminPanel = typeof userAdminPanels.$inferSelect;
 export type InsertUserAdminPanel = z.infer<typeof insertUserAdminPanelSchema>;
 export type GuestPhoto = typeof guestPhotos.$inferSelect;
+export type Translation = typeof translations.$inferSelect;
+export type InsertTranslation = z.infer<typeof insertTranslationSchema>;
+export type UpdateTranslation = z.infer<typeof updateTranslationSchema>;
 export type InsertGuestPhoto = z.infer<typeof insertGuestPhotoSchema>;
 export type GoogleDriveIntegration = typeof googleDriveIntegrations.$inferSelect;
 export type InsertGoogleDriveIntegration = z.infer<typeof insertGoogleDriveIntegrationSchema>;
@@ -272,3 +402,9 @@ export type UpdateTemplate = z.infer<typeof updateTemplateSchema>;
 export type InsertRsvp = z.infer<typeof insertRsvpSchema>;
 export type Rsvp = typeof rsvps.$inferSelect;
 export type Image = typeof images.$inferSelect;
+export type PricingPlan = typeof pricingPlans.$inferSelect;
+export type PlanFeature = typeof planFeatures.$inferSelect;
+export type PlanFeatureAssociation = typeof planFeatureAssociations.$inferSelect;
+export type TranslationKey = typeof translationKeys.$inferSelect;
+export type TranslationValue = typeof translationValues.$inferSelect;
+export type PlatformSetting = typeof platformSettings.$inferSelect;

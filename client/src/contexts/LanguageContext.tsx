@@ -13,7 +13,7 @@ interface LanguageContextType {
 
 const LanguageContext = createContext<LanguageContextType | undefined>(undefined);
 
-const languageConfigs = {
+const staticLanguageConfigs = {
   en,
   hy,
   ru
@@ -36,6 +36,49 @@ export function LanguageProvider({ children }: LanguageProviderProps) {
   };
 
   const [currentLanguage, setCurrentLanguage] = useState<Language>(getStoredLanguage);
+  const [languageConfigs, setLanguageConfigs] = useState(staticLanguageConfigs);
+  const [isLoading, setIsLoading] = useState(true);
+
+  // Load translations from API
+  useEffect(() => {
+    const loadTranslations = async () => {
+      try {
+        const response = await fetch(`/api/translations/${currentLanguage}`);
+        if (response.ok) {
+          const data = await response.json();
+          if (data.config) {
+            // Deep merge API config with static config - API values override static
+            setLanguageConfigs(prev => ({
+              ...prev,
+              [currentLanguage]: {
+                ...staticLanguageConfigs[currentLanguage],
+                ...data.config,
+                hero: {
+                  ...staticLanguageConfigs[currentLanguage].hero,
+                  ...data.config.hero
+                },
+                features: {
+                  ...staticLanguageConfigs[currentLanguage].features,
+                  ...data.config.features
+                },
+                pricing: {
+                  ...staticLanguageConfigs[currentLanguage].pricing,
+                  ...data.config.pricing
+                }
+              }
+            }));
+          }
+        }
+      } catch (error) {
+        console.log('Using static translations:', error);
+        // Fall back to static configs if API fails
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    loadTranslations();
+  }, [currentLanguage]);
 
   // Save language preference to localStorage
   useEffect(() => {
@@ -45,6 +88,7 @@ export function LanguageProvider({ children }: LanguageProviderProps) {
   }, [currentLanguage]);
 
   const setLanguage = (language: Language) => {
+    setIsLoading(true);
     setCurrentLanguage(language);
   };
 
@@ -56,6 +100,18 @@ export function LanguageProvider({ children }: LanguageProviderProps) {
     t: t as LanguageConfig,
     availableLanguages: languages
   };
+
+  // Show loading spinner while fetching API translations on initial load
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center h-screen">
+        <div className="text-center">
+          <div className="inline-block h-8 w-8 animate-spin rounded-full border-4 border-solid border-rose-500 border-r-transparent mb-4"></div>
+          <p className="text-gray-600">Loading...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <LanguageContext.Provider value={value}>

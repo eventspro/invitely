@@ -6,13 +6,13 @@ This is a **multi-tenant Armenian wedding platform** enabling couples to create 
 
 - **Backend**: Express.js + Drizzle ORM (PostgreSQL) deployed as Vercel serverless functions
 - **Frontend**: React SPA with Wouter routing, TanStack Query for server state, and Context for app state  
-- **Templates**: Lazy-loaded modular system with JSONB configs stored per template instance
-- **Database**: Template-scoped data isolation with comprehensive Zod validation schemas
-- **Storage**: Multi-provider object storage abstraction (Cloudflare R2, Google Cloud, AWS S3) with presigned URLs
-- **Email Service**: Brevo integration for RSVP notifications with template-scoped routing
-- **Authentication**: JWT-based auth with separate systems for template admins vs. platform admins
-- **SSL/TLS Security**: Enterprise-grade SSL-safe media serving with HTTP 206 range request support
-- **SEO Integration**: Schema.org structured data, multilingual sitemap, and dynamic meta tags
+- **Templates**: Lazy-loaded modular system with JSONB configs stored per template instance (5 variants: pro, classic, elegant, romantic, nature)
+- **Database**: PostgreSQL with template-scoped data isolation and comprehensive Zod validation schemas
+- **Storage**: Multi-provider object storage abstraction (Cloudflare R2 primary, Google Cloud/AWS S3 fallback) with presigned URLs
+- **Email Service**: Brevo integration for RSVP notifications with template-scoped routing and 3-tier recipient priority
+- **Authentication**: JWT-based auth (7d expiry) with separate systems for template admins vs. platform admins
+- **SSL/TLS Security**: Enterprise-grade SSL-safe media serving with HTTP 206 range request support for audio streaming
+- **SEO Integration**: Schema.org structured data, multilingual sitemap, robots.txt, and dynamic meta tags
 
 ## Key Development Patterns
 
@@ -41,10 +41,20 @@ templates/
 - Dynamic config loading: `loadTemplateConfig()` function imports configs based on template key
 
 ### Database Schema Key Points
-- `templates` table stores template instances with `config` JSONB field
+- `templates` table stores template instances with `config` JSONB field and `template_version` for versioning
+- **Translation System** (dual approach):
+  - `translations` table: JSONB-based bulk translations per language (1 row in production)
+  - `translation_keys` table: Granular translation keys with sections (252 rows in production)
+  - `translation_values` table: Key-value pairs per language (325 rows in production)
+- **Pricing System**:
+  - `pricing_plans` table: Plan definitions (5 rows: basic, essential, professional, premium, ultimate)
+  - `plan_features` table: Available features (9 rows)
+  - `plan_feature_associations` table: Plan-to-feature mappings (45 rows)
+- `platform_settings` table: Key-value configuration store (1 row in production)
 - Template-scoped foreign keys: `rsvps.templateId`, `guestPhotos.templateId`, etc.
 - Use Zod schemas from `shared/schema.ts` for all data validation
 - Run migrations with `npm run db:migrate` (includes seeding default template)
+- Maintenance mode: `templates.maintenance` and `templates.maintenancePassword` fields
 
 ### Development Workflow
 ```bash
@@ -53,23 +63,30 @@ npm run dev          # Runs Express server on localhost:5001 (serves both API + 
 
 # Database operations  
 npm run db:push      # Push Drizzle schema changes to database
-npm run db:migrate   # Run migrations + seed default template via scripts/migrate-default-template.ts
+npm run db:migrate   # Run migrations + seed default template
 npm run db:generate  # Generate migration files from schema changes
 
 # Testing
-npx playwright test  # E2E tests with auto-start dev server
+npx playwright test  # E2E tests with auto-start dev server (port 5001)
 npm run check        # TypeScript type checking across entire project
 
 # Production build
-npm run build        # Vite build + esbuild server bundle
+npm run build        # Vite build (dist/public) + esbuild server bundle (dist/index.js)
 npm run vercel-build # Vercel-optimized build (same as npm run build)
-npm run preview      # Test production build locally
+npm run preview      # Test production build locally (runs dist/index.js)
 
-# Template management scripts (PowerShell-compatible)
+# Deployment
+npm run deploy:production  # Deploy to production (vercel.json)
+npm run deploy:staging     # Deploy to staging (vercel.staging.json)
+
+# Template management scripts (PowerShell/tsx compatible)
 tsx scripts/create-{template}-template.ts    # Create new template instances
 tsx scripts/apply-armenian-to-all-templates.ts  # Apply Armenian localization
 tsx scripts/check-template-status.ts         # Verify template health
 tsx scripts/migrate-default-template.ts      # Initial template seeding
+
+# Environment setup (Windows)
+setup-env.bat        # Interactive environment variable configuration
 ```
 
 ### API Route Patterns & Authentication
@@ -81,6 +98,10 @@ Routes in `server/routes/` follow RESTful conventions with multi-layered authent
 - `server/routes/admin.ts` - Platform admin endpoints (order processing, user management)
 - `server/routes/auth.ts` - Authentication endpoints (login, registration, password reset)
 - `server/routes/platform-admin.ts` - Platform-level administration
+- `server/routes/translations.ts` - JSONB-based multi-language translation management (bulk configs)
+- `server/routes/translation-keys.ts` - Granular key-value translation system (252 keys, 325 values)
+- `server/routes/pricing.ts` - Pricing plans and feature management (5 plans, 9 features, 45 associations)
+- `server/routes/platform-settings.ts` - Platform-wide configuration key-value store
 
 **Authentication Middleware** (defined in `server/middleware/auth.ts`):
 - `authenticateUser` - Validates JWT token, extracts user from token payload
@@ -134,33 +155,55 @@ Routes in `server/routes/` follow RESTful conventions with multi-layered authent
 - **Styling**: Tailwind with custom CSS variables for wedding themes
 - **Build chunking**: Vendor (React), router (Wouter), UI (Radix) chunks for optimal loading
 - **Asset handling**: Vercel routes with proper caching headers (31536000s for assets, 86400s for previews)
-- **Development**: Vite dev server with proxy to Express backend, Replit error overlay for debugging
-
-### Critical Files to Understand
-- `shared/schema.ts` - Complete database schema with Zod validation (275+ lines)
-  - Tables: templates, managementUsers, orders, userAdminPanels, rsvps, guestPhotos, images
+- **Development**: Vite dev server with proxy to Express backend, Rep390+ lines)
+  - Core tables: templates, managementUsers, orders, userAdminPanels, rsvps, guestPhotos, images
+  - Translation tables: translations (JSONB), translationKeys, translationValues (key-value)
+  - Pricing tables: pricingPlans, planFeatures, planFeatureAssociations
+  - Platform: platformSettings (key-value config store)
   - All validation schemas with Armenian bilingual error messages
-- `client/src/templates/types.ts` - WeddingConfig interface (200+ lines of config options)
-  - Defines all customizable template properties (colors, fonts, sections, content)
+  - Translation schemas: insertTranslationSchema, updateTranslationSchema, insertTranslationKeySchema, insertTranslationValueSchema
+  - Pricing schemas: insertPricingPlanSchema, insertPlanFeatureSchema, insertPlanFeatureAssociation (290+ lines)
+  - Tables: templates, managementUsers, orders, userAdminPanels, rsvps, guestPhotos, images, translations
+  - All validation schemas with Armenian bilingual error messages
+  - Translation schemas: insertTranslationSchema, updateTranslationSchema
+- `client/src/templates/types.ts` - WeddingConfig interface (285+ lines of config options)
+  - Defines all customizable template properties (colors, fonts, sections, content, locations, timeline, RSVP forms)
 - `client/src/templates/index.ts` - Template registry with lazy loading
-  - Central registry of all available templates
-  - `loadTemplateConfig()` function for dynamic config imports
-- `server/index.ts` - Express server setup with environment validation and error handling
-  - SSL/HTTPS redirect logic for production
-  - Security headers (HSTS, CORS, CSP)
-- `server/middleware/auth.ts` - Authentication middleware and JWT handling
-  - Token generation/verification, password hashing
-  - Multi-layered access control (user, template admin, platform admin)
-- `server/email.ts` - Brevo email service with template-scoped routing and Armenian localization
-  - RSVP notifications with 3-tier recipient priority
+  - Central registry: pro, classic, elegant, romantic, nature templates
+  - `loadTemplateConfig()` function for dynamic config imports based on template key
+- `server/index.ts` - Express server setup (180 lines) with environment validation
+  - SSL/HTTPS redirect logic for production (Vercel only: trust proxy + x-forwarded-proto check)
+  - Security headers: HSTS, X-Frame-Options, X-Content-Type-Options, CSP, Referrer-Policy
+  - Health check at `/health`, test endpoint at `/api/test`
+  - Rate limiting via `apiLimiter` middleware on `/api/*` routes
+- `server/middleware/auth.ts` - Authentication middleware and JWT handling (269 lines)
+  - Token generation/verification (7d expiry), bcrypt password hashing (12 rounds)
+  - Multi-layered access control: `authenticateUser`, `requireAdminPanelAccess`, `optionalAuth`
+  - Development mode bypass for local testing (mock users)
+- `server/email.ts` - Brevo email service with dynamic import (456 lines)
+  - Template-scoped routing with 3-tier recipient priority
+  - Functions: `sendTemplateRsvpNotificationEmails()`, `sendTemplateRsvpConfirmationEmail()`
+  - Armenian localization support
 - `server/routes/templates.ts` - Template management, RSVP processing, and admin endpoints
   - Core template CRUD operations and public API
-- `server/routes/admin-panel.ts` - Template owner dashboard and analytics
-  - RSVP management, photo management, Google Drive integration
+  - RSVP submission with duplicate detection and email validation
+- `server/routes/admin-panel.ts` - Template owner dashboard and analytics (Ultimate plan)
+  - RSVP management with Excel export, photo management, Google Drive integration
+- `server/objectStorage.ts` + `server/r2Storage.ts` - Multi-provider storage abstraction
+  - Cloudflare R2 (primary), Google Cloud Storage, AWS S3 (fallback)
+  - Presigned URL generation for secure uploads
 - `vite.config.ts` - Development proxy, build chunking, and path resolution
-  - Manual chunks for optimal loading (vendor, router, UI)
-- `vercel.json` - Serverless deployment configuration with asset routing
-  - Route prioritization (API before static), caching headers
+  - Manual chunks for optimal loading: vendor (React), router (Wouter), UI (Radix)
+  - Path aliases: `@/` (client/src), `@shared/` (shared), `@assets/` (public/attached_assets)
+  - Development proxy to port 5001 for API routes
+- `vercel.json` - Serverless deployment configuration (112 lines)
+  - Route prioritization: `/api/*`, `/health`, `/uploads/*` before static assets
+  - Caching headers: 31536000s (1 year) for assets, 86400s (1 day) for previews/SEO files
+  - Separate staging config: `vercel.staging.json`
+- `playwright.config.ts` - E2E testing configuration
+  - Auto-starts dev server on port 5001, reuses server for faster iteration
+  - Tests on Chromium, Firefox, and Webkit
+  - HTML reporter, screenshot on failure, trace on retry
 
 ### Armenian Localization
 This platform specifically supports **Armenian weddings** with:

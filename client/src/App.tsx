@@ -21,6 +21,7 @@ import TemplatesPage from "@/pages/templates";
 import NotFound from "@/pages/not-found";
 import LoadingScreen from "@/components/loading-screen";
 import PlatformDashboard from "@/pages/platform-dashboard";
+import PlatformTranslations from "@/pages/platform-translations";
 import TemplateRenderer from "@/components/template-renderer";
 import TemplateAdminPanel from "@/components/template-admin-panel";
 import TemplateIdentifierGuard from "@/components/TemplateIdentifierGuard";
@@ -67,6 +68,7 @@ function Router() {
       
       {/* Platform admin routes */}
       <Route path="/platform" component={PlatformDashboard} />
+      <Route path="/platform/translations" component={PlatformTranslations} />
       <Route path="/platform/templates/:templateId" component={TemplateAdminPanel} />
       
       {/* Legacy routes for backward compatibility */}
