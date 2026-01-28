@@ -729,11 +729,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
     try {
       console.log(`📋 Getting all templates`);
+      console.log(`📋 Database URL set: ${!!process.env.DATABASE_URL}`);
+      console.log(`📋 Environment: ${process.env.NODE_ENV}`);
       
       const allTemplates = await Promise.race([
         storage.getAllTemplates(),
         new Promise((_, reject) => setTimeout(() => reject(new Error('Database timeout')), 4000))
       ]) as any[];
+      
+      console.log(`📊 Raw templates count: ${allTemplates?.length || 0}`);
       
       // Filter to show only main templates (exclude clones)
       const mainTemplates = allTemplates.filter(template => template.isMain === true);
@@ -743,11 +747,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
       if (!res.headersSent) {
         res.json(mainTemplates);
       }
-    } catch (error) {
+    } catch (error: any) {
       clearTimeout(timeoutId);
       console.error("❌ Failed to get templates:", error);
+      console.error("❌ Error stack:", error?.stack);
+      console.error("❌ Error message:", error?.message);
       if (!res.headersSent) {
-        res.status(500).json({ error: "Failed to get templates" });
+        res.status(500).json({ 
+          error: "Failed to get templates",
+          message: error?.message || 'Unknown error',
+          details: process.env.NODE_ENV === 'development' ? error?.stack : undefined
+        });
       }
     }
   });
