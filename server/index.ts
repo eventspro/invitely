@@ -53,19 +53,24 @@ const env = validateEnvironment();
  * - Local production does NOT have SSL
  * - Therefore HTTPS redirects must NEVER run locally
  */
-if (env.isProduction && env.isVercel) {
-  app.set("trust proxy", 1);
+// Security middleware – ONLY on Vercel production
+const isVercel = !!process.env.VERCEL;
+
+if (process.env.NODE_ENV === 'production' && isVercel) {
+  // Trust proxy only when behind Vercel
+  app.set('trust proxy', 1);
 
   app.use((req, res, next) => {
-    const proto = req.header("x-forwarded-proto");
-    if (proto !== "https") {
-      const httpsUrl = `https://${req.headers.host}${req.originalUrl}`;
-      log(`🔒 HTTPS redirect (Vercel): ${req.originalUrl}`);
-      return res.redirect(301, httpsUrl);
+    if (req.header('x-forwarded-proto') !== 'https') {
+      return res.redirect(
+        301,
+        `https://${req.headers.host}${req.originalUrl}`
+      );
     }
     next();
   });
 }
+
 
 /* -------------------------------------------------------------------------- */
 /* Middleware */
