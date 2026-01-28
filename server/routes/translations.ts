@@ -1,6 +1,6 @@
 import { Router } from 'express';
 import { db } from '../db.js';
-import { translations, insertTranslationSchema, updateTranslationSchema } from '../../shared/schema.js';
+import { translations, insertTranslationSchema, updateTranslationSchema } from '@shared/schema.js';
 import { eq } from 'drizzle-orm';
 import { authenticateUser } from '../middleware/auth.js';
 
