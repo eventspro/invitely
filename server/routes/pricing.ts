@@ -231,5 +231,3 @@ router.post("/plan-feature-associations", authenticateUser, async (req, res) => 
 export function registerPricingRoutes(app: Router) {
   app.use("/api", router);
 }
-
-export default router;

@@ -101,6 +101,33 @@ export const activityLogs = pgTable("activity_logs", {
   createdAt: timestamp("created_at").default(sql`now()`),
 });
 
+// Configurable pricing plans for homepage
+export const configurablePricingPlans = pgTable("configurable_pricing_plans", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  planKey: text("plan_key").notNull().unique(), // basic, standard, premium, deluxe, ultimate
+  enabled: boolean("enabled").default(true),
+  orderIndex: integer("order_index").notNull().default(0),
+  price: text("price").notNull(), // "10,000 AMD" format for display
+  currency: text("currency").default("AMD"),
+  badgeKey: text("badge_key"), // Translation key for badge (e.g., "templatePlansSection.planBadges.basic")
+  badgeColor: text("badge_color"), // CSS class for badge color
+  popular: boolean("popular").default(false),
+  templateRoute: text("template_route").notNull(), // e.g., "/classic"
+  createdAt: timestamp("created_at").default(sql`now()`),
+  updatedAt: timestamp("updated_at").default(sql`now()`),
+});
+
+// Plan features for each pricing plan
+export const configurablePlanFeatures = pgTable("configurable_plan_features", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  planId: varchar("plan_id").notNull().references(() => configurablePricingPlans.id, { onDelete: "cascade" }),
+  featureKey: text("feature_key").notNull(), // Translation key (e.g., "templatePlans.features.Wedding Timeline")
+  icon: text("icon").notNull(), // Icon name from lucide-react
+  included: boolean("included").default(true),
+  orderIndex: integer("order_index").notNull().default(0),
+  createdAt: timestamp("created_at").default(sql`now()`),
+});
+
 // Translations table for multi-language support (key-value approach for production)
 export const translations = pgTable("translations", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
@@ -329,6 +356,30 @@ export const insertRsvpSchema = createInsertSchema(rsvps).omit({
   }),
 });
 
+// Configurable pricing plan schemas
+export const insertConfigurablePricingPlanSchema = createInsertSchema(configurablePricingPlans).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+}).extend({
+  planKey: z.string().min(1, "Plan key is required").regex(/^[a-z0-9_-]+$/, "Plan key must be lowercase alphanumeric with hyphens/underscores"),
+  price: z.string().min(1, "Price is required"),
+  orderIndex: z.number().int().min(0, "Order index must be non-negative"),
+  templateRoute: z.string().min(1, "Template route is required").startsWith("/", "Template route must start with /"),
+});
+
+export const updateConfigurablePricingPlanSchema = insertConfigurablePricingPlanSchema.partial();
+
+export const insertConfigurablePlanFeatureSchema = createInsertSchema(configurablePlanFeatures).omit({
+  id: true,
+  createdAt: true,
+}).extend({
+  planId: z.string().min(1, "Plan ID is required"),
+  featureKey: z.string().min(1, "Feature key is required"),
+  icon: z.string().min(1, "Icon is required"),
+  orderIndex: z.number().int().min(0, "Order index must be non-negative"),
+});
+
 // Type exports
 export type InsertUser = z.infer<typeof insertUserSchema>;
 export type User = typeof managementUsers.$inferSelect;
@@ -350,3 +401,8 @@ export type UpdateTemplate = z.infer<typeof updateTemplateSchema>;
 export type InsertRsvp = z.infer<typeof insertRsvpSchema>;
 export type Rsvp = typeof rsvps.$inferSelect;
 export type Image = typeof images.$inferSelect;
+export type ConfigurablePricingPlan = typeof configurablePricingPlans.$inferSelect;
+export type InsertConfigurablePricingPlan = z.infer<typeof insertConfigurablePricingPlanSchema>;
+export type UpdateConfigurablePricingPlan = z.infer<typeof updateConfigurablePricingPlanSchema>;
+export type ConfigurablePlanFeature = typeof configurablePlanFeatures.$inferSelect;
+export type InsertConfigurablePlanFeature = z.infer<typeof insertConfigurablePlanFeatureSchema>;

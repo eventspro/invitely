@@ -18,9 +18,9 @@ import { URL } from "url";
 import authRoutes from './routes/auth.js';
 import adminPanelRoutes from './routes/admin-panel.js';
 import platformAdminRoutes from './routes/platform-admin.js';
-import pricingRoutes from './routes/pricing.js';
 import { registerTemplateRoutes } from './routes/templates.js';
 import { registerTranslationRoutes } from './routes/translations.js';
+import { registerConfigurablePricingRoutes } from './routes/configurable-pricing.js';
 
 // Configure multer for file uploads
 const uploadsDir = process.env.VERCEL ? '/tmp/uploads' : path.join(process.cwd(), 'uploads');
@@ -108,14 +108,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Register platform admin routes (for platform owner)
   app.use('/api/platform-admin', platformAdminRoutes);
   
-  // Register pricing routes (for pricing plan management)
-  app.use('/api', pricingRoutes);
-  
   // Register template routes (for template-specific endpoints)
   registerTemplateRoutes(app);
   
   // Register translation routes (for translation management)
   registerTranslationRoutes(app);
+  
+  // Register configurable pricing routes (for pricing plan management)
+  registerConfigurablePricingRoutes(app);
   
   // Legacy RSVP endpoint - redirect to template-scoped endpoint
   app.post("/api/rsvp", async (req, res) => {

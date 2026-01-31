@@ -22,7 +22,6 @@ import TranslationsPage from "@/pages/translations";
 import NotFound from "@/pages/not-found";
 import LoadingScreen from "@/components/loading-screen";
 import PlatformDashboard from "@/pages/platform-dashboard";
-import PlatformTranslations from "@/pages/platform-translations";
 import TemplateRenderer from "@/components/template-renderer";
 import TemplateAdminPanel from "@/components/template-admin-panel";
 import TemplateIdentifierGuard from "@/components/TemplateIdentifierGuard";

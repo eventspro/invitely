@@ -7,12 +7,14 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
-import PricingPlansManager from "@/components/admin/PricingPlansManager";
+import { useQuery } from "@tanstack/react-query";
 import { 
   ArrowLeft, Save, Heart, UserCheck, Smartphone, Palette, 
   Camera, Shield, Plus, Trash2, Edit2, Globe, Settings,
-  Check, X, ArrowRight, Eye
+  Check, X, ArrowRight, Eye, Crown, Sparkles, Gift,
+  Calendar, Music, MapPin, Mail, Download, Upload, QrCode
 } from "lucide-react";
+import { defaultContentConfig, type PricingPlan as ConfigPricingPlan, getEnabledItems } from "@shared/content-config";
 
 interface FeatureItem {
   icon: string;
@@ -25,7 +27,7 @@ interface FAQItem {
   answer: string;
 }
 
-interface PricingPlan {
+interface TranslationPricingPlan {
   name: string;
   price: string;
   description: string;
@@ -55,7 +57,7 @@ interface TranslationSections {
   pricing: {
     title: string;
     subtitle: string;
-    plans: PricingPlan[];
+    plans: TranslationPricingPlan[];
   };
   faq: {
     title: string;
@@ -222,18 +224,45 @@ const iconMap: Record<string, any> = {
   smartphone: Smartphone,
   palette: Palette,
   camera: Camera,
-  shield: Shield
+  shield: Shield,
+  Calendar,
+  Music,
+  MapPin,
+  Mail,
+  Download,
+  Upload,
+  QrCode,
+  Settings
+};
+
+// Helper function to get icon component from icon name
+const getIconComponent = (iconName: string) => {
+  const icons: Record<string, any> = {
+    Calendar, Heart, MapPin, Mail, Camera, Music, Settings, QrCode, Download, Upload
+  };
+  return icons[iconName] || Calendar;
 };
 
 export default function PlatformTranslations() {
+  const [mainTab, setMainTab] = useState("translations"); // Top-level: translations vs configurable-content
   const [currentLanguage, setCurrentLanguage] = useState("hy");
   const [activeSection, setActiveSection] = useState("hero");
   const [translations, setTranslations] = useState<TranslationSections>(defaultTranslations);
   const [hasChanges, setHasChanges] = useState(false);
   const [editingPricing, setEditingPricing] = useState(false);
-  const [showPlansManager, setShowPlansManager] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const { toast } = useToast();
+
+  // Fetch pricing plans from database with fallback to config
+  const { data: dbPricingPlans, isLoading: plansLoading } = useQuery({
+    queryKey: ['/api/configurable-pricing-plans'],
+    staleTime: 30000, // Cache for 30 seconds
+  });
+
+  // Use database plans if available, otherwise fall back to config
+  const pricingPlans = dbPricingPlans && dbPricingPlans.length > 0 
+    ? dbPricingPlans 
+    : getEnabledItems(defaultContentConfig.pricingPlans);
 
   // Load translations from API
   useEffect(() => {
@@ -424,32 +453,51 @@ export default function PlatformTranslations() {
               <div>
                 <h1 className="text-2xl font-bold text-gray-900 flex items-center gap-2">
                   <Globe className="w-6 h-6 text-rose-500" />
-                  Live Translation Editor
+                  Platform Content Manager
                 </h1>
-                <p className="text-sm text-gray-600">Click any text to edit • Changes preview live</p>
+                <p className="text-sm text-gray-600">Manage translations and configurable content</p>
               </div>
             </div>
             <div className="flex items-center gap-4">
-              <Select value={currentLanguage} onValueChange={setCurrentLanguage}>
-                <SelectTrigger className="w-[180px]">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="hy">AM Հայերեն</SelectItem>
-                  <SelectItem value="en">EN English</SelectItem>
-                  <SelectItem value="ru">RU Русский</SelectItem>
-                </SelectContent>
-              </Select>
-              <Button onClick={saveAllChanges} disabled={!hasChanges} className="bg-rose-500 hover:bg-rose-600">
-                <Save className="w-4 h-4 mr-2" />
-                Save & Deploy
-              </Button>
+              {mainTab === "translations" && (
+                <>
+                  <Select value={currentLanguage} onValueChange={setCurrentLanguage}>
+                    <SelectTrigger className="w-[180px]">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="hy">AM Հայերեն</SelectItem>
+                      <SelectItem value="en">EN English</SelectItem>
+                      <SelectItem value="ru">RU Русский</SelectItem>
+                    </SelectContent>
+                  </Select>
+                  <Button onClick={saveAllChanges} disabled={!hasChanges} className="bg-rose-500 hover:bg-rose-600">
+                    <Save className="w-4 h-4 mr-2" />
+                    Save & Deploy
+                  </Button>
+                </>
+              )}
             </div>
           </div>
         </div>
       </div>
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+        {/* Top-level tabs: Translations vs Configurable Content */}
+        <Tabs value={mainTab} onValueChange={setMainTab} className="space-y-6">
+          <TabsList className="bg-white border-2">
+            <TabsTrigger value="translations" className="data-[state=active]:bg-rose-500 data-[state=active]:text-white">
+              <Globe className="w-4 h-4 mr-2" />
+              Translations
+            </TabsTrigger>
+            <TabsTrigger value="configurable-content" className="data-[state=active]:bg-rose-500 data-[state=active]:text-white">
+              <Settings className="w-4 h-4 mr-2" />
+              Configurable Content
+            </TabsTrigger>
+          </TabsList>
+
+          {/* Translations Tab - Existing Content (UNTOUCHED) */}
+          <TabsContent value="translations" className="space-y-0">
         <Tabs value={activeSection} onValueChange={setActiveSection}>
           <TabsList className="bg-gray-100">
             <TabsTrigger value="hero">Hero</TabsTrigger>
@@ -612,32 +660,22 @@ export default function PlatformTranslations() {
               <div className="flex justify-between items-center">
                 <p className="text-sm text-gray-500 flex items-center gap-2">
                   <Edit2 className="w-4 h-4" />
-                  Edit translations for pricing section
+                  Click any text below to edit pricing plans
                 </p>
-                <div className="flex gap-2">
-                  <Button 
-                    variant="default" 
-                    size="sm" 
-                    onClick={() => setShowPlansManager(true)}
-                  >
-                    <Settings className="w-4 h-4 mr-2" />
-                    Manage Plans
-                  </Button>
-                  <Button 
-                    variant="outline" 
-                    size="sm" 
-                    onClick={() => {
-                      setEditingPricing(!editingPricing);
-                      toast({
-                        title: editingPricing ? "View Mode" : "Edit Mode",
-                        description: editingPricing ? "Now viewing pricing plans" : "You can now edit plan details"
-                      });
-                    }}
-                  >
-                    <Edit2 className="w-4 h-4 mr-2" />
-                    {editingPricing ? "Done Editing" : "Edit Translations"}
-                  </Button>
-                </div>
+                <Button 
+                  variant="outline" 
+                  size="sm" 
+                  onClick={() => {
+                    setEditingPricing(!editingPricing);
+                    toast({
+                      title: editingPricing ? "View Mode" : "Edit Mode",
+                      description: editingPricing ? "Now viewing pricing plans" : "You can now edit plan details"
+                    });
+                  }}
+                >
+                  <Settings className="w-4 h-4 mr-2" />
+                  {editingPricing ? "Done Editing" : "Manage Plans"}
+                </Button>
               </div>
 
               <Card className="p-8">
@@ -933,19 +971,165 @@ export default function PlatformTranslations() {
             </Card>
           </TabsContent>
         </Tabs>
+          </TabsContent>
 
-        {hasChanges && (
+          {/* Configurable Content Tab - NEW */}
+          <TabsContent value="configurable-content" className="space-y-6">
+            <Card className="p-8">
+              <div className="mb-6">
+                <h2 className="text-2xl font-bold text-gray-900 flex items-center gap-2 mb-2">
+                  <Settings className="w-6 h-6 text-rose-500" />
+                  Configurable Content
+                </h2>
+                <p className="text-gray-600">
+                  Manage structured content that appears on the homepage (pricing plans, features, etc.)
+                </p>
+              </div>
+
+              {/* Pricing Plans Section */}
+              <div className="space-y-6">
+                <div className="flex justify-between items-center pb-4 border-b">
+                  <div>
+                    <h3 className="text-xl font-semibold text-gray-900">Pricing Plans</h3>
+                    <p className="text-sm text-gray-600 mt-1">
+                      Configure pricing plans exactly as they appear on the homepage
+                    </p>
+                  </div>
+                  <Button variant="outline" className="gap-2">
+                    <Plus className="w-4 h-4" />
+                    Add Plan
+                  </Button>
+                </div>
+
+                {/* Pricing Plans Display - Pixel-perfect mirror of homepage */}
+                <div className="bg-gradient-to-br from-slate-50 to-white rounded-xl p-8">
+                  <div className="text-center mb-12">
+                    <div className="inline-flex items-center bg-gradient-to-r from-rose-500 to-pink-500 text-white px-6 py-2 rounded-full text-sm font-medium mb-6">
+                      <Crown className="w-4 h-4 mr-2" />
+                      <span>Premium Plans</span>
+                    </div>
+                    <h2 className="text-4xl md:text-5xl font-bold text-charcoal mb-6">
+                      Choose Your Perfect Plan
+                    </h2>
+                    <p className="text-xl text-charcoal/70 max-w-4xl mx-auto leading-relaxed">
+                      Find the right plan for your wedding
+                    </p>
+                  </div>
+
+                  {/* Pricing Cards Grid - Pixel-perfect mirror from homepage */}
+                  <div className="grid lg:grid-cols-3 xl:grid-cols-5 gap-6">
+                    {plansLoading ? (
+                      <div className="col-span-full text-center py-8 text-gray-500">
+                        Loading pricing plans...
+                      </div>
+                    ) : pricingPlans.length === 0 ? (
+                      <div className="col-span-full text-center py-8 text-gray-500">
+                        No pricing plans configured. Click "Add Plan" to create one.
+                      </div>
+                    ) : (
+                      pricingPlans.map((plan: any, index: number) => {
+                        // Handle both database format (planKey) and config format (id)
+                        const planId = plan.planKey || plan.id;
+                        const planName = plan.nameKey || `templatePlans.plans.${index}.name`;
+                        const planBadge = plan.badge || (plan.badgeKey ? planId : null);
+                        const isPopular = plan.popular || false;
+                        
+                        return (
+                          <div 
+                            key={plan.id || planId}
+                            className={`relative rounded-2xl p-6 transition-all duration-300 hover:scale-105 cursor-pointer ${
+                              isPopular 
+                                ? 'bg-gradient-to-br from-emerald-500 to-teal-600 text-white shadow-2xl ring-4 ring-emerald-200 scale-105' 
+                                : 'bg-white border-2 border-gray-200 shadow-lg hover:shadow-xl'
+                            }`}
+                            onClick={() => {
+                              toast({
+                                title: "Plan Editor",
+                                description: `Editing ${planId} plan (coming soon)`
+                              });
+                            }}
+                          >
+                            {planBadge && (
+                              <div className="absolute -top-3 left-1/2 transform -translate-x-1/2">
+                                <span className={`px-4 py-1.5 rounded-full text-xs font-bold text-white ${
+                                  plan.badgeColor?.includes('gradient') 
+                                    ? plan.badgeColor 
+                                    : plan.badgeColor || 'bg-blue-500'
+                                }`}>
+                                  {planId.charAt(0).toUpperCase() + planId.slice(1)}
+                                </span>
+                              </div>
+                            )}
+
+                            <div className="text-center mb-6">
+                              <h3 className={`text-xl font-bold mb-2 ${isPopular ? 'text-white' : 'text-charcoal'}`}>
+                                {planName.split('.').pop() || planId}
+                              </h3>
+                              <div className="mb-3">
+                                <span className={`text-3xl font-bold ${isPopular ? 'text-white' : 'text-charcoal'}`}>
+                                  {plan.price} {plan.currency || ''}
+                                </span>
+                              </div>
+                              <p className={`text-sm ${isPopular ? 'text-white/90' : 'text-charcoal/70'}`}>
+                                {plan.descriptionKey || plan.description || ''}
+                              </p>
+                            </div>
+
+                            <div className="space-y-3 mb-6">
+                              {(plan.features || []).map((feature: any, idx: number) => {
+                                const FeatureIcon = getIconComponent(feature.icon || 'Check');
+                                const featureName = feature.translationKey?.split('.').pop() || feature.featureKey || 'Feature';
+                                const isIncluded = feature.included !== undefined ? feature.included : feature.isEnabled;
+                                
+                                return (
+                                  <div key={idx} className="flex items-center text-sm">
+                                    {isIncluded ? (
+                                      <Check className={`w-4 h-4 mr-3 flex-shrink-0 ${isPopular ? 'text-white' : 'text-emerald-500'}`} />
+                                    ) : (
+                                      <X className={`w-4 h-4 mr-3 flex-shrink-0 ${isPopular ? 'text-white/40' : 'text-gray-400'}`} />
+                                    )}
+                                    <div className="flex items-center">
+                                      <FeatureIcon className="w-4 h-4 mr-2" />
+                                      <span className={`${
+                                        isIncluded 
+                                          ? (isPopular ? 'text-white' : 'text-charcoal') 
+                                          : (isPopular ? 'text-white/40' : 'text-gray-400')
+                                      }`}>
+                                        {featureName}
+                                      </span>
+                                    </div>
+                                  </div>
+                                );
+                              })}
+                            </div>
+
+                            <div className="absolute top-4 right-4 opacity-0 group-hover:opacity-100 transition-opacity">
+                              <Button size="sm" variant="ghost" className="h-8 w-8 p-0">
+                                <Edit2 className="w-4 h-4" />
+                              </Button>
+                            </div>
+                          </div>
+                        );
+                      })
+                    )}
+                  </div>
+
+                  <div className="mt-8 text-center text-sm text-gray-500">
+                    <p>👆 This section mirrors the exact appearance of the homepage pricing section</p>
+                  </div>
+                </div>
+              </div>
+            </Card>
+          </TabsContent>
+        </Tabs>
+
+        {hasChanges && mainTab === "translations" && (
           <div className="fixed bottom-8 right-8">
             <Button onClick={saveAllChanges} size="lg" className="bg-rose-500 hover:bg-rose-600 shadow-lg">
               <Save className="w-5 h-5 mr-2" />
               Save All Changes
             </Button>
           </div>
-        )}
-
-        {/* Pricing Plans Manager Dialog */}
-        {showPlansManager && (
-          <PricingPlansManager onClose={() => setShowPlansManager(false)} />
         )}
       </div>
         </>
