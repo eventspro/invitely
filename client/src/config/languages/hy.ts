@@ -54,6 +54,14 @@ export const hy = {
   templates: {
     title: "Գեղեցիկ Հարսանեկան Ձևանմուշներ",
     subtitle: "Ընտրեք մեր հավաքածուից գրավիչ, մասնագիտորեն նախագծված ձևանմուշները",
+    loading: "Բեռնում է ձևանմուշները...",
+    error: "Չհաջողվեց բեռնել ձևանմուշները։ Ցուցադրվում են լռելյայն ձևանմուշները։",
+    viewDemo: "Դիտել Ցուցադրումը",
+    livePreview: "Կենդանի Նախադիտում Հասանելի է",
+    mobileResponsive: "Բջջային Հարմարեցված",
+    featuresLabel: "Հնարավորություններ",
+    cardSubtitle: "Կենդանի Նախադիտում Հասանելի է • Բջջային Հարմարեցված",
+    templateLabel: "Ձևանմուշ",
     items: [
       {
         name: "Էլեգանտ Հայկական Հարսանիք",
@@ -71,6 +79,7 @@ export const hy = {
     badge: "Հարսանեկան Դիզայններ և Գնացուցակ",
     title: "Ընտրեք Կատարյալ Հարսանեկան Կայքը",
     subtitle: "Ինտիմ հավաքույթներից մինչև վեհ տոնակատարությունները՝ գտիր այն դիզայնը, որը համապատասխանում է քո սիրո պատմությանը:",
+    featuresHeader: "Հնարավորություններ",
     plans: [
       {
         name: "Հիմնական",
@@ -208,6 +217,30 @@ export const hy = {
       "QR Code Cards": "QR Կոդի Քարտեր",
       "QR Code Cards (100 cards included)": "QR Կոդի Քարտեր (100 քարտ ներառված)"
     }
+  },
+
+  // Social Media Links - For Contact & Payment
+  socialMedia: {
+    instagram: {
+      url: "https://www.instagram.com/weddingsites_am",
+      label: "Instagram"
+    },
+    telegram: {
+      url: "https://t.me/weddingsites_am",
+      label: "Telegram"
+    },
+    facebook: {
+      url: "https://www.facebook.com/weddingsites.am",
+      label: "Facebook"
+    }
+  },
+
+  // Contact & Social Section
+  contactSocial: {
+    title: "Պատրա՞ստ եք ստեղծել ձեր կատարյալ հարսանեկան կայքը:",
+    subtitle: "Միացե՛ք հարյուրավոր զույգերին, ովքեր ընտրել են մեզ իրենց հատուկ օրվա համար",
+    description: "Կապվեք մեզ հետ սոցիալական ցանցերում՝ սկսելու համար",
+    brandName: "WeddingSites"
   },
 
   // Footer Section

@@ -329,51 +329,18 @@ export const insertRsvpSchema = createInsertSchema(rsvps).omit({
   }),
 });
 
-// Translation schemas
-export const insertTranslationSchema = z.object({
-  language: z.string().min(1, "Language code is required (e.g., 'hy', 'en')"),
-  config: z.any(), // JSONB config for translations
-  isActive: z.boolean().optional(),
-  version: z.number().optional(),
+// Translations table for storing UI translations
+export const translations = pgTable("translations", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  language: text("language").notNull(), // en, hy, ru
+  translationKey: text("translation_key").notNull(), // dot-notation key like "hero.title"
+  value: text("value").notNull(),
+  category: text("category"), // navigation, hero, features, pricing, etc.
+  createdAt: timestamp("created_at").default(sql`now()`),
+  updatedAt: timestamp("updated_at").default(sql`now()`),
 });
 
-export const updateTranslationSchema = z.object({
-  config: z.any().optional(),
-  isActive: z.boolean().optional(),
-  version: z.number().optional(),
-});
-
-// Pricing plans and features schemas
-export const insertPricingPlanSchema = createInsertSchema(pricingPlans).omit({
-  id: true,
-  createdAt: true,
-  updatedAt: true,
-});
-
-export const insertPlanFeatureSchema = createInsertSchema(planFeatures).omit({
-  id: true,
-  createdAt: true,
-  updatedAt: true,
-});
-
-export const insertPlanFeatureAssociationSchema = createInsertSchema(planFeatureAssociations).omit({
-  id: true,
-  createdAt: true,
-});
-
-export const insertTranslationKeySchema = createInsertSchema(translationKeys).omit({
-  id: true,
-  createdAt: true,
-  updatedAt: true,
-});
-
-export const insertTranslationValueSchema = createInsertSchema(translationValues).omit({
-  id: true,
-  createdAt: true,
-  updatedAt: true,
-});
-
-export const insertPlatformSettingSchema = createInsertSchema(platformSettings).omit({
+export const insertTranslationSchema = createInsertSchema(translations).omit({
   id: true,
   createdAt: true,
   updatedAt: true,
@@ -402,9 +369,5 @@ export type UpdateTemplate = z.infer<typeof updateTemplateSchema>;
 export type InsertRsvp = z.infer<typeof insertRsvpSchema>;
 export type Rsvp = typeof rsvps.$inferSelect;
 export type Image = typeof images.$inferSelect;
-export type PricingPlan = typeof pricingPlans.$inferSelect;
-export type PlanFeature = typeof planFeatures.$inferSelect;
-export type PlanFeatureAssociation = typeof planFeatureAssociations.$inferSelect;
-export type TranslationKey = typeof translationKeys.$inferSelect;
-export type TranslationValue = typeof translationValues.$inferSelect;
-export type PlatformSetting = typeof platformSettings.$inferSelect;
+export type Translation = typeof translations.$inferSelect;
+export type InsertTranslation = z.infer<typeof insertTranslationSchema>;

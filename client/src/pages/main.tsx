@@ -29,8 +29,9 @@ import {
 } from "lucide-react";
 import { SiInstagram, SiTelegram, SiFacebook } from "react-icons/si";
 import { Link } from "wouter";
-import { useTranslation, useLocaleFormat } from "@/hooks/useLanguage";
+import { useTranslation, useLocaleFormat, useLanguage } from "@/hooks/useLanguage";
 import LanguageSelector from "@/components/LanguageSelector";
+import { defaultContentConfig, getEnabledItems } from "@shared/content-config";
 
 // Template interface based on database schema
 interface Template {
@@ -77,6 +78,7 @@ interface TemplatePlan {
 export default function MainPage() {
   const { translations: t } = useTranslation();
   const { formatPrice } = useLocaleFormat();
+  const { isLoading: translationsLoading } = useLanguage();
   const [selectedPlan, setSelectedPlan] = useState<string>("standard");
   const [templates, setTemplates] = useState<DisplayTemplate[]>([]);
   const [loading, setLoading] = useState(true);
@@ -206,224 +208,147 @@ export default function MainPage() {
   const fallbackTemplates: DisplayTemplate[] = [
     {
       id: "harut-tatev",
-      name: "Elegant Armenian Wedding",
+      name: t.templates?.items?.[0]?.name || "Elegant Armenian Wedding",
       preview: "/template_previews/template-preview-1.jpg",
       demoUrl: "/harut-tatev",
-      features: ["Armenian Fonts", "Timeline", "RSVP", "Photo Gallery"]
+      features: [
+        t.templates?.items?.[0]?.features?.["0"] || "Armenian Fonts",
+        t.templates?.items?.[0]?.features?.["1"] || "Timeline",
+        t.templates?.items?.[0]?.features?.["2"] || "RSVP",
+        t.templates?.items?.[0]?.features?.["3"] || "Photo Gallery"
+      ]
     },
     {
       id: "forest-lily",
-      name: "Nature Wedding Theme",
+      name: t.templates?.items?.[1]?.name || "Nature Wedding Theme",
       preview: "/template_previews/template-preview-2.jpg", 
       demoUrl: "/forest-lily-nature",
-      features: ["Nature Theme", "Green Colors", "RSVP", "Calendar"]
+      features: [
+        t.templates?.items?.[1]?.features?.["0"] || "Nature Theme",
+        t.templates?.items?.[1]?.features?.["1"] || "Green Colors",
+        t.templates?.items?.[1]?.features?.["2"] || "RSVP",
+        t.templates?.items?.[1]?.features?.["3"] || "Calendar"
+      ]
     },
     {
       id: "classic-wedding",
-      name: "Classic Romantic Wedding",
+      name: t.templates?.items?.[2]?.name || "Classic Romantic Wedding",
       preview: "/template_previews/template-preview-3.jpg",
       demoUrl: "/michael-sarah-classic",
-      features: ["Classic Design", "Elegant Style", "RSVP", "Mobile Responsive"]
+      features: [
+        t.templates?.items?.[2]?.features?.["0"] || "Classic Design",
+        t.templates?.items?.[2]?.features?.["1"] || "Elegant Style",
+        t.templates?.items?.[2]?.features?.["2"] || "RSVP",
+        t.templates?.items?.[2]?.features?.["3"] || "Mobile Responsive"
+      ]
     },
     {
       id: "luxury-wedding",
-      name: "Luxury Elegant Wedding",
+      name: t.templates?.items?.[3]?.name || "Luxury Elegant Wedding",
       preview: "/template_previews/template-preview-4.jpg",
       demoUrl: "/alexander-isabella-elegant",
-      features: ["Premium Features", "Admin Panel", "Blue Theme", "Full Gallery"]
+      features: [
+        t.templates?.items?.[3]?.features?.["0"] || "Premium Features",
+        t.templates?.items?.[3]?.features?.["1"] || "Admin Panel",
+        t.templates?.items?.[3]?.features?.["2"] || "Blue Theme",
+        t.templates?.items?.[3]?.features?.["3"] || "Full Gallery"
+      ]
     },
     {
       id: "modern-wedding",
-      name: "Romantic Pink Wedding",
+      name: t.templates?.items?.[4]?.name || "Romantic Pink Wedding",
       preview: "/template_previews/template-preview-5.jpg",
       demoUrl: "/david-rose-romantic",
-      features: ["Romantic Design", "Pink Theme", "Music Player", "Love Story"]
+      features: [
+        t.templates?.items?.[4]?.features?.["0"] || "Romantic Design",
+        t.templates?.items?.[4]?.features?.["1"] || "Pink Theme",
+        t.templates?.items?.[4]?.features?.["2"] || "Music Player",
+        t.templates?.items?.[4]?.features?.["3"] || "Love Story"
+      ]
     }
   ];
 
   const features = [
     {
       icon: Globe,
-      title: t.features.items[0].title,
-      description: t.features.items[0].description
+      title: t.features?.items?.[0]?.title || 'Multi-Language Support',
+      description: t.features?.items?.[0]?.description || 'Support for multiple languages'
     },
     {
       icon: Palette,
-      title: t.features.items[3].title,
-      description: t.features.items[3].description
+      title: t.features?.items?.[3]?.title || 'Easy Customization',
+      description: t.features?.items?.[3]?.description || 'Customize your wedding website'
     },
     {
       icon: Smartphone,
-      title: t.features.items[2].title,
-      description: t.features.items[2].description
+      title: t.features?.items?.[2]?.title || 'Mobile Responsive',
+      description: t.features?.items?.[2]?.description || 'Works on all devices'
     },
     {
       icon: Users,
-      title: t.features.items[1].title,
-      description: t.features.items[1].description
+      title: t.features?.items?.[1]?.title || 'Guest Management',
+      description: t.features?.items?.[1]?.description || 'Manage your guest list'
     },
     {
       icon: Camera,
-      title: t.features.items[4].title,
-      description: t.features.items[4].description
+      title: t.features?.items?.[4]?.title || 'Photo Gallery',
+      description: t.features?.items?.[4]?.description || 'Share your memories'
     },
     {
       icon: Lock,
-      title: t.features.items[5].title,
-      description: t.features.items[5].description
+      title: t.features?.items?.[5]?.title || 'Secure & Private',
+      description: t.features?.items?.[5]?.description || 'Your data is safe'
     }
   ];
 
-  const templatePlans: TemplatePlan[] = [
-    {
-      id: "basic",
-      name: t.pricingPlans.plans.basic.name,
-      price: t.pricingPlans.plans.basic.price,
-      description: t.pricingPlans.plans.basic.description,
-      badge: t.pricingPlans.plans.basic.badge,
-      templateRoute: "/michael-sarah-classic",
-      features: [
-        { name: t.pricingPlans.features.weddingTimeline, icon: <Calendar className="w-4 h-4" />, included: true },
-        { name: t.pricingPlans.features.coupleIntroduction, icon: <Heart className="w-4 h-4" />, included: true },
-        { name: t.pricingPlans.features.weddingLocations, icon: <MapPin className="w-4 h-4" />, included: true },
-        { name: t.pricingPlans.features.rsvpFunctionality, icon: <Mail className="w-4 h-4" />, included: true },
-        { name: t.pricingPlans.features.guestListExport, icon: <Download className="w-4 h-4" />, included: true },
-        { name: t.pricingPlans.features.photoGallery, icon: <Camera className="w-4 h-4" />, included: false },
-        { name: t.pricingPlans.features.audioPlayer, icon: <Music className="w-4 h-4" />, included: false },
-        { name: t.pricingPlans.features.adminPanel, icon: <Settings className="w-4 h-4" />, included: false },
-        { name: t.pricingPlans.features.qrCodeCards, icon: <QrCode className="w-4 h-4" />, included: false }
-      ]
-    },
-    {
-      id: "essential",
-      name: t.pricingPlans.plans.essential.name,
-      price: t.pricingPlans.plans.essential.price,
-      badge: t.pricingPlans.plans.essential.badge,
-      badgeColor: "bg-blue-500",
-      description: t.pricingPlans.plans.essential.description,
-      templateRoute: "/forest-lily-nature",
-      features: [
-        { name: t.pricingPlans.features.weddingTimeline, icon: <Calendar className="w-4 h-4" />, included: true },
-        { name: t.pricingPlans.features.coupleIntroduction, icon: <Heart className="w-4 h-4" />, included: true },
-        { name: t.pricingPlans.features.weddingLocations, icon: <MapPin className="w-4 h-4" />, included: true },
-        { name: t.pricingPlans.features.rsvpFunctionality, icon: <Mail className="w-4 h-4" />, included: true },
-        { name: t.pricingPlans.features.guestListExport, icon: <Download className="w-4 h-4" />, included: true },
-        { name: t.pricingPlans.features.photoGallery, icon: <Camera className="w-4 h-4" />, included: true },
-        { name: t.pricingPlans.features.audioPlayer, icon: <Music className="w-4 h-4" />, included: true },
-        { name: t.pricingPlans.features.adminPanel, icon: <Settings className="w-4 h-4" />, included: false },
-        { name: t.pricingPlans.features.qrCodeCards, icon: <QrCode className="w-4 h-4" />, included: false }
-      ]
-    },
-    {
-      id: "professional",
-      name: t.pricingPlans.plans.professional.name,
-      price: t.pricingPlans.plans.professional.price,
-      badge: t.pricingPlans.plans.professional.badge,
-      badgeColor: "bg-green-500",
-      popular: true,
-      description: t.pricingPlans.plans.professional.description,
-      templateRoute: "/david-rose-romantic",
-      features: [
-        { name: t.pricingPlans.features.weddingTimeline, icon: <Calendar className="w-4 h-4" />, included: true },
-        { name: t.pricingPlans.features.coupleIntroduction, icon: <Heart className="w-4 h-4" />, included: true },
-        { name: t.pricingPlans.features.weddingLocations, icon: <MapPin className="w-4 h-4" />, included: true },
-        { name: t.pricingPlans.features.rsvpFunctionality, icon: <Mail className="w-4 h-4" />, included: true },
-        { name: t.pricingPlans.features.guestListExport, icon: <Download className="w-4 h-4" />, included: true },
-        { name: t.pricingPlans.features.photoGallery, icon: <Camera className="w-4 h-4" />, included: true },
-        { name: t.pricingPlans.features.audioPlayer, icon: <Music className="w-4 h-4" />, included: true },
-        { name: t.pricingPlans.features.adminPanel, icon: <Settings className="w-4 h-4" />, included: true },
-        { name: t.pricingPlans.features.qrCodeCards, icon: <QrCode className="w-4 h-4" />, included: false }
-      ]
-    },
-    {
-      id: "premium",
-      name: t.pricingPlans.plans.premium.name,
-      price: t.pricingPlans.plans.premium.price,
-      badge: t.pricingPlans.plans.premium.badge,
-      badgeColor: "bg-purple-500",
-      description: t.pricingPlans.plans.premium.description,
-      templateRoute: "/alexander-isabella-elegant",
-      features: [
-        { name: t.pricingPlans.features.weddingTimeline, icon: <Calendar className="w-4 h-4" />, included: true },
-        { name: t.pricingPlans.features.coupleIntroduction, icon: <Heart className="w-4 h-4" />, included: true },
-        { name: t.pricingPlans.features.weddingLocations, icon: <MapPin className="w-4 h-4" />, included: true },
-        { name: t.pricingPlans.features.rsvpFunctionality, icon: <Mail className="w-4 h-4" />, included: true },
-        { name: t.pricingPlans.features.guestListExport, icon: <Download className="w-4 h-4" />, included: true },
-        { name: t.pricingPlans.features.photoGallery, icon: <Camera className="w-4 h-4" />, included: true },
-        { name: t.pricingPlans.features.audioPlayer, icon: <Music className="w-4 h-4" />, included: true },
-        { name: t.pricingPlans.features.adminPanel, icon: <Settings className="w-4 h-4" />, included: true },
-        { name: t.pricingPlans.features.qrCodeCards50, icon: <QrCode className="w-4 h-4" />, included: true }
-      ]
-    },
-    {
-      id: "ultimate",
-      name: t.pricingPlans.plans.ultimate.name,
-      price: t.pricingPlans.plans.ultimate.price,
-      badge: t.pricingPlans.plans.ultimate.badge,
-      badgeColor: "bg-gradient-to-r from-yellow-400 to-orange-500",
-      description: t.pricingPlans.plans.ultimate.description,
-      templateRoute: "/harut-tatev",
-      features: [
-        { name: t.pricingPlans.features.weddingTimeline, icon: <Calendar className="w-4 h-4" />, included: true },
-        { name: t.pricingPlans.features.coupleIntroduction, icon: <Heart className="w-4 h-4" />, included: true },
-        { name: t.pricingPlans.features.weddingLocations, icon: <MapPin className="w-4 h-4" />, included: true },
-        { name: t.pricingPlans.features.rsvpFunctionality, icon: <Mail className="w-4 h-4" />, included: true },
-        { name: t.pricingPlans.features.guestListExport, icon: <Download className="w-4 h-4" />, included: true },
-        { name: t.pricingPlans.features.photoGallery, icon: <Camera className="w-4 h-4" />, included: true },
-        { name: t.pricingPlans.features.audioPlayer, icon: <Music className="w-4 h-4" />, included: true },
-        { name: t.pricingPlans.features.adminPanel, icon: <Settings className="w-4 h-4" />, included: true },
-        { name: t.pricingPlans.features.qrCodeCards100, icon: <QrCode className="w-4 h-4" />, included: true }
-      ]
-    }
-  ];
+  // Helper function to get icon component from icon name
+  const getIcon = (iconName: string, size = "w-4 h-4") => {
+    const icons: Record<string, any> = {
+      Calendar, Heart, MapPin, Mail, Camera, Music, Settings, QrCode, Download, Upload
+    };
+    const IconComponent = icons[iconName] || Calendar;
+    return <IconComponent className={size} />;
+  };
 
-  const pricingPlans = [
-    {
-      id: "basic",
-      name: "Basic",
-      price: "$99",
-      description: "Perfect for simple weddings",
-      features: [
-        "1 Template Design",
-        "Basic Customization",
-        "RSVP Collection",
-        "Mobile Responsive",
-        "1 Month Support"
-      ],
-      popular: false
-    },
-    {
-      id: "standard",
-      name: "Standard",
-      price: "$199",
-      description: "Most popular choice",
-      features: [
-        "2 Template Options",
-        "Full Customization",
-        "Photo Gallery",
-        "RSVP Management",
-        "Armenian Font Support",
-        "3 Months Support"
-      ],
-      popular: true
-    },
-    {
-      id: "premium",
-      name: "Premium",
-      price: "$299",
-      description: "Complete wedding solution",
-      features: [
-        "All Templates",
-        "Custom Design",
-        "Unlimited Photos",
-        "Advanced RSVP",
-        "Custom Domain",
-        "6 Months Support",
-        "Priority Support"
-      ],
-      popular: false
-    }
-  ];
+  // Build template plans from centralized config + translations
+  const templatePlans: TemplatePlan[] = getEnabledItems(defaultContentConfig.pricingPlans).map(plan => {
+    // Extract the feature name from translation key (e.g., "templatePlans.features.Wedding Timeline" -> "Wedding Timeline")
+    const getFeatureName = (translationKey: string) => {
+      const parts = translationKey.split('.');
+      return parts[parts.length - 1]; // Get last part
+    };
+
+    return {
+      id: plan.id,
+      name: t.templatePlans?.plans?.[plan.order]?.name || plan.id,
+      price: plan.price,
+      badge: plan.badgeKey ? (t.templatePlansSection?.planBadges as any)?.[plan.id] : undefined,
+      badgeColor: plan.badgeColor,
+      description: t.templatePlans?.plans?.[plan.order]?.description || "",
+      templateRoute: plan.templateRoute,
+      popular: plan.popular,
+      features: plan.features.map(f => {
+        const featureName = getFeatureName(f.translationKey);
+        return {
+          name: (t.templatePlans?.features as any)?.[featureName] || featureName,
+          icon: getIcon(f.icon),
+          included: f.included
+        };
+      })
+    };
+  });
+
+  // Show loading state while translations are being fetched
+  if (translationsLoading) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-cream via-white to-lightGold/20 flex items-center justify-center">
+        <div className="text-center">
+          <div className="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-softGold mb-4"></div>
+          <p className="text-charcoal/60">Loading translations...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-cream via-white to-lightGold/20">
@@ -433,13 +358,21 @@ export default function MainPage() {
           <div className="flex justify-between items-center h-16">
             <div className="flex items-center">
               <Heart className="h-8 w-8 text-softGold mr-3" />
-              <span className="text-xl font-bold text-charcoal">WeddingSites</span>
+              <span className="text-xl font-bold text-charcoal" data-i18n-key="contactSocial.brandName">{t.contactSocial?.brandName || 'WeddingSites'}</span>
             </div>
             <div className="hidden md:flex space-x-8">
-              <a href="#features" className="text-charcoal hover:text-softGold transition-colors">{t.navigation.features}</a>
-              <Link to="/templates" className="text-charcoal hover:text-softGold transition-colors">{t.navigation.templates}</Link>
-              <a href="#pricing" className="text-charcoal hover:text-softGold transition-colors">{t.navigation.pricing}</a>
-              <a href="#contact" className="text-charcoal hover:text-softGold transition-colors">{t.navigation.contact}</a>
+              <a href="#features" className="text-charcoal hover:text-softGold transition-colors">
+                <span data-i18n-key="navigation.features">{t.navigation?.features || 'Features'}</span>
+              </a>
+              <Link to="/templates" className="text-charcoal hover:text-softGold transition-colors">
+                <span data-i18n-key="navigation.templates">{t.navigation?.templates || 'Templates'}</span>
+              </Link>
+              <a href="#pricing" className="text-charcoal hover:text-softGold transition-colors">
+                <span data-i18n-key="navigation.pricing">{t.navigation?.pricing || 'Pricing'}</span>
+              </a>
+              <a href="#contact" className="text-charcoal hover:text-softGold transition-colors">
+                <span data-i18n-key="navigation.contact">{t.navigation?.contact || 'Contact'}</span>
+              </a>
             </div>
             <div className="flex items-center space-x-4">
               <LanguageSelector />
@@ -448,7 +381,7 @@ export default function MainPage() {
                 className="bg-softGold hover:bg-softGold/90 text-white px-4 py-2 rounded-lg transition-colors"
                 data-testid="button-start-today"
               >
-                {t.hero.cta}
+                <span data-i18n-key="hero.cta">{t.hero?.cta || 'Start Today'}</span>
               </a>
             </div>
           </div>
@@ -462,24 +395,31 @@ export default function MainPage() {
         <div className="absolute bottom-20 right-10 w-40 h-40 bg-sageGreen/10 rounded-full blur-xl animate-float" style={{ animationDelay: '1s' }}></div>
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative">
           <div className="text-center animate-fade-in">
-            <h1 className="text-4xl md:text-6xl font-bold text-charcoal mb-6 animate-slide-up">
-              {t.hero.title}
+            <h1 
+              className="text-4xl md:text-6xl font-bold text-charcoal mb-6 animate-slide-up"
+              data-i18n-key="hero.title"
+            >
+              {t.hero?.title || 'Create Your Dream Wedding Website'}
             </h1>
-            <p className="text-xl text-charcoal/70 mb-8 max-w-3xl mx-auto animate-slide-up" style={{ animationDelay: '0.2s' }}>
-              {t.hero.subtitle}
+            <p 
+              className="text-xl text-charcoal/70 mb-8 max-w-3xl mx-auto animate-slide-up" 
+              style={{ animationDelay: '0.2s' }}
+              data-i18n-key="hero.subtitle"
+            >
+              {t.hero?.subtitle || 'Beautiful, customizable wedding websites in minutes'}
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center items-center animate-slide-up" style={{ animationDelay: '0.4s' }}>
               <Link 
                 to="/templates"
                 className="bg-softGold hover:bg-softGold/90 text-white px-8 py-4 rounded-lg text-lg font-medium transition-all duration-300 transform hover:scale-105 flex items-center"
               >
-                {t.hero.ctaButton || t.hero.viewTemplates} <ArrowRight className="ml-2 h-5 w-5" />
+                <span data-i18n-key="hero.viewTemplates">{t.hero?.viewTemplates || 'View Templates'}</span> <ArrowRight className="ml-2 h-5 w-5" />
               </Link>
               <a 
                 href="#templates"
                 className="border-2 border-charcoal text-charcoal hover:bg-charcoal hover:text-white px-8 py-4 rounded-lg text-lg font-medium transition-all duration-300 transform hover:scale-105 flex items-center"
               >
-                {t.hero.viewTemplatesButton || t.common.viewMore} <Eye className="ml-2 h-5 w-5" />
+                <span data-i18n-key="common.viewMore">{t.common?.viewMore || 'View More'}</span> <Eye className="ml-2 h-5 w-5" />
               </a>
             </div>
           </div>
@@ -490,11 +430,17 @@ export default function MainPage() {
       <section id="features" className="py-20 bg-white">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-16">
-            <h2 className="text-3xl md:text-4xl font-bold text-charcoal mb-4">
-              {t.features.title}
+            <h2 
+              className="text-3xl md:text-4xl font-bold text-charcoal mb-4"
+              data-i18n-key="features.title"
+            >
+              {t.features?.title || 'Features'}
             </h2>
-            <p className="text-xl text-charcoal/70 max-w-3xl mx-auto">
-              {t.features.subtitle}
+            <p 
+              className="text-xl text-charcoal/70 max-w-3xl mx-auto"
+              data-i18n-key="features.subtitle"
+            >
+              {t.features?.subtitle || 'Everything you need for your special day'}
             </p>
           </div>
           <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
@@ -505,8 +451,18 @@ export default function MainPage() {
                 style={{ animationDelay: `${index * 0.1}s` }}
               >
                 <feature.icon className="h-12 w-12 text-softGold mb-4" />
-                <h3 className="text-xl font-semibold text-charcoal mb-2">{feature.title}</h3>
-                <p className="text-charcoal/70">{feature.description}</p>
+                <h3 
+                  className="text-xl font-semibold text-charcoal mb-2"
+                  data-i18n-key={`features.items.${index}.title`}
+                >
+                  {feature.title}
+                </h3>
+                <p 
+                  className="text-charcoal/70"
+                  data-i18n-key={`features.items.${index}.description`}
+                >
+                  {feature.description}
+                </p>
               </div>
             ))}
           </div>
@@ -517,23 +473,39 @@ export default function MainPage() {
       <section id="templates" className="py-20 bg-gradient-to-br from-lightGold/10 to-cream/30">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-16">
-            <h2 className="text-3xl md:text-4xl font-bold text-charcoal mb-4">
-              Beautiful Template Designs
+            <h2 
+              className="text-3xl md:text-4xl font-bold text-charcoal mb-4"
+              data-i18n-key="templates.title"
+            >
+              {t.templates?.title || 'Choose Your Template'}
             </h2>
-            <p className="text-xl text-charcoal/70 max-w-3xl mx-auto">
-              Choose from our collection of stunning wedding website templates
+            <p 
+              className="text-xl text-charcoal/70 max-w-3xl mx-auto"
+              data-i18n-key="templates.subtitle"
+            >
+              {t.templates?.subtitle || 'Select from our beautiful collection'}
             </p>
           </div>
           
           {loading ? (
             <div className="text-center py-12">
               <div className="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-softGold"></div>
-              <p className="mt-4 text-charcoal/60">Loading templates...</p>
+              <p 
+                className="mt-4 text-charcoal/60"
+                data-i18n-key="templates.loading"
+              >
+                {t.templates?.loading || 'Loading templates...'}
+              </p>
             </div>
           ) : error ? (
             <div className="text-center py-12">
-              <p className="text-red-600 mb-4">{error}</p>
-              <p className="text-charcoal/60">Showing default templates</p>
+              <p className="text-red-600 mb-4" data-i18n-key="templates.error">{error}</p>
+              <p 
+                className="text-charcoal/60"
+                data-i18n-key="templates.error"
+              >
+                {t.templates?.error || 'Failed to load templates'}
+              </p>
             </div>
           ) : null}
           
@@ -564,23 +536,23 @@ export default function MainPage() {
                       to={template.demoUrl}
                       className="inline-flex items-center bg-white hover:bg-gray-100 text-charcoal px-6 py-3 rounded-lg transition-all duration-300 font-semibold shadow-lg transform translate-y-4 group-hover:translate-y-0"
                     >
-                      View Live Demo <ArrowRight className="ml-2 h-4 w-4" />
+                      <span data-i18n-key="templates.viewDemo">{t.templates?.viewDemo || 'View Live Demo'}</span> <ArrowRight className="ml-2 h-4 w-4" />
                     </Link>
                   </div>
                   {/* Template label */}
                   <div className="absolute top-4 left-4">
-                    <span className="bg-white/90 backdrop-blur-sm text-charcoal px-3 py-1 rounded-full text-sm font-medium shadow-lg">
-                      Template
+                    <span className="bg-white/90 backdrop-blur-sm text-charcoal px-3 py-1 rounded-full text-sm font-medium shadow-lg" data-i18n-key="templates.templateLabel">
+                      {t.templates?.templateLabel || 'Template'}
                     </span>
                   </div>
                 </div>
                 <div className="p-6">
-                  <h3 className="text-xl font-bold text-charcoal mb-2">{template.name}</h3>
-                  <p className="text-charcoal/60 mb-4 text-sm">Live Preview Available • Mobile Responsive</p>
-                  <h4 className="font-semibold text-charcoal mb-3 text-sm">Features:</h4>
+                  <h3 className="text-xl font-bold text-charcoal mb-2" data-i18n-key="templates.name">{template.name}</h3>
+                  <p className="text-charcoal/60 mb-4 text-sm" data-i18n-key="templates.cardSubtitle">{t.templates?.cardSubtitle}</p>
+                  <h4 className="font-semibold text-charcoal mb-3 text-sm" data-i18n-key="templates.featuresLabel">{t.templates?.featuresLabel}:</h4>
                   <div className="flex flex-wrap gap-2">
                     {template.features.map((feature: string, idx: number) => (
-                      <span key={idx} className="bg-softGold/10 text-softGold px-3 py-1 rounded-full text-sm font-medium border border-softGold/20">
+                      <span key={idx} className="bg-softGold/10 text-softGold px-3 py-1 rounded-full text-sm font-medium border border-softGold/20" data-i18n-key={`templates.feature.${idx}`}>
                         {feature}
                       </span>
                     ))}
@@ -598,13 +570,19 @@ export default function MainPage() {
           <div className="text-center mb-16">
             <div className="inline-flex items-center bg-gradient-to-r from-rose-500 to-pink-500 text-white px-6 py-2 rounded-full text-sm font-medium mb-6">
               <Crown className="w-4 h-4 mr-2" />
-              {t.templatePlansSection.badge}
+              <span data-i18n-key="templatePlansSection.badge">{t.templatePlansSection?.badge || 'Premium Plans'}</span>
             </div>
-            <h2 className="text-4xl md:text-5xl font-bold text-charcoal mb-6">
-              {t.templatePlansSection.title}
+            <h2 
+              className="text-4xl md:text-5xl font-bold text-charcoal mb-6"
+              data-i18n-key="templatePlansSection.title"
+            >
+              {t.templatePlansSection?.title || 'Choose Your Perfect Plan'}
             </h2>
-            <p className="text-xl text-charcoal/70 max-w-4xl mx-auto leading-relaxed">
-              {t.templatePlansSection.subtitle}
+            <p 
+              className="text-xl text-charcoal/70 max-w-4xl mx-auto leading-relaxed"
+              data-i18n-key="templatePlansSection.subtitle"
+            >
+              {t.templatePlansSection?.subtitle || 'Find the right plan for your wedding'}
             </p>
           </div>
 
@@ -625,22 +603,22 @@ export default function MainPage() {
                       plan.badgeColor?.includes('gradient') 
                         ? plan.badgeColor 
                         : plan.badgeColor || 'bg-blue-500'
-                    }`}>
+                    }`} data-i18n-key={`templatePlans.plans.${index}.badge`}>
                       {plan.badge}
                     </span>
                   </div>
                 )}
 
                 <div className="text-center mb-6">
-                  <h3 className={`text-xl font-bold mb-2 ${plan.popular ? 'text-white' : 'text-charcoal'}`}>
+                  <h3 className={`text-xl font-bold mb-2 ${plan.popular ? 'text-white' : 'text-charcoal'}`} data-i18n-key={`templatePlans.plans.${index}.name`}>
                     {plan.name}
                   </h3>
                   <div className="mb-3">
-                    <span className={`text-3xl font-bold ${plan.popular ? 'text-white' : 'text-charcoal'}`}>
+                    <span className={`text-3xl font-bold ${plan.popular ? 'text-white' : 'text-charcoal'}`} data-i18n-key={`templatePlans.plans.${index}.price`}>
                       {plan.price}
                     </span>
                   </div>
-                  <p className={`text-sm ${plan.popular ? 'text-white/90' : 'text-charcoal/70'}`}>
+                  <p className={`text-sm ${plan.popular ? 'text-white/90' : 'text-charcoal/70'}`} data-i18n-key={`templatePlans.plans.${index}.description`}>
                     {plan.description}
                   </p>
                 </div>
@@ -659,10 +637,10 @@ export default function MainPage() {
                           feature.included 
                             ? (plan.popular ? 'text-white' : 'text-charcoal') 
                             : (plan.popular ? 'text-white/40' : 'text-gray-400')
-                        }`}>
+                        }`} data-i18n-key={`templatePlans.features.${feature.name}`}>
                           {feature.name}
                           {feature.description && (
-                            <span className="text-xs ml-1">({feature.description})</span>
+                            <span className="text-xs ml-1" data-i18n-key={`templatePlans.features.${feature.name}.description`}>({feature.description})</span>
                           )}
                         </span>
                       </div>
@@ -678,7 +656,7 @@ export default function MainPage() {
                       : 'bg-gradient-to-r from-rose-500 to-pink-500 text-white hover:from-rose-600 hover:to-pink-600 shadow-md'
                   }`}
                 >
-                  View Template
+                  <span data-i18n-key="templatePlans.viewTemplate">{t.templatePlans?.viewTemplate || 'View Template'}</span>
                 </Link>
               </div>
             ))}
@@ -687,20 +665,20 @@ export default function MainPage() {
           {/* Feature Comparison Table */}
           <div className="bg-white rounded-2xl shadow-2xl overflow-hidden">
             <div className="bg-gradient-to-r from-slate-800 to-slate-900 text-white p-6">
-              <h3 className="text-2xl font-bold text-center">Detailed Feature Comparison</h3>
-              <p className="text-center text-slate-300 mt-2">Compare all features across our wedding website plans</p>
+              <h3 className="text-2xl font-bold text-center" data-i18n-key="templatePlans.comparisonTitle">{t.templatePlans?.comparisonTitle}</h3>
+              <p className="text-center text-slate-300 mt-2" data-i18n-key="templatePlans.comparisonSubtitle">{t.templatePlans?.comparisonSubtitle}</p>
             </div>
             
             <div className="overflow-x-auto">
               <table className="w-full">
                 <thead className="bg-slate-50">
                   <tr>
-                    <th className="text-left p-4 font-semibold text-charcoal">Features</th>
-                    {templatePlans.map((plan) => (
+                    <th className="text-left p-4 font-semibold text-charcoal" data-i18n-key="templatePlans.featuresHeader">{t.templatePlans?.featuresHeader}</th>
+                    {templatePlans.map((plan, planIdx) => (
                       <th key={plan.id} className="text-center p-4 font-semibold text-charcoal min-w-[120px]">
                         <div className="flex flex-col items-center">
-                          <span>{plan.name}</span>
-                          <span className="text-sm font-normal text-slate-600">{plan.price}</span>
+                          <span data-i18n-key={`templatePlans.plans.${planIdx}.name`}>{plan.name}</span>
+                          <span className="text-sm font-normal text-slate-600" data-i18n-key={`templatePlans.plans.${planIdx}.price`}>{plan.price}</span>
                         </div>
                       </th>
                     ))}
@@ -712,7 +690,7 @@ export default function MainPage() {
                       <td className="p-4 font-medium text-charcoal">
                         <div className="flex items-center">
                           {featureTemplate.icon}
-                          <span className="ml-2">{featureTemplate.name}</span>
+                          <span className="ml-2" data-i18n-key={`templatePlans.features.${featureTemplate.name}`}>{featureTemplate.name}</span>
                         </div>
                       </td>
                       {templatePlans.map((plan) => {
@@ -727,7 +705,7 @@ export default function MainPage() {
                               )}
                             </div>
                             {feature.description && (
-                              <div className="text-xs text-slate-600 mt-1">{feature.description}</div>
+                              <div className="text-xs text-slate-600 mt-1" data-i18n-key={`templatePlans.features.${feature.name}.description`}>{feature.description}</div>
                             )}
                           </td>
                         );
@@ -741,49 +719,45 @@ export default function MainPage() {
 
           {/* FAQ Section */}
           <div className="mt-20">
-            <h3 className="text-3xl font-bold text-center text-charcoal mb-12">Frequently Asked Questions</h3>
+            <h3 className="text-3xl font-bold text-center text-charcoal mb-12" data-i18n-key="faq.title">{t.faq?.title}</h3>
             <div className="max-w-4xl mx-auto space-y-6">
               <div className="bg-white rounded-xl p-6 shadow-lg">
                 <h4 className="text-lg font-semibold text-charcoal mb-3 flex items-center">
                   <Gift className="w-5 h-5 mr-2 text-rose-500" />
-                  What's included in each plan?
+                  <span data-i18n-key="faq.items.0.question">{t.faq?.items?.[0]?.question}</span>
                 </h4>
-                <p className="text-charcoal/70">
-                  Each plan includes a beautifully designed wedding website template, RSVP functionality, and guest management. 
-                  Higher tiers add premium features like photo galleries, music integration, admin panels, and physical QR code cards.
+                <p className="text-charcoal/70" data-i18n-key="faq.items.0.answer">
+                  {t.faq?.items?.[0]?.answer}
                 </p>
               </div>
               
               <div className="bg-white rounded-xl p-6 shadow-lg">
                 <h4 className="text-lg font-semibold text-charcoal mb-3 flex items-center">
                   <Settings className="w-5 h-5 mr-2 text-rose-500" />
-                  Can I customize my template?
+                  <span data-i18n-key="faq.items.1.question">{t.faq?.items?.[1]?.question}</span>
                 </h4>
-                <p className="text-charcoal/70">
-                  Absolutely! All templates are fully customizable. You can change colors, fonts, content, photos, and layout elements 
-                  to match your wedding style. Professional and higher plans include an admin panel for easy customization.
+                <p className="text-charcoal/70" data-i18n-key="faq.items.1.answer">
+                  {t.faq?.items?.[1]?.answer}
                 </p>
               </div>
               
               <div className="bg-white rounded-xl p-6 shadow-lg">
                 <h4 className="text-lg font-semibold text-charcoal mb-3 flex items-center">
                   <QrCode className="w-5 h-5 mr-2 text-rose-500" />
-                  What are QR Code Cards?
+                  <span data-i18n-key="faq.items.2.question">{t.faq?.items?.[2]?.question}</span>
                 </h4>
-                <p className="text-charcoal/70">
-                  QR Code Cards are physical cards with QR codes that link directly to your wedding website. Perfect for wedding invitations, 
-                  table settings, or save-the-dates. Premium includes 50 cards, Ultimate includes 100 cards.
+                <p className="text-charcoal/70" data-i18n-key="faq.items.2.answer">
+                  {t.faq?.items?.[2]?.answer}
                 </p>
               </div>
               
               <div className="bg-white rounded-xl p-6 shadow-lg">
                 <h4 className="text-lg font-semibold text-charcoal mb-3 flex items-center">
                   <Calendar className="w-5 h-5 mr-2 text-rose-500" />
-                  How do I manage RSVPs?
+                  <span data-i18n-key="faq.items.3.question">{t.faq?.items?.[3]?.question}</span>
                 </h4>
-                <p className="text-charcoal/70">
-                  All plans include RSVP functionality where guests can confirm attendance and meal preferences. 
-                  You can export guest lists and track responses in real-time through your website dashboard.
+                <p className="text-charcoal/70" data-i18n-key="faq.items.3.answer">
+                  {t.faq?.items?.[3]?.answer}
                 </p>
               </div>
             </div>
@@ -795,13 +769,13 @@ export default function MainPage() {
       <section id="contact" className="py-20 bg-gradient-to-br from-charcoal to-charcoal/90 text-white">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center">
-            <h2 className="text-3xl md:text-4xl font-bold mb-4">
-              {t.contactSection.title}
+            <h2 className="text-3xl md:text-4xl font-bold mb-4" data-i18n-key="contactSection.title">
+              {t.contactSection?.title}
             </h2>
-            <p className="text-xl text-white/80 mb-8 max-w-3xl mx-auto">
-              {t.contactSection.subtitle}
+            <p className="text-xl text-white/80 mb-8 max-w-3xl mx-auto" data-i18n-key="contactSection.subtitle">
+              {t.contactSection?.subtitle}
             </p>
-            <p className="text-lg text-white/70 mb-6">Contact us on social media to get started</p>
+            <p className="text-lg text-white/70 mb-6" data-i18n-key="contactSocial.description">{t.contactSocial?.description}</p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center items-center flex-wrap">
               <a 
                 href="https://www.instagram.com/weddingsites_am" 
@@ -811,7 +785,7 @@ export default function MainPage() {
                 data-testid="link-instagram-contact"
               >
                 <SiInstagram className="w-6 h-6" />
-                Instagram
+                <span data-i18n-key="socialMedia.instagram.label">{t.socialMedia?.instagram?.label}</span>
               </a>
               <a 
                 href="https://t.me/weddingsites_am" 
@@ -821,7 +795,7 @@ export default function MainPage() {
                 data-testid="link-telegram-contact"
               >
                 <SiTelegram className="w-6 h-6" />
-                Telegram
+                <span data-i18n-key="socialMedia.telegram.label">{t.socialMedia?.telegram?.label}</span>
               </a>
               <a 
                 href="https://www.facebook.com/weddingsites.am" 
@@ -831,7 +805,7 @@ export default function MainPage() {
                 data-testid="link-facebook-contact"
               >
                 <SiFacebook className="w-6 h-6" />
-                Facebook
+                <span data-i18n-key="socialMedia.facebook.label">{t.socialMedia?.facebook?.label}</span>
               </a>
             </div>
           </div>
@@ -845,33 +819,56 @@ export default function MainPage() {
             <div>
               <div className="flex items-center mb-4">
                 <Heart className="h-6 w-6 text-softGold mr-2" />
-                <span className="text-lg font-bold">WeddingSites</span>
+                <span className="text-lg font-bold" data-i18n-key="contactSocial.brandName">{t.contactSocial?.brandName}</span>
               </div>
-              <p className="text-white/70">
-                {t.footer.tagline}
+              <p 
+                className="text-white/70"
+                data-i18n-key="footer.tagline"
+              >
+                {t.footer?.tagline}
               </p>
             </div>
             <div>
-              <h4 className="font-semibold mb-4">{t.footer.services.title}</h4>
+              <h4 
+                className="font-semibold mb-4"
+                data-i18n-key="footer.services.title"
+              >
+                {t.footer?.services?.title}
+              </h4>
               <ul className="space-y-2 text-white/70">
-                <li>{t.footer.services.weddingWebsites}</li>
-                <li>{t.footer.services.templateDesign}</li>
-                <li>{t.footer.services.customDevelopment}</li>
-                <li>{t.footer.services.support}</li>
+                <li data-i18n-key="footer.services.items.0">{t.footer?.services?.items?.[0]}</li>
+                <li data-i18n-key="footer.services.items.1">{t.footer?.services?.items?.[1]}</li>
+                <li data-i18n-key="footer.services.items.2">{t.footer?.services?.items?.[2]}</li>
+                <li data-i18n-key="footer.services.items.3">{t.footer?.services?.items?.[3]}</li>
               </ul>
             </div>
             <div>
-              <h4 className="font-semibold mb-4">{t.footer.features.title}</h4>
+              <h4 
+                className="font-semibold mb-4"
+                data-i18n-key="footer.features.title"
+              >
+                {t.footer?.features?.title}
+              </h4>
               <ul className="space-y-2 text-white/70">
-                <li>{t.footer.features.armenianSupport}</li>
-                <li>{t.footer.features.rsvpManagement}</li>
-                <li>{t.footer.features.photoGalleries}</li>
-                <li>{t.footer.features.mobileResponsive}</li>
+                <li data-i18n-key="footer.features.items.0">{t.footer?.features?.items?.[0]}</li>
+                <li data-i18n-key="footer.features.items.1">{t.footer?.features?.items?.[1]}</li>
+                <li data-i18n-key="footer.features.items.2">{t.footer?.features?.items?.[2]}</li>
+                <li data-i18n-key="footer.features.items.3">{t.footer?.features?.items?.[3]}</li>
               </ul>
             </div>
             <div>
-              <h4 className="font-semibold mb-4">{t.footer.contact.title}</h4>
-              <p className="text-white/70 mb-4">{t.contactSection.socialMedia}</p>
+              <h4 
+                className="font-semibold mb-4"
+                data-i18n-key="footer.contact.title"
+              >
+                {t.footer?.contact?.title}
+              </h4>
+              <p 
+                className="text-white/70 mb-4"
+                data-i18n-key="footer.contact.description"
+              >
+                {t.footer?.contact?.description}
+              </p>
               <div className="flex gap-4">
                 <a 
                   href="https://www.instagram.com/weddingsites_am" 
@@ -907,7 +904,7 @@ export default function MainPage() {
             </div>
           </div>
           <div className="border-t border-white/20 mt-8 pt-8 text-center text-white/70">
-            <p>{t.footer.copyright}</p>
+            <p data-i18n-key="footer.copyright">{t.footer?.copyright || '© 2024 WeddingSites. All rights reserved.'}</p>
           </div>
         </div>
       </footer>

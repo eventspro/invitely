@@ -6,13 +6,14 @@ This is a **multi-tenant Armenian wedding platform** enabling couples to create 
 
 - **Backend**: Express.js + Drizzle ORM (PostgreSQL) deployed as Vercel serverless functions
 - **Frontend**: React SPA with Wouter routing, TanStack Query for server state, and Context for app state  
-- **Templates**: Lazy-loaded modular system with JSONB configs stored per template instance (5 variants: pro, classic, elegant, romantic, nature)
-- **Database**: PostgreSQL with template-scoped data isolation and comprehensive Zod validation schemas
-- **Storage**: Multi-provider object storage abstraction (Cloudflare R2 primary, Google Cloud/AWS S3 fallback) with presigned URLs
-- **Email Service**: Brevo integration for RSVP notifications with template-scoped routing and 3-tier recipient priority
-- **Authentication**: JWT-based auth (7d expiry) with separate systems for template admins vs. platform admins
-- **SSL/TLS Security**: Enterprise-grade SSL-safe media serving with HTTP 206 range request support for audio streaming
-- **SEO Integration**: Schema.org structured data, multilingual sitemap, robots.txt, and dynamic meta tags
+- **Templates**: Lazy-loaded modular system with JSONB configs stored per template instance
+- **Database**: Template-scoped data isolation with comprehensive Zod validation schemas (PostgreSQL via Neon)
+- **Storage**: Multi-provider object storage abstraction (Cloudflare R2 primary, Google Cloud, AWS S3 fallback) with presigned URLs
+- **Email Service**: Brevo integration for RSVP notifications with template-scoped routing
+- **Authentication**: JWT-based auth with separate systems for template admins vs. platform admins
+- **SSL/TLS Security**: Enterprise-grade SSL-safe media serving with HTTP 206 range request support
+- **SEO Integration**: Schema.org structured data, multilingual sitemap, and dynamic meta tags
+- **Rate Limiting**: Express rate limiter (100 requests per 15 minutes on API routes)
 
 ## Key Development Patterns
 
@@ -20,7 +21,7 @@ This is a **multi-tenant Armenian wedding platform** enabling couples to create 
 Templates are located in `client/src/templates/` with this pattern:
 ```
 templates/
-├── index.ts          # Template registry and lazy loading
+├── index.ts          # Template registry and lazy loading (TemplateDefinition interface)
 ├── types.ts          # Shared WeddingConfig interface (200+ lines)
 ├── pro/
 │   ├── ProTemplate.tsx
@@ -35,10 +36,11 @@ templates/
 
 **Critical Template Patterns:**
 - Always use the `WeddingConfig` type from `templates/types.ts` - it defines 200+ configuration options
-- Template configs stored in database as JSONB, loaded via `/api/templates/:id/config`
+- Template configs stored in database as JSONB, loaded via `/api/templates/:identifier/config` (supports ID or slug)
 - Lazy loading: Templates registered in `index.ts` with `React.lazy()` for code splitting
 - Template variants: Multiple templates can extend base layouts with different themes
 - Dynamic config loading: `loadTemplateConfig()` function imports configs based on template key
+- Each template includes: key, name, description, defaultConfig, component (lazy), previewImage, features array
 
 ### Database Schema Key Points
 - `templates` table stores template instances with `config` JSONB field and `template_version` for versioning
@@ -53,6 +55,8 @@ templates/
 - `platform_settings` table: Key-value configuration store (1 row in production)
 - Template-scoped foreign keys: `rsvps.templateId`, `guestPhotos.templateId`, etc.
 - Use Zod schemas from `shared/schema.ts` for all data validation
+- Key insert schemas: `insertRsvpSchema`, `insertUserSchema`, `insertOrderSchema`, `insertTemplateSchema`, `insertGuestPhotoSchema`
+- All schemas include Armenian bilingual error messages for validation
 - Run migrations with `npm run db:migrate` (includes seeding default template)
 - Maintenance mode: `templates.maintenance` and `templates.maintenancePassword` fields
 
@@ -169,41 +173,30 @@ Routes in `server/routes/` follow RESTful conventions with multi-layered authent
 - `client/src/templates/types.ts` - WeddingConfig interface (285+ lines of config options)
   - Defines all customizable template properties (colors, fonts, sections, content, locations, timeline, RSVP forms)
 - `client/src/templates/index.ts` - Template registry with lazy loading
-  - Central registry: pro, classic, elegant, romantic, nature templates
-  - `loadTemplateConfig()` function for dynamic config imports based on template key
-- `server/index.ts` - Express server setup (180 lines) with environment validation
-  - SSL/HTTPS redirect logic for production (Vercel only: trust proxy + x-forwarded-proto check)
-  - Security headers: HSTS, X-Frame-Options, X-Content-Type-Options, CSP, Referrer-Policy
-  - Health check at `/health`, test endpoint at `/api/test`
-  - Rate limiting via `apiLimiter` middleware on `/api/*` routes
-- `server/middleware/auth.ts` - Authentication middleware and JWT handling (269 lines)
-  - Token generation/verification (7d expiry), bcrypt password hashing (12 rounds)
-  - Multi-layered access control: `authenticateUser`, `requireAdminPanelAccess`, `optionalAuth`
-  - Development mode bypass for local testing (mock users)
-- `server/email.ts` - Brevo email service with dynamic import (456 lines)
-  - Template-scoped routing with 3-tier recipient priority
+  - Central registry of all available templates (pro, classic, elegant, romantic, nature)
+  - `TemplateDefinition` interface and `loadTemplateConfig()` function for dynamic config imports
+- `server/index.ts` - Express server setup with environment validation and error handling
+  - SSL/HTTPS redirect logic for production
+  - Security headers (HSTS, CORS, CSP)
+  - Health check endpoint (`/health`)
+- `server/middleware/auth.ts` - Authentication middleware and JWT handling
+  - Token generation/verification, password hashing
+  - Multi-layered access control (user, template admin, platform admin)
+  - `authenticateUser`, `requireAdminPanelAccess`, `optionalAuth` middleware
+- `server/email.ts` - Brevo email service with template-scoped routing and Armenian localization
+  - RSVP notifications with 3-tier recipient priority
   - Functions: `sendTemplateRsvpNotificationEmails()`, `sendTemplateRsvpConfirmationEmail()`
-  - Armenian localization support
 - `server/routes/templates.ts` - Template management, RSVP processing, and admin endpoints
   - Core template CRUD operations and public API
-  - RSVP submission with duplicate detection and email validation
-- `server/routes/admin-panel.ts` - Template owner dashboard and analytics (Ultimate plan)
-  - RSVP management with Excel export, photo management, Google Drive integration
-- `server/objectStorage.ts` + `server/r2Storage.ts` - Multi-provider storage abstraction
-  - Cloudflare R2 (primary), Google Cloud Storage, AWS S3 (fallback)
-  - Presigned URL generation for secure uploads
+- `server/routes/admin-panel.ts` - Template owner dashboard and analytics
+  - RSVP management, photo management, Google Drive integration
+- `server/routes/auth.ts` - Authentication endpoints (login, registration, password reset)
 - `vite.config.ts` - Development proxy, build chunking, and path resolution
-  - Manual chunks for optimal loading: vendor (React), router (Wouter), UI (Radix)
-  - Path aliases: `@/` (client/src), `@shared/` (shared), `@assets/` (public/attached_assets)
-  - Development proxy to port 5001 for API routes
-- `vercel.json` - Serverless deployment configuration (112 lines)
-  - Route prioritization: `/api/*`, `/health`, `/uploads/*` before static assets
-  - Caching headers: 31536000s (1 year) for assets, 86400s (1 day) for previews/SEO files
-  - Separate staging config: `vercel.staging.json`
-- `playwright.config.ts` - E2E testing configuration
-  - Auto-starts dev server on port 5001, reuses server for faster iteration
-  - Tests on Chromium, Firefox, and Webkit
-  - HTML reporter, screenshot on failure, trace on retry
+  - Manual chunks for optimal loading (vendor, router, UI)
+  - Path aliases: `@/` → `client/src/`, `@shared/` → `shared/`, `@assets/` → `public/attached_assets/`
+- `vercel.json` - Serverless deployment configuration with asset routing
+  - Route prioritization (API before static), caching headers
+  - SEO routes (robots.txt, sitemap.xml)
 
 ### Armenian Localization
 This platform specifically supports **Armenian weddings** with:
