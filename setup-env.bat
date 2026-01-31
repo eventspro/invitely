@@ -4,7 +4,9 @@ echo ==========================================
 
 echo.
 echo Adding DATABASE_URL...
-echo postgresql://neondb_owner:npg_iE2wuqaHgO6c@ep-summer-wave-abtfvjyj-pooler.eu-west-2.aws.neon.tech/neondb?sslmode=require^&channel_binding=require | npx vercel env add DATABASE_URL production
+echo Enter your DATABASE_URL:
+set /p DATABASE_URL=
+echo %DATABASE_URL% | npx vercel env add DATABASE_URL production
 
 echo.
 echo Adding JWT_SECRET...

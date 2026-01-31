@@ -1,6 +1,15 @@
 import pg from 'pg';
+import dotenv from 'dotenv';
 
-const connectionString = 'postgresql://neondb_owner:npg_iE2wuqaHgO6c@ep-summer-wave-abtfvjyj-pooler.eu-west-2.aws.neon.tech/neondb?sslmode=require';
+// Load environment variables
+dotenv.config();
+
+const connectionString = process.env.DATABASE_URL;
+
+if (!connectionString) {
+  console.error('❌ DATABASE_URL not found in environment variables');
+  process.exit(1);
+}
 
 async function migrateTranslationsTable() {
   const client = new pg.Client({ connectionString });

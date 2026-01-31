@@ -61,8 +61,8 @@ vercel
 In Vercel Dashboard > Project Settings > Environment Variables, add:
 
 ```
-DATABASE_URL=postgresql://neondb_owner:npg_iE2wuqaHgO6c@ep-summer-wave-abtfvjyj-pooler.eu-west-2.aws.neon.tech/neondb?sslmode=require&channel_binding=require
-JWT_SECRET=5c9532fc21a0e0db70f172b75db86d02fd479bfd7109a0c3e0cff87f938e2f6ec11800d491bfa137169462e566d3046d
+DATABASE_URL=your_postgresql_connection_string_here
+JWT_SECRET=your_secure_jwt_secret_here
 NODE_ENV=production
 ADMIN_USERNAME=admin
 ADMIN_PASSWORD=wedding2025
