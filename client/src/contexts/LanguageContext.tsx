@@ -42,8 +42,10 @@ export function LanguageProvider({ children }: LanguageProviderProps) {
     console.log('🔄 fetchTranslations started - setting isLoading to true');
     setIsLoading(true);
     try {
+      // Add cache-busting timestamp to force fresh data
+      const timestamp = new Date().getTime();
       console.log('📡 Fetching from /api/translations...');
-      const response = await fetch('/api/translations');
+      const response = await fetch(`/api/translations?_t=${timestamp}`);
       console.log('📡 Response received:', response.status, response.ok);
       
       if (!response.ok) {
