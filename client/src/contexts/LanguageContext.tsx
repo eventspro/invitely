@@ -70,7 +70,7 @@ export function LanguageProvider({ children }: LanguageProviderProps) {
         const { en } = await import('@/config/languages/en');
         const { hy } = await import('@/config/languages/hy');
         const { ru } = await import('@/config/languages/ru');
-        setTranslationsCache({ en, hy, ru });
+        setTranslationsCache({ en: en as any, hy: hy as any, ru: ru as any });
         console.log('✅ Translations loaded from fallback files');
       } catch (fallbackError) {
         console.error('❌ Failed to load fallback translations:', fallbackError);
