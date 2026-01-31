@@ -18,6 +18,7 @@ import {
 import { defaultContentConfig, type PricingPlan as ConfigPricingPlan, getEnabledItems } from "@shared/content-config";
 import PricingPlanEditor from "@/components/admin/PricingPlanEditor";
 import PricingPlanReorder from "@/components/admin/PricingPlanReorder";
+import AddPricingPlan from "@/components/admin/AddPricingPlan";
 
 interface FeatureItem {
   icon: string;
@@ -262,6 +263,9 @@ export default function PlatformTranslations() {
   
   // Phase 3.1: Plan reordering state
   const [isReorderOpen, setIsReorderOpen] = useState(false);
+  
+  // Phase 3.2: Add plan state
+  const [isAddPlanOpen, setIsAddPlanOpen] = useState(false);
 
   // Fetch pricing plans from database with fallback to config
   const { data: dbPricingPlans, isLoading: plansLoading } = useQuery<any[]>({
@@ -1015,7 +1019,11 @@ export default function PlatformTranslations() {
                       <ArrowUpDown className="w-4 h-4" />
                       Reorder Plans
                     </Button>
-                    <Button variant="outline" className="gap-2">
+                    <Button 
+                      variant="outline" 
+                      className="gap-2"
+                      onClick={() => setIsAddPlanOpen(true)}
+                    >
                       <Plus className="w-4 h-4" />
                       Add Plan
                     </Button>
@@ -1168,6 +1176,13 @@ export default function PlatformTranslations() {
           plans={pricingPlans}
           isOpen={isReorderOpen}
           onClose={() => setIsReorderOpen(false)}
+        />
+
+        {/* Phase 3.2: Add Pricing Plan Modal */}
+        <AddPricingPlan
+          existingPlans={pricingPlans}
+          isOpen={isAddPlanOpen}
+          onClose={() => setIsAddPlanOpen(false)}
         />
       </div>
         </>
