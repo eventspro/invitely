@@ -10,11 +10,14 @@ if (!process.env.DATABASE_URL) {
 
 console.log('🔗 Connecting to database with URL:', process.env.DATABASE_URL?.substring(0, 30) + '...');
 
+// Detect if running on Vercel
+const isVercel = process.env.VERCEL === '1';
+
 export const pool = new Pool({ 
   connectionString: process.env.DATABASE_URL,
-  ssl: process.env.NODE_ENV === 'production' ? { rejectUnauthorized: false } : false,
-  connectionTimeoutMillis: 10000,
-  idleTimeoutMillis: 30000,
-  max: 10
+  ssl: process.env.NODE_ENV === 'production' || isVercel ? { rejectUnauthorized: false } : false,
+  connectionTimeoutMillis: isVercel ? 5000 : 10000,
+  idleTimeoutMillis: isVercel ? 10000 : 30000,
+  max: isVercel ? 1 : 10, // Serverless functions should use minimal connections
 });
 export const db = drizzle({ client: pool, schema });
