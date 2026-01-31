@@ -42,8 +42,21 @@ export default function PricingPlanEditor({
   const [badge, setBadge] = useState(plan?.badge || '');
   const [enabled, setEnabled] = useState(plan?.enabled ?? true);
   const [isSaving, setIsSaving] = useState(false);
+  
+  // Phase 2.3: Feature toggles state (staged locally until save)
+  const [features, setFeatures] = useState<any[]>(planFeatures.map((f: any) => ({
+    ...f,
+    isEnabled: f.isEnabled ?? f.included ?? false
+  })));
 
-  // Save handler - PATCH to API
+  // Handle feature toggle
+  const handleFeatureToggle = (index: number) => {
+    setFeatures(prev => prev.map((f, i) => 
+      i === index ? { ...f, isEnabled: !f.isEnabled } : f
+    ));
+  };
+
+  // Save handler - PATCH metadata + PUT features
   const handleSave = async () => {
     // Basic validation
     if (!price || price.trim() === '') {
@@ -58,7 +71,8 @@ export default function PricingPlanEditor({
     setIsSaving(true);
 
     try {
-      const response = await fetch(`/api/configurable-pricing-plans/${plan.id}`, {
+      // 1. Update plan metadata
+      const metadataResponse = await fetch(`/api/configurable-pricing-plans/${plan.id}`, {
         method: 'PATCH',
         headers: {
           'Content-Type': 'application/json',
@@ -70,9 +84,32 @@ export default function PricingPlanEditor({
         }),
       });
 
-      if (!response.ok) {
-        const error = await response.json();
-        throw new Error(error.message || 'Failed to update plan');
+      if (!metadataResponse.ok) {
+        const error = await metadataResponse.json();
+        throw new Error(error.message || 'Failed to update plan metadata');
+      }
+
+      // 2. Update plan features
+      const featuresPayload = features.map(f => ({
+        featureKey: f.featureKey || f.translationKey,
+        icon: f.icon || 'Check',
+        included: f.isEnabled,
+        orderIndex: f.orderIndex ?? 0
+      }));
+
+      const featuresResponse = await fetch(`/api/configurable-pricing-plans/${plan.id}/features`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          features: featuresPayload
+        }),
+      });
+
+      if (!featuresResponse.ok) {
+        const error = await featuresResponse.json();
+        throw new Error(error.message || 'Failed to update plan features');
       }
 
       // Success - refresh data and close
@@ -188,36 +225,59 @@ export default function PricingPlanEditor({
             </div>
           </Card>
 
-          {/* Plan Features - READ-ONLY (Phase 2.3 will add toggles) */}
+          {/* Plan Features - EDITABLE (Phase 2.3) */}
           <Card className="p-6">
-            <h3 className="font-semibold text-lg mb-4">Plan Features (read-only)</h3>
-            <p className="text-xs text-gray-500 mb-3">Feature toggles will be available in Phase 2.3</p>
+            <h3 className="font-semibold text-lg mb-4">Plan Features</h3>
+            <p className="text-xs text-gray-500 mb-3">
+              Toggle features on/off for this plan. Changes are saved when you click "Save Changes".
+            </p>
             <div className="space-y-2">
-              {planFeatures.length === 0 ? (
+              {features.length === 0 ? (
                 <p className="text-gray-500 text-sm">No features configured</p>
               ) : (
-                planFeatures.map((feature: any, index: number) => {
+                features.map((feature: any, index: number) => {
+                  // Extract feature key - prioritize featureKey, fallback to translationKey
                   const featureKey = feature.featureKey || feature.translationKey || 'Unknown';
-                  const isEnabled = feature.isEnabled ?? feature.included ?? false;
+                  
+                  // Extract display label from translation key (last part after dots)
+                  // e.g., "templatePlans.features.Wedding Timeline" -> "Wedding Timeline"
+                  const featureLabel = featureKey.includes('.') 
+                    ? featureKey.split('.').pop() || featureKey 
+                    : featureKey;
                   
                   return (
                     <div
                       key={index}
-                      className="flex items-center justify-between p-3 bg-gray-50 rounded-lg"
+                      className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors"
                     >
-                      <span className="text-sm">{featureKey}</span>
+                      <input
+                        type="checkbox"
+                        id={`feature-${index}`}
+                        checked={feature.isEnabled}
+                        onChange={() => handleFeatureToggle(index)}
+                        className="w-4 h-4 text-blue-600 rounded focus:ring-2 focus:ring-blue-500"
+                      />
+                      <Label 
+                        htmlFor={`feature-${index}`}
+                        className="flex-1 text-sm cursor-pointer select-none"
+                      >
+                        {featureLabel}
+                      </Label>
                       <span className={`text-xs font-medium px-2 py-1 rounded ${
-                        isEnabled 
+                        feature.isEnabled 
                           ? 'bg-green-100 text-green-700' 
                           : 'bg-gray-200 text-gray-600'
                       }`}>
-                        {isEnabled ? 'Included' : 'Not Included'}
+                        {feature.isEnabled ? 'Included' : 'Not Included'}
                       </span>
                     </div>
                   );
                 })
               )}
             </div>
+            <p className="text-xs text-gray-500 mt-3">
+              Feature labels are resolved from the translation system using stable feature keys.
+            </p>
           </Card>
         </div>
 
