@@ -208,10 +208,19 @@ export function EditorOverlay({ enabled, currentLanguage, onEditStart, onEditEnd
       
       // If we found a translatable element
       if (translatable && translatable.hasAttribute('data-i18n-key')) {
-        // CRITICAL: Prevent default behavior and stop propagation in edit mode
+        // CRITICAL: Prevent ALL default behavior (navigation, form submit, etc.)
         e.preventDefault();
         e.stopPropagation();
         e.stopImmediatePropagation();
+        
+        // If the translatable is a button or link, prevent its action
+        if (translatable.tagName === 'BUTTON' || translatable.tagName === 'A') {
+          const originalOnClick = (translatable as any).onclick;
+          (translatable as any).onclick = null;
+          setTimeout(() => {
+            (translatable as any).onclick = originalOnClick;
+          }, 100);
+        }
         
         const key = translatable.getAttribute('data-i18n-key');
         if (!key) return;

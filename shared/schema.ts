@@ -101,13 +101,13 @@ export const activityLogs = pgTable("activity_logs", {
   createdAt: timestamp("created_at").default(sql`now()`),
 });
 
-// Translations table for multi-language support
+// Translations table for multi-language support (key-value approach for production)
 export const translations = pgTable("translations", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
-  language: text("language").notNull().unique(), // e.g., 'hy' for Armenian, 'en' for English
-  config: jsonb("config").notNull(), // Translation data for all sections
-  isActive: boolean("is_active").default(true),
-  version: integer("version").default(1),
+  language: text("language").notNull(), // e.g., 'hy' for Armenian, 'en' for English
+  translationKey: text("translation_key").notNull(), // Dot-notation key like 'hero.title'
+  value: text("value").notNull(), // The translated text
+  category: text("category"), // Section like 'hero', 'pricing', etc.
   createdAt: timestamp("created_at").default(sql`now()`),
   updatedAt: timestamp("updated_at").default(sql`now()`),
 });

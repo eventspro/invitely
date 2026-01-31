@@ -1184,7 +1184,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Register translations routes
-  registerTranslationsRoutes(app);
+  registerTranslationRoutes(app);
 
   // Audio serving endpoint with SSL-safe range request support
   app.get("/api/audio/serve/:filename", (req, res) => {

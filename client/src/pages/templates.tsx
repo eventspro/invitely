@@ -431,27 +431,35 @@ export default function TemplatesPage() {
           
           <div className="grid md:grid-cols-2 gap-8 text-left">
             <div className="space-y-6">
-              <div>
-                <h3 className="text-xl font-semibold mb-2">{t.templatesPage.faqItems[0].question}</h3>
-                <p className="text-gray-600">{t.templatesPage.faqItems[0].answer}</p>
-              </div>
+              {t.templatesPage.faqItems?.[0] && (
+                <div>
+                  <h3 className="text-xl font-semibold mb-2">{t.templatesPage.faqItems[0].question}</h3>
+                  <p className="text-gray-600">{t.templatesPage.faqItems[0].answer}</p>
+                </div>
+              )}
               
-              <div>
-                <h3 className="text-xl font-semibold mb-2">{t.templatesPage.faqItems[1].question}</h3>
-                <p className="text-gray-600">{t.templatesPage.faqItems[1].answer}</p>
-              </div>
+              {t.templatesPage.faqItems?.[1] && (
+                <div>
+                  <h3 className="text-xl font-semibold mb-2">{t.templatesPage.faqItems[1].question}</h3>
+                  <p className="text-gray-600">{t.templatesPage.faqItems[1].answer}</p>
+                </div>
+              )}
             </div>
             
             <div className="space-y-6">
-              <div>
-                <h3 className="text-xl font-semibold mb-2">{t.templatesPage.faqItems[2].question}</h3>
-                <p className="text-gray-600">{t.templatesPage.faqItems[2].answer}</p>
-              </div>
+              {t.templatesPage.faqItems?.[2] && (
+                <div>
+                  <h3 className="text-xl font-semibold mb-2">{t.templatesPage.faqItems[2].question}</h3>
+                  <p className="text-gray-600">{t.templatesPage.faqItems[2].answer}</p>
+                </div>
+              )}
               
-              <div>
-                <h3 className="text-xl font-semibold mb-2">{t.templatesPage.faqItems[3].question}</h3>
-                <p className="text-gray-600">{t.templatesPage.faqItems[3].answer}</p>
-              </div>
+              {t.templatesPage.faqItems?.[3] && (
+                <div>
+                  <h3 className="text-xl font-semibold mb-2">{t.templatesPage.faqItems[3].question}</h3>
+                  <p className="text-gray-600">{t.templatesPage.faqItems[3].answer}</p>
+                </div>
+              )}
             </div>
           </div>
         </div>

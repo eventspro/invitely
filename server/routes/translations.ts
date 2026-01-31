@@ -109,7 +109,7 @@ export function registerTranslationRoutes(app: Express) {
         return res.json(grouped);
       }
       
-      // Group by language and unflatten
+      // Group by language and unflatten (with proper array support)
       for (const t of allTranslations) {
         if (!t.language || !t.translationKey || !t.value) {
           console.warn("⚠️ Invalid translation entry:", t);
@@ -126,11 +126,38 @@ export function registerTranslationRoutes(app: Express) {
         
         try {
           for (let i = 0; i < keys.length - 1; i++) {
-            if (!current[keys[i]]) current[keys[i]] = {};
-            current = current[keys[i]];
+            const key = keys[i];
+            const nextKey = keys[i + 1];
+            
+            // Check if current key is a number (we're in an array)
+            const isCurrentKeyNumeric = /^\d+$/.test(key);
+            // Check if next key is a number (next level should be array)
+            const isNextKeyNumeric = /^\d+$/.test(nextKey);
+            
+            if (isCurrentKeyNumeric) {
+              // We're setting an array element
+              const index = parseInt(key, 10);
+              if (!current[index]) {
+                current[index] = isNextKeyNumeric ? [] : {};
+              }
+              current = current[index];
+            } else {
+              // We're setting an object property
+              if (!current[key]) {
+                current[key] = isNextKeyNumeric ? [] : {};
+              }
+              current = current[key];
+            }
           }
           
-          current[keys[keys.length - 1]] = t.value;
+          const finalKey = keys[keys.length - 1];
+          const isFinalKeyNumeric = /^\d+$/.test(finalKey);
+          
+          if (isFinalKeyNumeric) {
+            current[parseInt(finalKey, 10)] = t.value;
+          } else {
+            current[finalKey] = t.value;
+          }
         } catch (err) {
           console.error(`⚠️ Error processing translation key ${t.translationKey}:`, err);
           continue;
@@ -138,6 +165,13 @@ export function registerTranslationRoutes(app: Express) {
       }
       
       console.log(`✅ Loaded ${allTranslations.length} translations for ${Object.keys(grouped).length} languages`);
+      
+      // Debug: Log templatesPage.faqItems structure
+      if (grouped.en?.templatesPage?.faqItems) {
+        console.log('🐛 faqItems type:', Array.isArray(grouped.en.templatesPage.faqItems) ? 'Array' : 'Object');
+        console.log('🐛 faqItems:', JSON.stringify(grouped.en.templatesPage.faqItems).substring(0, 200));
+      }
+      
       res.json(grouped);
     } catch (error) {
       console.error("❌ Get translations error:", error);
