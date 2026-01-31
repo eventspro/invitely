@@ -305,20 +305,42 @@ export function registerTranslationRoutes(app: Express) {
         return res.status(400).json({ message: "Invalid language" });
       }
       
-      // Apply all updates
+      console.log(`🔄 Starting bulk update for ${Object.keys(updates).length} translations in ${language}`);
+      
+      // Get all existing translations for this language in one query
+      const existing = await db
+        .select()
+        .from(translations)
+        .where(eq(translations.language, language));
+      
+      const existingKeys = new Set(existing.map(t => t.translationKey));
+      
+      // Separate updates and inserts
+      const toUpdate: Array<{ key: string; value: string }> = [];
+      const toInsert: Array<{ language: string; translationKey: string; value: string; category: string }> = [];
+      
       for (const [key, value] of Object.entries(updates) as [string, string][]) {
-        const existing = await db
-          .select()
-          .from(translations)
-          .where(
-            and(
-              eq(translations.language, language),
-              eq(translations.translationKey, key)
-            )
-          )
-          .limit(1);
-        
-        if (existing.length > 0) {
+        if (existingKeys.has(key)) {
+          toUpdate.push({ key, value });
+        } else {
+          toInsert.push({
+            language,
+            translationKey: key,
+            value,
+            category: key.split('.')[0]
+          });
+        }
+      }
+      
+      // Batch insert new translations
+      if (toInsert.length > 0) {
+        await db.insert(translations).values(toInsert);
+        console.log(`✅ Inserted ${toInsert.length} new translations`);
+      }
+      
+      // Batch update existing translations (one query per translation due to Drizzle limitations)
+      if (toUpdate.length > 0) {
+        for (const { key, value } of toUpdate) {
           await db
             .update(translations)
             .set({ value, updatedAt: new Date() })
@@ -328,33 +350,15 @@ export function registerTranslationRoutes(app: Express) {
                 eq(translations.translationKey, key)
               )
             );
-        } else {
-          await db.insert(translations).values({
-            language,
-            translationKey: key,
-            value,
-            category: key.split('.')[0]
-          });
         }
+        console.log(`✅ Updated ${toUpdate.length} existing translations`);
       }
       
-      console.log(`✅ Bulk updated ${Object.keys(updates).length} translations for ${language}`);
-      
-      // Return updated translations
-      const updated = await db
-        .select()
-        .from(translations)
-        .where(eq(translations.language, language));
-      
-      const flat: Record<string, string> = {};
-      for (const t of updated) {
-        flat[t.translationKey] = t.value;
-      }
+      console.log(`✅ Bulk update complete for ${language}`);
       
       res.json({ 
         success: true, 
-        message: "Translations updated",
-        translations: unflattenObject(flat)
+        message: `Updated ${toUpdate.length} and inserted ${toInsert.length} translations`
       });
     } catch (error) {
       console.error("Bulk update translations error:", error);

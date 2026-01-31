@@ -282,48 +282,52 @@ export default function PlatformTranslations() {
   useEffect(() => {
     const loadTranslations = async () => {
       try {
-        const response = await fetch(`/api/translations/${currentLanguage}`);
+        const response = await fetch(`/api/translations`);
         if (response.ok) {
           const data = await response.json();
           console.log('API response:', data);
-          console.log('API config structure:', JSON.stringify(data.config, null, 2));
-          if (data.config) {
-            // Deep merge API config with defaults to ensure all nested fields exist
+          // The API returns { en: {...}, hy: {...}, ru: {...} }
+          const langData = data[currentLanguage];
+          console.log('Language data structure:', JSON.stringify(langData, null, 2));
+          if (langData) {
+            // Deep merge API data with defaults to ensure all nested fields exist
             const mergedConfig = {
-              hero: { ...defaultTranslations.hero, ...data.config.hero },
+              hero: { ...defaultTranslations.hero, ...langData.hero },
               features: { 
                 ...defaultTranslations.features, 
-                ...data.config.features,
-                items: data.config.features?.items || defaultTranslations.features.items
+                ...langData.features,
+                items: langData.features?.items || defaultTranslations.features.items
               },
-              templates: { ...defaultTranslations.templates, ...data.config.templates },
+              templates: { ...defaultTranslations.templates, ...langData.templates },
               pricing: { 
                 ...defaultTranslations.pricing, 
-                ...data.config.pricing,
-                plans: data.config.pricing?.plans || defaultTranslations.pricing.plans
+                ...langData.pricing,
+                plans: langData.pricing?.plans || defaultTranslations.pricing.plans
               },
               faq: { 
                 ...defaultTranslations.faq, 
-                ...data.config.faq,
-                items: data.config.faq?.items || defaultTranslations.faq.items
+                ...langData.faq,
+                items: langData.faq?.items || defaultTranslations.faq.items
               },
-              contact: { ...defaultTranslations.contact, ...data.config.contact },
+              contact: { ...defaultTranslations.contact, ...langData.contact },
               footer: {
                 ...defaultTranslations.footer,
-                ...data.config.footer,
+                ...langData.footer,
                 services: {
                   ...defaultTranslations.footer.services,
-                  ...data.config.footer?.services,
-                  items: data.config.footer?.services?.items || defaultTranslations.footer.services.items
+                  ...langData.footer?.services,
+                  items: langData.footer?.services?.items || defaultTranslations.footer.services.items
                 },
                 contact: {
                   ...defaultTranslations.footer.contact,
-                  ...data.config.footer?.contact,
-                  items: data.config.footer?.contact?.items || defaultTranslations.footer.contact.items
+                  ...langData.footer?.contact,
+                  items: langData.footer?.contact?.items || defaultTranslations.footer.contact.items
                 }
               }
             };
             setTranslations(mergedConfig);
+          } else {
+            console.log('No translation data for language:', currentLanguage);
           }
         } else {
           console.log('API returned non-OK status, using defaults');
@@ -451,6 +455,8 @@ export default function PlatformTranslations() {
 
       const updates = flattenObject(translations);
 
+      console.log(`Saving ${Object.keys(updates).length} translation keys...`);
+
       const response = await fetch(`/api/translations/bulk`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -464,8 +470,16 @@ export default function PlatformTranslations() {
         throw new Error('Failed to save translations');
       }
 
-      toast({ title: "Saved!", description: "Translations saved successfully" });
+      const result = await response.json();
+      console.log('Save result:', result);
+
+      toast({ title: "Saved!", description: result.message || "Translations saved successfully" });
       setHasChanges(false);
+      
+      // Reload translations from database to confirm changes
+      setTimeout(() => {
+        window.location.reload();
+      }, 1000);
     } catch (error) {
       console.error('Save error:', error);
       toast({ title: "Error", description: "Failed to save translations", variant: "destructive" });
