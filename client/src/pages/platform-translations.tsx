@@ -15,6 +15,7 @@ import {
   Calendar, Music, MapPin, Mail, Download, Upload, QrCode
 } from "lucide-react";
 import { defaultContentConfig, type PricingPlan as ConfigPricingPlan, getEnabledItems } from "@shared/content-config";
+import PricingPlanEditor from "@/components/admin/PricingPlanEditor";
 
 interface FeatureItem {
   icon: string;
@@ -252,15 +253,19 @@ export default function PlatformTranslations() {
   const [editingPricing, setEditingPricing] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const { toast } = useToast();
+  
+  // Phase 2.1: Plan editor state
+  const [editingPlan, setEditingPlan] = useState<any | null>(null);
+  const [isEditorOpen, setIsEditorOpen] = useState(false);
 
   // Fetch pricing plans from database with fallback to config
-  const { data: dbPricingPlans, isLoading: plansLoading } = useQuery({
+  const { data: dbPricingPlans, isLoading: plansLoading } = useQuery<any[]>({
     queryKey: ['/api/configurable-pricing-plans'],
     staleTime: 30000, // Cache for 30 seconds
   });
 
   // Use database plans if available, otherwise fall back to config
-  const pricingPlans = dbPricingPlans && dbPricingPlans.length > 0 
+  const pricingPlans = (dbPricingPlans && dbPricingPlans.length > 0) 
     ? dbPricingPlans 
     : getEnabledItems(defaultContentConfig.pricingPlans);
 
@@ -1043,10 +1048,8 @@ export default function PlatformTranslations() {
                                 : 'bg-white border-2 border-gray-200 shadow-lg hover:shadow-xl'
                             }`}
                             onClick={() => {
-                              toast({
-                                title: "Plan Editor",
-                                description: `Editing ${planId} plan (coming soon)`
-                              });
+                              setEditingPlan(plan);
+                              setIsEditorOpen(true);
                             }}
                           >
                             {planBadge && (
@@ -1130,6 +1133,18 @@ export default function PlatformTranslations() {
               Save All Changes
             </Button>
           </div>
+        )}
+
+        {/* Phase 2.1: Pricing Plan Editor Modal */}
+        {editingPlan && (
+          <PricingPlanEditor
+            plan={editingPlan}
+            isOpen={isEditorOpen}
+            onClose={() => {
+              setIsEditorOpen(false);
+              setEditingPlan(null);
+            }}
+          />
         )}
       </div>
         </>
