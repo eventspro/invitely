@@ -186,7 +186,7 @@ export const defaultContentConfig: ContentConfig = {
         { id: "f8", translationKey: "templatePlans.features.Admin Panel", icon: "Settings", included: false },
         { id: "f9", translationKey: "templatePlans.features.QR Code Cards", icon: "QrCode", included: false }
       ],
-      templateRoute: "/michael-sarah-classic",
+      templateRoute: "/classic",
       popular: false
     },
     {
