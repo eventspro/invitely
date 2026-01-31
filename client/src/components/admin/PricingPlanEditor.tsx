@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { X, Save, Loader2 } from "lucide-react";
+import { X, Save, Loader2, Trash2, AlertCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -43,6 +43,10 @@ export default function PricingPlanEditor({
   const [enabled, setEnabled] = useState(plan?.enabled ?? true);
   const [isSaving, setIsSaving] = useState(false);
   
+  // Phase 3.3: Delete confirmation state
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
+  
   // Phase 2.3: Feature toggles state (staged locally until save)
   const [features, setFeatures] = useState<any[]>(planFeatures.map((f: any) => ({
     ...f,
@@ -54,6 +58,41 @@ export default function PricingPlanEditor({
     setFeatures(prev => prev.map((f, i) => 
       i === index ? { ...f, isEnabled: !f.isEnabled } : f
     ));
+  };
+
+  // Phase 3.3: Handle delete with confirmation
+  const handleDelete = async () => {
+    setIsDeleting(true);
+
+    try {
+      const response = await fetch(`/api/configurable-pricing-plans/${plan.id}`, {
+        method: 'DELETE',
+      });
+
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.message || 'Failed to delete plan');
+      }
+
+      // Success - refresh data and close all modals
+      await queryClient.invalidateQueries({ queryKey: ['/api/configurable-pricing-plans'] });
+      
+      toast({
+        title: "Plan Deleted",
+        description: `Plan "${planId}" has been permanently deleted`,
+      });
+
+      setShowDeleteConfirm(false);
+      onClose();
+    } catch (error: any) {
+      toast({
+        title: "Error",
+        description: error.message || "Failed to delete plan",
+        variant: "destructive"
+      });
+    } finally {
+      setIsDeleting(false);
+    }
   };
 
   // Save handler - PATCH metadata + PUT features
@@ -281,14 +320,75 @@ export default function PricingPlanEditor({
           </Card>
         </div>
 
+        {/* Phase 3.3: Delete Confirmation Section */}
+        {showDeleteConfirm && (
+          <Card className="p-4 border-red-300 bg-red-50">
+            <div className="flex items-start gap-3">
+              <AlertCircle className="w-5 h-5 text-red-600 flex-shrink-0 mt-0.5" />
+              <div className="flex-1">
+                <h4 className="font-semibold text-red-900 mb-1">Confirm Deletion</h4>
+                <p className="text-sm text-red-800 mb-3">
+                  Are you sure you want to delete the plan <strong>"{planId}"</strong>? 
+                  This action is <strong>irreversible</strong> and will permanently remove:
+                </p>
+                <ul className="text-sm text-red-800 list-disc list-inside space-y-1 mb-4">
+                  <li>The pricing plan</li>
+                  <li>All associated features</li>
+                  <li>Its position in the display order</li>
+                </ul>
+                <div className="flex gap-2">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setShowDeleteConfirm(false)}
+                    disabled={isDeleting}
+                  >
+                    Cancel
+                  </Button>
+                  <Button
+                    variant="destructive"
+                    size="sm"
+                    onClick={handleDelete}
+                    disabled={isDeleting}
+                  >
+                    {isDeleting ? (
+                      <>
+                        <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                        Deleting...
+                      </>
+                    ) : (
+                      <>
+                        <Trash2 className="w-4 h-4 mr-2" />
+                        Delete Plan
+                      </>
+                    )}
+                  </Button>
+                </div>
+              </div>
+            </div>
+          </Card>
+        )}
+
         {/* Footer Actions */}
         <div className="flex justify-between items-center pt-4 border-t">
-          <Button variant="outline" onClick={onClose} disabled={isSaving}>
-            <X className="w-4 h-4 mr-2" />
-            Cancel
-          </Button>
+          <div className="flex gap-2">
+            <Button variant="outline" onClick={onClose} disabled={isSaving || isDeleting}>
+              <X className="w-4 h-4 mr-2" />
+              Cancel
+            </Button>
+            
+            {/* Phase 3.3: Delete button (destructive, separated) */}
+            <Button 
+              variant="destructive" 
+              onClick={() => setShowDeleteConfirm(true)}
+              disabled={isSaving || isDeleting || showDeleteConfirm}
+            >
+              <Trash2 className="w-4 h-4 mr-2" />
+              Delete Plan
+            </Button>
+          </div>
           
-          <Button onClick={handleSave} disabled={isSaving}>
+          <Button onClick={handleSave} disabled={isSaving || isDeleting}>
             {isSaving ? (
               <>
                 <Loader2 className="w-4 h-4 mr-2 animate-spin" />
