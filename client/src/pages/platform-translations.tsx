@@ -7,6 +7,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
+import PricingPlansManager from "@/components/admin/PricingPlansManager";
 import { 
   ArrowLeft, Save, Heart, UserCheck, Smartphone, Palette, 
   Camera, Shield, Plus, Trash2, Edit2, Globe, Settings,
@@ -230,6 +231,7 @@ export default function PlatformTranslations() {
   const [translations, setTranslations] = useState<TranslationSections>(defaultTranslations);
   const [hasChanges, setHasChanges] = useState(false);
   const [editingPricing, setEditingPricing] = useState(false);
+  const [showPlansManager, setShowPlansManager] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const { toast } = useToast();
 
@@ -610,22 +612,32 @@ export default function PlatformTranslations() {
               <div className="flex justify-between items-center">
                 <p className="text-sm text-gray-500 flex items-center gap-2">
                   <Edit2 className="w-4 h-4" />
-                  Click any text below to edit pricing plans
+                  Edit translations for pricing section
                 </p>
-                <Button 
-                  variant="outline" 
-                  size="sm" 
-                  onClick={() => {
-                    setEditingPricing(!editingPricing);
-                    toast({
-                      title: editingPricing ? "View Mode" : "Edit Mode",
-                      description: editingPricing ? "Now viewing pricing plans" : "You can now edit plan details"
-                    });
-                  }}
-                >
-                  <Settings className="w-4 h-4 mr-2" />
-                  {editingPricing ? "Done Editing" : "Manage Plans"}
-                </Button>
+                <div className="flex gap-2">
+                  <Button 
+                    variant="default" 
+                    size="sm" 
+                    onClick={() => setShowPlansManager(true)}
+                  >
+                    <Settings className="w-4 h-4 mr-2" />
+                    Manage Plans
+                  </Button>
+                  <Button 
+                    variant="outline" 
+                    size="sm" 
+                    onClick={() => {
+                      setEditingPricing(!editingPricing);
+                      toast({
+                        title: editingPricing ? "View Mode" : "Edit Mode",
+                        description: editingPricing ? "Now viewing pricing plans" : "You can now edit plan details"
+                      });
+                    }}
+                  >
+                    <Edit2 className="w-4 h-4 mr-2" />
+                    {editingPricing ? "Done Editing" : "Edit Translations"}
+                  </Button>
+                </div>
               </div>
 
               <Card className="p-8">
@@ -929,6 +941,11 @@ export default function PlatformTranslations() {
               Save All Changes
             </Button>
           </div>
+        )}
+
+        {/* Pricing Plans Manager Dialog */}
+        {showPlansManager && (
+          <PricingPlansManager onClose={() => setShowPlansManager(false)} />
         )}
       </div>
         </>

@@ -18,6 +18,7 @@ import { URL } from "url";
 import authRoutes from './routes/auth.js';
 import adminPanelRoutes from './routes/admin-panel.js';
 import platformAdminRoutes from './routes/platform-admin.js';
+import pricingRoutes from './routes/pricing.js';
 import { registerTemplateRoutes } from './routes/templates.js';
 import { registerTranslationRoutes } from './routes/translations.js';
 
@@ -106,6 +107,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
   
   // Register platform admin routes (for platform owner)
   app.use('/api/platform-admin', platformAdminRoutes);
+  
+  // Register pricing routes (for pricing plan management)
+  app.use('/api', pricingRoutes);
   
   // Register template routes (for template-specific endpoints)
   registerTemplateRoutes(app);
