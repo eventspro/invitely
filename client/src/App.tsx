@@ -18,6 +18,7 @@ import Home from "@/pages/home";
 import MainPage from "@/pages/main";
 import PhotosPage from "@/pages/photos";
 import TemplatesPage from "@/pages/templates";
+import TranslationsPage from "@/pages/translations";
 import NotFound from "@/pages/not-found";
 import LoadingScreen from "@/components/loading-screen";
 import PlatformDashboard from "@/pages/platform-dashboard";
@@ -67,6 +68,7 @@ function Router() {
       
       {/* Platform admin routes */}
       <Route path="/platform" component={PlatformDashboard} />
+      <Route path="/platform/translations" component={TranslationsPage} />
       <Route path="/platform/templates/:templateId" component={TemplateAdminPanel} />
       
       {/* Legacy routes for backward compatibility */}

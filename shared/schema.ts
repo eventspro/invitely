@@ -252,6 +252,23 @@ export const insertRsvpSchema = createInsertSchema(rsvps).omit({
   }),
 });
 
+// Translations table for storing UI translations
+export const translations = pgTable("translations", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  language: text("language").notNull(), // en, hy, ru
+  translationKey: text("translation_key").notNull(), // dot-notation key like "hero.title"
+  value: text("value").notNull(),
+  category: text("category"), // navigation, hero, features, pricing, etc.
+  createdAt: timestamp("created_at").default(sql`now()`),
+  updatedAt: timestamp("updated_at").default(sql`now()`),
+});
+
+export const insertTranslationSchema = createInsertSchema(translations).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
 // Type exports
 export type InsertUser = z.infer<typeof insertUserSchema>;
 export type User = typeof managementUsers.$inferSelect;
@@ -272,3 +289,5 @@ export type UpdateTemplate = z.infer<typeof updateTemplateSchema>;
 export type InsertRsvp = z.infer<typeof insertRsvpSchema>;
 export type Rsvp = typeof rsvps.$inferSelect;
 export type Image = typeof images.$inferSelect;
+export type Translation = typeof translations.$inferSelect;
+export type InsertTranslation = z.infer<typeof insertTranslationSchema>;

@@ -19,6 +19,7 @@ import authRoutes from './routes/auth.js';
 import adminPanelRoutes from './routes/admin-panel.js';
 import platformAdminRoutes from './routes/platform-admin.js';
 import { registerTemplateRoutes } from './routes/templates.js';
+import { registerTranslationRoutes } from './routes/translations.js';
 
 // Configure multer for file uploads
 const uploadsDir = process.env.VERCEL ? '/tmp/uploads' : path.join(process.cwd(), 'uploads');
@@ -108,6 +109,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
   
   // Register template routes (for template-specific endpoints)
   registerTemplateRoutes(app);
+  
+  // Register translation routes (for translation management)
+  registerTranslationRoutes(app);
   
   // Legacy RSVP endpoint - redirect to template-scoped endpoint
   app.post("/api/rsvp", async (req, res) => {
@@ -735,10 +739,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
         new Promise((_, reject) => setTimeout(() => reject(new Error('Database timeout')), 4000))
       ]) as any[];
       
-      // Filter to show only main templates (exclude clones)
-      const mainTemplates = allTemplates.filter(template => template.isMain === true);
+      // Filter to show only the 5 real, accessible main templates
+      const validTemplateNames = ['Template 1', 'Template 2', 'Template 3', 'Template 4', 'Template 5'];
+      const mainTemplates = allTemplates.filter(template => 
+        template.isMain === true && validTemplateNames.includes(template.name)
+      );
       
-      console.log(`📊 Found ${allTemplates.length} total templates, ${mainTemplates.length} main templates`);
+      console.log(`📊 Found ${allTemplates.length} total templates, ${mainTemplates.length} valid main templates`);
       clearTimeout(timeoutId);
       if (!res.headersSent) {
         res.json(mainTemplates);

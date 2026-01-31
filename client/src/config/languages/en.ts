@@ -52,16 +52,61 @@ export const en = {
 
   // Templates Section
   templates: {
-    title: "Unique Wedding Designs",
-    subtitle: "Crafted with elegance and inspired by love",
+    title: "Beautiful Template Designs",
+    subtitle: "Choose from our collection of stunning wedding website templates",
+    loading: "Loading templates...",
+    error: "Unable to load templates. Showing default templates.",
+    viewDemo: "View Demo",
+    livePreview: "Live Preview Available",
+    mobileResponsive: "Mobile Responsive",
+    featuresLabel: "Features",
+    cardSubtitle: "Live Preview Available • Mobile Responsive",
+    templateLabel: "Template",
     items: [
       {
-        name: "Romantic Armenian Style",
-        description: "Classic and heartfelt design with cultural inspiration"
+        name: "Elegant Armenian Wedding",
+        features: {
+          0: "Armenian Fonts",
+          1: "Timeline",
+          2: "RSVP",
+          3: "Photo Gallery"
+        }
       },
       {
-        name: "Modern Elegance",
-        description: "Clean and stylish design for today’s couples"
+        name: "Nature Wedding Theme",
+        features: {
+          0: "Nature Theme",
+          1: "Green Colors",
+          2: "RSVP",
+          3: "Calendar"
+        }
+      },
+      {
+        name: "Classic Romantic Wedding",
+        features: {
+          0: "Classic Design",
+          1: "Elegant Style",
+          2: "RSVP",
+          3: "Mobile Responsive"
+        }
+      },
+      {
+        name: "Luxury Elegant Wedding",
+        features: {
+          0: "Premium Features",
+          1: "Admin Panel",
+          2: "Blue Theme",
+          3: "Full Gallery"
+        }
+      },
+      {
+        name: "Romantic Pink Wedding",
+        features: {
+          0: "Romantic Design",
+          1: "Pink Theme",
+          2: "Music Player",
+          3: "Love Story"
+        }
       }
     ]
   },
@@ -71,6 +116,7 @@ export const en = {
     badge: "Wedding Designs & Pricing",
     title: "Choose the Perfect Wedding Website",
     subtitle: "From intimate gatherings to grand celebrations, find the design that matches your love story.",
+    featuresHeader: "Features",
     plans: [
       {
         name: "Basic",
@@ -226,26 +272,38 @@ export const en = {
     }
   },
 
+  // Contact & Social Section
+  contactSocial: {
+    title: "Ready to Create Your Perfect Wedding Website?",
+    subtitle: "Join hundreds of couples who chose us for their special day",
+    description: "Contact us on social media to get started",
+    brandName: "WeddingSites"
+  },
+
   // Footer Section
   footer: {
     tagline: "Beautiful wedding websites for your special day",
     services: {
       title: "Services",
-      weddingWebsites: "Wedding Websites",
-      templateDesign: "Template Design", 
-      customDevelopment: "Custom Development",
-      support: "Support"
+      items: {
+        0: "Wedding Websites",
+        1: "Template Design",
+        2: "Custom Development",
+        3: "Support"
+      }
     },
     features: {
       title: "Features",
-      armenianSupport: "Armenian Support",
-      rsvpManagement: "RSVP Management",
-      photoGalleries: "Photo Galleries", 
-      mobileResponsive: "Mobile Responsive"
+      items: {
+        0: "Armenian Support",
+        1: "RSVP Management",
+        2: "Photo Galleries",
+        3: "Mobile Responsive"
+      }
     },
     contact: {
       title: "Contact Us",
-      followUs: "Follow us on social media"
+      description: "Reach out on social media"
     },
     copyright: "© 2025 WeddingSites. All rights reserved."
   },
@@ -254,72 +312,13 @@ export const en = {
   contactSection: {
     title: "Ready to Create Your Wedding Website?",
     subtitle: "Get started today and create a beautiful website for your special day",
-    startNow: "Start Now",
-    contactUs: "Contact Us"
+    startNow: "Start Now"
   },
 
   // Pricing Plans Section
-  pricingPlans: {
-    sectionTitle: "Choose Your Perfect Wedding Website",
-    sectionSubtitle: "Professional wedding invitation websites with comprehensive features. From intimate ceremonies to grand celebrations, we have the perfect template for your special day.",
+  pricing: {
     comparisonTitle: "Detailed Feature Comparison",
     comparisonSubtitle: "Compare all features across our wedding website plans",
-    
-    // Plan Names & Descriptions
-    plans: {
-      basic: {
-        name: "Basic",
-        price: "10,000 AMD",
-        description: "Perfect for intimate weddings with essential features",
-        badge: ""
-      },
-      essential: {
-        name: "Essential",
-        price: "17,000 AMD", 
-        description: "Enhanced features for modern couples",
-        badge: "Great Value"
-      },
-      professional: {
-        name: "Professional",
-        price: "23,000 AMD",
-        description: "Complete wedding website solution",
-        badge: "Most Popular"
-      },
-      premium: {
-        name: "Premium",
-        price: "31,000 AMD",
-        description: "Premium features for luxury weddings",
-        badge: "Advanced"
-      },
-      ultimate: {
-        name: "Ultimate",
-        price: "37,000 AMD",
-        description: "The complete luxury wedding experience",
-        badge: "Luxury"
-      }
-    },
-    
-    // Feature Names
-    features: {
-      weddingTimeline: "Wedding Timeline",
-      coupleIntroduction: "Couple Introduction", 
-      weddingLocations: "Wedding Locations",
-      rsvpFunctionality: "RSVP Functionality",
-      guestListExport: "Guest List Export",
-      photoGallery: "Photo Gallery",
-      audioPlayer: "Audio Player",
-      adminPanel: "Admin Panel",
-      multiplePhotoSlider: "Multiple Photo/Slider",
-      qrCodeCards: "QR Code Cards",
-      qrCodeCards50: "QR Code Cards (50 cards included)",
-      qrCodeCards100: "QR Code Cards (100 cards included)"
-    },
-    
-    // Call to Action
-    viewTemplate: "View Template",
-    selectPlan: "Select Plan",
-    mostPopular: "Most Popular",
-    
     // Feature Status
     included: "✓",
     notIncluded: "✗",

@@ -7,12 +7,13 @@ This is a **multi-tenant Armenian wedding platform** enabling couples to create 
 - **Backend**: Express.js + Drizzle ORM (PostgreSQL) deployed as Vercel serverless functions
 - **Frontend**: React SPA with Wouter routing, TanStack Query for server state, and Context for app state  
 - **Templates**: Lazy-loaded modular system with JSONB configs stored per template instance
-- **Database**: Template-scoped data isolation with comprehensive Zod validation schemas
-- **Storage**: Multi-provider object storage abstraction (Cloudflare R2, Google Cloud, AWS S3) with presigned URLs
+- **Database**: Template-scoped data isolation with comprehensive Zod validation schemas (PostgreSQL via Neon)
+- **Storage**: Multi-provider object storage abstraction (Cloudflare R2 primary, Google Cloud, AWS S3 fallback) with presigned URLs
 - **Email Service**: Brevo integration for RSVP notifications with template-scoped routing
 - **Authentication**: JWT-based auth with separate systems for template admins vs. platform admins
 - **SSL/TLS Security**: Enterprise-grade SSL-safe media serving with HTTP 206 range request support
 - **SEO Integration**: Schema.org structured data, multilingual sitemap, and dynamic meta tags
+- **Rate Limiting**: Express rate limiter (100 requests per 15 minutes on API routes)
 
 ## Key Development Patterns
 
@@ -20,7 +21,7 @@ This is a **multi-tenant Armenian wedding platform** enabling couples to create 
 Templates are located in `client/src/templates/` with this pattern:
 ```
 templates/
-├── index.ts          # Template registry and lazy loading
+├── index.ts          # Template registry and lazy loading (TemplateDefinition interface)
 ├── types.ts          # Shared WeddingConfig interface (200+ lines)
 ├── pro/
 │   ├── ProTemplate.tsx
@@ -35,15 +36,18 @@ templates/
 
 **Critical Template Patterns:**
 - Always use the `WeddingConfig` type from `templates/types.ts` - it defines 200+ configuration options
-- Template configs stored in database as JSONB, loaded via `/api/templates/:id/config`
+- Template configs stored in database as JSONB, loaded via `/api/templates/:identifier/config` (supports ID or slug)
 - Lazy loading: Templates registered in `index.ts` with `React.lazy()` for code splitting
 - Template variants: Multiple templates can extend base layouts with different themes
 - Dynamic config loading: `loadTemplateConfig()` function imports configs based on template key
+- Each template includes: key, name, description, defaultConfig, component (lazy), previewImage, features array
 
 ### Database Schema Key Points
 - `templates` table stores template instances with `config` JSONB field
 - Template-scoped foreign keys: `rsvps.templateId`, `guestPhotos.templateId`, etc.
 - Use Zod schemas from `shared/schema.ts` for all data validation
+- Key insert schemas: `insertRsvpSchema`, `insertUserSchema`, `insertOrderSchema`, `insertTemplateSchema`, `insertGuestPhotoSchema`
+- All schemas include Armenian bilingual error messages for validation
 - Run migrations with `npm run db:migrate` (includes seeding default template)
 
 ### Development Workflow
@@ -143,24 +147,30 @@ Routes in `server/routes/` follow RESTful conventions with multi-layered authent
 - `client/src/templates/types.ts` - WeddingConfig interface (200+ lines of config options)
   - Defines all customizable template properties (colors, fonts, sections, content)
 - `client/src/templates/index.ts` - Template registry with lazy loading
-  - Central registry of all available templates
-  - `loadTemplateConfig()` function for dynamic config imports
+  - Central registry of all available templates (pro, classic, elegant, romantic, nature)
+  - `TemplateDefinition` interface and `loadTemplateConfig()` function for dynamic config imports
 - `server/index.ts` - Express server setup with environment validation and error handling
   - SSL/HTTPS redirect logic for production
   - Security headers (HSTS, CORS, CSP)
+  - Health check endpoint (`/health`)
 - `server/middleware/auth.ts` - Authentication middleware and JWT handling
   - Token generation/verification, password hashing
   - Multi-layered access control (user, template admin, platform admin)
+  - `authenticateUser`, `requireAdminPanelAccess`, `optionalAuth` middleware
 - `server/email.ts` - Brevo email service with template-scoped routing and Armenian localization
   - RSVP notifications with 3-tier recipient priority
+  - Functions: `sendTemplateRsvpNotificationEmails()`, `sendTemplateRsvpConfirmationEmail()`
 - `server/routes/templates.ts` - Template management, RSVP processing, and admin endpoints
   - Core template CRUD operations and public API
 - `server/routes/admin-panel.ts` - Template owner dashboard and analytics
   - RSVP management, photo management, Google Drive integration
+- `server/routes/auth.ts` - Authentication endpoints (login, registration, password reset)
 - `vite.config.ts` - Development proxy, build chunking, and path resolution
   - Manual chunks for optimal loading (vendor, router, UI)
+  - Path aliases: `@/` → `client/src/`, `@shared/` → `shared/`, `@assets/` → `public/attached_assets/`
 - `vercel.json` - Serverless deployment configuration with asset routing
   - Route prioritization (API before static), caching headers
+  - SEO routes (robots.txt, sitemap.xml)
 
 ### Armenian Localization
 This platform specifically supports **Armenian weddings** with:

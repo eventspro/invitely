@@ -52,6 +52,14 @@ export const ru = {
   templates: {
     title: "Красивые Свадебные Шаблоны",
     subtitle: "Выберите из нашей коллекции потрясающих, профессионально разработанных шаблонов",
+    loading: "Загрузка шаблонов...",
+    error: "Не удалось загрузить шаблоны. Показаны шаблоны по умолчанию.",
+    viewDemo: "Посмотреть Демо",
+    livePreview: "Доступен Живой Предпросмотр",
+    mobileResponsive: "Мобильная Адаптация",
+    featuresLabel: "Возможности",
+    cardSubtitle: "Доступен Живой Предпросмотр • Мобильная Адаптация",
+    templateLabel: "Шаблон",
     items: [
       {
         name: "Элегантная Армянская Свадьба",
@@ -69,6 +77,7 @@ export const ru = {
     badge: "Свадебные Шаблоны и Цены",
     title: "Выберите Ваш Идеальный Свадебный Сайт",
     subtitle: "Профессиональные сайты свадебных приглашений с комплексными возможностями. От интимных церемоний до грандиозных торжеств, у нас есть идеальный шаблон для вашего особенного дня.",
+    featuresHeader: "Возможности",
     plans: [
       {
         name: "Базовый",
@@ -142,6 +151,31 @@ export const ru = {
     cta: "Начать Создание Сейчас"
   },
 
+  // Social Media Links - For Contact & Payment
+  socialMedia: {
+    instagram: {
+      url: "https://www.instagram.com/weddingsites_am",
+      label: "Instagram"
+    },
+    telegram: {
+      url: "https://t.me/weddingsites_am",
+      label: "Telegram"
+    },
+    facebook: {
+      url: "https://www.facebook.com/weddingsites.am",
+      label: "Facebook"
+    }
+  },
+
+  // Contact & Social Section
+  contactSocial: {
+    title: "Готовы Создать Ваш Идеальный Свадебный Сайт?",
+    subtitle: "Присоединяйтесь к сотням пар, которые выбрали нас для своего особенного дня",
+    description: "Свяжитесь с нами в социальных сетях, чтобы начать",
+    brandName: "WeddingSites"
+  },
+
+  // 
   // Common
   common: {
     currency: "драм",

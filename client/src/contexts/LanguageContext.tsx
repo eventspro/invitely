@@ -1,23 +1,17 @@
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { Language, defaultLanguage, languages, LanguageConfig } from '@/config/languages';
-import { en } from '@/config/languages/en';
-import { hy } from '@/config/languages/hy';
-import { ru } from '@/config/languages/ru';
 
 interface LanguageContextType {
   currentLanguage: Language;
   setLanguage: (language: Language) => void;
   t: LanguageConfig;
   availableLanguages: typeof languages;
+  isLoading: boolean;
+  refreshTranslations: () => Promise<void>;
+  updateTranslationInCache: (key: string, value: string) => void;
 }
 
 const LanguageContext = createContext<LanguageContextType | undefined>(undefined);
-
-const languageConfigs = {
-  en,
-  hy,
-  ru
-};
 
 interface LanguageProviderProps {
   children: ReactNode;
@@ -36,6 +30,59 @@ export function LanguageProvider({ children }: LanguageProviderProps) {
   };
 
   const [currentLanguage, setCurrentLanguage] = useState<Language>(getStoredLanguage);
+  const [translationsCache, setTranslationsCache] = useState<Record<Language, LanguageConfig>>({
+    en: {} as LanguageConfig,
+    hy: {} as LanguageConfig,
+    ru: {} as LanguageConfig
+  });
+  const [isLoading, setIsLoading] = useState(true);
+
+  // Fetch translations from backend API
+  const fetchTranslations = async () => {
+    console.log('🔄 fetchTranslations started - setting isLoading to true');
+    setIsLoading(true);
+    try {
+      console.log('📡 Fetching from /api/translations...');
+      const response = await fetch('/api/translations');
+      console.log('📡 Response received:', response.status, response.ok);
+      
+      if (!response.ok) {
+        throw new Error(`Failed to fetch translations: ${response.status}`);
+      }
+      
+      const data = await response.json();
+      console.log('📦 Data parsed. Type:', typeof data, 'Has en:', 'en' in (data || {}), 'Has hy:', 'hy' in (data || {}), 'Has ru:', 'ru' in (data || {}));
+      
+      // Validate that data has the expected structure
+      if (data && typeof data === 'object' && ('en' in data || 'hy' in data || 'ru' in data)) {
+        setTranslationsCache(data);
+        console.log('✅ Translations loaded from API and cached');
+      } else {
+        console.warn('⚠️ Invalid translation data structure, using fallback');
+        throw new Error('Invalid data structure');
+      }
+    } catch (error) {
+      console.error('❌ Failed to load translations from API:', error);
+      // Fallback to static imports only if API fails
+      try {
+        const { en } = await import('@/config/languages/en');
+        const { hy } = await import('@/config/languages/hy');
+        const { ru } = await import('@/config/languages/ru');
+        setTranslationsCache({ en, hy, ru });
+        console.log('✅ Translations loaded from fallback files');
+      } catch (fallbackError) {
+        console.error('❌ Failed to load fallback translations:', fallbackError);
+      }
+    } finally {
+      console.log('✅ fetchTranslations complete - setting isLoading to false');
+      setIsLoading(false);
+    }
+  };
+
+  // Load translations on mount
+  useEffect(() => {
+    fetchTranslations();
+  }, []);
 
   // Save language preference to localStorage
   useEffect(() => {
@@ -48,13 +95,46 @@ export function LanguageProvider({ children }: LanguageProviderProps) {
     setCurrentLanguage(language);
   };
 
-  const t = languageConfigs[currentLanguage];
+  // Optimistic update for immediate UI feedback
+  const updateTranslationInCache = (key: string, value: string) => {
+    setTranslationsCache(prev => {
+      const updated = { ...prev };
+      const keys = key.split('.');
+      
+      // Deep clone the current language translations
+      const langCopy = JSON.parse(JSON.stringify(updated[currentLanguage]));
+      let current: any = langCopy;
+      
+      // Navigate to the nested property
+      for (let i = 0; i < keys.length - 1; i++) {
+        if (!current[keys[i]]) current[keys[i]] = {};
+        current = current[keys[i]];
+      }
+      
+      // Update the final value
+      current[keys[keys.length - 1]] = value;
+      
+      // Update the cache with the modified copy
+      updated[currentLanguage] = langCopy;
+      
+      return updated;
+    });
+  };
+
+  const refreshTranslations = async () => {
+    await fetchTranslations();
+  };
+
+  const t = translationsCache[currentLanguage] || ({} as LanguageConfig);
 
   const value: LanguageContextType = {
     currentLanguage,
     setLanguage,
     t: t as LanguageConfig,
-    availableLanguages: languages
+    availableLanguages: languages,
+    isLoading,
+    refreshTranslations,
+    updateTranslationInCache
   };
 
   return (
