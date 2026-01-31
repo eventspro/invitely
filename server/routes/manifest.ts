@@ -1,5 +1,5 @@
 import express from 'express';
-import { db } from '../db';
+import { db } from '../db.js';
 import { templates } from '@shared/schema';
 import { eq } from 'drizzle-orm';
 import type { WeddingConfig } from '../../client/src/templates/types';
