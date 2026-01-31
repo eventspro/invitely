@@ -18,7 +18,7 @@ import Home from "@/pages/home";
 import MainPage from "@/pages/main";
 import PhotosPage from "@/pages/photos";
 import TemplatesPage from "@/pages/templates";
-import TranslationsPage from "@/pages/translations";
+import TranslationsPage from "@/pages/platform-translations";
 import NotFound from "@/pages/not-found";
 import LoadingScreen from "@/components/loading-screen";
 import PlatformDashboard from "@/pages/platform-dashboard";

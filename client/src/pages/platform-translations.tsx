@@ -421,26 +421,16 @@ export default function PlatformTranslations() {
   };
 
   const saveAllChanges = async () => {
-    try {
-      const response = await fetch(`/api/translations/${currentLanguage}`, {
-        method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ config: translations })
-      });
-
-      if (!response.ok) {
-        throw new Error('Failed to save translations');
-      }
-
-      toast({ title: "Saved!", description: "Translations saved and deployed successfully" });
-      setHasChanges(false);
-      
-      // Reload the page to fetch updated translations
-      setTimeout(() => window.location.reload(), 1000);
-    } catch (error) {
-      console.error('Save error:', error);
-      toast({ title: "Error", description: "Failed to save translations", variant: "destructive" });
-    }
+    toast({ 
+      title: "Translation System Note", 
+      description: "The bulk translation save feature is not yet implemented. Use the granular translation editor for now.",
+      variant: "default"
+    });
+    
+    // TODO: Implement JSONB-based bulk translation save
+    // The current API uses granular key-value pairs in the translations table
+    // This UI is designed for a JSONB bulk update system that needs to be implemented
+    // For now, users should use the individual key editor or the DOM-based translation editor
   };
 
   return (
@@ -485,9 +475,11 @@ export default function PlatformTranslations() {
                       <SelectItem value="ru">RU Русский</SelectItem>
                     </SelectContent>
                   </Select>
-                  <Button onClick={saveAllChanges} disabled={!hasChanges} className="bg-rose-500 hover:bg-rose-600">
+                  {/* Note: Bulk save is not yet implemented for this translation UI */}
+                  {/* Use the DOM-based translation editor or individual key editor instead */}
+                  <Button onClick={saveAllChanges} disabled={true} className="bg-gray-400 cursor-not-allowed" title="Bulk translation save not yet implemented">
                     <Save className="w-4 h-4 mr-2" />
-                    Save & Deploy
+                    Save & Deploy (Coming Soon)
                   </Button>
                 </>
               )}
@@ -512,6 +504,20 @@ export default function PlatformTranslations() {
 
           {/* Translations Tab - Existing Content (UNTOUCHED) */}
           <TabsContent value="translations" className="space-y-0">
+            {/* Warning Banner */}
+            <Card className="mb-6 p-4 bg-yellow-50 border-yellow-200">
+              <div className="flex items-start gap-3">
+                <Shield className="w-5 h-5 text-yellow-600 mt-0.5" />
+                <div>
+                  <h3 className="font-semibold text-yellow-900 mb-1">Translation Editor (View Only)</h3>
+                  <p className="text-sm text-yellow-800">
+                    This translation interface is currently <strong>view-only</strong>. The bulk save feature is not yet connected to the API. 
+                    To edit translations, please use the granular translation key editor or contact support.
+                  </p>
+                </div>
+              </div>
+            </Card>
+
         <Tabs value={activeSection} onValueChange={setActiveSection}>
           <TabsList className="bg-gray-100">
             <TabsTrigger value="hero">Hero</TabsTrigger>
