@@ -12,10 +12,12 @@ import {
   ArrowLeft, Save, Heart, UserCheck, Smartphone, Palette, 
   Camera, Shield, Plus, Trash2, Edit2, Globe, Settings,
   Check, X, ArrowRight, Eye, Crown, Sparkles, Gift,
-  Calendar, Music, MapPin, Mail, Download, Upload, QrCode
+  Calendar, Music, MapPin, Mail, Download, Upload, QrCode,
+  ArrowUpDown
 } from "lucide-react";
 import { defaultContentConfig, type PricingPlan as ConfigPricingPlan, getEnabledItems } from "@shared/content-config";
 import PricingPlanEditor from "@/components/admin/PricingPlanEditor";
+import PricingPlanReorder from "@/components/admin/PricingPlanReorder";
 
 interface FeatureItem {
   icon: string;
@@ -257,6 +259,9 @@ export default function PlatformTranslations() {
   // Phase 2.1: Plan editor state
   const [editingPlan, setEditingPlan] = useState<any | null>(null);
   const [isEditorOpen, setIsEditorOpen] = useState(false);
+  
+  // Phase 3.1: Plan reordering state
+  const [isReorderOpen, setIsReorderOpen] = useState(false);
 
   // Fetch pricing plans from database with fallback to config
   const { data: dbPricingPlans, isLoading: plansLoading } = useQuery<any[]>({
@@ -1000,10 +1005,21 @@ export default function PlatformTranslations() {
                       Configure pricing plans exactly as they appear on the homepage
                     </p>
                   </div>
-                  <Button variant="outline" className="gap-2">
-                    <Plus className="w-4 h-4" />
-                    Add Plan
-                  </Button>
+                  <div className="flex gap-2">
+                    <Button 
+                      variant="outline" 
+                      className="gap-2"
+                      onClick={() => setIsReorderOpen(true)}
+                      disabled={!pricingPlans || pricingPlans.length <= 1}
+                    >
+                      <ArrowUpDown className="w-4 h-4" />
+                      Reorder Plans
+                    </Button>
+                    <Button variant="outline" className="gap-2">
+                      <Plus className="w-4 h-4" />
+                      Add Plan
+                    </Button>
+                  </div>
                 </div>
 
                 {/* Pricing Plans Display - Pixel-perfect mirror of homepage */}
@@ -1146,6 +1162,13 @@ export default function PlatformTranslations() {
             }}
           />
         )}
+
+        {/* Phase 3.1: Pricing Plan Reorder Modal */}
+        <PricingPlanReorder
+          plans={pricingPlans}
+          isOpen={isReorderOpen}
+          onClose={() => setIsReorderOpen(false)}
+        />
       </div>
         </>
       )}
