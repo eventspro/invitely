@@ -12,3 +12,4 @@ uploads
 .vercel
 .env
 .env*.local
+.env.production
