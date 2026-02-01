@@ -57,6 +57,23 @@ interface TranslationSections {
     loadingText: string;
     viewDemoButton: string;
     templateLabel: string;
+    cardSubtitle: string;
+    featuresLabel: string;
+    commonFeatures: {
+      natureTheme: string;
+      greenColors: string;
+      romanticDesign: string;
+      pinkTheme: string;
+      elegantStyle: string;
+      classicDesign: string;
+      armenianFonts: string;
+      rsvp: string;
+      mobileResponsive: string;
+      photoGallery: string;
+      timeline: string;
+      musicPlayer: string;
+      loveStory: string;
+    };
   };
   pricing: {
     title: string;
@@ -104,7 +121,24 @@ const defaultTranslations: TranslationSections = {
     subtitle: "Ընտրեք մեր հավաքածուից գրավիչ, մասնագիտորեն նախագծված ձևանմուշները",
     loadingText: "Ձևանմուշները բեռնվում են...",
     viewDemoButton: "Դիտել Օրինակը",
-    templateLabel: "Ձևանմուշ"
+    templateLabel: "Ձևանմուշ",
+    cardSubtitle: "Կենդանի Նախադիտում Հասանելի է • Բջջային Հարմարեցված",
+    featuresLabel: "Հնարավորություններ",
+    commonFeatures: {
+      natureTheme: "Nature Theme",
+      greenColors: "Green Colors",
+      romanticDesign: "Romantic Design",
+      pinkTheme: "Pink Theme",
+      elegantStyle: "Elegant Style",
+      classicDesign: "Classic Design",
+      armenianFonts: "Armenian Fonts",
+      rsvp: "RSVP",
+      mobileResponsive: "Mobile Responsive",
+      photoGallery: "Photo Gallery",
+      timeline: "Timeline",
+      musicPlayer: "Music Player",
+      loveStory: "Love Story"
+    }
   },
   pricing: {
     title: "Ընտրեք Կատարյալ Հարսանեկան Կայքը",
@@ -351,6 +385,23 @@ export default function PlatformTranslations() {
         [field]: value
       }
     }));
+    setHasChanges(true);
+  };
+
+  const updateNestedSection = (section: keyof TranslationSections, path: string, value: any) => {
+    const keys = path.split('.');
+    setTranslations(prev => {
+      const updated = { ...prev };
+      let current: any = updated[section];
+      
+      for (let i = 0; i < keys.length - 1; i++) {
+        current[keys[i]] = { ...current[keys[i]] };
+        current = current[keys[i]];
+      }
+      
+      current[keys[keys.length - 1]] = value;
+      return updated;
+    });
     setHasChanges(true);
   };
 
@@ -688,25 +739,102 @@ export default function PlatformTranslations() {
               </p>
               
               <div className="space-y-6">
-                <div>
-                  <label className="text-sm font-medium mb-2 block">Section Title</label>
-                  <Input value={translations.templates.title} onChange={(e) => updateSection('templates', 'title', e.target.value)} className="border-blue-200" />
+                <div className="border-b pb-4">
+                  <h3 className="font-semibold text-lg mb-4">Section Headers</h3>
+                  <div className="space-y-4">
+                    <div>
+                      <label className="text-sm font-medium mb-2 block">Section Title</label>
+                      <Input value={translations.templates.title} onChange={(e) => updateSection('templates', 'title', e.target.value)} className="border-blue-200" />
+                    </div>
+                    <div>
+                      <label className="text-sm font-medium mb-2 block">Section Subtitle</label>
+                      <Input value={translations.templates.subtitle} onChange={(e) => updateSection('templates', 'subtitle', e.target.value)} className="border-blue-200" />
+                    </div>
+                    <div>
+                      <label className="text-sm font-medium mb-2 block">Loading Text</label>
+                      <Input value={translations.templates.loadingText} onChange={(e) => updateSection('templates', 'loadingText', e.target.value)} className="border-blue-200" />
+                    </div>
+                  </div>
                 </div>
-                <div>
-                  <label className="text-sm font-medium mb-2 block">Section Subtitle</label>
-                  <Input value={translations.templates.subtitle} onChange={(e) => updateSection('templates', 'subtitle', e.target.value)} className="border-blue-200" />
+
+                <div className="border-b pb-4">
+                  <h3 className="font-semibold text-lg mb-4">Card Labels</h3>
+                  <div className="space-y-4">
+                    <div>
+                      <label className="text-sm font-medium mb-2 block">View Demo Button</label>
+                      <Input value={translations.templates.viewDemoButton} onChange={(e) => updateSection('templates', 'viewDemoButton', e.target.value)} className="border-blue-200" />
+                    </div>
+                    <div>
+                      <label className="text-sm font-medium mb-2 block">Template Label (badge)</label>
+                      <Input value={translations.templates.templateLabel} onChange={(e) => updateSection('templates', 'templateLabel', e.target.value)} className="border-blue-200" />
+                    </div>
+                    <div>
+                      <label className="text-sm font-medium mb-2 block">Card Subtitle</label>
+                      <Input value={translations.templates.cardSubtitle} onChange={(e) => updateSection('templates', 'cardSubtitle', e.target.value)} className="border-blue-200" />
+                    </div>
+                    <div>
+                      <label className="text-sm font-medium mb-2 block">Features Label</label>
+                      <Input value={translations.templates.featuresLabel} onChange={(e) => updateSection('templates', 'featuresLabel', e.target.value)} className="border-blue-200" />
+                    </div>
+                  </div>
                 </div>
+
                 <div>
-                  <label className="text-sm font-medium mb-2 block">Loading Text</label>
-                  <Input value={translations.templates.loadingText} onChange={(e) => updateSection('templates', 'loadingText', e.target.value)} className="border-blue-200" />
-                </div>
-                <div>
-                  <label className="text-sm font-medium mb-2 block">View Demo Button</label>
-                  <Input value={translations.templates.viewDemoButton} onChange={(e) => updateSection('templates', 'viewDemoButton', e.target.value)} className="border-blue-200" />
-                </div>
-                <div>
-                  <label className="text-sm font-medium mb-2 block">Template Label</label>
-                  <Input value={translations.templates.templateLabel} onChange={(e) => updateSection('templates', 'templateLabel', e.target.value)} className="border-blue-200" />
+                  <h3 className="font-semibold text-lg mb-4">Common Feature Names</h3>
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <label className="text-sm font-medium mb-2 block">Nature Theme</label>
+                      <Input value={translations.templates.commonFeatures.natureTheme} onChange={(e) => updateNestedSection('templates', 'commonFeatures.natureTheme', e.target.value)} className="border-blue-200" />
+                    </div>
+                    <div>
+                      <label className="text-sm font-medium mb-2 block">Green Colors</label>
+                      <Input value={translations.templates.commonFeatures.greenColors} onChange={(e) => updateNestedSection('templates', 'commonFeatures.greenColors', e.target.value)} className="border-blue-200" />
+                    </div>
+                    <div>
+                      <label className="text-sm font-medium mb-2 block">Romantic Design</label>
+                      <Input value={translations.templates.commonFeatures.romanticDesign} onChange={(e) => updateNestedSection('templates', 'commonFeatures.romanticDesign', e.target.value)} className="border-blue-200" />
+                    </div>
+                    <div>
+                      <label className="text-sm font-medium mb-2 block">Pink Theme</label>
+                      <Input value={translations.templates.commonFeatures.pinkTheme} onChange={(e) => updateNestedSection('templates', 'commonFeatures.pinkTheme', e.target.value)} className="border-blue-200" />
+                    </div>
+                    <div>
+                      <label className="text-sm font-medium mb-2 block">Elegant Style</label>
+                      <Input value={translations.templates.commonFeatures.elegantStyle} onChange={(e) => updateNestedSection('templates', 'commonFeatures.elegantStyle', e.target.value)} className="border-blue-200" />
+                    </div>
+                    <div>
+                      <label className="text-sm font-medium mb-2 block">Classic Design</label>
+                      <Input value={translations.templates.commonFeatures.classicDesign} onChange={(e) => updateNestedSection('templates', 'commonFeatures.classicDesign', e.target.value)} className="border-blue-200" />
+                    </div>
+                    <div>
+                      <label className="text-sm font-medium mb-2 block">Armenian Fonts</label>
+                      <Input value={translations.templates.commonFeatures.armenianFonts} onChange={(e) => updateNestedSection('templates', 'commonFeatures.armenianFonts', e.target.value)} className="border-blue-200" />
+                    </div>
+                    <div>
+                      <label className="text-sm font-medium mb-2 block">RSVP</label>
+                      <Input value={translations.templates.commonFeatures.rsvp} onChange={(e) => updateNestedSection('templates', 'commonFeatures.rsvp', e.target.value)} className="border-blue-200" />
+                    </div>
+                    <div>
+                      <label className="text-sm font-medium mb-2 block">Mobile Responsive</label>
+                      <Input value={translations.templates.commonFeatures.mobileResponsive} onChange={(e) => updateNestedSection('templates', 'commonFeatures.mobileResponsive', e.target.value)} className="border-blue-200" />
+                    </div>
+                    <div>
+                      <label className="text-sm font-medium mb-2 block">Photo Gallery</label>
+                      <Input value={translations.templates.commonFeatures.photoGallery} onChange={(e) => updateNestedSection('templates', 'commonFeatures.photoGallery', e.target.value)} className="border-blue-200" />
+                    </div>
+                    <div>
+                      <label className="text-sm font-medium mb-2 block">Timeline</label>
+                      <Input value={translations.templates.commonFeatures.timeline} onChange={(e) => updateNestedSection('templates', 'commonFeatures.timeline', e.target.value)} className="border-blue-200" />
+                    </div>
+                    <div>
+                      <label className="text-sm font-medium mb-2 block">Music Player</label>
+                      <Input value={translations.templates.commonFeatures.musicPlayer} onChange={(e) => updateNestedSection('templates', 'commonFeatures.musicPlayer', e.target.value)} className="border-blue-200" />
+                    </div>
+                    <div>
+                      <label className="text-sm font-medium mb-2 block">Love Story</label>
+                      <Input value={translations.templates.commonFeatures.loveStory} onChange={(e) => updateNestedSection('templates', 'commonFeatures.loveStory', e.target.value)} className="border-blue-200" />
+                    </div>
+                  </div>
                 </div>
               </div>
             </Card>
