@@ -2,7 +2,7 @@
 import type { Express } from "express";
 import { db } from "../db.js";
 import { translations } from "../../shared/schema.js";
-import { eq, and } from "drizzle-orm";
+import { eq, and, sql } from "drizzle-orm";
 import { z } from "zod";
 
 // Import default translations for initialization
@@ -305,60 +305,38 @@ export function registerTranslationRoutes(app: Express) {
         return res.status(400).json({ message: "Invalid language" });
       }
       
-      console.log(`🔄 Starting bulk update for ${Object.keys(updates).length} translations in ${language}`);
+      console.log(`🔄 Starting bulk UPSERT for ${Object.keys(updates).length} translations in ${language}`);
+      const startTime = Date.now();
       
-      // Get all existing translations for this language in one query
-      const existing = await db
-        .select()
-        .from(translations)
-        .where(eq(translations.language, language));
+      // Prepare all values for UPSERT (insert with ON CONFLICT UPDATE)
+      const valuesToUpsert = Object.entries(updates).map(([key, value]) => ({
+        language,
+        translationKey: key,
+        value: value as string,
+        category: key.split('.')[0],
+        updatedAt: new Date()
+      }));
       
-      const existingKeys = new Set(existing.map(t => t.translationKey));
+      // Use PostgreSQL UPSERT: INSERT ... ON CONFLICT ... DO UPDATE
+      // This handles both new inserts and updates in a single batch operation
+      await db
+        .insert(translations)
+        .values(valuesToUpsert)
+        .onConflictDoUpdate({
+          target: [translations.language, translations.translationKey],
+          set: {
+            value: sql`EXCLUDED.value`,
+            updatedAt: sql`EXCLUDED.updated_at`,
+            category: sql`EXCLUDED.category`
+          }
+        });
       
-      // Separate updates and inserts
-      const toUpdate: Array<{ key: string; value: string }> = [];
-      const toInsert: Array<{ language: string; translationKey: string; value: string; category: string }> = [];
-      
-      for (const [key, value] of Object.entries(updates) as [string, string][]) {
-        if (existingKeys.has(key)) {
-          toUpdate.push({ key, value });
-        } else {
-          toInsert.push({
-            language,
-            translationKey: key,
-            value,
-            category: key.split('.')[0]
-          });
-        }
-      }
-      
-      // Batch insert new translations
-      if (toInsert.length > 0) {
-        await db.insert(translations).values(toInsert);
-        console.log(`✅ Inserted ${toInsert.length} new translations`);
-      }
-      
-      // Batch update existing translations (one query per translation due to Drizzle limitations)
-      if (toUpdate.length > 0) {
-        for (const { key, value } of toUpdate) {
-          await db
-            .update(translations)
-            .set({ value, updatedAt: new Date() })
-            .where(
-              and(
-                eq(translations.language, language),
-                eq(translations.translationKey, key)
-              )
-            );
-        }
-        console.log(`✅ Updated ${toUpdate.length} existing translations`);
-      }
-      
-      console.log(`✅ Bulk update complete for ${language}`);
+      const duration = Date.now() - startTime;
+      console.log(`✅ Bulk UPSERT complete for ${language}: ${valuesToUpsert.length} translations in ${duration}ms`);
       
       res.json({ 
         success: true, 
-        message: `Updated ${toUpdate.length} and inserted ${toInsert.length} translations`
+        message: `Updated ${valuesToUpsert.length} translations in ${duration}ms`
       });
     } catch (error) {
       console.error("Bulk update translations error:", error);

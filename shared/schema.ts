@@ -1,5 +1,5 @@
 import { sql } from "drizzle-orm";
-import { pgTable, text, varchar, timestamp, boolean, jsonb, decimal, integer } from "drizzle-orm/pg-core";
+import { pgTable, text, varchar, timestamp, boolean, jsonb, decimal, integer, unique } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
 
@@ -137,7 +137,10 @@ export const translations = pgTable("translations", {
   category: text("category"), // Section like 'hero', 'pricing', etc.
   createdAt: timestamp("created_at").default(sql`now()`),
   updatedAt: timestamp("updated_at").default(sql`now()`),
-});
+}, (table) => ({
+  // Unique constraint for UPSERT operations
+  languageKeyUnique: unique().on(table.language, table.translationKey),
+}));
 
 // Production translation system tables (granular key-value approach)
 export const translationKeys = pgTable("translation_keys", {
