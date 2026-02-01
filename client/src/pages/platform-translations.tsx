@@ -732,112 +732,362 @@ export default function PlatformTranslations() {
           </TabsContent>
 
           <TabsContent value="templates" className="mt-6">
-            <Card className="p-8">
-              <p className="text-sm text-gray-500 mb-6 flex items-center gap-2">
+            <div className="bg-gradient-to-br from-yellow-50/50 to-orange-50/30 p-4 rounded-lg mb-4">
+              <p className="text-sm text-gray-600 flex items-center gap-2">
                 <Edit2 className="w-4 h-4" />
-                Click any text below to edit it
+                Click any text to edit it directly
               </p>
-              
-              <div className="space-y-6">
-                <div className="border-b pb-4">
-                  <h3 className="font-semibold text-lg mb-4">Section Headers</h3>
-                  <div className="space-y-4">
-                    <div>
-                      <label className="text-sm font-medium mb-2 block">Section Title</label>
-                      <Input value={translations.templates.title} onChange={(e) => updateSection('templates', 'title', e.target.value)} className="border-blue-200" />
+            </div>
+            
+            {/* Live Preview - Exact replica of templates section */}
+            <section className="py-20 bg-gradient-to-br from-yellow-50/10 to-orange-50/30 rounded-xl">
+              <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                <div className="text-center mb-16">
+                  <input
+                    type="text"
+                    value={translations.templates.title}
+                    onChange={(e) => updateSection('templates', 'title', e.target.value)}
+                    className="text-3xl md:text-4xl font-bold text-gray-800 mb-4 text-center w-full bg-transparent border-2 border-transparent hover:border-blue-300 focus:border-blue-500 focus:outline-none rounded px-4 py-2 transition-colors"
+                    placeholder="Section Title"
+                  />
+                  <input
+                    type="text"
+                    value={translations.templates.subtitle}
+                    onChange={(e) => updateSection('templates', 'subtitle', e.target.value)}
+                    className="text-xl text-gray-600 max-w-3xl mx-auto block text-center bg-transparent border-2 border-transparent hover:border-blue-300 focus:border-blue-500 focus:outline-none rounded px-4 py-2 transition-colors"
+                    placeholder="Section Subtitle"
+                  />
+                </div>
+                
+                <div className="grid sm:grid-cols-1 md:grid-cols-2 lg:grid-cols-2 gap-8">
+                  {/* Template 1 */}
+                  <div className="bg-white rounded-xl shadow-xl overflow-hidden">
+                    <div className="relative aspect-video overflow-hidden bg-gray-100">
+                      <img 
+                        src="/template_previews/img2.jpg" 
+                        alt="Template 1 preview"
+                        className="w-full h-full object-cover"
+                      />
+                      <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-100 flex items-end justify-center pb-6">
+                        <div className="inline-flex items-center bg-white text-gray-800 px-6 py-3 rounded-lg font-semibold shadow-lg">
+                          <input
+                            type="text"
+                            value={translations.templates.viewDemoButton}
+                            onChange={(e) => updateSection('templates', 'viewDemoButton', e.target.value)}
+                            className="bg-transparent border-b-2 border-transparent hover:border-blue-300 focus:border-blue-500 focus:outline-none text-center min-w-[120px]"
+                          />
+                        </div>
+                      </div>
+                      <div className="absolute top-4 left-4">
+                        <input
+                          type="text"
+                          value={translations.templates.templateLabel}
+                          onChange={(e) => updateSection('templates', 'templateLabel', e.target.value)}
+                          className="bg-white/90 backdrop-blur-sm text-gray-800 px-3 py-1 rounded-full text-sm font-medium shadow-lg border-2 border-transparent hover:border-blue-300 focus:border-blue-500 focus:outline-none"
+                        />
+                      </div>
                     </div>
-                    <div>
-                      <label className="text-sm font-medium mb-2 block">Section Subtitle</label>
-                      <Input value={translations.templates.subtitle} onChange={(e) => updateSection('templates', 'subtitle', e.target.value)} className="border-blue-200" />
-                    </div>
-                    <div>
-                      <label className="text-sm font-medium mb-2 block">Loading Text</label>
-                      <Input value={translations.templates.loadingText} onChange={(e) => updateSection('templates', 'loadingText', e.target.value)} className="border-blue-200" />
+                    <div className="p-6">
+                      <h3 className="text-xl font-bold text-gray-800 mb-2">Template 1</h3>
+                      <input
+                        type="text"
+                        value={translations.templates.cardSubtitle}
+                        onChange={(e) => updateSection('templates', 'cardSubtitle', e.target.value)}
+                        className="text-gray-600 mb-4 text-sm w-full bg-transparent border-2 border-transparent hover:border-blue-300 focus:border-blue-500 focus:outline-none rounded px-2 py-1"
+                      />
+                      <input
+                        type="text"
+                        value={translations.templates.featuresLabel}
+                        onChange={(e) => updateSection('templates', 'featuresLabel', e.target.value)}
+                        className="font-semibold text-gray-800 mb-3 text-sm bg-transparent border-2 border-transparent hover:border-blue-300 focus:border-blue-500 focus:outline-none rounded px-2 py-1"
+                      />
+                      <div className="flex flex-wrap gap-2">
+                        <input
+                          type="text"
+                          value={translations.templates.commonFeatures.natureTheme}
+                          onChange={(e) => updateNestedSection('templates', 'commonFeatures.natureTheme', e.target.value)}
+                          className="bg-yellow-50 text-yellow-700 px-3 py-1 rounded-full text-sm font-medium border border-yellow-200 hover:border-blue-300 focus:border-blue-500 focus:outline-none"
+                        />
+                        <input
+                          type="text"
+                          value={translations.templates.commonFeatures.greenColors}
+                          onChange={(e) => updateNestedSection('templates', 'commonFeatures.greenColors', e.target.value)}
+                          className="bg-yellow-50 text-yellow-700 px-3 py-1 rounded-full text-sm font-medium border border-yellow-200 hover:border-blue-300 focus:border-blue-500 focus:outline-none"
+                        />
+                        <input
+                          type="text"
+                          value={translations.templates.commonFeatures.rsvp}
+                          onChange={(e) => updateNestedSection('templates', 'commonFeatures.rsvp', e.target.value)}
+                          className="bg-yellow-50 text-yellow-700 px-3 py-1 rounded-full text-sm font-medium border border-yellow-200 hover:border-blue-300 focus:border-blue-500 focus:outline-none"
+                        />
+                        <input
+                          type="text"
+                          value={translations.templates.commonFeatures.mobileResponsive}
+                          onChange={(e) => updateNestedSection('templates', 'commonFeatures.mobileResponsive', e.target.value)}
+                          className="bg-yellow-50 text-yellow-700 px-3 py-1 rounded-full text-sm font-medium border border-yellow-200 hover:border-blue-300 focus:border-blue-500 focus:outline-none"
+                        />
+                      </div>
                     </div>
                   </div>
-                </div>
 
-                <div className="border-b pb-4">
-                  <h3 className="font-semibold text-lg mb-4">Card Labels</h3>
-                  <div className="space-y-4">
-                    <div>
-                      <label className="text-sm font-medium mb-2 block">View Demo Button</label>
-                      <Input value={translations.templates.viewDemoButton} onChange={(e) => updateSection('templates', 'viewDemoButton', e.target.value)} className="border-blue-200" />
+                  {/* Template 2 */}
+                  <div className="bg-white rounded-xl shadow-xl overflow-hidden">
+                    <div className="relative aspect-video overflow-hidden bg-gray-100">
+                      <img 
+                        src="/template_previews/img5.jpeg" 
+                        alt="Template 2 preview"
+                        className="w-full h-full object-cover"
+                      />
+                      <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-100 flex items-end justify-center pb-6">
+                        <div className="inline-flex items-center bg-white text-gray-800 px-6 py-3 rounded-lg font-semibold shadow-lg">
+                          <input
+                            type="text"
+                            value={translations.templates.viewDemoButton}
+                            onChange={(e) => updateSection('templates', 'viewDemoButton', e.target.value)}
+                            className="bg-transparent border-b-2 border-transparent hover:border-blue-300 focus:border-blue-500 focus:outline-none text-center min-w-[120px]"
+                          />
+                        </div>
+                      </div>
+                      <div className="absolute top-4 left-4">
+                        <input
+                          type="text"
+                          value={translations.templates.templateLabel}
+                          onChange={(e) => updateSection('templates', 'templateLabel', e.target.value)}
+                          className="bg-white/90 backdrop-blur-sm text-gray-800 px-3 py-1 rounded-full text-sm font-medium shadow-lg border-2 border-transparent hover:border-blue-300 focus:border-blue-500 focus:outline-none"
+                        />
+                      </div>
                     </div>
-                    <div>
-                      <label className="text-sm font-medium mb-2 block">Template Label (badge)</label>
-                      <Input value={translations.templates.templateLabel} onChange={(e) => updateSection('templates', 'templateLabel', e.target.value)} className="border-blue-200" />
-                    </div>
-                    <div>
-                      <label className="text-sm font-medium mb-2 block">Card Subtitle</label>
-                      <Input value={translations.templates.cardSubtitle} onChange={(e) => updateSection('templates', 'cardSubtitle', e.target.value)} className="border-blue-200" />
-                    </div>
-                    <div>
-                      <label className="text-sm font-medium mb-2 block">Features Label</label>
-                      <Input value={translations.templates.featuresLabel} onChange={(e) => updateSection('templates', 'featuresLabel', e.target.value)} className="border-blue-200" />
+                    <div className="p-6">
+                      <h3 className="text-xl font-bold text-gray-800 mb-2">Template 2</h3>
+                      <input
+                        type="text"
+                        value={translations.templates.cardSubtitle}
+                        onChange={(e) => updateSection('templates', 'cardSubtitle', e.target.value)}
+                        className="text-gray-600 mb-4 text-sm w-full bg-transparent border-2 border-transparent hover:border-blue-300 focus:border-blue-500 focus:outline-none rounded px-2 py-1"
+                      />
+                      <input
+                        type="text"
+                        value={translations.templates.featuresLabel}
+                        onChange={(e) => updateSection('templates', 'featuresLabel', e.target.value)}
+                        className="font-semibold text-gray-800 mb-3 text-sm bg-transparent border-2 border-transparent hover:border-blue-300 focus:border-blue-500 focus:outline-none rounded px-2 py-1"
+                      />
+                      <div className="flex flex-wrap gap-2">
+                        <input
+                          type="text"
+                          value={translations.templates.commonFeatures.romanticDesign}
+                          onChange={(e) => updateNestedSection('templates', 'commonFeatures.romanticDesign', e.target.value)}
+                          className="bg-yellow-50 text-yellow-700 px-3 py-1 rounded-full text-sm font-medium border border-yellow-200 hover:border-blue-300 focus:border-blue-500 focus:outline-none"
+                        />
+                        <input
+                          type="text"
+                          value={translations.templates.commonFeatures.rsvp}
+                          onChange={(e) => updateNestedSection('templates', 'commonFeatures.rsvp', e.target.value)}
+                          className="bg-yellow-50 text-yellow-700 px-3 py-1 rounded-full text-sm font-medium border border-yellow-200 hover:border-blue-300 focus:border-blue-500 focus:outline-none"
+                        />
+                        <input
+                          type="text"
+                          value={translations.templates.commonFeatures.mobileResponsive}
+                          onChange={(e) => updateNestedSection('templates', 'commonFeatures.mobileResponsive', e.target.value)}
+                          className="bg-yellow-50 text-yellow-700 px-3 py-1 rounded-full text-sm font-medium border border-yellow-200 hover:border-blue-300 focus:border-blue-500 focus:outline-none"
+                        />
+                      </div>
                     </div>
                   </div>
-                </div>
 
-                <div>
-                  <h3 className="font-semibold text-lg mb-4">Common Feature Names</h3>
-                  <div className="grid grid-cols-2 gap-4">
-                    <div>
-                      <label className="text-sm font-medium mb-2 block">Nature Theme</label>
-                      <Input value={translations.templates.commonFeatures.natureTheme} onChange={(e) => updateNestedSection('templates', 'commonFeatures.natureTheme', e.target.value)} className="border-blue-200" />
+                  {/* Template 3 */}
+                  <div className="bg-white rounded-xl shadow-xl overflow-hidden">
+                    <div className="relative aspect-video overflow-hidden bg-gray-100">
+                      <img 
+                        src="/template_previews/img4.avif" 
+                        alt="Template 3 preview"
+                        className="w-full h-full object-cover"
+                      />
+                      <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-100 flex items-end justify-center pb-6">
+                        <div className="inline-flex items-center bg-white text-gray-800 px-6 py-3 rounded-lg font-semibold shadow-lg">
+                          <input
+                            type="text"
+                            value={translations.templates.viewDemoButton}
+                            onChange={(e) => updateSection('templates', 'viewDemoButton', e.target.value)}
+                            className="bg-transparent border-b-2 border-transparent hover:border-blue-300 focus:border-blue-500 focus:outline-none text-center min-w-[120px]"
+                          />
+                        </div>
+                      </div>
+                      <div className="absolute top-4 left-4">
+                        <input
+                          type="text"
+                          value={translations.templates.templateLabel}
+                          onChange={(e) => updateSection('templates', 'templateLabel', e.target.value)}
+                          className="bg-white/90 backdrop-blur-sm text-gray-800 px-3 py-1 rounded-full text-sm font-medium shadow-lg border-2 border-transparent hover:border-blue-300 focus:border-blue-500 focus:outline-none"
+                        />
+                      </div>
                     </div>
-                    <div>
-                      <label className="text-sm font-medium mb-2 block">Green Colors</label>
-                      <Input value={translations.templates.commonFeatures.greenColors} onChange={(e) => updateNestedSection('templates', 'commonFeatures.greenColors', e.target.value)} className="border-blue-200" />
+                    <div className="p-6">
+                      <h3 className="text-xl font-bold text-gray-800 mb-2">Template 3</h3>
+                      <input
+                        type="text"
+                        value={translations.templates.cardSubtitle}
+                        onChange={(e) => updateSection('templates', 'cardSubtitle', e.target.value)}
+                        className="text-gray-600 mb-4 text-sm w-full bg-transparent border-2 border-transparent hover:border-blue-300 focus:border-blue-500 focus:outline-none rounded px-2 py-1"
+                      />
+                      <input
+                        type="text"
+                        value={translations.templates.featuresLabel}
+                        onChange={(e) => updateSection('templates', 'featuresLabel', e.target.value)}
+                        className="font-semibold text-gray-800 mb-3 text-sm bg-transparent border-2 border-transparent hover:border-blue-300 focus:border-blue-500 focus:outline-none rounded px-2 py-1"
+                      />
+                      <div className="flex flex-wrap gap-2">
+                        <input
+                          type="text"
+                          value={translations.templates.commonFeatures.elegantStyle}
+                          onChange={(e) => updateNestedSection('templates', 'commonFeatures.elegantStyle', e.target.value)}
+                          className="bg-yellow-50 text-yellow-700 px-3 py-1 rounded-full text-sm font-medium border border-yellow-200 hover:border-blue-300 focus:border-blue-500 focus:outline-none"
+                        />
+                        <input
+                          type="text"
+                          value={translations.templates.commonFeatures.rsvp}
+                          onChange={(e) => updateNestedSection('templates', 'commonFeatures.rsvp', e.target.value)}
+                          className="bg-yellow-50 text-yellow-700 px-3 py-1 rounded-full text-sm font-medium border border-yellow-200 hover:border-blue-300 focus:border-blue-500 focus:outline-none"
+                        />
+                        <input
+                          type="text"
+                          value={translations.templates.commonFeatures.mobileResponsive}
+                          onChange={(e) => updateNestedSection('templates', 'commonFeatures.mobileResponsive', e.target.value)}
+                          className="bg-yellow-50 text-yellow-700 px-3 py-1 rounded-full text-sm font-medium border border-yellow-200 hover:border-blue-300 focus:border-blue-500 focus:outline-none"
+                        />
+                      </div>
                     </div>
-                    <div>
-                      <label className="text-sm font-medium mb-2 block">Romantic Design</label>
-                      <Input value={translations.templates.commonFeatures.romanticDesign} onChange={(e) => updateNestedSection('templates', 'commonFeatures.romanticDesign', e.target.value)} className="border-blue-200" />
+                  </div>
+
+                  {/* Template 4 */}
+                  <div className="bg-white rounded-xl shadow-xl overflow-hidden">
+                    <div className="relative aspect-video overflow-hidden bg-gray-100">
+                      <img 
+                        src="/template_previews/img4.jpg" 
+                        alt="Template 4 preview"
+                        className="w-full h-full object-cover"
+                      />
+                      <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-100 flex items-end justify-center pb-6">
+                        <div className="inline-flex items-center bg-white text-gray-800 px-6 py-3 rounded-lg font-semibold shadow-lg">
+                          <input
+                            type="text"
+                            value={translations.templates.viewDemoButton}
+                            onChange={(e) => updateSection('templates', 'viewDemoButton', e.target.value)}
+                            className="bg-transparent border-b-2 border-transparent hover:border-blue-300 focus:border-blue-500 focus:outline-none text-center min-w-[120px]"
+                          />
+                        </div>
+                      </div>
+                      <div className="absolute top-4 left-4">
+                        <input
+                          type="text"
+                          value={translations.templates.templateLabel}
+                          onChange={(e) => updateSection('templates', 'templateLabel', e.target.value)}
+                          className="bg-white/90 backdrop-blur-sm text-gray-800 px-3 py-1 rounded-full text-sm font-medium shadow-lg border-2 border-transparent hover:border-blue-300 focus:border-blue-500 focus:outline-none"
+                        />
+                      </div>
                     </div>
-                    <div>
-                      <label className="text-sm font-medium mb-2 block">Pink Theme</label>
-                      <Input value={translations.templates.commonFeatures.pinkTheme} onChange={(e) => updateNestedSection('templates', 'commonFeatures.pinkTheme', e.target.value)} className="border-blue-200" />
+                    <div className="p-6">
+                      <h3 className="text-xl font-bold text-gray-800 mb-2">Template 4</h3>
+                      <input
+                        type="text"
+                        value={translations.templates.cardSubtitle}
+                        onChange={(e) => updateSection('templates', 'cardSubtitle', e.target.value)}
+                        className="text-gray-600 mb-4 text-sm w-full bg-transparent border-2 border-transparent hover:border-blue-300 focus:border-blue-500 focus:outline-none rounded px-2 py-1"
+                      />
+                      <input
+                        type="text"
+                        value={translations.templates.featuresLabel}
+                        onChange={(e) => updateSection('templates', 'featuresLabel', e.target.value)}
+                        className="font-semibold text-gray-800 mb-3 text-sm bg-transparent border-2 border-transparent hover:border-blue-300 focus:border-blue-500 focus:outline-none rounded px-2 py-1"
+                      />
+                      <div className="flex flex-wrap gap-2">
+                        <input
+                          type="text"
+                          value={translations.templates.commonFeatures.classicDesign}
+                          onChange={(e) => updateNestedSection('templates', 'commonFeatures.classicDesign', e.target.value)}
+                          className="bg-yellow-50 text-yellow-700 px-3 py-1 rounded-full text-sm font-medium border border-yellow-200 hover:border-blue-300 focus:border-blue-500 focus:outline-none"
+                        />
+                        <input
+                          type="text"
+                          value={translations.templates.commonFeatures.rsvp}
+                          onChange={(e) => updateNestedSection('templates', 'commonFeatures.rsvp', e.target.value)}
+                          className="bg-yellow-50 text-yellow-700 px-3 py-1 rounded-full text-sm font-medium border border-yellow-200 hover:border-blue-300 focus:border-blue-500 focus:outline-none"
+                        />
+                        <input
+                          type="text"
+                          value={translations.templates.commonFeatures.mobileResponsive}
+                          onChange={(e) => updateNestedSection('templates', 'commonFeatures.mobileResponsive', e.target.value)}
+                          className="bg-yellow-50 text-yellow-700 px-3 py-1 rounded-full text-sm font-medium border border-yellow-200 hover:border-blue-300 focus:border-blue-500 focus:outline-none"
+                        />
+                      </div>
                     </div>
-                    <div>
-                      <label className="text-sm font-medium mb-2 block">Elegant Style</label>
-                      <Input value={translations.templates.commonFeatures.elegantStyle} onChange={(e) => updateNestedSection('templates', 'commonFeatures.elegantStyle', e.target.value)} className="border-blue-200" />
+                  </div>
+
+                  {/* Template 5 */}
+                  <div className="bg-white rounded-xl shadow-xl overflow-hidden">
+                    <div className="relative aspect-video overflow-hidden bg-gray-100">
+                      <img 
+                        src="/template_previews/img1.jpg" 
+                        alt="Template 5 preview"
+                        className="w-full h-full object-cover"
+                      />
+                      <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-100 flex items-end justify-center pb-6">
+                        <div className="inline-flex items-center bg-white text-gray-800 px-6 py-3 rounded-lg font-semibold shadow-lg">
+                          <input
+                            type="text"
+                            value={translations.templates.viewDemoButton}
+                            onChange={(e) => updateSection('templates', 'viewDemoButton', e.target.value)}
+                            className="bg-transparent border-b-2 border-transparent hover:border-blue-300 focus:border-blue-500 focus:outline-none text-center min-w-[120px]"
+                          />
+                        </div>
+                      </div>
+                      <div className="absolute top-4 left-4">
+                        <input
+                          type="text"
+                          value={translations.templates.templateLabel}
+                          onChange={(e) => updateSection('templates', 'templateLabel', e.target.value)}
+                          className="bg-white/90 backdrop-blur-sm text-gray-800 px-3 py-1 rounded-full text-sm font-medium shadow-lg border-2 border-transparent hover:border-blue-300 focus:border-blue-500 focus:outline-none"
+                        />
+                      </div>
                     </div>
-                    <div>
-                      <label className="text-sm font-medium mb-2 block">Classic Design</label>
-                      <Input value={translations.templates.commonFeatures.classicDesign} onChange={(e) => updateNestedSection('templates', 'commonFeatures.classicDesign', e.target.value)} className="border-blue-200" />
-                    </div>
-                    <div>
-                      <label className="text-sm font-medium mb-2 block">Armenian Fonts</label>
-                      <Input value={translations.templates.commonFeatures.armenianFonts} onChange={(e) => updateNestedSection('templates', 'commonFeatures.armenianFonts', e.target.value)} className="border-blue-200" />
-                    </div>
-                    <div>
-                      <label className="text-sm font-medium mb-2 block">RSVP</label>
-                      <Input value={translations.templates.commonFeatures.rsvp} onChange={(e) => updateNestedSection('templates', 'commonFeatures.rsvp', e.target.value)} className="border-blue-200" />
-                    </div>
-                    <div>
-                      <label className="text-sm font-medium mb-2 block">Mobile Responsive</label>
-                      <Input value={translations.templates.commonFeatures.mobileResponsive} onChange={(e) => updateNestedSection('templates', 'commonFeatures.mobileResponsive', e.target.value)} className="border-blue-200" />
-                    </div>
-                    <div>
-                      <label className="text-sm font-medium mb-2 block">Photo Gallery</label>
-                      <Input value={translations.templates.commonFeatures.photoGallery} onChange={(e) => updateNestedSection('templates', 'commonFeatures.photoGallery', e.target.value)} className="border-blue-200" />
-                    </div>
-                    <div>
-                      <label className="text-sm font-medium mb-2 block">Timeline</label>
-                      <Input value={translations.templates.commonFeatures.timeline} onChange={(e) => updateNestedSection('templates', 'commonFeatures.timeline', e.target.value)} className="border-blue-200" />
-                    </div>
-                    <div>
-                      <label className="text-sm font-medium mb-2 block">Music Player</label>
-                      <Input value={translations.templates.commonFeatures.musicPlayer} onChange={(e) => updateNestedSection('templates', 'commonFeatures.musicPlayer', e.target.value)} className="border-blue-200" />
-                    </div>
-                    <div>
-                      <label className="text-sm font-medium mb-2 block">Love Story</label>
-                      <Input value={translations.templates.commonFeatures.loveStory} onChange={(e) => updateNestedSection('templates', 'commonFeatures.loveStory', e.target.value)} className="border-blue-200" />
+                    <div className="p-6">
+                      <h3 className="text-xl font-bold text-gray-800 mb-2">Template 5</h3>
+                      <input
+                        type="text"
+                        value={translations.templates.cardSubtitle}
+                        onChange={(e) => updateSection('templates', 'cardSubtitle', e.target.value)}
+                        className="text-gray-600 mb-4 text-sm w-full bg-transparent border-2 border-transparent hover:border-blue-300 focus:border-blue-500 focus:outline-none rounded px-2 py-1"
+                      />
+                      <input
+                        type="text"
+                        value={translations.templates.featuresLabel}
+                        onChange={(e) => updateSection('templates', 'featuresLabel', e.target.value)}
+                        className="font-semibold text-gray-800 mb-3 text-sm bg-transparent border-2 border-transparent hover:border-blue-300 focus:border-blue-500 focus:outline-none rounded px-2 py-1"
+                      />
+                      <div className="flex flex-wrap gap-2">
+                        <input
+                          type="text"
+                          value={translations.templates.commonFeatures.armenianFonts}
+                          onChange={(e) => updateNestedSection('templates', 'commonFeatures.armenianFonts', e.target.value)}
+                          className="bg-yellow-50 text-yellow-700 px-3 py-1 rounded-full text-sm font-medium border border-yellow-200 hover:border-blue-300 focus:border-blue-500 focus:outline-none"
+                        />
+                        <input
+                          type="text"
+                          value={translations.templates.commonFeatures.rsvp}
+                          onChange={(e) => updateNestedSection('templates', 'commonFeatures.rsvp', e.target.value)}
+                          className="bg-yellow-50 text-yellow-700 px-3 py-1 rounded-full text-sm font-medium border border-yellow-200 hover:border-blue-300 focus:border-blue-500 focus:outline-none"
+                        />
+                        <input
+                          type="text"
+                          value={translations.templates.commonFeatures.mobileResponsive}
+                          onChange={(e) => updateNestedSection('templates', 'commonFeatures.mobileResponsive', e.target.value)}
+                          className="bg-yellow-50 text-yellow-700 px-3 py-1 rounded-full text-sm font-medium border border-yellow-200 hover:border-blue-300 focus:border-blue-500 focus:outline-none"
+                        />
+                      </div>
                     </div>
                   </div>
                 </div>
               </div>
-            </Card>
+            </section>
           </TabsContent>
 
           <TabsContent value="pricing" className="mt-6">
