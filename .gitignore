@@ -7,9 +7,25 @@ vite.config.ts.*
 uploads
 .vercel
 
-.vercel
-
-.vercel
+# Environment variables - NEVER commit these
 .env
-.env*.local
+.env.local
+.env.*.local
 .env.production
+.env.staging
+.env.development
+
+# Keep example files
+!.env.example
+!.env.*.example
+
+# Vercel
+.vercel
+.vercel.json.backup
+
+# Sensitive data
+*.pem
+*.key
+*.cert
+config/secrets.*
+credentials.*
