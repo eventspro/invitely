@@ -208,98 +208,98 @@ export default function MainPage() {
   const fallbackTemplates: DisplayTemplate[] = [
     {
       id: "harut-tatev",
-      name: t.templates?.items?.[0]?.name || "Elegant Armenian Wedding",
+      name: t.templates?.items?.[0]?.name || "",
       preview: "/template_previews/template-preview-1.jpg",
       demoUrl: "/harut-tatev",
       features: [
-        t.templates?.items?.[0]?.features?.["0"] || "Armenian Fonts",
-        t.templates?.items?.[0]?.features?.["1"] || "Timeline",
-        t.templates?.items?.[0]?.features?.["2"] || "RSVP",
-        t.templates?.items?.[0]?.features?.["3"] || "Photo Gallery"
-      ]
+        t.templates?.items?.[0]?.features?.["0"] || "",
+        t.templates?.items?.[0]?.features?.["1"] || "",
+        t.templates?.items?.[0]?.features?.["2"] || "",
+        t.templates?.items?.[0]?.features?.["3"] || ""
+      ].filter(f => f) // Remove empty strings
     },
     {
       id: "forest-lily",
-      name: t.templates?.items?.[1]?.name || "Nature Wedding Theme",
+      name: t.templates?.items?.[1]?.name || "",
       preview: "/template_previews/template-preview-2.jpg", 
       demoUrl: "/forest-lily-nature",
       features: [
-        t.templates?.items?.[1]?.features?.["0"] || "Nature Theme",
-        t.templates?.items?.[1]?.features?.["1"] || "Green Colors",
-        t.templates?.items?.[1]?.features?.["2"] || "RSVP",
-        t.templates?.items?.[1]?.features?.["3"] || "Calendar"
-      ]
+        t.templates?.items?.[1]?.features?.["0"] || "",
+        t.templates?.items?.[1]?.features?.["1"] || "",
+        t.templates?.items?.[1]?.features?.["2"] || "",
+        t.templates?.items?.[1]?.features?.["3"] || ""
+      ].filter(f => f)
     },
     {
       id: "classic-wedding",
-      name: t.templates?.items?.[2]?.name || "Classic Romantic Wedding",
+      name: t.templates?.items?.[2]?.name || "",
       preview: "/template_previews/template-preview-3.jpg",
       demoUrl: "/michael-sarah-classic",
       features: [
-        t.templates?.items?.[2]?.features?.["0"] || "Classic Design",
-        t.templates?.items?.[2]?.features?.["1"] || "Elegant Style",
-        t.templates?.items?.[2]?.features?.["2"] || "RSVP",
-        t.templates?.items?.[2]?.features?.["3"] || "Mobile Responsive"
-      ]
+        t.templates?.items?.[2]?.features?.["0"] || "",
+        t.templates?.items?.[2]?.features?.["1"] || "",
+        t.templates?.items?.[2]?.features?.["2"] || "",
+        t.templates?.items?.[2]?.features?.["3"] || ""
+      ].filter(f => f)
     },
     {
       id: "luxury-wedding",
-      name: t.templates?.items?.[3]?.name || "Luxury Elegant Wedding",
+      name: t.templates?.items?.[3]?.name || "",
       preview: "/template_previews/template-preview-4.jpg",
       demoUrl: "/alexander-isabella-elegant",
       features: [
-        t.templates?.items?.[3]?.features?.["0"] || "Premium Features",
-        t.templates?.items?.[3]?.features?.["1"] || "Admin Panel",
-        t.templates?.items?.[3]?.features?.["2"] || "Blue Theme",
-        t.templates?.items?.[3]?.features?.["3"] || "Full Gallery"
-      ]
+        t.templates?.items?.[3]?.features?.["0"] || "",
+        t.templates?.items?.[3]?.features?.["1"] || "",
+        t.templates?.items?.[3]?.features?.["2"] || "",
+        t.templates?.items?.[3]?.features?.["3"] || ""
+      ].filter(f => f)
     },
     {
       id: "modern-wedding",
-      name: t.templates?.items?.[4]?.name || "Romantic Pink Wedding",
+      name: t.templates?.items?.[4]?.name || "",
       preview: "/template_previews/template-preview-5.jpg",
       demoUrl: "/david-rose-romantic",
       features: [
-        t.templates?.items?.[4]?.features?.["0"] || "Romantic Design",
-        t.templates?.items?.[4]?.features?.["1"] || "Pink Theme",
-        t.templates?.items?.[4]?.features?.["2"] || "Music Player",
-        t.templates?.items?.[4]?.features?.["3"] || "Love Story"
-      ]
+        t.templates?.items?.[4]?.features?.["0"] || "",
+        t.templates?.items?.[4]?.features?.["1"] || "",
+        t.templates?.items?.[4]?.features?.["2"] || "",
+        t.templates?.items?.[4]?.features?.["3"] || ""
+      ].filter(f => f)
     }
-  ];
+  ].filter(t => t.name); // Only include templates that have names
 
   const features = [
     {
       icon: Globe,
-      title: t.features?.items?.[0]?.title || 'Multi-Language Support',
-      description: t.features?.items?.[0]?.description || 'Support for multiple languages'
+      title: t.features?.items?.[0]?.title,
+      description: t.features?.items?.[0]?.description
     },
     {
       icon: Palette,
-      title: t.features?.items?.[3]?.title || 'Easy Customization',
-      description: t.features?.items?.[3]?.description || 'Customize your wedding website'
+      title: t.features?.items?.[3]?.title,
+      description: t.features?.items?.[3]?.description
     },
     {
       icon: Smartphone,
-      title: t.features?.items?.[2]?.title || 'Mobile Responsive',
-      description: t.features?.items?.[2]?.description || 'Works on all devices'
+      title: t.features?.items?.[2]?.title,
+      description: t.features?.items?.[2]?.description
     },
     {
       icon: Users,
-      title: t.features?.items?.[1]?.title || 'Guest Management',
-      description: t.features?.items?.[1]?.description || 'Manage your guest list'
+      title: t.features?.items?.[1]?.title,
+      description: t.features?.items?.[1]?.description
     },
     {
       icon: Camera,
-      title: t.features?.items?.[4]?.title || 'Photo Gallery',
-      description: t.features?.items?.[4]?.description || 'Share your memories'
+      title: t.features?.items?.[4]?.title,
+      description: t.features?.items?.[4]?.description
     },
     {
       icon: Lock,
-      title: t.features?.items?.[5]?.title || 'Secure & Private',
-      description: t.features?.items?.[5]?.description || 'Your data is safe'
+      title: t.features?.items?.[5]?.title,
+      description: t.features?.items?.[5]?.description
     }
-  ];
+  ].filter(f => f.title && f.description); // Only include if both title and description exist
 
   // Helper function to get icon component from icon name
   const getIcon = (iconName: string, size = "w-4 h-4") => {
@@ -354,7 +354,7 @@ export default function MainPage() {
     <div className="min-h-screen bg-gradient-to-br from-cream via-white to-lightGold/20 relative">
       {/* Fixed Background Image */}
       <div 
-        className="fixed inset-0 z-0 opacity-5"
+        className="fixed inset-0 z-0"
         style={{
           backgroundImage: 'url(/attached_assets/floral-background1.jpg)',
           backgroundSize: 'cover',
@@ -372,31 +372,45 @@ export default function MainPage() {
           <div className="flex justify-between items-center h-16">
             <div className="flex items-center">
               <Heart className="h-8 w-8 text-softGold mr-3" />
-              <span className="text-xl font-bold text-charcoal" data-i18n-key="contactSocial.brandName">{t.contactSocial?.brandName || 'WeddingSites'}</span>
+              {t.contactSocial?.brandName && (
+                <span className="text-xl font-bold text-charcoal" data-i18n-key="contactSocial.brandName">
+                  {t.contactSocial.brandName}
+                </span>
+              )}
             </div>
             <div className="hidden md:flex space-x-8">
-              <a href="#features" className="text-charcoal hover:text-softGold transition-colors">
-                <span data-i18n-key="navigation.features">{t.navigation?.features || 'Features'}</span>
-              </a>
-              <Link to="/templates" className="text-charcoal hover:text-softGold transition-colors">
-                <span data-i18n-key="navigation.templates">{t.navigation?.templates || 'Templates'}</span>
-              </Link>
-              <a href="#pricing" className="text-charcoal hover:text-softGold transition-colors">
-                <span data-i18n-key="navigation.pricing">{t.navigation?.pricing || 'Pricing'}</span>
-              </a>
-              <a href="#contact" className="text-charcoal hover:text-softGold transition-colors">
-                <span data-i18n-key="navigation.contact">{t.navigation?.contact || 'Contact'}</span>
-              </a>
+              {t.navigation?.features && (
+                <a href="#features" className="text-charcoal hover:text-softGold transition-colors">
+                  <span data-i18n-key="navigation.features">{t.navigation.features}</span>
+                </a>
+              )}
+              {t.navigation?.templates && (
+                <Link to="/templates" className="text-charcoal hover:text-softGold transition-colors">
+                  <span data-i18n-key="navigation.templates">{t.navigation.templates}</span>
+                </Link>
+              )}
+              {t.navigation?.pricing && (
+                <a href="#pricing" className="text-charcoal hover:text-softGold transition-colors">
+                  <span data-i18n-key="navigation.pricing">{t.navigation.pricing}</span>
+                </a>
+              )}
+              {t.navigation?.contact && (
+                <a href="#contact" className="text-charcoal hover:text-softGold transition-colors">
+                  <span data-i18n-key="navigation.contact">{t.navigation.contact}</span>
+                </a>
+              )}
             </div>
             <div className="flex items-center space-x-4">
               <LanguageSelector />
-              <a 
-                href="#contact" 
-                className="bg-softGold hover:bg-softGold/90 text-white px-4 py-2 rounded-lg transition-colors"
-                data-testid="button-start-today"
-              >
-                <span data-i18n-key="hero.cta">{t.hero?.cta || 'Start Today'}</span>
-              </a>
+              {t.hero?.cta && (
+                <a 
+                  href="#contact" 
+                  className="bg-softGold hover:bg-softGold/90 text-white px-4 py-2 rounded-lg transition-colors"
+                  data-testid="button-start-today"
+                >
+                  <span data-i18n-key="hero.cta">{t.hero.cta}</span>
+                </a>
+              )}
             </div>
           </div>
         </div>
@@ -409,59 +423,71 @@ export default function MainPage() {
         <div className="absolute bottom-20 right-10 w-40 h-40 bg-sageGreen/10 rounded-full blur-xl animate-float" style={{ animationDelay: '1s' }}></div>
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative">
           <div className="text-center animate-fade-in">
-            <h1 
-              className="text-4xl md:text-6xl font-bold text-charcoal mb-6 animate-slide-up"
-              data-i18n-key="hero.title"
-            >
-              {t.hero?.title || 'Create Your Dream Wedding Website'}
-            </h1>
-            <p 
-              className="text-xl text-charcoal/70 mb-8 max-w-3xl mx-auto animate-slide-up" 
-              style={{ animationDelay: '0.2s' }}
-              data-i18n-key="hero.subtitle"
-            >
-              {t.hero?.subtitle || 'Beautiful, customizable wedding websites in minutes'}
-            </p>
+            {t.hero?.title && t.hero.title.trim() && (
+              <h1 
+                className="text-4xl md:text-6xl font-bold text-charcoal mb-6 animate-slide-up"
+                data-i18n-key="hero.title"
+              >
+                {t.hero.title}
+              </h1>
+            )}
+            {t.hero?.subtitle && t.hero.subtitle.trim() && (
+              <p 
+                className="text-xl text-charcoal/70 mb-8 max-w-3xl mx-auto animate-slide-up" 
+                style={{ animationDelay: '0.2s' }}
+                data-i18n-key="hero.subtitle"
+              >
+                {t.hero.subtitle}
+              </p>
+            )}
             <div className="flex flex-col sm:flex-row gap-4 justify-center items-center animate-slide-up" style={{ animationDelay: '0.4s' }}>
-              <Link 
-                to="/templates"
-                className="bg-softGold hover:bg-softGold/90 text-white px-8 py-4 rounded-lg text-lg font-medium transition-all duration-300 transform hover:scale-105 flex items-center"
-              >
-                <span data-i18n-key="hero.viewTemplates">{t.hero?.viewTemplates || 'View Templates'}</span> <ArrowRight className="ml-2 h-5 w-5" />
-              </Link>
-              <a 
-                href="#templates"
-                className="border-2 border-charcoal text-charcoal hover:bg-charcoal hover:text-white px-8 py-4 rounded-lg text-lg font-medium transition-all duration-300 transform hover:scale-105 flex items-center"
-              >
-                <span data-i18n-key="common.viewMore">{t.common?.viewMore || 'View More'}</span> <Eye className="ml-2 h-5 w-5" />
-              </a>
+              {t.hero?.viewTemplates && t.hero.viewTemplates.trim() && (
+                <Link 
+                  to="/templates"
+                  className="bg-softGold hover:bg-softGold/90 text-white px-8 py-4 rounded-lg text-lg font-medium transition-all duration-300 transform hover:scale-105 flex items-center"
+                >
+                  <span data-i18n-key="hero.viewTemplates">{t.hero.viewTemplates}</span> <ArrowRight className="ml-2 h-5 w-5" />
+                </Link>
+              )}
+              {t.common?.viewMore && t.common.viewMore.trim() && (
+                <a 
+                  href="#templates"
+                  className="border-2 border-charcoal text-charcoal hover:bg-charcoal hover:text-white px-8 py-4 rounded-lg text-lg font-medium transition-all duration-300 transform hover:scale-105 flex items-center"
+                >
+                  <span data-i18n-key="common.viewMore">{t.common.viewMore}</span> <Eye className="ml-2 h-5 w-5" />
+                </a>
+              )}
             </div>
           </div>
         </div>
       </section>
 
       {/* Features Section */}
-      <section id="features" className="py-20 bg-white">
+      <section id="features" className="py-20">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-16">
-            <h2 
-              className="text-3xl md:text-4xl font-bold text-charcoal mb-4"
-              data-i18n-key="features.title"
-            >
-              {t.features?.title || 'Features'}
-            </h2>
-            <p 
-              className="text-xl text-charcoal/70 max-w-3xl mx-auto"
-              data-i18n-key="features.subtitle"
-            >
-              {t.features?.subtitle || 'Everything you need for your special day'}
-            </p>
+            {t.features?.title && (
+              <h2 
+                className="text-3xl md:text-4xl font-bold text-charcoal mb-4"
+                data-i18n-key="features.title"
+              >
+                {t.features.title}
+              </h2>
+            )}
+            {t.features?.subtitle && (
+              <p 
+                className="text-xl text-charcoal/70 max-w-3xl mx-auto"
+                data-i18n-key="features.subtitle"
+              >
+                {t.features.subtitle}
+              </p>
+            )}
           </div>
           <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
             {features.map((feature, index) => (
               <div 
                 key={index} 
-                className="bg-gradient-to-br from-cream/50 to-white p-6 rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105 animate-fade-in"
+                className="p-6 rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105 animate-fade-in"
                 style={{ animationDelay: `${index * 0.1}s` }}
               >
                 <feature.icon className="h-12 w-12 text-softGold mb-4" />
@@ -484,21 +510,25 @@ export default function MainPage() {
       </section>
 
       {/* Templates Section */}
-      <section id="templates" className="py-20 bg-gradient-to-br from-lightGold/10 to-cream/30">
+      <section id="templates" className="py-20">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-16">
-            <h2 
-              className="text-3xl md:text-4xl font-bold text-charcoal mb-4"
-              data-i18n-key="templates.title"
-            >
-              {t.templates?.title || 'Choose Your Template'}
-            </h2>
-            <p 
-              className="text-xl text-charcoal/70 max-w-3xl mx-auto"
-              data-i18n-key="templates.subtitle"
-            >
-              {t.templates?.subtitle || 'Select from our beautiful collection'}
-            </p>
+            {t.templates?.title && (
+              <h2 
+                className="text-3xl md:text-4xl font-bold text-charcoal mb-4"
+                data-i18n-key="templates.title"
+              >
+                {t.templates.title}
+              </h2>
+            )}
+            {t.templates?.subtitle && (
+              <p 
+                className="text-xl text-charcoal/70 max-w-3xl mx-auto"
+                data-i18n-key="templates.subtitle"
+              >
+                {t.templates.subtitle}
+              </p>
+            )}
           </div>
           
           {loading ? (
@@ -527,7 +557,7 @@ export default function MainPage() {
             {templates.map((template, index) => (
               <div 
                 key={template.id} 
-                className="bg-white rounded-xl shadow-xl overflow-hidden hover:shadow-2xl transition-all duration-300 hover:scale-105 group"
+                className="rounded-xl shadow-xl overflow-hidden hover:shadow-2xl transition-all duration-300 hover:scale-105 group"
                 style={{ animationDelay: `${index * 0.1}s` }}
               >
                 <div className="relative aspect-video overflow-hidden bg-gray-100">
@@ -561,16 +591,16 @@ export default function MainPage() {
                   </div>
                 </div>
                 <div className="p-6">
-                  <h3 className="text-xl font-bold text-charcoal mb-2" data-i18n-key="templates.name">{template.name}</h3>
+                  <h3 className="text-xl font-bold text-charcoal mb-2" data-i18n-key={`templates.items.${index}.name`}>{t.templates?.items?.[index]?.name || template.name}</h3>
                   <p className="text-charcoal/60 mb-4 text-sm" data-i18n-key="templates.cardSubtitle">{t.templates?.cardSubtitle}</p>
-                  <h4 className="font-semibold text-charcoal mb-3 text-sm" data-i18n-key="templates.featuresLabel">{t.templates?.featuresLabel}:</h4>
-                  <div className="flex flex-wrap gap-2">
+                  {/* <h4 className="font-semibold text-charcoal mb-3 text-sm" data-i18n-key="templates.featuresLabel">{t.templates?.featuresLabel}:</h4> */}
+                  {/* <div className="flex flex-wrap gap-2">
                     {template.features.map((feature: string, idx: number) => (
                       <span key={idx} className="bg-softGold/10 text-softGold px-3 py-1 rounded-full text-sm font-medium border border-softGold/20" data-i18n-key={`templates.feature.${idx}`}>
                         {feature}
                       </span>
                     ))}
-                  </div>
+                  </div> */}
                 </div>
               </div>
             ))}
@@ -579,25 +609,31 @@ export default function MainPage() {
       </section>
 
       {/* Wedding Templates & Pricing Section */}
-      <section id="pricing" className="py-20 bg-gradient-to-br from-slate-50 to-white">
+      <section id="pricing" className="py-20">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-16">
             <div className="inline-flex items-center bg-gradient-to-r from-rose-500 to-pink-500 text-white px-6 py-2 rounded-full text-sm font-medium mb-6">
               <Crown className="w-4 h-4 mr-2" />
-              <span data-i18n-key="templatePlansSection.badge">{t.templatePlansSection?.badge || 'Premium Plans'}</span>
+              {t.templatePlansSection?.badge && (
+                <span data-i18n-key="templatePlansSection.badge">{t.templatePlansSection.badge}</span>
+              )}
             </div>
-            <h2 
-              className="text-4xl md:text-5xl font-bold text-charcoal mb-6"
-              data-i18n-key="templatePlansSection.title"
-            >
-              {t.templatePlansSection?.title || 'Choose Your Perfect Plan'}
-            </h2>
-            <p 
-              className="text-xl text-charcoal/70 max-w-4xl mx-auto leading-relaxed"
-              data-i18n-key="templatePlansSection.subtitle"
-            >
-              {t.templatePlansSection?.subtitle || 'Find the right plan for your wedding'}
-            </p>
+            {t.templatePlansSection?.title && (
+              <h2 
+                className="text-4xl md:text-5xl font-bold text-charcoal mb-6"
+                data-i18n-key="templatePlansSection.title"
+              >
+                {t.templatePlansSection.title}
+              </h2>
+            )}
+            {t.templatePlansSection?.subtitle && (
+              <p 
+                className="text-xl text-charcoal/70 max-w-4xl mx-auto leading-relaxed"
+                data-i18n-key="templatePlansSection.subtitle"
+              >
+                {t.templatePlansSection.subtitle}
+              </p>
+            )}
           </div>
 
           {/* Pricing Cards Grid */}
@@ -608,15 +644,15 @@ export default function MainPage() {
                 className={`relative rounded-2xl p-6 transition-all duration-300 hover:scale-105 ${
                   plan.popular 
                     ? 'bg-gradient-to-br from-emerald-500 to-teal-600 text-white shadow-2xl ring-4 ring-emerald-200 scale-105' 
-                    : 'bg-white border-2 border-gray-200 shadow-lg hover:shadow-xl'
+                    : 'backdrop-blur-sm border-2 border-gray-200 shadow-lg hover:shadow-xl'
                 }`}
               >
                 {plan.badge && (
-                  <div className="absolute -top-3 left-1/2 transform -translate-x-1/2">
-                    <span className={`px-4 py-1.5 rounded-full text-xs font-bold text-white ${
+                  <div className="absolute -top-3 left-1/2 transform -translate-x-1/2 z-10">
+                    <span className={`px-5 py-2 rounded-full text-xs font-bold text-white shadow-lg backdrop-blur-sm border border-white/20 ${
                       plan.badgeColor?.includes('gradient') 
                         ? plan.badgeColor 
-                        : plan.badgeColor || 'bg-blue-500'
+                        : plan.badgeColor || 'bg-gradient-to-r from-blue-500 to-blue-600'
                     }`} data-i18n-key={`templatePlans.plans.${index}.badge`}>
                       {plan.badge}
                     </span>
@@ -677,15 +713,15 @@ export default function MainPage() {
           </div>
 
           {/* Feature Comparison Table */}
-          <div className="bg-white rounded-2xl shadow-2xl overflow-hidden">
-            <div className="bg-gradient-to-r from-slate-800 to-slate-900 text-white p-6">
+          <div className="bg-white/30 backdrop-blur-md rounded-2xl shadow-2xl overflow-hidden border border-white/20">
+            <div className="bg-gradient-to-r from-slate-800/90 to-slate-900/90 backdrop-blur-sm text-white p-6">
               <h3 className="text-2xl font-bold text-center" data-i18n-key="templatePlans.comparisonTitle">{t.templatePlans?.comparisonTitle}</h3>
               <p className="text-center text-slate-300 mt-2" data-i18n-key="templatePlans.comparisonSubtitle">{t.templatePlans?.comparisonSubtitle}</p>
             </div>
             
             <div className="overflow-x-auto">
               <table className="w-full">
-                <thead className="bg-slate-50">
+                <thead className="bg-slate-50/20 backdrop-blur-sm">
                   <tr>
                     <th className="text-left p-4 font-semibold text-charcoal" data-i18n-key="templatePlans.featuresHeader">{t.templatePlans?.featuresHeader}</th>
                     {templatePlans.map((plan, planIdx) => (
@@ -700,7 +736,7 @@ export default function MainPage() {
                 </thead>
                 <tbody>
                   {templatePlans[0].features.map((featureTemplate, idx) => (
-                    <tr key={idx} className={idx % 2 === 0 ? 'bg-white' : 'bg-slate-50'}>
+                    <tr key={idx} className={idx % 2 === 0 ? 'bg-white/10' : 'bg-slate-50/10'}>
                       <td className="p-4 font-medium text-charcoal">
                         <div className="flex items-center">
                           {featureTemplate.icon}
@@ -733,45 +769,55 @@ export default function MainPage() {
 
           {/* FAQ Section */}
           <div className="mt-20">
-            <h3 className="text-3xl font-bold text-center text-charcoal mb-12" data-i18n-key="faq.title">{t.faq?.title}</h3>
+            <h3 className="text-3xl font-bold text-center text-charcoal mb-12" data-i18n-key="faq.title">
+              {t.faq?.title || "Frequently Asked Questions"}
+            </h3>
             <div className="max-w-4xl mx-auto space-y-6">
-              <div className="bg-white rounded-xl p-6 shadow-lg">
+              <div className="backdrop-blur-sm rounded-xl p-6 shadow-lg">
                 <h4 className="text-lg font-semibold text-charcoal mb-3 flex items-center">
                   <Gift className="w-5 h-5 mr-2 text-rose-500" />
-                  <span data-i18n-key="faq.items.0.question">{t.faq?.items?.[0]?.question}</span>
+                  <span data-i18n-key="faq.items.0.question">
+                    {t.faq?.items?.[0]?.question || "What's included in each plan?"}
+                  </span>
                 </h4>
                 <p className="text-charcoal/70" data-i18n-key="faq.items.0.answer">
-                  {t.faq?.items?.[0]?.answer}
+                  {t.faq?.items?.[0]?.answer || "Each plan includes a beautifully designed wedding website template, RSVP functionality, and guest management. Higher tiers add premium features like photo galleries, music integration, admin panels, and physical QR code cards."}
                 </p>
               </div>
               
-              <div className="bg-white rounded-xl p-6 shadow-lg">
+              <div className="backdrop-blur-sm rounded-xl p-6 shadow-lg">
                 <h4 className="text-lg font-semibold text-charcoal mb-3 flex items-center">
                   <Settings className="w-5 h-5 mr-2 text-rose-500" />
-                  <span data-i18n-key="faq.items.1.question">{t.faq?.items?.[1]?.question}</span>
+                  <span data-i18n-key="faq.items.1.question">
+                    {t.faq?.items?.[1]?.question || "Can I customize my template?"}
+                  </span>
                 </h4>
                 <p className="text-charcoal/70" data-i18n-key="faq.items.1.answer">
-                  {t.faq?.items?.[1]?.answer}
+                  {t.faq?.items?.[1]?.answer || "Absolutely! All templates are fully customizable. You can change colors, fonts, content, photos, and layout elements to match your wedding style. Professional and higher plans include an admin panel for easy customization."}
                 </p>
               </div>
               
-              <div className="bg-white rounded-xl p-6 shadow-lg">
+              <div className="backdrop-blur-sm rounded-xl p-6 shadow-lg">
                 <h4 className="text-lg font-semibold text-charcoal mb-3 flex items-center">
                   <QrCode className="w-5 h-5 mr-2 text-rose-500" />
-                  <span data-i18n-key="faq.items.2.question">{t.faq?.items?.[2]?.question}</span>
+                  <span data-i18n-key="faq.items.2.question">
+                    {t.faq?.items?.[2]?.question || "What are QR Code Cards?"}
+                  </span>
                 </h4>
                 <p className="text-charcoal/70" data-i18n-key="faq.items.2.answer">
-                  {t.faq?.items?.[2]?.answer}
+                  {t.faq?.items?.[2]?.answer || "QR Code Cards are physical cards with QR codes that link directly to your wedding website. Perfect for wedding invitations, table settings, or save-the-dates. Premium includes 50 cards, Ultimate includes 100 cards."}
                 </p>
               </div>
               
-              <div className="bg-white rounded-xl p-6 shadow-lg">
+              <div className="backdrop-blur-sm rounded-xl p-6 shadow-lg">
                 <h4 className="text-lg font-semibold text-charcoal mb-3 flex items-center">
                   <Calendar className="w-5 h-5 mr-2 text-rose-500" />
-                  <span data-i18n-key="faq.items.3.question">{t.faq?.items?.[3]?.question}</span>
+                  <span data-i18n-key="faq.items.3.question">
+                    {t.faq?.items?.[3]?.question || "How do I manage RSVPs?"}
+                  </span>
                 </h4>
                 <p className="text-charcoal/70" data-i18n-key="faq.items.3.answer">
-                  {t.faq?.items?.[3]?.answer}
+                  {t.faq?.items?.[3]?.answer || "All plans include RSVP functionality where guests can confirm attendance and meal preferences. You can export guest lists and track responses in real-time through your website dashboard."}
                 </p>
               </div>
             </div>
@@ -780,16 +826,24 @@ export default function MainPage() {
       </section>
 
       {/* Contact Section */}
-      <section id="contact" className="py-20 bg-gradient-to-br from-charcoal to-charcoal/90 text-white">
+      <section id="contact" className="py-20 backdrop-blur-sm">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center">
-            <h2 className="text-3xl md:text-4xl font-bold mb-4" data-i18n-key="contactSection.title">
-              {t.contactSection?.title}
-            </h2>
-            <p className="text-xl text-white/80 mb-8 max-w-3xl mx-auto" data-i18n-key="contactSection.subtitle">
-              {t.contactSection?.subtitle}
-            </p>
-            <p className="text-lg text-white/70 mb-6" data-i18n-key="contactSocial.description">{t.contactSocial?.description}</p>
+            {t.contactSection?.title && (
+              <h2 className="text-3xl md:text-4xl font-bold mb-4 text-charcoal" data-i18n-key="contactSection.title">
+                {t.contactSection.title}
+              </h2>
+            )}
+            {t.contactSection?.subtitle && (
+              <p className="text-xl text-charcoal/80 mb-8 max-w-3xl mx-auto" data-i18n-key="contactSection.subtitle">
+                {t.contactSection.subtitle}
+              </p>
+            )}
+            {t.contactSocial?.description && (
+              <p className="text-lg text-charcoal/70 mb-6" data-i18n-key="contactSocial.description">
+                {t.contactSocial.description}
+              </p>
+            )}
             <div className="flex flex-col sm:flex-row gap-4 justify-center items-center flex-wrap">
               <a 
                 href="https://www.instagram.com/weddingsites_am" 
@@ -918,7 +972,9 @@ export default function MainPage() {
             </div>
           </div>
           <div className="border-t border-white/20 mt-8 pt-8 text-center text-white/70">
-            <p data-i18n-key="footer.copyright">{t.footer?.copyright || '© 2024 WeddingSites. All rights reserved.'}</p>
+            {t.footer?.copyright && (
+              <p data-i18n-key="footer.copyright">{t.footer.copyright}</p>
+            )}
           </div>
         </div>
       </footer>

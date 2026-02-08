@@ -40,6 +40,11 @@ interface TranslationPricingPlan {
 }
 
 interface TranslationSections {
+  common: {
+    viewMore: string;
+    learnMore: string;
+    getStarted: string;
+  };
   hero: {
     title: string;
     subtitle: string;
@@ -59,6 +64,9 @@ interface TranslationSections {
     templateLabel: string;
     cardSubtitle: string;
     featuresLabel: string;
+    items: Array<{
+      name: string;
+    }>;
     commonFeatures: {
       natureTheme: string;
       greenColors: string;
@@ -98,6 +106,11 @@ interface TranslationSections {
 }
 
 const defaultTranslations: TranslationSections = {
+  common: {
+    viewMore: "Տեսնել Ավելին",
+    learnMore: "Իմանալ Ավելին",
+    getStarted: "Սկսել"
+  },
   hero: {
     title: "Ստեղծեք Ձեր Կատարյալ Հարսանեկան Կայքը",
     subtitle: "Գեղեցիկ, հարմարեցվող հարսանեկան հրավիրատոմսերի կայքեր, որոնք արտահայտում են ձեր սիրո պատմությունը",
@@ -124,6 +137,13 @@ const defaultTranslations: TranslationSections = {
     templateLabel: "Ձևանմուշ",
     cardSubtitle: "Կենդանի Նախադիտում Հասանելի է • Բջջային Հարմարեցված",
     featuresLabel: "Հնարավորություններ",
+    items: [
+      { name: "Ձևանմուշ 1" },
+      { name: "Ձևանմուշ 2" },
+      { name: "Ձևանմուշ 3" },
+      { name: "Ձևանմուշ 4" },
+      { name: "Ձևանմուշ 5" }
+    ],
     commonFeatures: {
       natureTheme: "Nature Theme",
       greenColors: "Green Colors",
@@ -324,47 +344,72 @@ export default function PlatformTranslations() {
           const langData = data[currentLanguage];
           console.log('Language data structure:', JSON.stringify(langData, null, 2));
           if (langData) {
-            // Deep merge API data with defaults to ensure all nested fields exist
+            // Ensure structure exists with empty strings for missing fields
+            // Preserve ALL values from API (including empty strings) without overwriting
+            const ensureStructure = (base: any, data: any) => {
+              if (!data) return base;
+              const result = { ...base };
+              for (const key in data) {
+                if (typeof data[key] === 'object' && !Array.isArray(data[key])) {
+                  result[key] = ensureStructure(result[key] || {}, data[key]);
+                } else {
+                  result[key] = data[key]; // Preserve original value including ""
+                }
+              }
+              return result;
+            };
+            
             const mergedConfig = {
-              hero: { ...defaultTranslations.hero, ...langData.hero },
-              features: { 
-                ...defaultTranslations.features, 
-                ...langData.features,
-                items: langData.features?.items || defaultTranslations.features.items
+              common: ensureStructure({ viewMore: '', learnMore: '', getStarted: '' }, langData.common),
+              hero: ensureStructure({ title: '', subtitle: '', ctaButton: '', viewTemplatesButton: '' }, langData.hero),
+              features: {
+                title: langData.features?.title ?? '',
+                subtitle: langData.features?.subtitle ?? '',
+                items: langData.features?.items || []
               },
-              templates: { ...defaultTranslations.templates, ...langData.templates },
-              pricing: { 
-                ...defaultTranslations.pricing, 
-                ...langData.pricing,
-                plans: langData.pricing?.plans || defaultTranslations.pricing.plans
+              templates: {
+                title: langData.templates?.title ?? '',
+                subtitle: langData.templates?.subtitle ?? '',
+                loadingText: langData.templates?.loadingText ?? '',
+                viewDemoButton: langData.templates?.viewDemoButton ?? '',
+                templateLabel: langData.templates?.templateLabel ?? '',
+                cardSubtitle: langData.templates?.cardSubtitle ?? '',
+                featuresLabel: langData.templates?.featuresLabel ?? '',
+                items: langData.templates?.items || [],
+                commonFeatures: langData.templates?.commonFeatures || {}
               },
-              faq: { 
-                ...defaultTranslations.faq, 
-                ...langData.faq,
-                items: langData.faq?.items || defaultTranslations.faq.items
+              pricing: {
+                title: langData.pricing?.title ?? '',
+                subtitle: langData.pricing?.subtitle ?? '',
+                plans: langData.pricing?.plans || []
               },
-              contact: { ...defaultTranslations.contact, ...langData.contact },
+              faq: {
+                title: langData.faq?.title ?? '',
+                items: langData.faq?.items || []
+              },
+              contact: ensureStructure({ title: '', subtitle: '', ctaButton: '' }, langData.contact),
               footer: {
-                ...defaultTranslations.footer,
-                ...langData.footer,
+                about: langData.footer?.about ?? '',
                 services: {
-                  ...defaultTranslations.footer.services,
-                  ...langData.footer?.services,
-                  items: langData.footer?.services?.items || defaultTranslations.footer.services.items
+                  title: langData.footer?.services?.title ?? '',
+                  items: langData.footer?.services?.items || []
                 },
                 contact: {
-                  ...defaultTranslations.footer.contact,
-                  ...langData.footer?.contact,
-                  items: langData.footer?.contact?.items || defaultTranslations.footer.contact.items
-                }
+                  title: langData.footer?.contact?.title ?? '',
+                  items: langData.footer?.contact?.items || []
+                },
+                copyright: langData.footer?.copyright ?? ''
               }
             };
             setTranslations(mergedConfig);
           } else {
             console.log('No translation data for language:', currentLanguage);
+            // Only use defaults if API has no data at all
+            setTranslations(defaultTranslations);
           }
         } else {
           console.log('API returned non-OK status, using defaults');
+          setTranslations(defaultTranslations);
         }
       } catch (error) {
         console.log('Using default translations due to error:', error);
@@ -507,6 +552,10 @@ export default function PlatformTranslations() {
       const updates = flattenObject(translations);
 
       console.log(`Saving ${Object.keys(updates).length} translation keys...`);
+      console.log('🔍 DEBUG: Checking common section:', {
+        'translations.common': translations.common,
+        'updates["common.viewMore"]': updates['common.viewMore']
+      });
 
       const response = await fetch(`/api/translations/bulk`, {
         method: 'POST',
@@ -524,13 +573,17 @@ export default function PlatformTranslations() {
       const result = await response.json();
       console.log('Save result:', result);
 
-      toast({ title: "Saved!", description: result.message || "Translations saved successfully" });
+      toast({ 
+        title: "✅ Saved Successfully!", 
+        description: "Translations saved. This page will reload. Refresh other tabs to see changes.",
+        duration: 3000
+      });
       setHasChanges(false);
       
       // Reload translations from database to confirm changes
       setTimeout(() => {
         window.location.reload();
-      }, 1000);
+      }, 2000);
     } catch (error) {
       console.error('Save error:', error);
       toast({ title: "Error", description: "Failed to save translations", variant: "destructive" });
@@ -662,10 +715,10 @@ export default function PlatformTranslations() {
                     <span 
                       contentEditable 
                       suppressContentEditableWarning
-                      onBlur={(e) => updateSection('hero', 'viewTemplatesButton', e.currentTarget.textContent || '')}
+                      onBlur={(e) => updateSection('common', 'viewMore', e.currentTarget.textContent || '')}
                       className="outline-none"
                     >
-                      {translations.hero.viewTemplatesButton}
+                      {translations.common.viewMore}
                     </span>
                     <Eye className="ml-2 h-5 w-5" />
                     <Edit2 className="w-4 h-4 absolute -right-6 top-1/2 -translate-y-1/2 text-blue-500 opacity-0 group-hover:opacity-100 transition-opacity" />
@@ -788,7 +841,17 @@ export default function PlatformTranslations() {
                       </div>
                     </div>
                     <div className="p-6">
-                      <h3 className="text-xl font-bold text-gray-800 mb-2">Template 1</h3>
+                      <input
+                        type="text"
+                        value={translations.templates.items?.[0]?.name || 'Template 1'}
+                        onChange={(e) => {
+                          const newItems = [...(translations.templates.items || [])];
+                          if (!newItems[0]) newItems[0] = { name: '' };
+                          newItems[0].name = e.target.value;
+                          updateSection('templates', 'items', newItems);
+                        }}
+                        className="text-xl font-bold text-gray-800 mb-2 w-full bg-transparent border-2 border-transparent hover:border-blue-300 focus:border-blue-500 focus:outline-none rounded px-2 py-1"
+                      />
                       <input
                         type="text"
                         value={translations.templates.cardSubtitle}
@@ -858,7 +921,17 @@ export default function PlatformTranslations() {
                       </div>
                     </div>
                     <div className="p-6">
-                      <h3 className="text-xl font-bold text-gray-800 mb-2">Template 2</h3>
+                      <input
+                        type="text"
+                        value={translations.templates.items?.[1]?.name || 'Template 2'}
+                        onChange={(e) => {
+                          const newItems = [...(translations.templates.items || [])];
+                          if (!newItems[1]) newItems[1] = { name: '' };
+                          newItems[1].name = e.target.value;
+                          updateSection('templates', 'items', newItems);
+                        }}
+                        className="text-xl font-bold text-gray-800 mb-2 w-full bg-transparent border-2 border-transparent hover:border-blue-300 focus:border-blue-500 focus:outline-none rounded px-2 py-1"
+                      />
                       <input
                         type="text"
                         value={translations.templates.cardSubtitle}
@@ -922,7 +995,17 @@ export default function PlatformTranslations() {
                       </div>
                     </div>
                     <div className="p-6">
-                      <h3 className="text-xl font-bold text-gray-800 mb-2">Template 3</h3>
+                      <input
+                        type="text"
+                        value={translations.templates.items?.[2]?.name || 'Template 3'}
+                        onChange={(e) => {
+                          const newItems = [...(translations.templates.items || [])];
+                          if (!newItems[2]) newItems[2] = { name: '' };
+                          newItems[2].name = e.target.value;
+                          updateSection('templates', 'items', newItems);
+                        }}
+                        className="text-xl font-bold text-gray-800 mb-2 w-full bg-transparent border-2 border-transparent hover:border-blue-300 focus:border-blue-500 focus:outline-none rounded px-2 py-1"
+                      />
                       <input
                         type="text"
                         value={translations.templates.cardSubtitle}
@@ -986,7 +1069,17 @@ export default function PlatformTranslations() {
                       </div>
                     </div>
                     <div className="p-6">
-                      <h3 className="text-xl font-bold text-gray-800 mb-2">Template 4</h3>
+                      <input
+                        type="text"
+                        value={translations.templates.items?.[3]?.name || 'Template 4'}
+                        onChange={(e) => {
+                          const newItems = [...(translations.templates.items || [])];
+                          if (!newItems[3]) newItems[3] = { name: '' };
+                          newItems[3].name = e.target.value;
+                          updateSection('templates', 'items', newItems);
+                        }}
+                        className="text-xl font-bold text-gray-800 mb-2 w-full bg-transparent border-2 border-transparent hover:border-blue-300 focus:border-blue-500 focus:outline-none rounded px-2 py-1"
+                      />
                       <input
                         type="text"
                         value={translations.templates.cardSubtitle}
@@ -1050,7 +1143,17 @@ export default function PlatformTranslations() {
                       </div>
                     </div>
                     <div className="p-6">
-                      <h3 className="text-xl font-bold text-gray-800 mb-2">Template 5</h3>
+                      <input
+                        type="text"
+                        value={translations.templates.items?.[4]?.name || 'Template 5'}
+                        onChange={(e) => {
+                          const newItems = [...(translations.templates.items || [])];
+                          if (!newItems[4]) newItems[4] = { name: '' };
+                          newItems[4].name = e.target.value;
+                          updateSection('templates', 'items', newItems);
+                        }}
+                        className="text-xl font-bold text-gray-800 mb-2 w-full bg-transparent border-2 border-transparent hover:border-blue-300 focus:border-blue-500 focus:outline-none rounded px-2 py-1"
+                      />
                       <input
                         type="text"
                         value={translations.templates.cardSubtitle}

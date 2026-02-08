@@ -25,6 +25,7 @@ import PlatformDashboard from "@/pages/platform-dashboard";
 import TemplateRenderer from "@/components/template-renderer";
 import TemplateAdminPanel from "@/components/template-admin-panel";
 import TemplateIdentifierGuard from "@/components/TemplateIdentifierGuard";
+import ComingSoon from "@/pages/coming-soon";
 
 function Router() {
   return (
@@ -92,6 +93,25 @@ function App() {
   const [maintenanceBypassed, setMaintenanceBypassed] = useState(false);
   const [maintenanceEnabled, setMaintenanceEnabled] = useState(false);
   const [loading, setLoading] = useState(true);
+
+  // Check if site is unlocked
+  const isUnlocked = typeof window !== 'undefined' && localStorage.getItem('site-unlocked') === 'true';
+  
+  // Show coming soon page if not unlocked
+  if (!isUnlocked) {
+    return (
+      <QueryClientProvider client={queryClient}>
+        <ArmenianFontProvider>
+          <LanguageProvider>
+            <TooltipProvider>
+              <Toaster />
+              <ComingSoon />
+            </TooltipProvider>
+          </LanguageProvider>
+        </ArmenianFontProvider>
+      </QueryClientProvider>
+    );
+  }
 
   // Check maintenance status from server and bypass conditions
   useEffect(() => {
