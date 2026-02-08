@@ -84,7 +84,7 @@ export function LanguageProvider({ children }: LanguageProviderProps) {
   // Load translations on mount
   useEffect(() => {
     fetchTranslations();
-  }, []);
+  }, [currentLanguage]);
 
   // Save language preference to localStorage
   useEffect(() => {
@@ -94,7 +94,6 @@ export function LanguageProvider({ children }: LanguageProviderProps) {
   }, [currentLanguage]);
 
   const setLanguage = (language: Language) => {
-    setIsLoading(true);
     setCurrentLanguage(language);
   };
 
