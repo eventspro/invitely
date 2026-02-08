@@ -15,8 +15,8 @@
     "db:generate": "drizzle-kit generate",
     "postbuild": "cp -r public/attached_assets dist/ 2>/dev/null || xcopy public\\attached_assets dist\\attached_assets /E /I /Q 2>nul || echo 'Assets copy completed'",
     "deploy:staging": "cross-env NODE_ENV=staging npm run build && vercel --local-config vercel.staging.json --prod",
-    "deploy:production": "cross-env NODE_ENV=production npm run build && pwsh -File deploy.ps1",
-    "deploy": "pwsh -File deploy.ps1",
+    "deploy:production": "cross-env NODE_ENV=production npm run build && powershell -ExecutionPolicy Bypass -File deploy.ps1",
+    "deploy": "powershell -ExecutionPolicy Bypass -File deploy.ps1",
     "staging:dev": "cross-env NODE_ENV=staging tsx server/index.ts",
     "staging:build": "cross-env NODE_ENV=staging npm run build"
   },
