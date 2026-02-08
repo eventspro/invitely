@@ -3,6 +3,10 @@
 
 Write-Host "Deploying to production..." -ForegroundColor Cyan
 
+# Build first
+Write-Host "Building project..." -ForegroundColor Yellow
+npm run build
+
 # Deploy to production
 Write-Host "Deploying to Vercel..." -ForegroundColor Yellow
 $deployOutput = vercel --prod 2>&1 | Out-String
