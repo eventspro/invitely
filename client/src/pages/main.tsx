@@ -351,7 +351,21 @@ export default function MainPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-cream via-white to-lightGold/20">
+    <div className="min-h-screen bg-gradient-to-br from-cream via-white to-lightGold/20 relative">
+      {/* Fixed Background Image */}
+      <div 
+        className="fixed inset-0 z-0 opacity-5"
+        style={{
+          backgroundImage: 'url(/attached_assets/floral-background1.jpg)',
+          backgroundSize: 'cover',
+          backgroundPosition: 'center',
+          backgroundRepeat: 'no-repeat',
+          backgroundAttachment: 'fixed'
+        }}
+      />
+      
+      {/* Content wrapper with relative positioning */}
+      <div className="relative z-10">
       {/* Navigation */}
       <nav className="bg-white/90 backdrop-blur-sm shadow-sm sticky top-0 z-50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -908,6 +922,7 @@ export default function MainPage() {
           </div>
         </div>
       </footer>
+      </div>
     </div>
   );
 }
