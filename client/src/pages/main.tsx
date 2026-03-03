@@ -351,7 +351,13 @@ export default function MainPage() {
   }
 
   return (
-    <div className="min-h-screen">
+    /* translateZ(0) on root: creates a GPU compositing context so Chrome correctly
+       stacks the position:fixed background (z-index:0) below the content (z-index:1)
+       without the fixed layer sinking below body paint. */
+    <div
+      className="min-h-screen"
+      style={{ transform: 'translateZ(0)' }}
+    >
       {/* Fixed background — z-index: 0 (positive) so Chrome mobile composites it
           correctly. Content wrapper uses z-index: 1 to sit above it.            
           Sibling of content (not a parent) to avoid Chrome fixed-parent viewport bug. */}
@@ -433,12 +439,13 @@ export default function MainPage() {
       </nav>
 
       {/* Hero Section */}
-      {/* overflow-hidden and blur-xl removed: they created a GPU compositor layer in Chrome
-          that occluded the position:fixed background behind it. Orb tint is preserved. */}
+      {/* overflow-hidden removed (causes Chrome GPU compositor layer to occlude fixed bg).
+          blur-xl kept on sm+ only — mobile base uses blur-0 to avoid the same
+          compositor promotion on Chrome for Android/iOS Chrome. Safari unaffected. */}
       <section className="relative py-20">
         <div className="absolute inset-0 bg-gradient-to-br from-softGold/10 via-transparent to-sageGreen/10"></div>
-        <div className="absolute top-20 left-10 w-32 h-32 bg-softGold/10 rounded-full animate-float"></div>
-        <div className="absolute bottom-20 right-10 w-40 h-40 bg-sageGreen/10 rounded-full animate-float" style={{ animationDelay: '1s' }}></div>
+        <div className="absolute top-20 left-10 w-32 h-32 bg-softGold/10 rounded-full blur-0 sm:blur-xl animate-float"></div>
+        <div className="absolute bottom-20 right-10 w-40 h-40 bg-sageGreen/10 rounded-full blur-0 sm:blur-xl animate-float" style={{ animationDelay: '1s' }}></div>
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative">
           <div className="text-center animate-fade-in">
             {t.hero?.title && t.hero.title.trim() && (
