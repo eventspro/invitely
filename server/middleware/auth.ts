@@ -39,10 +39,21 @@ export interface AuthenticatedRequest extends Request {
 
 const JWT_SECRET = process.env.JWT_SECRET;
 if (!JWT_SECRET) {
-  throw new Error('JWT_SECRET environment variable is required. The server cannot start without it.');
+  // Log a warning but do NOT throw at module level — a module-level throw crashes
+  // every Vercel serverless function invocation, including completely public routes
+  // like /api/templates and /api/translations. Auth functions will throw lazily.
+  console.error('[auth] CRITICAL: JWT_SECRET environment variable is not set. Auth-protected routes will fail, but public routes remain available.');
 }
 const JWT_EXPIRES_IN = '7d';
 const BCRYPT_ROUNDS = 12;
+
+// Lazy getter — throws only when an auth function is actually invoked
+function requireJwtSecret(): string {
+  if (!JWT_SECRET) {
+    throw new Error('JWT_SECRET environment variable is required for authentication. Set it in Vercel environment variables and redeploy.');
+  }
+  return JWT_SECRET;
+}
 
 // Password hashing utilities
 export const hashPassword = async (password: string): Promise<string> => {
@@ -60,12 +71,12 @@ export const generateToken = (userId: string, email: string, additionalPayload?:
     email,
     ...additionalPayload 
   };
-  return jwt.sign(payload, JWT_SECRET, { expiresIn: JWT_EXPIRES_IN });
+  return jwt.sign(payload, requireJwtSecret(), { expiresIn: JWT_EXPIRES_IN });
 };
 
 export const verifyToken = (token: string): any | null => {
   try {
-    return jwt.verify(token, JWT_SECRET);
+    return jwt.verify(token, requireJwtSecret());
   } catch (error) {
     return null;
   }

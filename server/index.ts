@@ -151,6 +151,16 @@ app.get("/health", (_req, res) => {
   res.status(200).json({ status: "ok" });
 });
 
+// Env diagnostics — shows WHICH vars are present (never values), helps debug Vercel env issues
+app.get("/api/env-check", (_req, res) => {
+  const vars = ["DATABASE_URL", "JWT_SECRET", "BREVO_API_KEY", "NODE_ENV", "VERCEL", "PORT"];
+  const status: Record<string, boolean> = {};
+  for (const v of vars) {
+    status[v] = !!(process.env[v] && process.env[v]!.length > 0);
+  }
+  res.status(200).json({ envPresent: status });
+});
+
 // Test endpoint — minimal response
 app.get("/api/test", (_req, res) => {
   res.status(200).json({ status: "ok", message: "Server is running" });
