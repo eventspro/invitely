@@ -351,34 +351,23 @@ export default function MainPage() {
   }
 
   return (
-    <div className="min-h-screen">
-      {/* Fixed background — z-index: 0 (positive) so Chrome mobile composites it
-          correctly. Content wrapper uses z-index: 1 to sit above it.            
-          Sibling of content (not a parent) to avoid Chrome fixed-parent viewport bug. */}
+    <div className="relative min-h-screen transform-gpu">
+      {/* Fixed background — -z-10 keeps it below all content without relying on
+          inline zIndex. CSS background-image avoids an extra compositor layer
+          that the native <img> approach caused on Chrome mobile. will-change-transform
+          promotes this layer independently so fixed positioning is stable. */}
       <div
         aria-hidden="true"
+        className="fixed inset-0 -z-10 pointer-events-none will-change-transform"
         style={{
-          position: 'fixed',
-          inset: 0,
-          zIndex: 0,
-          overflow: 'hidden',
+          backgroundImage: `url(/attached_assets/floral-background1.jpg)`,
+          backgroundSize: 'cover',
+          backgroundPosition: 'center',
+          backgroundRepeat: 'no-repeat',
         }}
-      >
-        <img
-          src="/attached_assets/floral-background1.jpg"
-          alt=""
-          fetchPriority="high"
-          style={{
-            width: '100%',
-            height: '100%',
-            objectFit: 'cover',
-            objectPosition: 'center top',
-            display: 'block',
-          }}
-        />
-      </div>
-      {/* Content wrapper — must be positioned above the z-0 background */}
-      <div className="relative" style={{ zIndex: 1 }}>
+      />
+      {/* Content wrapper */}
+      <div className="relative z-10">
       {/* Navigation */}
       <nav className="bg-white/90 backdrop-blur-sm shadow-sm sticky top-0 z-50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
