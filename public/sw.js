@@ -1,5 +1,5 @@
 // Wedding Photo PWA Service Worker
-const CACHE_NAME = 'wedding-photos-v1';
+const CACHE_NAME = 'wedding-photos-v2';
 const OFFLINE_CACHE = 'wedding-photos-offline-v1';
 
 // Files to cache for offline functionality
@@ -8,7 +8,7 @@ const urlsToCache = [
   '/photos',
   '/static/js/bundle.js',
   '/static/css/main.css',
-  '/favicon.png',
+  '/favicon1.png',
   '/manifest.json'
 ];
 

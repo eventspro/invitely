@@ -219,9 +219,8 @@ export default function TemplatesPage() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center h-16">
             <div className="flex items-center">
-              <Heart className="h-8 w-8 text-rose-500 mr-3" />
-              <Link to="/" className="text-xl font-bold text-gray-900 hover:text-rose-500 transition-colors">
-                WeddingSites
+              <Link to="/" className="flex items-center">
+                <img src="/Logo.png" alt="4ever.am" className="h-16 w-auto" />
               </Link>
             </div>
             <div className="hidden md:flex space-x-8">
@@ -355,7 +354,7 @@ export default function TemplatesPage() {
                       className="w-full flex items-center gap-2"
                     >
                       <Eye className="w-4 h-4" />
-                      Preview Template
+                      {t.templatesPage?.previewTemplate || "Preview Template"}
                     </Button>
                     <Button
                       onClick={() => handleSelectPlan(plan.id)}
@@ -367,7 +366,7 @@ export default function TemplatesPage() {
                           : ''
                       }`}
                     >
-                      Choose Plan
+                      {t.templatesPage?.choosePlan || "Choose Plan"}
                       <ArrowRight className="w-4 h-4" />
                     </Button>
                   </div>
@@ -383,13 +382,13 @@ export default function TemplatesPage() {
       {!isLoading && templatePlans.length > 0 && (
       <section className="py-20 px-4 bg-white">
         <div className="max-w-7xl mx-auto">
-          <h2 className="text-4xl font-bold text-center mb-12">Feature Comparison</h2>
+          <h2 className="text-4xl font-bold text-center mb-12">{t.templatesPage?.comparisonTitle || "Feature Comparison"}</h2>
           
           <div className="overflow-x-auto">
             <table className="w-full border-collapse bg-white rounded-lg shadow-lg overflow-hidden">
               <thead>
                 <tr className="bg-gray-50">
-                  <th className="p-4 text-left font-semibold">Features</th>
+                  <th className="p-4 text-left font-semibold">{t.templatesPage?.featuresHeader || "Features"}</th>
                   {templatePlans.map((plan) => (
                     <th key={plan.id} className="p-4 text-center font-semibold min-w-[150px]">
                       {plan.name}

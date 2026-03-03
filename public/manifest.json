@@ -1,8 +1,8 @@
 {
-  "name": "Հարություն & Տաթև Wedding Photos",
-  "short_name": "Wedding Photos",
-  "description": "Share your beautiful memories from Harut & Tatev's wedding day",
-  "start_url": "/photos",
+  "name": "4ever.am - Հայկական Հարսանեկան Հրավիրատոմսեր",
+  "short_name": "4ever.am",
+  "description": "Գեղեցիկ հայկական հարսանեկան կայքեր",
+  "start_url": "/",
   "display": "standalone",
   "background_color": "#F8F6F1",
   "theme_color": "#DAA520",
@@ -12,25 +12,25 @@
   "categories": ["photo", "social"],
   "icons": [
     {
-      "src": "/favicon.png",
+      "src": "/favicon1.png",
       "sizes": "192x192",
       "type": "image/png"
     },
     {
-      "src": "/favicon.png",
+      "src": "/favicon1.png",
       "sizes": "512x512",
       "type": "image/png"
     }
   ],
   "screenshots": [
     {
-      "src": "/favicon.png",
+      "src": "/favicon1.png",
       "sizes": "1280x720",
       "type": "image/png",
       "form_factor": "wide"
     },
     {
-      "src": "/favicon.png",
+      "src": "/favicon1.png",
       "sizes": "750x1334",
       "type": "image/png",
       "form_factor": "narrow"

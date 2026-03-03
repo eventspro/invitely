@@ -80,7 +80,11 @@ router.post("/platform-settings", authenticateUser, async (req, res) => {
 
     const [newSetting] = await db
       .insert(platformSettings)
-      .values(validatedData)
+      .values({
+        key: validatedData.key,
+        value: validatedData.value!,
+        description: validatedData.description,
+      })
       .returning();
 
     res.status(201).json(newSetting);

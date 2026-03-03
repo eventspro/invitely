@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+﻿import { useState, useEffect } from "react";
 import { Link } from "wouter";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -87,6 +87,34 @@ interface TranslationSections {
     title: string;
     subtitle: string;
     plans: TranslationPricingPlan[];
+  };
+  templatePlansSection: {
+    badge: string;
+    title: string;
+    subtitle: string;
+    planDescriptions: {
+      basic: string;
+      standard: string;
+      premium: string;
+      deluxe: string;
+    };
+    planBadges: {
+      basic: string;
+      standard: string;
+      premium: string;
+      deluxe: string;
+    };
+    features: Record<string, string>;
+  };
+  templatesPage: {
+    title: string;
+    subtitle: string;
+    previewTemplate: string;
+    choosePlan: string;
+    comparisonTitle: string;
+    featuresHeader: string;
+    faqTitle: string;
+    faqItems: FAQItem[];
   };
   faq: {
     title: string;
@@ -257,6 +285,47 @@ const defaultTranslations: TranslationSections = {
       }
     ]
   },
+  templatePlansSection: {
+    badge: "Հարսանիքների Ձևանմուշներ և Գնացուցակ",
+    title: "Ընտրեք Ձեր Կատարյալ Հարսանեկյան Կայքը",
+    subtitle: "Մասնագիտական հարսանեկյան հրավիրատոմսերի կայքեր հարկարգված համապարփակ հնարավորությամբ: Ինտիմ արարողություններից մինչև վեհը տոնակատարումները, մենք ունենք տեր կատարյալ ձևանմուշը ձեր հատրւք օրվա համար:"
+  ,
+    planDescriptions: {
+      basic: "",
+      standard: "",
+      premium: "",
+      deluxe: ""
+    },
+    planBadges: {
+      basic: "",
+      standard: "",
+      premium: "",
+      deluxe: ""
+    },
+    features: {
+      "Wedding Timeline": "",
+      "Couple Introduction": "",
+      "Wedding Locations": "",
+      "RSVP Functionality": "",
+      "Multiple Photo/Slider": "",
+      "Photo Gallery": "",
+      "Audio Player": "",
+      "Admin Panel": "",
+      "Admin Panel (includes Guest List Export)": "",
+      "QR Code Cards": "",
+      "QR Code Cards (100 cards included)": ""
+    }
+  },
+  templatesPage: {
+    title: "",
+    subtitle: "",
+    previewTemplate: "",
+    choosePlan: "",
+    comparisonTitle: "",
+    featuresHeader: "",
+    faqTitle: "",
+    faqItems: []
+  },
   contact: {
     title: "Պատրա՞ստ ստեղծել ձեր հարսանեկան կայքը:",
     subtitle: "Սկսեք այսօր և ստեղծեք գեղեցիկ կայք ձեր հատուկ օրվա համար",
@@ -272,7 +341,7 @@ const defaultTranslations: TranslationSections = {
       title: "Կապ",
       items: ["Էլ. փոստ: info@weddingsites.com", "Հեռախոս: +1 (555) 123-4567", "Աջակցություն: support@weddingsites.com"]
     },
-    copyright: "© 2025 WeddingSites. Բոլոր իրավունքները պաշտպանված են."
+    copyright: "© 2026 WeddingSites. Բոլոր իրավունքները պաշտպանված են."
   }
 };
 
@@ -383,6 +452,25 @@ export default function PlatformTranslations() {
                 subtitle: langData.pricing?.subtitle ?? '',
                 plans: langData.pricing?.plans || []
               },
+              templatePlansSection: ensureStructure(
+                {
+                  badge: '', title: '', subtitle: '',
+                  planDescriptions: { basic: '', standard: '', premium: '', deluxe: '' },
+                  planBadges: { basic: '', standard: '', premium: '', deluxe: '' },
+                  features: {
+                    "Wedding Timeline": '', "Couple Introduction": '', "Wedding Locations": '',
+                    "RSVP Functionality": '', "Multiple Photo/Slider": '', "Photo Gallery": '',
+                    "Audio Player": '', "Admin Panel": '',
+                    "Admin Panel (includes Guest List Export)": '',
+                    "QR Code Cards": '', "QR Code Cards (100 cards included)": ''
+                  }
+                },
+                langData.templatePlansSection
+              ),
+              templatesPage: ensureStructure(
+                { title: '', subtitle: '', previewTemplate: '', choosePlan: '', comparisonTitle: '', featuresHeader: '', faqTitle: '', faqItems: [] },
+                langData.templatesPage
+              ),
               faq: {
                 title: langData.faq?.title ?? '',
                 items: langData.faq?.items || []
@@ -665,6 +753,8 @@ export default function PlatformTranslations() {
             <TabsTrigger value="features">Features</TabsTrigger>
             <TabsTrigger value="templates">Templates</TabsTrigger>
             <TabsTrigger value="pricing">Pricing</TabsTrigger>
+            <TabsTrigger value="templatePlans">Template Plans</TabsTrigger>
+            <TabsTrigger value="templatesPage">Templates Page</TabsTrigger>
             <TabsTrigger value="faq">FAQ</TabsTrigger>
             <TabsTrigger value="contact">Contact</TabsTrigger>
             <TabsTrigger value="footer">Footer</TabsTrigger>
@@ -1357,6 +1447,235 @@ export default function PlatformTranslations() {
                 </div>
               </Card>
             </div>
+          </TabsContent>
+
+          <TabsContent value="templatePlans" className="mt-6">
+            <Card className="p-8">
+              <div className="text-sm text-gray-500 mb-4 flex items-center gap-2">
+                <Edit2 className="w-4 h-4" />
+                Edit the Template Plans section shown on the main page
+              </div>
+              
+              <div className="space-y-6">
+                {/* Badge */}
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">Badge Text</label>
+                  <div className="inline-flex items-center bg-gradient-to-r from-rose-500 to-pink-500 text-white px-6 py-2 rounded-full text-sm font-medium cursor-pointer hover:outline hover:outline-2 hover:outline-blue-300 relative group">
+                    <Crown className="w-4 h-4 mr-2" />
+                    <span 
+                      contentEditable 
+                      suppressContentEditableWarning
+                      onBlur={(e) => updateSection('templatePlansSection', 'badge', e.currentTarget.textContent || '')}
+                      className="outline-none"
+                    >
+                      {translations.templatePlansSection.badge}
+                    </span>
+                    <Edit2 className="w-4 h-4 absolute -right-6 top-1/2 -translate-y-1/2 text-blue-500 opacity-0 group-hover:opacity-100 transition-opacity" />
+                  </div>
+                </div>
+
+                {/* Title */}
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">Section Title</label>
+                  <div 
+                    contentEditable 
+                    suppressContentEditableWarning
+                    onBlur={(e) => updateSection('templatePlansSection', 'title', e.currentTarget.textContent || '')}
+                    className="text-3xl md:text-4xl font-bold text-charcoal mb-4 cursor-pointer hover:bg-blue-50 hover:outline hover:outline-2 hover:outline-blue-300 rounded p-3 transition-all relative group outline-none"
+                  >
+                    {translations.templatePlansSection.title}
+                    <Edit2 className="w-4 h-4 absolute -right-6 top-1/2 -translate-y-1/2 text-blue-500 opacity-0 group-hover:opacity-100 transition-opacity" />
+                  </div>
+                </div>
+
+                {/* Subtitle */}
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">Section Subtitle</label>
+                  <div 
+                    contentEditable 
+                    suppressContentEditableWarning
+                    onBlur={(e) => updateSection('templatePlansSection', 'subtitle', e.currentTarget.textContent || '')}
+                    className="text-lg text-charcoal/70 cursor-pointer hover:bg-blue-50 hover:outline hover:outline-2 hover:outline-blue-300 rounded p-3 transition-all relative group outline-none"
+                  >
+                    {translations.templatePlansSection.subtitle}
+                    <Edit2 className="w-4 h-4 absolute -right-6 top-1/2 -translate-y-1/2 text-blue-500 opacity-0 group-hover:opacity-100 transition-opacity" />
+                  </div>
+                </div>
+
+                {/* Plan Badges */}
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-3">Plan Badges (labels on cards)</label>
+                  <div className="grid grid-cols-2 gap-3">
+                    {(['basic', 'standard', 'premium', 'deluxe'] as const).map(plan => (
+                      <div key={plan}>
+                        <span className="text-xs text-gray-500 capitalize">{plan}</span>
+                        <div
+                          contentEditable
+                          suppressContentEditableWarning
+                          onBlur={(e) => updateNestedSection('templatePlansSection', `planBadges.${plan}`, e.currentTarget.textContent || '')}
+                          className="p-2 border-2 border-transparent hover:border-blue-300 rounded outline-none cursor-text bg-gray-50 text-sm"
+                        >
+                          {(translations.templatePlansSection as any)?.planBadges?.[plan]}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Plan Descriptions */}
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-3">Plan Descriptions</label>
+                  <div className="space-y-3">
+                    {(['basic', 'standard', 'premium', 'deluxe'] as const).map(plan => (
+                      <div key={plan}>
+                        <span className="text-xs text-gray-500 capitalize">{plan}</span>
+                        <div
+                          contentEditable
+                          suppressContentEditableWarning
+                          onBlur={(e) => updateNestedSection('templatePlansSection', `planDescriptions.${plan}`, e.currentTarget.textContent || '')}
+                          className="p-2 border-2 border-transparent hover:border-blue-300 rounded outline-none cursor-text bg-gray-50 text-sm"
+                        >
+                          {(translations.templatePlansSection as any)?.planDescriptions?.[plan]}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Feature Names */}
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-3">Feature Names (shown in plan cards)</label>
+                  <div className="space-y-2">
+                    {Object.keys((translations.templatePlansSection as any)?.features || {}).map(featureKey => (
+                      <div key={featureKey} className="flex items-center gap-3">
+                        <span className="text-xs text-gray-400 w-64 flex-shrink-0">{featureKey}</span>
+                        <div
+                          contentEditable
+                          suppressContentEditableWarning
+                          onBlur={(e) => updateNestedSection('templatePlansSection', `features.${featureKey}`, e.currentTarget.textContent || '')}
+                          className="flex-1 p-2 border-2 border-transparent hover:border-blue-300 rounded outline-none cursor-text bg-gray-50 text-sm"
+                        >
+                          {(translations.templatePlansSection as any)?.features?.[featureKey]}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Preview */}
+                <div className="mt-8 pt-8 border-t border-gray-200">
+                  <p className="text-sm font-medium text-gray-700 mb-4">Preview:</p>
+                  <div className="bg-gradient-to-br from-cream via-white to-lightGold/20 p-8 rounded-lg">
+                    <div className="text-center">
+                      <div className="inline-flex items-center bg-gradient-to-r from-rose-500 to-pink-500 text-white px-6 py-2 rounded-full text-sm font-medium mb-6">
+                        <Crown className="w-4 h-4 mr-2" />
+                        {translations.templatePlansSection.badge}
+                      </div>
+                      <h2 className="text-4xl md:text-5xl font-bold text-charcoal mb-6">
+                        {translations.templatePlansSection.title}
+                      </h2>
+                      <p className="text-xl text-charcoal/70 max-w-4xl mx-auto leading-relaxed">
+                        {translations.templatePlansSection.subtitle}
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </Card>
+          </TabsContent>
+
+          <TabsContent value="templatesPage" className="mt-6">
+            <Card className="p-8">
+              <div className="text-sm text-gray-500 mb-6 flex items-center gap-2">
+                <Edit2 className="w-4 h-4" />
+                Edit text shown on the /templates page
+              </div>
+              <div className="space-y-6">
+                {/* Page Title */}
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">Page Title</label>
+                  <div
+                    contentEditable
+                    suppressContentEditableWarning
+                    onBlur={(e) => updateSection('templatesPage', 'title', e.currentTarget.textContent || '')}
+                    className="text-2xl font-bold p-3 border-2 border-transparent hover:border-blue-300 rounded outline-none cursor-text"
+                  >
+                    {(translations as any).templatesPage?.title}
+                  </div>
+                </div>
+                {/* Subtitle */}
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">Subtitle</label>
+                  <div
+                    contentEditable
+                    suppressContentEditableWarning
+                    onBlur={(e) => updateSection('templatesPage', 'subtitle', e.currentTarget.textContent || '')}
+                    className="text-gray-600 p-3 border-2 border-transparent hover:border-blue-300 rounded outline-none cursor-text"
+                  >
+                    {(translations as any).templatesPage?.subtitle}
+                  </div>
+                </div>
+                {/* Buttons */}
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">"Preview Template" button</label>
+                    <div
+                      contentEditable
+                      suppressContentEditableWarning
+                      onBlur={(e) => updateSection('templatesPage', 'previewTemplate', e.currentTarget.textContent || '')}
+                      className="p-3 border-2 border-transparent hover:border-blue-300 rounded outline-none cursor-text bg-gray-50"
+                    >
+                      {(translations as any).templatesPage?.previewTemplate}
+                    </div>
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">"Choose Plan" button</label>
+                    <div
+                      contentEditable
+                      suppressContentEditableWarning
+                      onBlur={(e) => updateSection('templatesPage', 'choosePlan', e.currentTarget.textContent || '')}
+                      className="p-3 border-2 border-transparent hover:border-blue-300 rounded outline-none cursor-text bg-gray-50"
+                    >
+                      {(translations as any).templatesPage?.choosePlan}
+                    </div>
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">Feature Comparison title</label>
+                    <div
+                      contentEditable
+                      suppressContentEditableWarning
+                      onBlur={(e) => updateSection('templatesPage', 'comparisonTitle', e.currentTarget.textContent || '')}
+                      className="p-3 border-2 border-transparent hover:border-blue-300 rounded outline-none cursor-text bg-gray-50"
+                    >
+                      {(translations as any).templatesPage?.comparisonTitle}
+                    </div>
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">Features column header</label>
+                    <div
+                      contentEditable
+                      suppressContentEditableWarning
+                      onBlur={(e) => updateSection('templatesPage', 'featuresHeader', e.currentTarget.textContent || '')}
+                      className="p-3 border-2 border-transparent hover:border-blue-300 rounded outline-none cursor-text bg-gray-50"
+                    >
+                      {(translations as any).templatesPage?.featuresHeader}
+                    </div>
+                  </div>
+                </div>
+                {/* FAQ section */}
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">FAQ Title</label>
+                  <div
+                    contentEditable
+                    suppressContentEditableWarning
+                    onBlur={(e) => updateSection('templatesPage', 'faqTitle', e.currentTarget.textContent || '')}
+                    className="text-xl font-bold p-3 border-2 border-transparent hover:border-blue-300 rounded outline-none cursor-text"
+                  >
+                    {(translations as any).templatesPage?.faqTitle}
+                  </div>
+                </div>
+              </div>
+            </Card>
           </TabsContent>
 
           <TabsContent value="faq" className="mt-6">

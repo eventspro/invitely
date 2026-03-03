@@ -371,12 +371,9 @@ export default function MainPage() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center h-16">
             <div className="flex items-center">
-              <Heart className="h-8 w-8 text-softGold mr-3" />
-              {t.contactSocial?.brandName && (
-                <span className="text-xl font-bold text-charcoal" data-i18n-key="contactSocial.brandName">
-                  {t.contactSocial.brandName}
-                </span>
-              )}
+              <a href="/" className="flex items-center">
+                <img src="/Logo.png" alt="4ever.am" className="h-16 w-auto" />
+              </a>
             </div>
             <div className="hidden md:flex space-x-8">
               {t.navigation?.features && (
@@ -886,8 +883,7 @@ export default function MainPage() {
           <div className="grid md:grid-cols-4 gap-8">
             <div>
               <div className="flex items-center mb-4">
-                <Heart className="h-6 w-6 text-softGold mr-2" />
-                <span className="text-lg font-bold" data-i18n-key="contactSocial.brandName">{t.contactSocial?.brandName}</span>
+                <img src="/Logo.png" alt="4ever.am" className="h-12 w-auto brightness-0 invert" />
               </div>
               <p 
                 className="text-white/70"

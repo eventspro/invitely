@@ -383,6 +383,77 @@ export const insertConfigurablePlanFeatureSchema = createInsertSchema(configurab
   orderIndex: z.number().int().min(0, "Order index must be non-negative"),
 });
 
+// Platform settings schemas
+export const insertPlatformSettingSchema = createInsertSchema(platformSettings, {
+  key: z.string().min(1, "Key is required"),
+  value: z.unknown(), // JSONB value
+}).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
+export const updatePlatformSettingSchema = insertPlatformSettingSchema.partial();
+
+// Pricing plans schemas (production)
+export const insertPricingPlanSchema = createInsertSchema(pricingPlans).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+}).extend({
+  name: z.string().min(1, "Name is required"),
+  displayName: z.string().min(1, "Display name is required"),
+  price: z.string().min(1, "Price is required"),
+});
+
+export const updatePricingPlanSchema = insertPricingPlanSchema.partial();
+
+// Plan features schemas
+export const insertPlanFeatureSchema = createInsertSchema(planFeatures).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+}).extend({
+  name: z.string().min(1, "Name is required"),
+  displayName: z.string().min(1, "Display name is required"),
+});
+
+export const updatePlanFeatureSchema = insertPlanFeatureSchema.partial();
+
+// Plan feature associations schemas
+export const insertPlanFeatureAssociationSchema = createInsertSchema(planFeatureAssociations).omit({
+  id: true,
+  createdAt: true,
+}).extend({
+  planId: z.string().min(1, "Plan ID is required"),
+  featureId: z.string().min(1, "Feature ID is required"),
+});
+
+// Translation keys schemas
+export const insertTranslationKeySchema = createInsertSchema(translationKeys).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+}).extend({
+  key: z.string().min(1, "Key is required"),
+  section: z.string().optional(),
+});
+
+export const updateTranslationKeySchema = insertTranslationKeySchema.partial();
+
+// Translation values schemas
+export const insertTranslationValueSchema = createInsertSchema(translationValues).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+}).extend({
+  keyId: z.string().min(1, "Key ID is required"),
+  language: z.string().min(1, "Language is required"),
+  value: z.string().min(1, "Value is required"),
+});
+
+export const updateTranslationValueSchema = insertTranslationValueSchema.partial();
+
 // Type exports
 export type InsertUser = z.infer<typeof insertUserSchema>;
 export type User = typeof managementUsers.$inferSelect;
@@ -409,3 +480,20 @@ export type InsertConfigurablePricingPlan = z.infer<typeof insertConfigurablePri
 export type UpdateConfigurablePricingPlan = z.infer<typeof updateConfigurablePricingPlanSchema>;
 export type ConfigurablePlanFeature = typeof configurablePlanFeatures.$inferSelect;
 export type InsertConfigurablePlanFeature = z.infer<typeof insertConfigurablePlanFeatureSchema>;
+export type PlatformSetting = typeof platformSettings.$inferSelect;
+export type InsertPlatformSetting = z.infer<typeof insertPlatformSettingSchema>;
+export type UpdatePlatformSetting = z.infer<typeof updatePlatformSettingSchema>;
+export type PricingPlan = typeof pricingPlans.$inferSelect;
+export type InsertPricingPlan = z.infer<typeof insertPricingPlanSchema>;
+export type UpdatePricingPlan = z.infer<typeof updatePricingPlanSchema>;
+export type PlanFeature = typeof planFeatures.$inferSelect;
+export type InsertPlanFeature = z.infer<typeof insertPlanFeatureSchema>;
+export type UpdatePlanFeature = z.infer<typeof updatePlanFeatureSchema>;
+export type PlanFeatureAssociation = typeof planFeatureAssociations.$inferSelect;
+export type InsertPlanFeatureAssociation = z.infer<typeof insertPlanFeatureAssociationSchema>;
+export type TranslationKey = typeof translationKeys.$inferSelect;
+export type InsertTranslationKey = z.infer<typeof insertTranslationKeySchema>;
+export type UpdateTranslationKey = z.infer<typeof updateTranslationKeySchema>;
+export type TranslationValue = typeof translationValues.$inferSelect;
+export type InsertTranslationValue = z.infer<typeof insertTranslationValueSchema>;
+export type UpdateTranslationValue = z.infer<typeof updateTranslationValueSchema>;

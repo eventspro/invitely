@@ -221,7 +221,11 @@ export const en = {
         question: "Is technical support included?",
         answer: "Yes! All plans include email support, with phone support available for Premium and above."
       }
-    ]
+    ],
+    previewTemplate: "Preview Template",
+    choosePlan: "Choose Plan",
+    comparisonTitle: "Feature Comparison",
+    featuresHeader: "Features"
   },
 
   // Template Plans Section (used on main page and templates page)
@@ -305,7 +309,7 @@ export const en = {
       title: "Contact Us",
       description: "Reach out on social media"
     },
-    copyright: "© 2025 WeddingSites. All rights reserved."
+    copyright: "© 2026 WeddingSites. All rights reserved."
   },
 
   // Contact Section

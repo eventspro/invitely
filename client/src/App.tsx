@@ -26,6 +26,7 @@ import TemplateRenderer from "@/components/template-renderer";
 import TemplateAdminPanel from "@/components/template-admin-panel";
 import TemplateIdentifierGuard from "@/components/TemplateIdentifierGuard";
 import ComingSoon from "@/pages/coming-soon";
+import { ErrorBoundary } from "@/components/ErrorBoundary";
 
 function Router() {
   return (
@@ -105,7 +106,9 @@ function App() {
           <LanguageProvider>
             <TooltipProvider>
               <Toaster />
-              <ComingSoon />
+              <ErrorBoundary>
+                <Router />
+              </ErrorBoundary>
             </TooltipProvider>
           </LanguageProvider>
         </ArmenianFontProvider>

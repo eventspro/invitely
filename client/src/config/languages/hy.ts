@@ -184,7 +184,11 @@ export const hy = {
         question: "Ներառվա՞ծ է տեխնիկական աջակցությունը:",
         answer: "Այո՝ էլ. փոստով աջակցություն ներառված է բոլոր պլանների համար; հեռախոսային աջակցությունը հասանելի է Պրեմիում և Վերջնական համար:"
       }
-    ]
+    ],
+    previewTemplate: "Դիտել Ձևանմուշը",
+    choosePlan: "Ընտրել Պլանը",
+    comparisonTitle: "Հնարավորությունների Համեմատություն",
+    featuresHeader: "Հնարավորություններ"
   },
 
   // Template Plans Section (used on main page and templates page)
@@ -266,7 +270,7 @@ export const hy = {
       phone: "Հեռախոս: +1 (555) 123-4567",
       support: "Աջակցություն: support@weddingsites.com"
     },
-    copyright: "© 2025 WeddingSites: Բոլոր իրավունքները պաշտպանված են:"
+    copyright: "© 2026 WeddingSites: Բոլոր իրավունքները պաշտպանված են:"
   },
 
   // Contact Section

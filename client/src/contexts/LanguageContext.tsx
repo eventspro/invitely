@@ -37,6 +37,24 @@ export function LanguageProvider({ children }: LanguageProviderProps) {
   });
   const [isLoading, setIsLoading] = useState(true);
 
+  // Deep-merge static config into DB data: DB values win, but missing keys fall back to static
+  const deepMergeStatic = (staticObj: any, dbObj: any): any => {
+    if (!dbObj || typeof dbObj !== 'object') return staticObj;
+    if (!staticObj || typeof staticObj !== 'object') return dbObj;
+    const result = { ...staticObj };
+    for (const key in dbObj) {
+      if (dbObj[key] !== null && typeof dbObj[key] === 'object' && !Array.isArray(dbObj[key])) {
+        result[key] = deepMergeStatic(staticObj[key] || {}, dbObj[key]);
+      } else if (Array.isArray(dbObj[key]) && dbObj[key].length > 0) {
+        result[key] = dbObj[key];
+      } else if (dbObj[key] !== undefined && dbObj[key] !== '') {
+        result[key] = dbObj[key];
+      }
+      // if dbObj[key] is '' or undefined, keep staticObj[key] as default
+    }
+    return result;
+  };
+
   // Fetch translations from backend API
   const fetchTranslations = async () => {
     console.log('🔄 fetchTranslations started - setting isLoading to true');
@@ -57,8 +75,17 @@ export function LanguageProvider({ children }: LanguageProviderProps) {
       
       // Validate that data has the expected structure
       if (data && typeof data === 'object' && ('en' in data || 'hy' in data || 'ru' in data)) {
-        setTranslationsCache(data);
-        console.log('✅ Translations loaded from API and cached');
+        // Always deep-merge static files so new keys are available even before DB is updated
+        const { en: staticEn } = await import('@/config/languages/en');
+        const { hy: staticHy } = await import('@/config/languages/hy');
+        const { ru: staticRu } = await import('@/config/languages/ru');
+        const merged = {
+          en: deepMergeStatic(staticEn, data.en || {}),
+          hy: deepMergeStatic(staticHy as any, data.hy || {}),
+          ru: deepMergeStatic(staticRu as any, data.ru || {}),
+        };
+        setTranslationsCache(merged as any);
+        console.log('✅ Translations loaded from API and merged with static defaults');
       } else {
         console.warn('⚠️ Invalid translation data structure, using fallback');
         throw new Error('Invalid data structure');
