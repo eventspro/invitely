@@ -65,8 +65,10 @@ jobs:
           node-version: '20'
           cache: 'npm'
       - run: npm ci --ignore-scripts
-      - name: Run npm audit (fail on critical)
-        run: npm audit --audit-level=critical
+      - name: Run npm audit (fail on critical - production deps only)
+        # --omit=dev excludes dev-only tools (esbuild/vite/drizzle-kit) whose
+        # vulns never reach the production server runtime.
+        run: npm audit --audit-level=critical --omit=dev
 
   # ── Phase 7 Guard 3: TypeScript check ──────────────────────────────────────
   typecheck:
@@ -78,8 +80,11 @@ jobs:
         with:
           node-version: '20'
           cache: 'npm'
-      - run: npm ci --ignore-scripts
-      - run: npm run check
+      # Full install (without --ignore-scripts) so postinstall steps that
+      # generate type declarations (e.g. native add-ons) run correctly.
+      - run: npm ci
+      - name: Run TypeScript type check
+        run: npm run check
 
   # ── Phase 7 Guard 4: Auth regression test ──────────────────────────────────
   auth-regression:
