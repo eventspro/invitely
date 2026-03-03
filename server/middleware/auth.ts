@@ -96,10 +96,13 @@ export const authenticateUser = async (req: AuthenticatedRequest, res: Response,
       return res.status(404).json({ error: 'Not found' });
     }
 
+    const isAdminRoute = req.originalUrl.includes('/api/admin-panel');
+
     const decoded = verifyToken(token);
     if (!decoded) {
-      securityEvent('auth_invalid_token', { route: req.path, ip: req.ip, status: 401 });
-      return res.status(401).json({ error: 'Invalid or expired token' });
+      const status = isAdminRoute ? 404 : 401;
+      securityEvent('auth_invalid_token', { route: req.path, ip: req.ip, status });
+      return res.status(status).json({ error: isAdminRoute ? 'Not found' : 'Invalid or expired token' });
     }
 
     // Get user from database
@@ -116,8 +119,9 @@ export const authenticateUser = async (req: AuthenticatedRequest, res: Response,
     ));
 
     if (!user) {
-      securityEvent('auth_user_not_found', { route: req.path, ip: req.ip, status: 401 });
-      return res.status(401).json({ error: 'User not found or inactive' });
+      const status = isAdminRoute ? 404 : 401;
+      securityEvent('auth_user_not_found', { route: req.path, ip: req.ip, status });
+      return res.status(status).json({ error: isAdminRoute ? 'Not found' : 'User not found or inactive' });
     }
 
     req.user = {
@@ -174,11 +178,9 @@ export const requireAdminPanelAccess = async (req: AuthenticatedRequest, res: Re
         templateId,
         route: req.path,
         ip: req.ip,
-        status: 403
+        status: 404
       });
-      return res.status(403).json({ 
-        error: 'Admin panel access denied. Ultimate template purchase required.' 
-      });
+      return res.status(404).json({ error: 'Not found' });
     }
 
     req.adminPanel = {

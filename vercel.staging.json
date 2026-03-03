@@ -23,8 +23,8 @@
       }
     },
     {
-      "src": "/favicon.png",
-      "dest": "/favicon.png",
+      "src": "/favicon1.png",
+      "dest": "/favicon1.png",
       "headers": {
         "Cache-Control": "public, max-age=86400"
       }

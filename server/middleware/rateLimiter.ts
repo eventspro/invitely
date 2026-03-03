@@ -61,6 +61,18 @@ export const adminLimiter = rateLimit({
 });
 
 /**
+ * CSP report endpoint rate limiter — 60 requests per minute per IP
+ * No environment bypass.
+ */
+export const cspReportLimiter = rateLimit({
+  windowMs: 60 * 1000, // 1 minute
+  max: 60,
+  message: { success: false, error: 'Too many requests.' },
+  standardHeaders: true,
+  legacyHeaders: false,
+});
+
+/**
  * Image upload rate limiter — 20 uploads per 15 minutes
  */
 export const uploadLimiter = rateLimit({

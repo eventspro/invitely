@@ -7,7 +7,7 @@ import { registerRoutes } from "./routes.js";
 import { registerAdminRoutes } from "./routes/admin.js";
 import { registerMusicUploadRoutes } from "./routes/music-upload.js";
 import { registerManifestRoutes } from "./routes/manifest.js";
-import { apiLimiter } from "./middleware/rateLimiter.js";
+import { apiLimiter, cspReportLimiter } from "./middleware/rateLimiter.js";
 
 // Structured security event logger — no PII fields
 export const securityLog = (
@@ -72,7 +72,6 @@ if (env.isProduction && isVercel) {
     );
     res.setHeader("X-Frame-Options", "DENY");
     res.setHeader("X-Content-Type-Options", "nosniff");
-    res.setHeader("X-XSS-Protection", "1; mode=block");
     res.setHeader("Referrer-Policy", "strict-origin-when-cross-origin");
     res.setHeader(
       "Permissions-Policy",
@@ -108,26 +107,44 @@ app.use("/api", (_req, res, next) => {
   next();
 });
 
-// Body parsing
-app.use(express.json({ limit: "10mb" }));
-app.use(express.urlencoded({ extended: false, limit: "10mb" }));
+// Body parsing — global limit kept tight; upload routes use multer with its own 10 MB limit
+app.use(express.json({ limit: "250kb" }));
+app.use(express.urlencoded({ extended: false, limit: "250kb" }));
 
 // Rate limit API
 app.use("/api", apiLimiter);
 
 // CSP violation report endpoint
-app.post("/api/csp-report", express.json({ type: 'application/csp-report', limit: '50kb' }), (req, res) => {
-  const report = req.body?.['csp-report'] || req.body;
-  // Log structured — no PII
-  console.log(JSON.stringify({
-    ts: new Date().toISOString(),
-    event: 'csp-violation',
-    blockedUri: report?.['blocked-uri'],
-    violatedDirective: report?.['violated-directive'],
-    documentUri: report?.['document-uri'],
-  }));
-  res.status(204).end();
-});
+// - rate-limited (60 req/min per IP)
+// - accepts application/csp-report and application/json
+// - body parsed with express.raw to safely handle malformed JSON
+// - body size capped at 10 kb
+// - always returns 204; logs structured summary only (no raw body)
+app.post(
+  "/api/csp-report",
+  cspReportLimiter,
+  express.raw({ type: ['application/csp-report', 'application/json'], limit: '10kb' }),
+  (req, res) => {
+    res.status(204).end();
+    try {
+      const raw = Buffer.isBuffer(req.body) ? req.body.toString('utf8') : '';
+      const body = raw ? JSON.parse(raw) : {};
+      const report =
+        body && typeof body === 'object' && 'csp-report' in body
+          ? body['csp-report']
+          : body;
+      console.log(JSON.stringify({
+        ts: new Date().toISOString(),
+        event: 'csp-violation',
+        documentUri: String(report?.['document-uri'] ?? '').slice(0, 200),
+        violatedDirective: String(report?.['violated-directive'] ?? '').slice(0, 100),
+        blockedUri: String(report?.['blocked-uri'] ?? '').slice(0, 200),
+      }));
+    } catch {
+      // swallow parse errors — always 204
+    }
+  }
+);
 
 // Health check — minimal response, no env info
 app.get("/health", (_req, res) => {
