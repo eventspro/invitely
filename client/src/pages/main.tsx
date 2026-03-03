@@ -351,13 +351,7 @@ export default function MainPage() {
   }
 
   return (
-    /* translateZ(0) on root: creates a GPU compositing context so Chrome correctly
-       stacks the position:fixed background (z-index:0) below the content (z-index:1)
-       without the fixed layer sinking below body paint. */
-    <div
-      className="min-h-screen"
-      style={{ transform: 'translateZ(0)' }}
-    >
+    <div className="min-h-screen">
       {/* Fixed background — z-index: 0 (positive) so Chrome mobile composites it
           correctly. Content wrapper uses z-index: 1 to sit above it.            
           Sibling of content (not a parent) to avoid Chrome fixed-parent viewport bug. */}
