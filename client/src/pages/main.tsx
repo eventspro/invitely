@@ -352,17 +352,17 @@ export default function MainPage() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-cream via-white to-lightGold/20 relative">
-      {/* Fixed Background Image */}
-      <div 
-        className="fixed inset-0 z-0"
-        style={{
-          backgroundImage: 'url(/attached_assets/floral-background1.jpg)',
-          backgroundSize: 'cover',
-          backgroundPosition: 'center',
-          backgroundRepeat: 'no-repeat',
-          backgroundAttachment: 'fixed'
-        }}
-      />
+      {/* Fixed Background Image - using <img> instead of background-image to fix iOS Safari pixelation bug (background-attachment: fixed is broken on iOS) */}
+      <div className="fixed inset-0 z-0 overflow-hidden">
+        <img
+          src="/attached_assets/floral-background1.jpg"
+          alt=""
+          aria-hidden="true"
+          className="absolute inset-0 w-full h-full object-cover object-center"
+          style={{ willChange: 'auto', pointerEvents: 'none' }}
+          fetchPriority="high"
+        />
+      </div>
       
       {/* Content wrapper with relative positioning */}
       <div className="relative z-10">
