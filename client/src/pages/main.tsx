@@ -351,7 +351,7 @@ export default function MainPage() {
   }
 
   return (
-    <div className="relative min-h-screen isolate">
+    <div className="relative min-h-[100dvh] isolate">
       {/* Fixed background — uses native <img> inside .app-fixed-bg (z-index:-1).
           NOT inside any transform/filter ancestor to preserve fixed positioning
           on both iOS Safari and iOS Chrome. */}
