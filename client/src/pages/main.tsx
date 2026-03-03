@@ -97,7 +97,7 @@ export default function MainPage() {
             'Content-Type': 'application/json',
           },
           // Add timeout to prevent hanging
-          signal: AbortSignal.timeout(10000),
+          signal: AbortSignal.timeout(15000),
         });
         
         if (!response.ok) {
@@ -152,8 +152,8 @@ export default function MainPage() {
           return;
         }
         
-        setError('Failed to load templates');
-        // Fall back to hardcoded templates if API fails
+        // Fall back to hardcoded templates silently - don't show scary error banner when fallback works
+        console.warn('Templates API failed, using fallback:', err);
         setTemplates(fallbackTemplates);
       } finally {
         setLoading(false);
@@ -536,16 +536,6 @@ export default function MainPage() {
                 data-i18n-key="templates.loading"
               >
                 {t.templates?.loading || 'Loading templates...'}
-              </p>
-            </div>
-          ) : error ? (
-            <div className="text-center py-12">
-              <p className="text-red-600 mb-4" data-i18n-key="templates.error">{error}</p>
-              <p 
-                className="text-charcoal/60"
-                data-i18n-key="templates.error"
-              >
-                {t.templates?.error || 'Failed to load templates'}
               </p>
             </div>
           ) : null}

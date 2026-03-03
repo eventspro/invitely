@@ -734,7 +734,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         console.error('Templates list request timeout');
         res.status(408).json({ error: "Request timeout" });
       }
-    }, 6000); // 6 second timeout
+    }, 12000); // 12 second timeout
 
     try {
       console.log(`📋 Getting all templates`);
@@ -743,7 +743,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       const allTemplates = await Promise.race([
         storage.getAllTemplates(),
-        new Promise((_, reject) => setTimeout(() => reject(new Error('Database timeout')), 4000))
+        new Promise((_, reject) => setTimeout(() => reject(new Error('Database timeout')), 8000))
       ]) as any[];
       
       // Filter to show only the 5 real, accessible main templates
