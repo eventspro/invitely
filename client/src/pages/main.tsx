@@ -351,16 +351,33 @@ export default function MainPage() {
   }
 
   return (
-    <div
-      className="min-h-screen relative"
-      style={{
-        backgroundImage: 'url(/attached_assets/floral-background1.jpg)',
-        backgroundSize: 'cover',
-        backgroundPosition: 'center top',
-        backgroundRepeat: 'no-repeat',
-        backgroundAttachment: 'scroll',
-      }}
-    >
+    <div className="min-h-screen relative">
+      {/* Fixed background image — rendered as native <img> so the browser can apply
+          full DPR scaling (fixes pixelation on Safari AND Chrome mobile).          
+          Sibling of content (not a parent), so Chrome's fixed-parent viewport bug
+          does not apply. */}
+      <div
+        aria-hidden="true"
+        style={{
+          position: 'fixed',
+          inset: 0,
+          zIndex: -1,
+          overflow: 'hidden',
+        }}
+      >
+        <img
+          src="/attached_assets/floral-background1.jpg"
+          alt=""
+          fetchPriority="high"
+          style={{
+            width: '100%',
+            height: '100%',
+            objectFit: 'cover',
+            objectPosition: 'center top',
+            display: 'block',
+          }}
+        />
+      </div>
       {/* Content wrapper */}
       <div className="relative z-10">
       {/* Navigation */}
@@ -369,7 +386,13 @@ export default function MainPage() {
           <div className="flex justify-between items-center h-16">
             <div className="flex items-center">
               <a href="/" className="flex items-center">
-                <img src="/Logo.png" alt="4ever.am" className="h-16 w-auto" />
+                <img
+                  src="/Logo.png"
+                  alt="4ever.am"
+                  className="h-10 sm:h-14 w-auto"
+                  loading="eager"
+                  fetchPriority="high"
+                />
               </a>
             </div>
             <div className="hidden md:flex space-x-8">
