@@ -351,17 +351,16 @@ export default function MainPage() {
   }
 
   return (
-    <div className="min-h-screen relative">
-      {/* Fixed background image — rendered as native <img> so the browser can apply
-          full DPR scaling (fixes pixelation on Safari AND Chrome mobile).          
-          Sibling of content (not a parent), so Chrome's fixed-parent viewport bug
-          does not apply. */}
+    <div className="min-h-screen">
+      {/* Fixed background — z-index: 0 (positive) so Chrome mobile composites it
+          correctly. Content wrapper uses z-index: 1 to sit above it.            
+          Sibling of content (not a parent) to avoid Chrome fixed-parent viewport bug. */}
       <div
         aria-hidden="true"
         style={{
           position: 'fixed',
           inset: 0,
-          zIndex: -1,
+          zIndex: 0,
           overflow: 'hidden',
         }}
       >
@@ -378,8 +377,8 @@ export default function MainPage() {
           }}
         />
       </div>
-      {/* Content wrapper */}
-      <div className="relative z-10">
+      {/* Content wrapper — must be positioned above the z-0 background */}
+      <div className="relative" style={{ zIndex: 1 }}>
       {/* Navigation */}
       <nav className="bg-white/90 backdrop-blur-sm shadow-sm sticky top-0 z-50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -388,7 +387,7 @@ export default function MainPage() {
               <a href="/" className="flex items-center">
                 <img
                   src="/Logo.png"
-                  alt="4ever.am"
+                  alt=""
                   className="h-10 sm:h-14 w-auto"
                   loading="eager"
                   fetchPriority="high"
