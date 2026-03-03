@@ -351,21 +351,28 @@ export default function MainPage() {
   }
 
   return (
-    <div className="relative min-h-screen transform-gpu">
-      {/* Fixed background — -z-10 keeps it below all content without relying on
-          inline zIndex. CSS background-image avoids an extra compositor layer
-          that the native <img> approach caused on Chrome mobile. will-change-transform
-          promotes this layer independently so fixed positioning is stable. */}
+    <div className="relative min-h-screen isolate">
+      {/* Fixed background — uses native <img> inside .app-fixed-bg (z-index:-1).
+          NOT inside any transform/filter ancestor to preserve fixed positioning
+          on both iOS Safari and iOS Chrome. */}
       <div
         aria-hidden="true"
-        className="fixed inset-0 -z-10 pointer-events-none will-change-transform"
-        style={{
-          backgroundImage: `url(/attached_assets/floral-background1.jpg)`,
-          backgroundSize: 'cover',
-          backgroundPosition: 'center',
-          backgroundRepeat: 'no-repeat',
-        }}
-      />
+        className="app-fixed-bg"
+      >
+        <img
+          src="/attached_assets/floral-background1.jpg"
+          alt=""
+          fetchPriority="high"
+          draggable={false}
+          style={{
+            width: "100%",
+            height: "100%",
+            objectFit: "cover",
+            objectPosition: "center top",
+            display: "block"
+          }}
+        />
+      </div>
       {/* Content wrapper */}
       <div className="relative z-10">
       {/* Navigation */}
@@ -427,8 +434,8 @@ export default function MainPage() {
           compositor promotion on Chrome for Android/iOS Chrome. Safari unaffected. */}
       <section className="relative py-20">
         <div className="absolute inset-0 bg-gradient-to-br from-softGold/10 via-transparent to-sageGreen/10"></div>
-        <div className="absolute top-20 left-10 w-32 h-32 bg-softGold/10 rounded-full blur-0 sm:blur-xl animate-float"></div>
-        <div className="absolute bottom-20 right-10 w-40 h-40 bg-sageGreen/10 rounded-full blur-0 sm:blur-xl animate-float" style={{ animationDelay: '1s' }}></div>
+        <div className="absolute top-20 left-10 w-32 h-32 bg-softGold/10 rounded-full blur-0 sm:blur-xl animate-float z-0 pointer-events-none"></div>
+        <div className="absolute bottom-20 right-10 w-40 h-40 bg-sageGreen/10 rounded-full blur-0 sm:blur-xl animate-float z-0 pointer-events-none" style={{ animationDelay: '1s' }}></div>
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative">
           <div className="text-center animate-fade-in">
             {t.hero?.title && t.hero.title.trim() && (
