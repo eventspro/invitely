@@ -388,7 +388,7 @@ export default function MainPage() {
                 <img
                   src="/Logo.png"
                   alt=""
-                  className="h-10 sm:h-14 w-auto"
+                  className="h-10 sm:h-14 w-auto flex-shrink-0"
                   loading="eager"
                   fetchPriority="high"
                 />
@@ -433,10 +433,12 @@ export default function MainPage() {
       </nav>
 
       {/* Hero Section */}
-      <section className="relative py-20 overflow-hidden">
+      {/* overflow-hidden and blur-xl removed: they created a GPU compositor layer in Chrome
+          that occluded the position:fixed background behind it. Orb tint is preserved. */}
+      <section className="relative py-20">
         <div className="absolute inset-0 bg-gradient-to-br from-softGold/10 via-transparent to-sageGreen/10"></div>
-        <div className="absolute top-20 left-10 w-32 h-32 bg-softGold/10 rounded-full blur-xl animate-float"></div>
-        <div className="absolute bottom-20 right-10 w-40 h-40 bg-sageGreen/10 rounded-full blur-xl animate-float" style={{ animationDelay: '1s' }}></div>
+        <div className="absolute top-20 left-10 w-32 h-32 bg-softGold/10 rounded-full animate-float"></div>
+        <div className="absolute bottom-20 right-10 w-40 h-40 bg-sageGreen/10 rounded-full animate-float" style={{ animationDelay: '1s' }}></div>
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative">
           <div className="text-center animate-fade-in">
             {t.hero?.title && t.hero.title.trim() && (
