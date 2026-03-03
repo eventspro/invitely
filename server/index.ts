@@ -1,6 +1,7 @@
 import "dotenv/config";
 import express, { type Request, Response, NextFunction } from "express";
 import path from "path";
+import helmet from "helmet";
 
 import { registerRoutes } from "./routes.js";
 import { registerAdminRoutes } from "./routes/admin.js";
@@ -8,7 +9,15 @@ import { registerMusicUploadRoutes } from "./routes/music-upload.js";
 import { registerManifestRoutes } from "./routes/manifest.js";
 import { apiLimiter } from "./middleware/rateLimiter.js";
 
-// Simple logging function
+// Structured security event logger — no PII fields
+export const securityLog = (
+  event: string,
+  meta: { userId?: string; route?: string; templateId?: string; ip?: string; status?: number }
+) => {
+  console.log(JSON.stringify({ ts: new Date().toISOString(), event, ...meta }));
+};
+
+// Simple request logger
 const log = (message: string) => {
   console.log(`[${new Date().toISOString()}] ${message}`);
 };
@@ -74,6 +83,31 @@ if (env.isProduction && isVercel) {
   });
 }
 
+// Helmet — secure HTTP headers for all API responses
+app.use("/api", helmet({
+  contentSecurityPolicy: false, // CSP set manually below with Report-Only
+  crossOriginEmbedderPolicy: false, // Disabled for wedding media embeds
+}));
+
+// CSP Report-Only — monitoring mode before enforcement
+app.use("/api", (_req, res, next) => {
+  res.setHeader(
+    'Content-Security-Policy-Report-Only',
+    [
+      "default-src 'self'",
+      "script-src 'self'",
+      "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
+      "font-src 'self' https://fonts.gstatic.com",
+      "img-src 'self' data: https: blob:",
+      "connect-src 'self' https:",
+      "media-src 'self' https: blob:",
+      "frame-ancestors 'none'",
+      `report-uri /api/csp-report`,
+    ].join('; ')
+  );
+  next();
+});
+
 // Body parsing
 app.use(express.json({ limit: "10mb" }));
 app.use(express.urlencoded({ extended: false, limit: "10mb" }));
@@ -81,38 +115,45 @@ app.use(express.urlencoded({ extended: false, limit: "10mb" }));
 // Rate limit API
 app.use("/api", apiLimiter);
 
-// Health check endpoint
+// CSP violation report endpoint
+app.post("/api/csp-report", express.json({ type: 'application/csp-report', limit: '50kb' }), (req, res) => {
+  const report = req.body?.['csp-report'] || req.body;
+  // Log structured — no PII
+  console.log(JSON.stringify({
+    ts: new Date().toISOString(),
+    event: 'csp-violation',
+    blockedUri: report?.['blocked-uri'],
+    violatedDirective: report?.['violated-directive'],
+    documentUri: report?.['document-uri'],
+  }));
+  res.status(204).end();
+});
+
+// Health check — minimal response, no env info
 app.get("/health", (_req, res) => {
-  res.status(200).json({
-    status: "ok",
-    timestamp: new Date().toISOString(),
-    environment: env.nodeEnv,
-    version: "1.0.0",
-  });
+  res.status(200).json({ status: "ok" });
 });
 
-// Test endpoint
+// Test endpoint — minimal response
 app.get("/api/test", (_req, res) => {
-  res.status(200).json({
-    message: "Server is running",
-    timestamp: new Date().toISOString(),
-    environment: env.nodeEnv,
-    hasDatabase: !!process.env.DATABASE_URL,
-    databaseUrlPrefix: process.env.DATABASE_URL?.substring(0, 20) + "...",
-  });
+  res.status(200).json({ status: "ok", message: "Server is running" });
 });
 
-// API request logger
+// API request logger — never logs request/response bodies on sensitive paths
 app.use((req, res, next) => {
   const start = Date.now();
   const reqPath = req.path;
+  // Determine sensitivity before capturing anything
+  const isSensitivePath = /\/(rsvp|auth|login|register|password|reset|admin-panel|export|upload)/.test(reqPath);
   let capturedJsonResponse: Record<string, any> | undefined;
 
-  const originalResJson = res.json.bind(res);
-  res.json = (bodyJson: any) => {
-    capturedJsonResponse = bodyJson;
-    return originalResJson(bodyJson);
-  };
+  if (!isSensitivePath) {
+    const originalResJson = res.json.bind(res);
+    res.json = (bodyJson: any) => {
+      capturedJsonResponse = bodyJson;
+      return originalResJson(bodyJson);
+    };
+  }
 
   res.on("finish", () => {
     const duration = Date.now() - start;

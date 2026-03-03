@@ -6,6 +6,19 @@ import { db } from '../db.js';
 import { managementUsers, orders, userAdminPanels } from '../../shared/schema.js';
 import { eq, and } from 'drizzle-orm';
 
+// Structured security event logger — no PII fields
+const securityEvent = (
+  event: string,
+  meta: { userId?: string; route?: string; templateId?: string; ip?: string; status?: number }
+) => {
+  console.log(JSON.stringify({ ts: new Date().toISOString(), event, ...meta }));
+};
+
+// Anomaly detection note:
+// Monitor for: same IP hitting 401 on /api/admin-panel/* > 5 times in 1 min
+// -> indicates credential stuffing or endpoint scanning
+// -> export securityEvent logs to your SIEM / Datadog / Vercel log drain and alert on event=auth_failed count
+
 export interface AuthenticatedRequest extends Request {
   user?: {
     id: string;
@@ -24,7 +37,10 @@ export interface AuthenticatedRequest extends Request {
   };
 }
 
-const JWT_SECRET = process.env.JWT_SECRET || 'your-super-secret-jwt-key-change-in-production';
+const JWT_SECRET = process.env.JWT_SECRET;
+if (!JWT_SECRET) {
+  throw new Error('JWT_SECRET environment variable is required. The server cannot start without it.');
+}
 const JWT_EXPIRES_IN = '7d';
 const BCRYPT_ROUNDS = 12;
 
@@ -60,33 +76,29 @@ export const generateSecureToken = (): string => {
   return crypto.randomBytes(32).toString('hex');
 };
 
+// Centralized auth failure handler — always use this for consistent security responses
+export const authFailHandler = (res: Response, statusCode: 401 | 403 | 404, message: string): void => {
+  // Return 404 on admin routes to prevent endpoint enumeration
+  res.status(statusCode).json({ error: message });
+};
+
 // Auth middleware
 export const authenticateUser = async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
   try {
-    // Development bypass - create a fake user for testing
-    if (process.env.NODE_ENV === 'development' || process.env.VERCEL === '1') {
-      console.log('🔓 Development/Demo mode: Bypassing user authentication');
-      req.user = {
-        id: 'dev-user-123',
-        email: 'dev@example.com',
-        firstName: 'Dev',
-        lastName: 'User',
-        status: 'active'
-      };
-      return next();
-    }
-
     const authHeader = req.headers.authorization;
     const token = authHeader && authHeader.startsWith('Bearer ') 
       ? authHeader.substring(7) 
       : req.cookies?.authToken;
 
     if (!token) {
-      return res.status(401).json({ error: 'Access token required' });
+      // 404 hides the existence of these endpoints from unauthenticated callers
+      securityEvent('auth_missing_token', { route: req.path, ip: req.ip, status: 404 });
+      return res.status(404).json({ error: 'Not found' });
     }
 
     const decoded = verifyToken(token);
     if (!decoded) {
+      securityEvent('auth_invalid_token', { route: req.path, ip: req.ip, status: 401 });
       return res.status(401).json({ error: 'Invalid or expired token' });
     }
 
@@ -104,6 +116,7 @@ export const authenticateUser = async (req: AuthenticatedRequest, res: Response,
     ));
 
     if (!user) {
+      securityEvent('auth_user_not_found', { route: req.path, ip: req.ip, status: 401 });
       return res.status(401).json({ error: 'User not found or inactive' });
     }
 
@@ -125,22 +138,10 @@ export const authenticateUser = async (req: AuthenticatedRequest, res: Response,
 // Check if user has admin panel access
 export const requireAdminPanelAccess = async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
   try {
-    // Development bypass - allow access without authentication in development
-    if (process.env.NODE_ENV === 'development' || process.env.VERCEL === '1') {
-      console.log('🔓 Development/Demo mode: Bypassing admin panel authentication');
-      req.adminPanel = {
-        id: 'dev-panel',
-        userId: 'dev-user',
-        templateId: req.params.templateId || req.body.templateId,
-        orderId: 'dev-order',
-        isActive: true,
-        templatePlan: 'ultimate'
-      };
-      return next();
-    }
-
     if (!req.user) {
-      return res.status(401).json({ error: 'Authentication required' });
+      // Should not reach here if authenticateUser ran first, but guard defensively
+      securityEvent('admin_no_user_context', { route: req.path, ip: req.ip, status: 404 });
+      return res.status(404).json({ error: 'Not found' });
     }
 
     const templateId = req.params.templateId || req.body.templateId;
@@ -149,14 +150,6 @@ export const requireAdminPanelAccess = async (req: AuthenticatedRequest, res: Re
     }
 
     // Check if user has admin panel access for this template
-    console.log('[auth] requireAdminPanelAccess start', {
-      templateId,
-      userId: req.user?.id,
-      env: process.env.NODE_ENV,
-      vercel: process.env.VERCEL,
-      vercelUrl: process.env.VERCEL_URL,
-      nowRegion: process.env.NOW_REGION,
-    });
     const [adminPanel] = await db.select({
       id: userAdminPanels.id,
       userId: userAdminPanels.userId,
@@ -176,23 +169,13 @@ export const requireAdminPanelAccess = async (req: AuthenticatedRequest, res: Re
     ));
 
     if (!adminPanel) {
-      // Production bypass to unblock platform-admin initiated uploads while we align token scopes
-      const vercelEnv = process.env.VERCEL || process.env.VERCEL_URL || process.env.NOW_REGION;
-      const prodEnv = process.env.NODE_ENV === 'production';
-      if (vercelEnv || prodEnv) {
-        console.log('🔓 Bypassing admin panel access check (vercel/prod fallback)');
-        req.adminPanel = {
-          id: 'vercel-bypass',
-          userId: req.user?.id || null,
-          templateId,
-          orderId: null,
-          isActive: true,
-          templatePlan: 'ultimate'
-        };
-        return next();
-      }
-
-      console.log('[auth] admin panel access denied');
+      securityEvent('admin_access_denied', {
+        userId: req.user?.id,
+        templateId,
+        route: req.path,
+        ip: req.ip,
+        status: 403
+      });
       return res.status(403).json({ 
         error: 'Admin panel access denied. Ultimate template purchase required.' 
       });

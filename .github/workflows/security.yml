@@ -1,0 +1,131 @@
+name: Security Hardening CI
+
+on:
+  push:
+    branches: [main, staging]
+  pull_request:
+    branches: [main, staging]
+
+jobs:
+  # ── Phase 7 Guard 1: No auth bypasses ──────────────────────────────────────
+  auth-bypass-check:
+    name: Auth Bypass Guard
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Fail if VERCEL env used inside auth middleware
+        run: |
+          if grep -rn "process\.env\.VERCEL" server/middleware/auth.ts server/routes/auth.ts 2>/dev/null; then
+            echo "❌ SECURITY FAIL: process.env.VERCEL found in auth files"
+            exit 1
+          fi
+          echo "✅ No VERCEL env usage in auth files"
+
+      - name: Fail if NOW_REGION env used inside auth middleware
+        run: |
+          if grep -rn "process\.env\.NOW_REGION" server/middleware/auth.ts server/routes/auth.ts 2>/dev/null; then
+            echo "❌ SECURITY FAIL: process.env.NOW_REGION found in auth files"
+            exit 1
+          fi
+          echo "✅ No NOW_REGION env usage in auth files"
+
+      - name: Fail if NODE_ENV used for auth decisions in auth middleware
+        run: |
+          if grep -n "NODE_ENV" server/middleware/auth.ts 2>/dev/null; then
+            echo "❌ SECURITY FAIL: NODE_ENV found in server/middleware/auth.ts"
+            exit 1
+          fi
+          echo "✅ No NODE_ENV usage in auth middleware"
+
+      - name: Fail if hardcoded JWT secret fallback exists
+        run: |
+          if grep -rn "your-super-secret" server/ 2>/dev/null; then
+            echo "❌ SECURITY FAIL: Hardcoded JWT secret fallback found"
+            exit 1
+          fi
+          echo "✅ No hardcoded JWT secret found"
+
+      - name: Fail if JWT_SECRET has || fallback
+        run: |
+          if grep -n "JWT_SECRET.*||" server/middleware/auth.ts 2>/dev/null; then
+            echo "❌ SECURITY FAIL: JWT_SECRET has a fallback value"
+            exit 1
+          fi
+          echo "✅ JWT_SECRET has no fallback"
+
+  # ── Phase 7 Guard 2: npm audit ──────────────────────────────────────────────
+  dependency-audit:
+    name: Dependency Audit
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+      - run: npm ci --ignore-scripts
+      - name: Run npm audit (fail on critical)
+        run: npm audit --audit-level=critical
+
+  # ── Phase 7 Guard 3: TypeScript check ──────────────────────────────────────
+  typecheck:
+    name: TypeScript Check
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+      - run: npm ci --ignore-scripts
+      - run: npm run check
+
+  # ── Phase 7 Guard 4: Auth regression test ──────────────────────────────────
+  auth-regression:
+    name: Auth Regression (Live)
+    runs-on: ubuntu-latest
+    # Only runs on main push after deployment
+    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+    needs: [auth-bypass-check, dependency-audit, typecheck]
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Wait for deployment to stabilize
+        run: sleep 30
+
+      - name: Test unauthenticated access returns non-200
+        env:
+          PRODUCTION_URL: ${{ secrets.PRODUCTION_URL }}
+        run: |
+          STATUS=$(curl -s -o /dev/null -w "%{http_code}" \
+            "${PRODUCTION_URL}/api/admin-panel/test-template-id/dashboard")
+          
+          if [ "$STATUS" = "200" ]; then
+            echo "❌ CRITICAL: /api/admin-panel returned 200 without auth (incident recurrence!)"
+            exit 1
+          fi
+          
+          echo "✅ /api/admin-panel without token returned HTTP $STATUS (expected 401 or 404)"
+
+      - name: Test /health returns minimal response
+        env:
+          PRODUCTION_URL: ${{ secrets.PRODUCTION_URL }}
+        run: |
+          BODY=$(curl -s "${PRODUCTION_URL}/health")
+          if echo "$BODY" | grep -qE "databaseUrl|DATABASE_URL|environment|nodeEnv"; then
+            echo "❌ /health is leaking environment info: $BODY"
+            exit 1
+          fi
+          echo "✅ /health response is clean: $BODY"
+
+      - name: Test /api/test returns minimal response
+        env:
+          PRODUCTION_URL: ${{ secrets.PRODUCTION_URL }}
+        run: |
+          BODY=$(curl -s "${PRODUCTION_URL}/api/test")
+          if echo "$BODY" | grep -qE "databaseUrl|DATABASE_URL|environment|nodeEnv"; then
+            echo "❌ /api/test is leaking environment info: $BODY"
+            exit 1
+          fi
+          echo "✅ /api/test response is clean: $BODY"

@@ -21,6 +21,7 @@ import platformAdminRoutes from './routes/platform-admin.js';
 import { registerTemplateRoutes } from './routes/templates.js';
 import { registerTranslationRoutes } from './routes/translations.js';
 import { registerConfigurablePricingRoutes } from './routes/configurable-pricing.js';
+import { adminLimiter, authLimiter } from './middleware/rateLimiter.js';
 
 // Configure multer for file uploads
 const uploadsDir = process.env.VERCEL ? '/tmp/uploads' : path.join(process.cwd(), 'uploads');
@@ -100,10 +101,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
   
   // Register authentication routes
-  app.use('/api/auth', authRoutes);
+  app.use('/api/auth', authLimiter, authRoutes);
   
-  // Register admin panel routes (for Ultimate template customers)
-  app.use('/api/admin-panel', adminPanelRoutes);
+  // Register admin panel routes (for Ultimate template customers) — rate-limited globally
+  app.use('/api/admin-panel', adminLimiter, adminPanelRoutes);
   
   // Register platform admin routes (for platform owner)
   app.use('/api/platform-admin', platformAdminRoutes);

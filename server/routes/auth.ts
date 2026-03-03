@@ -10,21 +10,16 @@ import {
   authenticateUser,
   AuthenticatedRequest 
 } from '../middleware/auth.js';
+import { authLimiter } from '../middleware/rateLimiter.js';
 import nodemailer from 'nodemailer';
 import rateLimit from 'express-rate-limit';
 
 const router = express.Router();
 
 // Rate limiting
-const authLimiter = rateLimit({
-  windowMs: 15 * 60 * 1000, // 15 minutes
-  max: 5, // 5 attempts per window
-  message: { error: 'Too many authentication attempts, please try again later' }
-});
-
 const emailLimiter = rateLimit({
   windowMs: 60 * 60 * 1000, // 1 hour
-  max: 3, // 3 emails per hour
+  max: 3,
   message: { error: 'Too many email requests, please try again later' }
 });
 

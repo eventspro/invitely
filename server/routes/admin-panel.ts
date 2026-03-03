@@ -20,6 +20,14 @@ import ExcelJS from 'exceljs';
 
 const router = express.Router();
 
+// Kill-switch: set DISABLE_ADMIN_PANEL=1 to shut down all admin-panel routes immediately
+router.use((_req, res, next) => {
+  if (process.env.DISABLE_ADMIN_PANEL === '1') {
+    return res.status(503).json({ error: 'Admin panel is temporarily disabled.' });
+  }
+  next();
+});
+
 // Configure multer for photo uploads
 const storage = multer.diskStorage({
   destination: async (req, file, cb) => {

@@ -11,12 +11,8 @@ export const apiLimiter = rateLimit({
     success: false,
     error: 'Too many requests from this IP, please try again later.'
   },
-  standardHeaders: true, // Return rate limit info in `RateLimit-*` headers
-  legacyHeaders: false, // Disable `X-RateLimit-*` headers
-  // Skip rate limiting for development mode
-  skip: (req) => {
-    return process.env.NODE_ENV === 'development' && !process.env.VERCEL;
-  }
+  standardHeaders: true,
+  legacyHeaders: false,
 });
 
 /**
@@ -32,61 +28,48 @@ export const rsvpLimiter = rateLimit({
   },
   standardHeaders: true,
   legacyHeaders: false,
-  skip: (req) => {
-    return process.env.NODE_ENV === 'development' && !process.env.VERCEL;
-  }
 });
 
 /**
- * Authentication rate limiter for login/registration
- * Allows 10 attempts per 15 minutes per IP
+ * Authentication rate limiter — 5 failed attempts per 15 minutes per IP
  */
 export const authLimiter = rateLimit({
-  windowMs: 15 * 60 * 1000, // 15 minutes
-  max: 10, // Limit each IP to 10 login/register attempts
+  windowMs: 15 * 60 * 1000,
+  max: 5,
   message: {
     success: false,
     error: 'Too many authentication attempts, please try again later.'
   },
   standardHeaders: true,
   legacyHeaders: false,
-  skip: (req) => {
-    return process.env.NODE_ENV === 'development' && !process.env.VERCEL;
-  }
+  skipSuccessfulRequests: true,
 });
 
 /**
- * Admin panel rate limiter for sensitive operations
- * Allows 50 requests per 15 minutes per IP
+ * Admin panel rate limiter — 20 requests per 15 minutes per IP
+ * Applied globally to all /api/admin-panel/* routes
  */
 export const adminLimiter = rateLimit({
-  windowMs: 15 * 60 * 1000, // 15 minutes
-  max: 50, // Limit admin operations
+  windowMs: 15 * 60 * 1000,
+  max: 20,
   message: {
     success: false,
     error: 'Too many admin panel requests, please try again later.'
   },
   standardHeaders: true,
   legacyHeaders: false,
-  skip: (req) => {
-    return process.env.NODE_ENV === 'development' && !process.env.VERCEL;
-  }
 });
 
 /**
- * Image upload rate limiter
- * Allows 20 uploads per 15 minutes per IP
+ * Image upload rate limiter — 20 uploads per 15 minutes
  */
 export const uploadLimiter = rateLimit({
-  windowMs: 15 * 60 * 1000, // 15 minutes
-  max: 20, // Limit image uploads
+  windowMs: 15 * 60 * 1000,
+  max: 20,
   message: {
     success: false,
     error: 'Too many upload attempts, please try again later.'
   },
   standardHeaders: true,
   legacyHeaders: false,
-  skip: (req) => {
-    return process.env.NODE_ENV === 'development' && !process.env.VERCEL;
-  }
 });
