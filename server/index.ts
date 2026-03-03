@@ -241,7 +241,9 @@ app.use((req, res, next) => {
       });
     });
   } catch (error) {
-    console.error("Failed to start server:", error);
-    process.exit(1);
+    // Do NOT call process.exit(1) on Vercel — it kills the entire serverless function
+    // instance and causes FUNCTION_INVOCATION_FAILED on all routes including public ones.
+    // Log the error and let Express continue handling requests with whatever routes loaded.
+    console.error("Failed during server initialization:", error);
   }
 })();
