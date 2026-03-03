@@ -204,11 +204,11 @@ export default function MainPage() {
     return features;
   };
 
-  // Fallback templates in case API fails
+  // Fallback templates in case API fails — always show all 5, use slug as name fallback
   const fallbackTemplates: DisplayTemplate[] = [
     {
       id: "harut-tatev",
-      name: t.templates?.items?.[0]?.name || "",
+      name: t.templates?.items?.[0]?.name || "Elegant Armenian Wedding",
       preview: "/template_previews/template-preview-1.jpg",
       demoUrl: "/harut-tatev",
       features: [
@@ -216,11 +216,11 @@ export default function MainPage() {
         t.templates?.items?.[0]?.features?.["1"] || "",
         t.templates?.items?.[0]?.features?.["2"] || "",
         t.templates?.items?.[0]?.features?.["3"] || ""
-      ].filter(f => f) // Remove empty strings
+      ].filter(f => f)
     },
     {
       id: "forest-lily",
-      name: t.templates?.items?.[1]?.name || "",
+      name: t.templates?.items?.[1]?.name || "Nature Wedding Theme",
       preview: "/template_previews/template-preview-2.jpg", 
       demoUrl: "/forest-lily-nature",
       features: [
@@ -232,7 +232,7 @@ export default function MainPage() {
     },
     {
       id: "classic-wedding",
-      name: t.templates?.items?.[2]?.name || "",
+      name: t.templates?.items?.[2]?.name || "Classic Armenian Wedding",
       preview: "/template_previews/template-preview-3.jpg",
       demoUrl: "/michael-sarah-classic",
       features: [
@@ -244,7 +244,7 @@ export default function MainPage() {
     },
     {
       id: "luxury-wedding",
-      name: t.templates?.items?.[3]?.name || "",
+      name: t.templates?.items?.[3]?.name || "Luxury Theme Wedding",
       preview: "/template_previews/template-preview-4.jpg",
       demoUrl: "/alexander-isabella-elegant",
       features: [
@@ -256,7 +256,7 @@ export default function MainPage() {
     },
     {
       id: "modern-wedding",
-      name: t.templates?.items?.[4]?.name || "",
+      name: t.templates?.items?.[4]?.name || "Modern Romantic Wedding",
       preview: "/template_previews/template-preview-5.jpg",
       demoUrl: "/david-rose-romantic",
       features: [
@@ -266,7 +266,7 @@ export default function MainPage() {
         t.templates?.items?.[4]?.features?.["3"] || ""
       ].filter(f => f)
     }
-  ].filter(t => t.name); // Only include templates that have names
+  ]; // No .filter(t => t.name) — English fallbacks ensure all 5 always show
 
   const features = [
     {
