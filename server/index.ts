@@ -197,6 +197,10 @@ app.use((req, res, next) => {
   next();
 });
 
+// ─── Async initialization ────────────────────────────────────────────────────
+// Registers all API routes, middleware, and (for local dev only) starts the
+// HTTP listener.  On Vercel the exported `app` below is the handler — Vercel
+// manages the HTTP layer so we must NOT call server.listen() there.
 (async () => {
   try {
     const server = await registerRoutes(app);
@@ -205,6 +209,7 @@ app.use((req, res, next) => {
     registerMusicUploadRoutes(app);
     registerManifestRoutes(app);
 
+    // Global error handler — must be registered AFTER all routes
     app.use((err: any, _req: Request, res: Response, _next: NextFunction) => {
       const status = err.status || err.statusCode || 500;
       const message = err.message || "Internal Server Error";
@@ -212,38 +217,46 @@ app.use((req, res, next) => {
       res.status(status).json({ message });
     });
 
-    if (env.nodeEnv === "development") {
-      const { setupVite } = await import("./vite.js");
-      await setupVite(app, server);
-    } else {
-      // Local production mode (NOT vercel): serve built frontend
-      if (!isVercel) {
+    // ── Local development: wire up Vite HMR + listen ──────────────────────
+    if (!isVercel) {
+      if (env.nodeEnv === "development") {
+        const { setupVite } = await import("./vite.js");
+        await setupVite(app, server);
+      } else {
+        // Local production preview: serve the built frontend
         const staticPath = path.join(process.cwd(), "dist/public");
         app.use(express.static(staticPath));
         app.get("*", (_req, res) => {
           res.sendFile(path.join(staticPath, "index.html"));
         });
       }
+
+      await new Promise<void>((resolve, reject) => {
+        const serverInstance = server.listen(env.port, "0.0.0.0", () => {
+          log(`Server running on port ${env.port} in ${env.nodeEnv} mode`);
+          resolve();
+        });
+
+        serverInstance.on("error", (error: any) => {
+          if (error.code === "EADDRINUSE") {
+            reject(new Error(`Port ${env.port} is already in use`));
+          } else {
+            reject(error);
+          }
+        });
+      });
     }
-
-    await new Promise<void>((resolve, reject) => {
-      const serverInstance = server.listen(env.port, "0.0.0.0", () => {
-        log(`Server running on port ${env.port} in ${env.nodeEnv} mode`);
-        resolve();
-      });
-
-      serverInstance.on("error", (error: any) => {
-        if (error.code === "EADDRINUSE") {
-          reject(new Error(`Port ${env.port} is already in use`));
-        } else {
-          reject(error);
-        }
-      });
-    });
+    // On Vercel: routes are now registered on `app`; Vercel calls app(req, res)
+    // directly — no listen() needed.
   } catch (error) {
-    // Do NOT call process.exit(1) on Vercel — it kills the entire serverless function
-    // instance and causes FUNCTION_INVOCATION_FAILED on all routes including public ones.
-    // Log the error and let Express continue handling requests with whatever routes loaded.
+    // Never call process.exit() here — on Vercel it kills the entire function
+    // instance and causes FUNCTION_INVOCATION_FAILED for every subsequent route.
     console.error("Failed during server initialization:", error);
   }
 })();
+
+// ─── Vercel handler export ────────────────────────────────────────────────────
+// @vercel/node uses the default export as the HTTP handler.
+// The async IIFE above starts route registration concurrently; by the time
+// the first real request arrives the routes will already be registered.
+export default app;
