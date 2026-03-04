@@ -1,10 +1,10 @@
-import { useState, useEffect, Suspense } from "react";
+import { useState, useEffect } from "react";
 import { Switch, Route, useLocation } from "wouter";
 import { queryClient } from "./lib/queryClient";
 import { QueryClientProvider } from "@tanstack/react-query";
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
-import { LanguageProvider } from "@/contexts/LanguageContext";
+import { LanguageProvider, useLanguage } from "@/contexts/LanguageContext";
 import { ArmenianFontProvider } from "@/components/ArmenianFontProvider";
 import { MaintenanceMode } from "@/components/maintenance-mode";
 import { AdminPanel } from "@/components/admin-panel";
@@ -89,107 +89,70 @@ function Router() {
   );
 }
 
-function App() {
+// AppContent lives inside LanguageProvider so it can use useLanguage().
+// It blocks rendering with TypingLoader until BOTH DB translations AND
+// the maintenance check are complete — preventing any flash of default text.
+function AppContent() {
+  const { isLoading: translationsLoading } = useLanguage();
   const [location] = useLocation();
   const [maintenanceBypassed, setMaintenanceBypassed] = useState(false);
   const [maintenanceEnabled, setMaintenanceEnabled] = useState(false);
-  const [loading, setLoading] = useState(true);
+  const [maintenanceChecked, setMaintenanceChecked] = useState(false);
 
-  // Check if site is unlocked
-  const isUnlocked = typeof window !== 'undefined' && localStorage.getItem('site-unlocked') === 'true';
-  
-  // Show coming soon page if not unlocked
-  if (!isUnlocked) {
-    return (
-      <QueryClientProvider client={queryClient}>
-        <ArmenianFontProvider>
-          <LanguageProvider>
-            <TooltipProvider>
-              <Toaster />
-              <ErrorBoundary>
-                <Router />
-              </ErrorBoundary>
-            </TooltipProvider>
-          </LanguageProvider>
-        </ArmenianFontProvider>
-      </QueryClientProvider>
-    );
-  }
-
-  // Check maintenance status from server and bypass conditions
   useEffect(() => {
-    // Minimum time to show TypingLoader: 8 chars × 120ms + 200ms buffer = 1160ms
-    const MIN_LOADER_MS = 1200;
-    const start = Date.now();
-
     const checkMaintenanceStatus = async () => {
       try {
         const response = await fetch("/api/maintenance");
         if (!response.ok) throw new Error(`HTTP ${response.status}`);
-        
         const data = await response.json();
         setMaintenanceEnabled(data.enabled);
-
-        // Check bypass conditions
         const bypassKey = localStorage.getItem("maintenance-bypass");
         const urlParams = new URLSearchParams(window.location.search);
-        const previewParam = urlParams.get("preview");
-        
-        // Allow bypass with URL parameter or localStorage
-        if (bypassKey === "true" || previewParam === "true") {
+        if (bypassKey === "true" || urlParams.get("preview") === "true") {
           setMaintenanceBypassed(true);
         }
       } catch (error) {
-        // If maintenance check fails, don't block the app - just log and continue
         console.warn("Maintenance check failed, allowing access:", error);
         setMaintenanceEnabled(false);
       } finally {
-        // Always show TypingLoader for at least MIN_LOADER_MS so the animation completes
-        const elapsed = Date.now() - start;
-        const remaining = Math.max(0, MIN_LOADER_MS - elapsed);
-        setTimeout(() => setLoading(false), remaining);
+        setMaintenanceChecked(true);
       }
     };
-
     checkMaintenanceStatus();
   }, []);
 
-  const handlePasswordCorrect = () => {
-    setMaintenanceBypassed(true);
-    localStorage.setItem("maintenance-bypass", "true");
-  };
-
-  // Show maintenance mode if enabled and not bypassed, but allow admin panel access
-  const isAdminRoute = location === "/admin";
-  const shouldShowMaintenance = maintenanceEnabled && !maintenanceBypassed && !isAdminRoute;
-
-  // Show TypingLoader while maintenance check is in flight
-  if (loading) {
+  // Block until BOTH translations from DB are loaded AND maintenance is checked
+  if (translationsLoading || !maintenanceChecked) {
     return <TypingLoader />;
   }
 
+  const isAdminRoute = location === "/admin";
+  const shouldShowMaintenance = maintenanceEnabled && !maintenanceBypassed && !isAdminRoute;
+
   if (shouldShowMaintenance) {
     return (
-      <QueryClientProvider client={queryClient}>
-        <ArmenianFontProvider>
-          <LanguageProvider>
-            <TooltipProvider>
-              <Toaster />
-              <MaintenanceMode onPasswordCorrect={handlePasswordCorrect} />
-            </TooltipProvider>
-          </LanguageProvider>
-        </ArmenianFontProvider>
-      </QueryClientProvider>
+      <MaintenanceMode
+        onPasswordCorrect={() => {
+          setMaintenanceBypassed(true);
+          localStorage.setItem("maintenance-bypass", "true");
+        }}
+      />
     );
   }
 
+  return <Router />;
+}
+
+function App() {
   return (
     <QueryClientProvider client={queryClient}>
       <ArmenianFontProvider>
         <LanguageProvider>
           <TooltipProvider>
             <Toaster />
-            <Router />
+            <ErrorBoundary>
+              <AppContent />
+            </ErrorBoundary>
           </TooltipProvider>
         </LanguageProvider>
       </ArmenianFontProvider>

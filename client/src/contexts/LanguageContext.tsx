@@ -44,10 +44,9 @@ export function LanguageProvider({ children }: LanguageProviderProps) {
   // Initialize with static translations so the page renders correctly from
   // the very first frame — no empty-object crash, no blocking spinner.
   const [translationsCache, setTranslationsCache] = useState<Record<Language, LanguageConfig>>(staticTranslations);
-  // isLoading starts false because content is immediately available.
-  // It briefly flips true while API translations are fetching, but nothing
-  // in the UI blocks on it anymore.
-  const [isLoading, setIsLoading] = useState(false);
+  // isLoading starts TRUE — we are fetching DB translations on mount.
+  // AppContent blocks rendering until this becomes false.
+  const [isLoading, setIsLoading] = useState(true);
 
   // Deep-merge static config into DB data: DB values win, but missing keys fall back to static
   const deepMergeStatic = (staticObj: any, dbObj: any): any => {
