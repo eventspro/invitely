@@ -1,9 +1,13 @@
-// v4 — true bootstrap gate: app never renders before translations + maintenance are ready
+// v5 — true bootstrap gate with boot-time console proof
 import { createRoot } from "react-dom/client";
 import { createElement, useState, useEffect, useCallback } from "react";
 import App, { type BootstrapData } from "./App";
 import TypingLoader from "./components/TypingLoader";
 import "./index.css";
+
+if (import.meta.env.DEV) {
+  console.log("[BOOT] main.tsx loaded", new Date().toISOString());
+}
 
 // ─── Startup data shape ───────────────────────────────────────────────────────
 // BootstrapData is defined in App.tsx and re-imported here.
@@ -107,6 +111,9 @@ function Root() {
   if (phase === "loading") return createElement(TypingLoader, null);
   if (phase === "error") {
     return createElement(BootstrapError, { onRetry: runBootstrap });
+  }
+  if (import.meta.env.DEV) {
+    console.log("[BOOT] rendering App (ready)", new Date().toISOString());
   }
   return createElement(App, { bootstrapData: data! });
 }

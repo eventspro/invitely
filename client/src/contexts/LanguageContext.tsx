@@ -1,32 +1,58 @@
-import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
+import { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { Language, defaultLanguage, languages, LanguageConfig } from '@/config/languages';
 import { en as staticEn } from '@/config/languages/en';
 import { hy as staticHy } from '@/config/languages/hy';
 import { ru as staticRu } from '@/config/languages/ru';
 
-// Pre-loaded static translations — available instantly on first render.
-// API translations merge in later, upgrading DB-managed strings transparently.
+// ─── Static fallback (used ONLY when bootstrap explicitly failed) ─────────────
 const staticTranslations = {
   en: staticEn as unknown as LanguageConfig,
   hy: staticHy as unknown as LanguageConfig,
   ru: staticRu as unknown as LanguageConfig,
 };
 
-// Module-level merge helper (used in useState initializer before component methods exist)
-function deepMergeStaticSync(staticObj: any, dbObj: any): any {
-  if (!dbObj || typeof dbObj !== 'object') return staticObj;
-  if (!staticObj || typeof staticObj !== 'object') return dbObj;
-  const result = { ...staticObj };
-  for (const key in dbObj) {
-    if (dbObj[key] !== null && typeof dbObj[key] === 'object' && !Array.isArray(dbObj[key])) {
-      result[key] = deepMergeStaticSync(staticObj[key] || {}, dbObj[key]);
-    } else if (Array.isArray(dbObj[key]) && dbObj[key].length > 0) {
-      result[key] = dbObj[key];
-    } else if (dbObj[key] !== undefined && dbObj[key] !== '') {
-      result[key] = dbObj[key];
+// ─── Module-level merge helper ────────────────────────────────────────────────
+// Called synchronously inside useState() initializer — must be module-level.
+// Strategy: static keys are the base; DB values overwrite if non-empty.
+function deepMerge(base: any, override: any): any {
+  if (!override || typeof override !== 'object') return base;
+  if (!base || typeof base !== 'object') return override;
+  const result: any = { ...base };
+  for (const key in override) {
+    const v = override[key];
+    if (v === null || v === undefined || v === '') continue; // keep static default
+    if (Array.isArray(v)) {
+      result[key] = v.length > 0 ? v : base[key]; // only overwrite non-empty arrays
+    } else if (typeof v === 'object') {
+      result[key] = deepMerge(base[key] ?? {}, v);
+    } else {
+      result[key] = v;
     }
   }
   return result;
+}
+
+// ─── Build initial translations cache from bootstrap data ─────────────────────
+// This runs ONCE synchronously inside the useState lazy initializer.
+// By the time LanguageProvider mounts, App has already awaited /api/translations
+// so prefetchedData is always the full DB payload — no flash possible.
+function buildCacheFromPrefetch(prefetchedData: any): Record<Language, LanguageConfig> {
+  if (prefetchedData && typeof prefetchedData === 'object') {
+    if (import.meta.env.DEV) {
+      console.log('[BOOT] LanguageContext: building initial cache from prefetched data');
+    }
+    return {
+      en: deepMerge(staticEn, prefetchedData.en ?? {}),
+      hy: deepMerge(staticHy, prefetchedData.hy ?? {}),
+      ru: deepMerge(staticRu, prefetchedData.ru ?? {}),
+    } as Record<Language, LanguageConfig>;
+  }
+  // Should never reach here in normal operation — bootstrap validates this.
+  // BootstrapError screen would have shown instead.
+  if (import.meta.env.DEV) {
+    console.warn('[BOOT] LanguageContext: no prefetchedData — falling back to static (bootstrap should have blocked this)');
+  }
+  return staticTranslations;
 }
 
 interface LanguageContextType {
@@ -43,131 +69,35 @@ const LanguageContext = createContext<LanguageContextType | undefined>(undefined
 
 interface LanguageProviderProps {
   children: ReactNode;
-  prefetchedData?: any; // Pre-fetched translation data from App root loader
+  prefetchedData: any; // Required — always provided by App after successful bootstrap
 }
 
 export function LanguageProvider({ children, prefetchedData }: LanguageProviderProps) {
-  // Get language from localStorage or use default
   const getStoredLanguage = (): Language => {
     if (typeof window !== 'undefined') {
       const stored = localStorage.getItem('preferred-language') as Language;
-      if (stored && stored in languages) {
-        return stored;
-      }
+      if (stored && stored in languages) return stored;
     }
     return defaultLanguage;
   };
 
   const [currentLanguage, setCurrentLanguage] = useState<Language>(getStoredLanguage);
-  // Initialize with prefetched DB data if available, otherwise fall back to static translations.
-  // By the time LanguageProvider mounts, App has already awaited /api/translations,
-  // so prefetchedData should always be present — no flash of static text.
-  const buildInitialCache = () => {
-    if (prefetchedData && typeof prefetchedData === 'object') {
-      return {
-        en: prefetchedData.en ? deepMergeStaticSync(staticEn as any, prefetchedData.en) : staticEn as unknown as LanguageConfig,
-        hy: prefetchedData.hy ? deepMergeStaticSync(staticHy as any, prefetchedData.hy) : staticHy as unknown as LanguageConfig,
-        ru: prefetchedData.ru ? deepMergeStaticSync(staticRu as any, prefetchedData.ru) : staticRu as unknown as LanguageConfig,
-      };
-    }
-    return staticTranslations;
-  };
 
-  const [translationsCache, setTranslationsCache] = useState<Record<Language, LanguageConfig>>(buildInitialCache);
-  // isLoading starts false because prefetchedData already has the DB translations.
+  // ─── CRITICAL: Initial cache built synchronously from bootstrap data ──────
+  // Uses a closure over `prefetchedData` so the lazy initializer always has
+  // the resolved data available — no state swap after first render.
+  const [translationsCache, setTranslationsCache] = useState<Record<Language, LanguageConfig>>(
+    () => buildCacheFromPrefetch(prefetchedData)
+  );
   const [isLoading, setIsLoading] = useState(false);
 
-  // Deep-merge static config into DB data: DB values win, but missing keys fall back to static
-  const deepMergeStatic = (staticObj: any, dbObj: any): any => {
-    if (!dbObj || typeof dbObj !== 'object') return staticObj;
-    if (!staticObj || typeof staticObj !== 'object') return dbObj;
-    const result = { ...staticObj };
-    for (const key in dbObj) {
-      if (dbObj[key] !== null && typeof dbObj[key] === 'object' && !Array.isArray(dbObj[key])) {
-        result[key] = deepMergeStatic(staticObj[key] || {}, dbObj[key]);
-      } else if (Array.isArray(dbObj[key]) && dbObj[key].length > 0) {
-        result[key] = dbObj[key];
-      } else if (dbObj[key] !== undefined && dbObj[key] !== '') {
-        result[key] = dbObj[key];
-      }
-      // if dbObj[key] is '' or undefined, keep staticObj[key] as default
-    }
-    return result;
-  };
+  // ─── IMPORTANT: No useEffect that auto-fetches translations. ─────────────
+  // All three languages (en, hy, ru) are pre-loaded in translationsCache from
+  // bootstrap. Switching language is a pure synchronous operation — just changing
+  // currentLanguage, which selects a different key from translationsCache.
+  // fetchTranslations is ONLY called explicitly via refreshTranslations() (admin use).
 
-  // Fetch translations from backend API
-  const fetchTranslations = async () => {
-    console.log('🔄 fetchTranslations started - setting isLoading to true');
-    setIsLoading(true);
-    try {
-      // Add cache-busting timestamp to force fresh data
-      const timestamp = new Date().getTime();
-      console.log('📡 Fetching from /api/translations...');
-      const response = await fetch(`/api/translations?_t=${timestamp}`);
-      console.log('📡 Response received:', response.status, response.ok);
-      
-      if (!response.ok) {
-        throw new Error(`Failed to fetch translations: ${response.status}`);
-      }
-      
-      const data = await response.json();
-      console.log('📦 Data parsed. Type:', typeof data, 'Has en:', 'en' in (data || {}), 'Has hy:', 'hy' in (data || {}), 'Has ru:', 'ru' in (data || {}));
-      
-      // Validate that data has the expected structure
-      if (data && typeof data === 'object' && ('en' in data || 'hy' in data || 'ru' in data)) {
-        // Always deep-merge static files so new keys are available even before DB is updated
-        const { en: staticEn } = await import('@/config/languages/en');
-        const { hy: staticHy } = await import('@/config/languages/hy');
-        const { ru: staticRu } = await import('@/config/languages/ru');
-        const merged = {
-          en: deepMergeStatic(staticEn, data.en || {}),
-          hy: deepMergeStatic(staticHy as any, data.hy || {}),
-          ru: deepMergeStatic(staticRu as any, data.ru || {}),
-        };
-        setTranslationsCache(merged as any);
-        console.log('✅ Translations loaded from API and merged with static defaults');
-      } else {
-        console.warn('⚠️ Invalid translation data structure, using fallback');
-        throw new Error('Invalid data structure');
-      }
-    } catch (error) {
-      console.error('❌ Failed to load translations from API:', error);
-      // Fallback to static imports only if API fails
-      try {
-        const { en } = await import('@/config/languages/en');
-        const { hy } = await import('@/config/languages/hy');
-        const { ru } = await import('@/config/languages/ru');
-        setTranslationsCache({ en: en as any, hy: hy as any, ru: ru as any });
-        console.log('✅ Translations loaded from fallback files');
-      } catch (fallbackError) {
-        console.error('❌ Failed to load fallback translations:', fallbackError);
-      }
-    } finally {
-      console.log('✅ fetchTranslations complete - setting isLoading to false');
-      setIsLoading(false);
-    }
-  };
-
-  // Reload translations only when the user actively switches language.
-  // On initial mount, prefetchedData from bootstrap is already in translationsCache — no re-fetch needed.
-  const isInitialMount = React.useRef(true);
-  useEffect(() => {
-    if (isInitialMount.current) {
-      isInitialMount.current = false;
-      // Skip the initial fetch if we already have prefetched DB data.
-      if (prefetchedData && typeof prefetchedData === 'object' &&
-          ('en' in prefetchedData || 'hy' in prefetchedData || 'ru' in prefetchedData)) {
-        if (import.meta.env.DEV) {
-          console.log('[4ever.am] ✅ Translations ready: using prefetched bootstrap data, skipping initial re-fetch');
-          console.log('[4ever.am] ✅ appReady = true');
-        }
-        return;
-      }
-    }
-    fetchTranslations();
-  }, [currentLanguage]);
-
-  // Save language preference to localStorage
+  // Persist language preference
   useEffect(() => {
     if (typeof window !== 'undefined') {
       localStorage.setItem('preferred-language', currentLanguage);
@@ -176,39 +106,59 @@ export function LanguageProvider({ children, prefetchedData }: LanguageProviderP
 
   const setLanguage = (language: Language) => {
     setCurrentLanguage(language);
+    // No fetch — all languages already loaded. t = translationsCache[language] instantly.
   };
 
-  // Optimistic update for immediate UI feedback
+  // ─── Deep-merge helper for fetchTranslations (admin refresh only) ─────────
+  const deepMergeForRefresh = (base: any, override: any): any => deepMerge(base, override);
+
+  // ─── Manual refresh — called only from admin panel or refreshTranslations() ─
+  const fetchTranslations = async () => {
+    if (import.meta.env.DEV) {
+      console.log('[i18n] fetchTranslations called (explicit refresh)');
+    }
+    setIsLoading(true);
+    try {
+      const response = await fetch(`/api/translations?_t=${Date.now()}`);
+      if (!response.ok) throw new Error(`HTTP ${response.status}`);
+      const data = await response.json();
+      if (data && typeof data === 'object' && ('en' in data || 'hy' in data || 'ru' in data)) {
+        setTranslationsCache({
+          en: deepMergeForRefresh(staticEn, data.en ?? {}) as LanguageConfig,
+          hy: deepMergeForRefresh(staticHy, data.hy ?? {}) as LanguageConfig,
+          ru: deepMergeForRefresh(staticRu, data.ru ?? {}) as LanguageConfig,
+        });
+        if (import.meta.env.DEV) {
+          console.log('[i18n] translations refreshed from API');
+        }
+      }
+    } catch (error) {
+      console.error('[i18n] fetchTranslations failed:', error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const refreshTranslations = async () => { await fetchTranslations(); };
+
+  // Optimistic update for admin panel inline edits
   const updateTranslationInCache = (key: string, value: string) => {
     setTranslationsCache(prev => {
       const updated = { ...prev };
       const keys = key.split('.');
-      
-      // Deep clone the current language translations
       const langCopy = JSON.parse(JSON.stringify(updated[currentLanguage]));
       let current: any = langCopy;
-      
-      // Navigate to the nested property
       for (let i = 0; i < keys.length - 1; i++) {
         if (!current[keys[i]]) current[keys[i]] = {};
         current = current[keys[i]];
       }
-      
-      // Update the final value
       current[keys[keys.length - 1]] = value;
-      
-      // Update the cache with the modified copy
       updated[currentLanguage] = langCopy;
-      
       return updated;
     });
   };
 
-  const refreshTranslations = async () => {
-    await fetchTranslations();
-  };
-
-  const t = translationsCache[currentLanguage] || ({} as LanguageConfig);
+  const t = translationsCache[currentLanguage] ?? ({} as LanguageConfig);
 
   const value: LanguageContextType = {
     currentLanguage,
@@ -217,12 +167,9 @@ export function LanguageProvider({ children, prefetchedData }: LanguageProviderP
     availableLanguages: languages,
     isLoading,
     refreshTranslations,
-    updateTranslationInCache
+    updateTranslationInCache,
   };
 
-  // Do NOT render a blocking spinner here — the TypingLoader in App.tsx already
-  // covers the initial load window. Translations hydrate silently into the UI
-  // once the API responds; children render immediately with fallback strings.
   return (
     <LanguageContext.Provider value={value}>
       {children}
@@ -238,30 +185,13 @@ export function useLanguage() {
   return context;
 }
 
-// Hook for getting translations with fallback
 export function useTranslation() {
   const { t, currentLanguage } = useLanguage();
-  
-  // Helper function to get nested translations
   const getTranslation = (key: string, fallback?: string): string => {
     const keys = key.split('.');
     let value: any = t;
-    
-    for (const k of keys) {
-      value = value?.[k];
-    }
-    
-    if (typeof value === 'string') {
-      return value;
-    }
-    
-    // Return fallback or key if translation not found
-    return fallback || key;
+    for (const k of keys) { value = value?.[k]; }
+    return typeof value === 'string' ? value : (fallback ?? key);
   };
-  
-  return {
-    t: getTranslation,
-    currentLanguage,
-    translations: t
-  };
+  return { t: getTranslation, currentLanguage, translations: t };
 }

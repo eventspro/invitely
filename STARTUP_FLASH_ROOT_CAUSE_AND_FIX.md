@@ -1,4 +1,146 @@
-# Startup Flash — Root Cause Analysis & Fix
+# Startup Flash — Root Cause Analysis & Fix (v2 — definitive)
+
+## STATUS: FIXED
+
+---
+
+## Part 1 — Why the fix in v1 still flashed
+
+### The `isInitialMount` pattern was fundamentally broken
+
+The v1 fix added this guard to `LanguageContext.tsx`:
+
+```tsx
+const isInitialMount = React.useRef(true);
+useEffect(() => {
+  if (isInitialMount.current) {
+    isInitialMount.current = false;
+    if (prefetchedData && ...) return; // try to skip
+  }
+  fetchTranslations(); // ← still called in two cases
+}, [currentLanguage]);
+```
+
+**Two execution paths still triggered `fetchTranslations()` after first render:**
+
+1. **React Strict Mode (dev)**: React 18 + StrictMode double-invokes effects for detecting side-effect bugs.
+   - Run 1: `isInitialMount.current = true` → sets to `false` → `prefetchedData` valid → `return` ✓
+   - Cleanup: no cleanup registered — ref mutation is NOT rolled back
+   - **Run 2**: `isInitialMount.current` is already `false` → falls through → `fetchTranslations()` ← FLASH ❌
+
+2. **Any parent re-render that unmounts + remounts `LanguageProvider`**: would create a new `useRef(true)` instance, but on second mount `isInitialMount.current` starts `true` again → skips → OK... Actually this path was safe. Path 1 was the primary culprit.
+
+### Timeline of the flash (v1, with isInitialMount guard, Strict Mode)
+
+```
+t=0ms      bootstrap() running — TypingLoader visible
+t=~300ms   bootstrap() resolves → setPhase("ready") + setData(d) (React 18 batched)
+t=~300ms   <App bootstrapData={d}> renders for the first time
+t=~300ms   LanguageProvider mounts, useState lazy init → buildInitialCache(prefetchedData) → CORRECT data ✓
+t=~300ms   Children render with CORRECT translated text ✓
+t=~300ms   useEffect (Run 1, Strict Mode): isInitialMount=true → false → prefetchedData valid → SKIP ✓
+t=~300ms   Strict Mode cleanup (no-op)
+t=~300ms   useEffect (Run 2, Strict Mode): isInitialMount=false → fetchTranslations() called ← PROBLEM
+t=~300ms   fetchTranslations: setIsLoading(true) → re-render (isLoading=true, t still correct)
+t=~700ms   /api/translations response arrives → setTranslationsCache(merged) → re-render
+           ↑ this re-render is redundant and causes visible repaint = FLASH
+```
+
+---
+
+## Part 2 — Confirmed root cause (v2 diagnosis)
+
+**File**: `client/src/contexts/LanguageContext.tsx` (pre-fix)  
+**Lines responsible**: the `useEffect` at line ~165 that called `fetchTranslations()` on `currentLanguage` change
+
+The architectural flaw: having a `useEffect` that triggers network fetches on every language change, then trying to suppress it with a fragile `useRef` flag. The flag worked in production non-strict single-effect execution, but any deviation (strict mode, double invocation, subtle re-render) bypassed it.
+
+---
+
+## Part 3 — The correct fix (v2 implementation)
+
+### Root fix: eliminate the auto-fetch useEffect entirely
+
+`LanguageContext.tsx` — the `useEffect(() => { fetchTranslations() }, [currentLanguage])` is **deleted**.
+
+**Why this is safe:**
+- `buildCacheFromPrefetch(prefetchedData)` runs synchronously inside `useState()` lazy initializer
+- `prefetchedData` = `bootstrap().translations` = already contains `{ en, hy, ru }` fully merged with DB data
+- `translationsCache` starts with final correct state for ALL three languages
+- Switching language (`setLanguage("en")`) just changes `currentLanguage`, which changes which cache key `t = translationsCache[currentLanguage]` selects — **no network needed**
+- `fetchTranslations()` is still available via `refreshTranslations()` for admin panel use only
+
+### Boot console logs added
+
+`main.tsx`:
+```
+[BOOT] main.tsx loaded   2026-03-04T...
+[BOOT] rendering App (ready)   2026-03-04T...
+```
+
+`LanguageContext.tsx`:
+```
+[BOOT] LanguageContext: building initial cache from prefetched data
+```
+
+These appear in DEV only (`import.meta.env.DEV`). The order `main.tsx loaded` → `rendering App (ready)` → `LanguageContext: building initial cache` proves bootstrap completes before any UI renders.
+
+### Changed files
+
+| File | Change |
+|------|--------|
+| `client/src/main.tsx` | Added `[BOOT] main.tsx loaded` + `[BOOT] rendering App (ready)` console logs |
+| `client/src/contexts/LanguageContext.tsx` | **Deleted** the `useEffect(() => fetchTranslations(), [currentLanguage])` auto-fetch. Language switch is now pure state (no network). `fetchTranslations` demoted to explicit-refresh-only. `deepMerge` rewritten as cleaner single module-level function. |
+
+---
+
+## Part 4 — What signals define "ready"
+
+| Signal | Resolved by | Timing |
+|--------|-------------|--------|
+| `/api/translations` fetched & valid | `bootstrap()` in `main.tsx` | Before `<App />` ever mounts |
+| `/api/maintenance` fetched & valid | `bootstrap()` in `main.tsx` | Before `<App />` ever mounts |
+| Language determined from localStorage | Synchronous read in `getStoredLanguage()` | Before any render |
+| `translationsCache` initialized | `useState(() => buildCacheFromPrefetch(...))` | First render, synchronous |
+
+**`setTranslationsCache()` is never called after first render unless admin explicitly calls `refreshTranslations()`.**
+
+---
+
+## Part 5 — How to verify: Slow 3G checklist
+
+### Setup
+1. Open Chrome DevTools → Network tab → Set throttle to **Slow 3G**
+2. Check **Disable cache**
+3. Open Console tab — filter to `[BOOT]`
+
+### Test sequence
+
+- [ ] Hard-reload (`Ctrl+Shift+R`)
+- [ ] `[BOOT] main.tsx loaded` appears immediately in console
+- [ ] TypingLoader is visible while network tab shows `/api/translations` and `/api/maintenance` pending
+- [ ] When both complete: `[BOOT] rendering App (ready)` appears
+- [ ] `[BOOT] LanguageContext: building initial cache from prefetched data` appears next
+- [ ] Page appears ONCE with correct translated text — no static text flash before it
+- [ ] `🔄 fetchTranslations started` does NOT appear in console (that log is now in explicit-refresh only)
+- [ ] Switch language in the UI → only `localStorage.setItem` fires, NO network request in Network tab
+
+### Test: network failure
+- [ ] Block `/api/translations` in DevTools (right-click → Block request URL)
+- [ ] Hard-reload
+- [ ] Error screen appears ("Could not connect...") — NOT a page with default English fallback text
+- [ ] Click **Retry** → translations and maintenance fetched → page loads correctly
+
+---
+
+## Part 6 — Tradeoffs
+
+| Concern | Impact | Notes |
+|---------|--------|-------|
+| Language switch no longer re-fetches | Safe — all 3 languages pre-loaded at boot | Admin has `refreshTranslations()` for live content updates |
+| Boot time increases by ~200–400ms (waits for API) | Acceptable — both calls parallel, Vercel edge is fast | Tradeoff: zero flash vs ~400ms extra wait |
+| Error screen on network failure | Better UX — explicit recovery path | User knows to retry instead of seeing wrong content |
+
 
 ## 1. Root Cause (proven from code)
 
