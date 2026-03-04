@@ -118,6 +118,10 @@ function App() {
 
   // Check maintenance status from server and bypass conditions
   useEffect(() => {
+    // Minimum time to show TypingLoader: 8 chars × 120ms + 200ms buffer = 1160ms
+    const MIN_LOADER_MS = 1200;
+    const start = Date.now();
+
     const checkMaintenanceStatus = async () => {
       try {
         const response = await fetch("/api/maintenance");
@@ -140,13 +144,14 @@ function App() {
         console.warn("Maintenance check failed, allowing access:", error);
         setMaintenanceEnabled(false);
       } finally {
-        setLoading(false);
+        // Always show TypingLoader for at least MIN_LOADER_MS so the animation completes
+        const elapsed = Date.now() - start;
+        const remaining = Math.max(0, MIN_LOADER_MS - elapsed);
+        setTimeout(() => setLoading(false), remaining);
       }
     };
 
     checkMaintenanceStatus();
-    // Quick fallback - if API takes too long, don't block the user
-    setTimeout(() => setLoading(false), 1000);
   }, []);
 
   const handlePasswordCorrect = () => {
