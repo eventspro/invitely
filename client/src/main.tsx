@@ -1,18 +1,16 @@
-// v5 — true bootstrap gate with boot-time console proof
+// v6 — deterministic bootstrap with requestTracker
 import { createRoot } from "react-dom/client";
 import { createElement, useState, useEffect, useCallback } from "react";
 import App, { type BootstrapData } from "./App";
 import TypingLoader from "./components/TypingLoader";
+import { trackPromise, subscribe, getPendingLabels } from "./lib/requestTracker";
 import "./index.css";
 
 if (import.meta.env.DEV) {
   console.log("[BOOT] main.tsx loaded", new Date().toISOString());
 }
 
-// ─── Startup data shape ───────────────────────────────────────────────────────
-// BootstrapData is defined in App.tsx and re-imported here.
-
-// ─── Error screen shown when bootstrap fails ──────────────────────────────────
+// ─── Error screen ─────────────────────────────────────────────────────────────
 function BootstrapError({ onRetry }: { onRetry: () => void }) {
   return createElement(
     "div",
@@ -25,49 +23,62 @@ function BootstrapError({ onRetry }: { onRetry: () => void }) {
     },
     createElement("p", { style: { color: "#555", fontSize: "1rem" } },
       "Could not connect to the server. Please check your connection."),
-    createElement(
-      "button",
-      {
-        onClick: onRetry,
-        style: {
-          padding: "0.6rem 1.4rem", background: "#7c3aed", color: "#fff",
-          border: "none", borderRadius: "6px", cursor: "pointer", fontSize: "0.95rem",
-        },
+    createElement("button", {
+      onClick: onRetry,
+      style: {
+        padding: "0.6rem 1.4rem", background: "#7c3aed", color: "#fff",
+        border: "none", borderRadius: "6px", cursor: "pointer", fontSize: "0.95rem",
       },
-      "Retry"
-    )
+    }, "Retry")
   );
 }
 
-// ─── Determine language preference ───────────────────────────────────────────
-function getPreferredLanguage(): string {
-  try {
-    const stored = localStorage.getItem("preferred-language");
-    if (stored && ["en", "hy", "ru"].includes(stored)) return stored;
-  } catch {}
-  return "hy"; // platform default
+// ─── Dev-only loader that shows pending labels ────────────────────────────────
+function LoaderWithDiagnostics() {
+  const [labels, setLabels] = useState<string[]>(() => getPendingLabels());
+  useEffect(() => subscribe(setLabels), []);
+
+  return createElement(
+    "div",
+    { style: { position: "relative" } },
+    createElement(TypingLoader, null),
+    import.meta.env.DEV
+      ? createElement("div", {
+          style: {
+            position: "fixed", bottom: "1rem", left: "50%", transform: "translateX(-50%)",
+            background: "rgba(0,0,0,0.7)", color: "#fff", padding: "0.4rem 0.8rem",
+            borderRadius: "6px", fontSize: "0.75rem", fontFamily: "monospace",
+            zIndex: 99999, pointerEvents: "none",
+            display: labels.length ? "block" : "none",
+          },
+        }, `⏳ waiting: ${labels.join(", ")}`)
+      : null
+  );
 }
 
-// ─── Bootstrap: fetch everything the app needs before first render ─────────────
+// ─── Bootstrap: all startup-critical fetches tracked and awaited ──────────────
 async function bootstrap(): Promise<BootstrapData> {
-  const [translationsRes, maintenanceRes] = await Promise.all([
-    fetch("/api/translations"),
-    fetch("/api/maintenance"),
+  const [translations, maintenance, templates] = await Promise.all([
+    trackPromise("translations",
+      fetch("/api/translations").then(r => {
+        if (!r.ok) throw new Error(`translations ${r.status}`);
+        return r.json();
+      })
+    ),
+    trackPromise("maintenance",
+      fetch("/api/maintenance").then(r => {
+        if (!r.ok) throw new Error(`maintenance ${r.status}`);
+        return r.json();
+      })
+    ),
+    trackPromise("templates",
+      fetch("/api/templates").then(r => {
+        if (!r.ok) throw new Error(`templates ${r.status}`);
+        return r.json();
+      }).catch(() => [] as any[])   // templates failure is non-fatal — fall back to []
+    ),
   ]);
 
-  if (!translationsRes.ok) {
-    throw new Error(`Translations fetch failed: ${translationsRes.status}`);
-  }
-  if (!maintenanceRes.ok) {
-    throw new Error(`Maintenance fetch failed: ${maintenanceRes.status}`);
-  }
-
-  const [translations, maintenance] = await Promise.all([
-    translationsRes.json(),
-    maintenanceRes.json(),
-  ]);
-
-  // Validate translations shape
   if (!translations || typeof translations !== "object" ||
       !("en" in translations || "hy" in translations || "ru" in translations)) {
     throw new Error("Invalid translations payload");
@@ -79,13 +90,15 @@ async function bootstrap(): Promise<BootstrapData> {
     bypassKey === "true" || urlParams.get("preview") === "true";
 
   if (import.meta.env.DEV) {
-    console.log("[4ever.am] ✅ Translations ready:", Object.keys(translations));
-    console.log("[4ever.am] ✅ Maintenance state:", maintenance.enabled, "| bypassed:", maintenanceBypassed);
-    console.log("[4ever.am] ✅ appReady = true");
+    console.log("[BOOT] ✅ translations ready:", Object.keys(translations));
+    console.log("[BOOT] ✅ templates count:", Array.isArray(templates) ? templates.length : "n/a");
+    console.log("[BOOT] ✅ maintenance:", maintenance.enabled, "| bypassed:", maintenanceBypassed);
+    console.log("[BOOT] rendering App (ready)", new Date().toISOString());
   }
 
   return {
     translations,
+    templates: Array.isArray(templates) ? templates : [],
     maintenanceEnabled: Boolean(maintenance.enabled),
     maintenanceBypassed,
   };
@@ -105,16 +118,10 @@ function Root() {
       .catch(() => setPhase("error"));
   }, []);
 
-  // Run once on mount — safe async side-effect
   useEffect(() => { runBootstrap(); }, []);
 
-  if (phase === "loading") return createElement(TypingLoader, null);
-  if (phase === "error") {
-    return createElement(BootstrapError, { onRetry: runBootstrap });
-  }
-  if (import.meta.env.DEV) {
-    console.log("[BOOT] rendering App (ready)", new Date().toISOString());
-  }
+  if (phase === "loading") return createElement(LoaderWithDiagnostics, null);
+  if (phase === "error") return createElement(BootstrapError, { onRetry: runBootstrap });
   return createElement(App, { bootstrapData: data! });
 }
 

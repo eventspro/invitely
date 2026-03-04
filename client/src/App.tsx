@@ -25,10 +25,12 @@ import TemplateAdminPanel from "@/components/template-admin-panel";
 import TemplateIdentifierGuard from "@/components/TemplateIdentifierGuard";
 import ComingSoon from "@/pages/coming-soon";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
+import { BootstrapProvider } from "@/contexts/BootstrapContext";
 
 // ─── Bootstrap data contract (shared with main.tsx via export) ────────────────
 export interface BootstrapData {
   translations: Record<string, any>;
+  templates: any[];           // raw /api/templates payload pre-fetched at boot
   maintenanceEnabled: boolean;
   maintenanceBypassed: boolean;
 }
@@ -123,22 +125,24 @@ function AppContent({
 }
 
 // App receives fully-resolved bootstrap data from main.tsx.
-// By the time this component mounts, translations + maintenance are already loaded — no loader needed here.
+// By the time this component mounts, translations + maintenance + templates are already loaded.
 function App({ bootstrapData }: { bootstrapData: BootstrapData }) {
   return (
     <QueryClientProvider client={queryClient}>
       <ArmenianFontProvider>
-        <LanguageProvider prefetchedData={bootstrapData.translations}>
-          <TooltipProvider>
-            <Toaster />
-            <ErrorBoundary>
-              <AppContent
-                maintenanceEnabled={bootstrapData.maintenanceEnabled}
-                maintenanceBypassed={bootstrapData.maintenanceBypassed}
-              />
-            </ErrorBoundary>
-          </TooltipProvider>
-        </LanguageProvider>
+        <BootstrapProvider data={bootstrapData}>
+          <LanguageProvider prefetchedData={bootstrapData.translations}>
+            <TooltipProvider>
+              <Toaster />
+              <ErrorBoundary>
+                <AppContent
+                  maintenanceEnabled={bootstrapData.maintenanceEnabled}
+                  maintenanceBypassed={bootstrapData.maintenanceBypassed}
+                />
+              </ErrorBoundary>
+            </TooltipProvider>
+          </LanguageProvider>
+        </BootstrapProvider>
       </ArmenianFontProvider>
     </QueryClientProvider>
   );

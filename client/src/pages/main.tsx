@@ -32,6 +32,7 @@ import { Link } from "wouter";
 import { useTranslation, useLocaleFormat, useLanguage } from "@/hooks/useLanguage";
 import LanguageSelector from "@/components/LanguageSelector";
 import { defaultContentConfig, getEnabledItems } from "@shared/content-config";
+import { useBootstrap } from "@/contexts/BootstrapContext";
 
 // Template interface based on database schema
 interface Template {
@@ -75,28 +76,74 @@ interface TemplatePlan {
   popular?: boolean;
 }
 
+// ─── Module-level helpers (no hooks — safe to call from useState initializer) ──────
+function getTemplateFeatures(template: Template): string[] {
+  const features: string[] = [];
+  if (template.config) {
+    if (template.config.features) return template.config.features;
+    if (template.config.hasTimeline) features.push('Timeline');
+    if (template.config.hasGallery) features.push('Photo Gallery');
+    if (template.config.hasMusic) features.push('Music Player');
+    if (template.config.theme?.name) features.push(`${template.config.theme.name} Theme`);
+  }
+  if (template.slug.includes('harut') || template.name.toLowerCase().includes('armenian')) features.push('Armenian Fonts');
+  if (template.slug.includes('forest') || template.slug.includes('lily') || template.name.toLowerCase().includes('nature')) features.push('Nature Theme', 'Green Colors');
+  if (template.slug.includes('classic') || template.name.toLowerCase().includes('classic')) features.push('Classic Design');
+  if (template.slug.includes('elegant') || template.name.toLowerCase().includes('elegant')) features.push('Elegant Style');
+  if (template.slug.includes('romantic') || template.name.toLowerCase().includes('romantic')) features.push('Romantic Design');
+  features.push('RSVP', 'Mobile Responsive');
+  return features;
+}
+
+function toDisplayTemplates(apiTemplates: Template[]): DisplayTemplate[] {
+  const allowedNames = ['Template 1', 'Template 2', 'Template 3', 'Template 4', 'Template 5'];
+  const main = apiTemplates.filter(t => t.isMain && allowedNames.includes(t.name));
+  return main.map((template, index) => {
+    let preview = `/template_previews/template-preview-${Math.min(index + 1, 5)}.jpg`;
+    if (template.slug.includes('harut')) preview = '/template_previews/img1.jpg';
+    else if (template.slug.includes('forest') || template.slug.includes('lily')) preview = '/template_previews/img2.jpg';
+    else if (template.slug.includes('michael') || template.slug.includes('sarah')) preview = '/template_previews/img4.jpg';
+    else if (template.slug.includes('alexander') || template.slug.includes('isabella')) preview = '/template_previews/img4.avif';
+    else if (template.slug.includes('david') || template.slug.includes('rose')) preview = '/template_previews/img5.jpeg';
+    return { id: template.slug, name: template.name, preview, demoUrl: `/${template.slug}`, features: getTemplateFeatures(template) };
+  });
+}
+
 export default function MainPage() {
   const { translations: t } = useTranslation();
   const { formatPrice } = useLocaleFormat();
   const { isLoading: translationsLoading } = useLanguage();
+  const bootstrap = useBootstrap();
   const [selectedPlan, setSelectedPlan] = useState<string>("standard");
-  const [templates, setTemplates] = useState<DisplayTemplate[]>([]);
-  const [loading, setLoading] = useState(true);
+
+  // ── Templates: use pre-fetched bootstrap data when available ────────────────
+  // bootstrap.templates was fetched in main.tsx before this component ever rendered.
+  // Only fall back to an on-mount fetch if bootstrap data is empty (shouldn't happen).
+  const [templates, setTemplates] = useState<DisplayTemplate[]>(() =>
+    bootstrap.templates.length > 0 ? toDisplayTemplates(bootstrap.templates) : []
+  );
+  const [loading, setLoading] = useState(false); // false — data already here from bootstrap
   const [error, setError] = useState<string | null>(null);
 
-  // Fetch templates from API
+  // ── Safety-net fetch: only runs if bootstrap returned no templates ───────────
+  // In normal operation this effect does nothing (bootstrap.templates is populated).
+  // It only fires as a fallback if someone navigates here without a full bootstrap.
   useEffect(() => {
+    if (bootstrap.templates.length > 0) {
+      // Already have data from bootstrap — nothing to do.
+      if (import.meta.env.DEV) {
+        console.log("[MainPage] using pre-fetched templates from bootstrap:", bootstrap.templates.length);
+      }
+      return;
+    }
+
     const fetchTemplates = async (retryCount = 0) => {
       try {
         setLoading(true);
         setError(null);
         
         const response = await fetch('/api/templates', {
-          headers: {
-            'Accept': 'application/json',
-            'Content-Type': 'application/json',
-          },
-          // Add timeout to prevent hanging
+          headers: { 'Accept': 'application/json', 'Content-Type': 'application/json' },
           signal: AbortSignal.timeout(15000),
         });
         
@@ -105,54 +152,15 @@ export default function MainPage() {
         }
         
         const apiTemplates: Template[] = await response.json();
-        
-        // Filter only Template 1-5 (main templates that exist)
-        const allowedTemplateNames = ['Template 1', 'Template 2', 'Template 3', 'Template 4', 'Template 5'];
-        const mainTemplates = apiTemplates.filter(template => 
-          template.isMain && allowedTemplateNames.includes(template.name)
-        );
-        
-        console.log('📋 Filtered templates:', mainTemplates.map(t => ({ name: t.name, slug: t.slug, isMain: t.isMain })));
-        
-        // Convert API templates to display format - USE ACTUAL TEMPLATE DATA
-        const displayTemplates = mainTemplates.map((template, index) => {
-          // Map template previews based on template name or slug - preserve order from database
-          let previewImage = `/template_previews/template-preview-${Math.min(index + 1, 5)}.jpg`;
-          
-          // Try to match specific templates to their preview images based on actual slugs
-          if (template.slug.includes('harut')) {
-            previewImage = '/template_previews/img1.jpg';
-          } else if (template.slug.includes('forest') || template.slug.includes('lily')) {
-            previewImage = '/template_previews/img2.jpg';
-          } else if (template.slug.includes('michael') || template.slug.includes('sarah')) {
-            previewImage = '/template_previews/img4.jpg';
-          } else if (template.slug.includes('alexander') || template.slug.includes('isabella')) {
-            previewImage = '/template_previews/img4.avif';
-          } else if (template.slug.includes('david') || template.slug.includes('rose')) {
-            previewImage = '/template_previews/img5.jpeg';
-          }
-          
-          return {
-            id: template.slug,
-            name: template.name, // USE ACTUAL TEMPLATE NAME FROM DATABASE
-            preview: previewImage,
-            demoUrl: `/${template.slug}`,
-            features: getTemplateFeatures(template)
-          };
-        });
-        
-        setTemplates(displayTemplates);
+        setTemplates(toDisplayTemplates(apiTemplates));
       } catch (err) {
         console.error('Error fetching templates:', err);
         
-        // Retry logic for network errors
         if (retryCount < 2 && (err instanceof TypeError || (err as any).name === 'AbortError')) {
-          console.log(`Retrying template fetch (attempt ${retryCount + 1})`);
           setTimeout(() => fetchTemplates(retryCount + 1), 1000);
           return;
         }
         
-        // Fall back to hardcoded templates silently - don't show scary error banner when fallback works
         console.warn('Templates API failed, using fallback:', err);
         setTemplates(fallbackTemplates);
       } finally {
@@ -164,46 +172,6 @@ export default function MainPage() {
   }, []);
 
   // Extract features from template config - use actual template data
-  const getTemplateFeatures = (template: Template) => {
-    const features = [];
-    
-    // Try to extract features from template config if available
-    if (template.config) {
-      // Check if config has specific features
-      if (template.config.features) {
-        return template.config.features;
-      }
-      
-      // Check for specific configuration properties
-      if (template.config.hasTimeline) features.push('Timeline');
-      if (template.config.hasGallery) features.push('Photo Gallery');
-      if (template.config.hasMusic) features.push('Music Player');
-      if (template.config.theme?.name) features.push(`${template.config.theme.name} Theme`);
-    }
-    
-    // Add features based on template slug patterns (fallback)
-    if (template.slug.includes('harut') || template.name.toLowerCase().includes('armenian')) {
-      features.push('Armenian Fonts');
-    }
-    if (template.slug.includes('forest') || template.slug.includes('lily') || template.name.toLowerCase().includes('nature')) {
-      features.push('Nature Theme', 'Green Colors');
-    }
-    if (template.slug.includes('classic') || template.name.toLowerCase().includes('classic')) {
-      features.push('Classic Design');
-    }
-    if (template.slug.includes('elegant') || template.name.toLowerCase().includes('elegant')) {
-      features.push('Elegant Style');
-    }
-    if (template.slug.includes('romantic') || template.name.toLowerCase().includes('romantic')) {
-      features.push('Romantic Design');
-    }
-    
-    // Add common features that all templates should have
-    features.push('RSVP', 'Mobile Responsive');
-    
-    return features;
-  };
-
   // Fallback templates in case API fails — always show all 5, use slug as name fallback
   const fallbackTemplates: DisplayTemplate[] = [
     {
