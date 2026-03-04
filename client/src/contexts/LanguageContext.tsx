@@ -1,5 +1,16 @@
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { Language, defaultLanguage, languages, LanguageConfig } from '@/config/languages';
+import { en as staticEn } from '@/config/languages/en';
+import { hy as staticHy } from '@/config/languages/hy';
+import { ru as staticRu } from '@/config/languages/ru';
+
+// Pre-loaded static translations — available instantly on first render.
+// API translations merge in later, upgrading DB-managed strings transparently.
+const staticTranslations = {
+  en: staticEn as unknown as LanguageConfig,
+  hy: staticHy as unknown as LanguageConfig,
+  ru: staticRu as unknown as LanguageConfig,
+};
 
 interface LanguageContextType {
   currentLanguage: Language;
@@ -30,12 +41,13 @@ export function LanguageProvider({ children }: LanguageProviderProps) {
   };
 
   const [currentLanguage, setCurrentLanguage] = useState<Language>(getStoredLanguage);
-  const [translationsCache, setTranslationsCache] = useState<Record<Language, LanguageConfig>>({
-    en: {} as LanguageConfig,
-    hy: {} as LanguageConfig,
-    ru: {} as LanguageConfig
-  });
-  const [isLoading, setIsLoading] = useState(true);
+  // Initialize with static translations so the page renders correctly from
+  // the very first frame — no empty-object crash, no blocking spinner.
+  const [translationsCache, setTranslationsCache] = useState<Record<Language, LanguageConfig>>(staticTranslations);
+  // isLoading starts false because content is immediately available.
+  // It briefly flips true while API translations are fetching, but nothing
+  // in the UI blocks on it anymore.
+  const [isLoading, setIsLoading] = useState(false);
 
   // Deep-merge static config into DB data: DB values win, but missing keys fall back to static
   const deepMergeStatic = (staticObj: any, dbObj: any): any => {
