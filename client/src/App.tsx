@@ -4,7 +4,7 @@ import { queryClient } from "./lib/queryClient";
 import { QueryClientProvider } from "@tanstack/react-query";
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
-import { LanguageProvider, useLanguage } from "@/contexts/LanguageContext";
+import { LanguageProvider } from "@/contexts/LanguageContext";
 import { ArmenianFontProvider } from "@/components/ArmenianFontProvider";
 import { MaintenanceMode } from "@/components/maintenance-mode";
 import { AdminPanel } from "@/components/admin-panel";
@@ -89,11 +89,7 @@ function Router() {
   );
 }
 
-// AppContent is mounted inside LanguageProvider, so it can call useLanguage().
-// It shows TypingLoader until BOTH translations from the DB are loaded AND
-// the maintenance check has completed — this prevents any flash of default text.
 function AppContent() {
-  const { isLoading: translationsLoading } = useLanguage();
   const [location] = useLocation();
   const [maintenanceBypassed, setMaintenanceBypassed] = useState(false);
   const [maintenanceEnabled, setMaintenanceEnabled] = useState(false);
@@ -121,10 +117,7 @@ function AppContent() {
     checkMaintenanceStatus();
   }, []);
 
-  // Show TypingLoader until translations are fetched from DB AND maintenance is checked
-  if (translationsLoading || !maintenanceChecked) {
-    return <TypingLoader />;
-  }
+  if (!maintenanceChecked) return null;
 
   const isAdminRoute = location === "/admin";
   const shouldShowMaintenance = maintenanceEnabled && !maintenanceBypassed && !isAdminRoute;
@@ -144,10 +137,30 @@ function AppContent() {
 }
 
 function App() {
+  // loading=true until BOTH: 1200ms elapsed AND /api/translations has responded.
+  // This prevents any flash of static fallback text before DB translations load.
+  const [loading, setLoading] = useState(true);
+  const [prefetchedTranslations, setPrefetchedTranslations] = useState<any>(null);
+
+  useEffect(() => {
+    const translationsFetch = fetch("/api/translations")
+      .then((r) => r.json())
+      .then((data) => { setPrefetchedTranslations(data); return data; })
+      .catch(() => null);
+
+    const minDelay = new Promise<void>((resolve) => setTimeout(resolve, 1200));
+
+    Promise.all([translationsFetch, minDelay]).finally(() => setLoading(false));
+  }, []);
+
+  if (loading) {
+    return <TypingLoader />;
+  }
+
   return (
     <QueryClientProvider client={queryClient}>
       <ArmenianFontProvider>
-        <LanguageProvider>
+        <LanguageProvider prefetchedData={prefetchedTranslations}>
           <TooltipProvider>
             <Toaster />
             <ErrorBoundary>

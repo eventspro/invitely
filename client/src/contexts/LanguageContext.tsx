@@ -12,6 +12,23 @@ const staticTranslations = {
   ru: staticRu as unknown as LanguageConfig,
 };
 
+// Module-level merge helper (used in useState initializer before component methods exist)
+function deepMergeStaticSync(staticObj: any, dbObj: any): any {
+  if (!dbObj || typeof dbObj !== 'object') return staticObj;
+  if (!staticObj || typeof staticObj !== 'object') return dbObj;
+  const result = { ...staticObj };
+  for (const key in dbObj) {
+    if (dbObj[key] !== null && typeof dbObj[key] === 'object' && !Array.isArray(dbObj[key])) {
+      result[key] = deepMergeStaticSync(staticObj[key] || {}, dbObj[key]);
+    } else if (Array.isArray(dbObj[key]) && dbObj[key].length > 0) {
+      result[key] = dbObj[key];
+    } else if (dbObj[key] !== undefined && dbObj[key] !== '') {
+      result[key] = dbObj[key];
+    }
+  }
+  return result;
+}
+
 interface LanguageContextType {
   currentLanguage: Language;
   setLanguage: (language: Language) => void;
@@ -26,9 +43,10 @@ const LanguageContext = createContext<LanguageContextType | undefined>(undefined
 
 interface LanguageProviderProps {
   children: ReactNode;
+  prefetchedData?: any; // Pre-fetched translation data from App root loader
 }
 
-export function LanguageProvider({ children }: LanguageProviderProps) {
+export function LanguageProvider({ children, prefetchedData }: LanguageProviderProps) {
   // Get language from localStorage or use default
   const getStoredLanguage = (): Language => {
     if (typeof window !== 'undefined') {
@@ -41,12 +59,23 @@ export function LanguageProvider({ children }: LanguageProviderProps) {
   };
 
   const [currentLanguage, setCurrentLanguage] = useState<Language>(getStoredLanguage);
-  // Initialize with static translations so the page renders correctly from
-  // the very first frame — no empty-object crash, no blocking spinner.
-  const [translationsCache, setTranslationsCache] = useState<Record<Language, LanguageConfig>>(staticTranslations);
-  // isLoading starts TRUE — we are fetching DB translations on mount.
-  // AppContent blocks rendering until this becomes false.
-  const [isLoading, setIsLoading] = useState(true);
+  // Initialize with prefetched DB data if available, otherwise fall back to static translations.
+  // By the time LanguageProvider mounts, App has already awaited /api/translations,
+  // so prefetchedData should always be present — no flash of static text.
+  const buildInitialCache = () => {
+    if (prefetchedData && typeof prefetchedData === 'object') {
+      return {
+        en: prefetchedData.en ? deepMergeStaticSync(staticEn as any, prefetchedData.en) : staticEn as unknown as LanguageConfig,
+        hy: prefetchedData.hy ? deepMergeStaticSync(staticHy as any, prefetchedData.hy) : staticHy as unknown as LanguageConfig,
+        ru: prefetchedData.ru ? deepMergeStaticSync(staticRu as any, prefetchedData.ru) : staticRu as unknown as LanguageConfig,
+      };
+    }
+    return staticTranslations;
+  };
+
+  const [translationsCache, setTranslationsCache] = useState<Record<Language, LanguageConfig>>(buildInitialCache);
+  // isLoading starts false because prefetchedData already has the DB translations.
+  const [isLoading, setIsLoading] = useState(false);
 
   // Deep-merge static config into DB data: DB values win, but missing keys fall back to static
   const deepMergeStatic = (staticObj: any, dbObj: any): any => {
