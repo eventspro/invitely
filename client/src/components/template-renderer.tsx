@@ -5,7 +5,7 @@ import { useState, useEffect, Suspense } from "react";
 import { useParams } from "wouter";
 import { getTemplate } from "@/templates";
 import { MaintenanceMode } from "@/components/maintenance-mode";
-import LoadingScreen from "@/components/loading-screen";
+import TypingLoader from "@/components/TypingLoader";
 import type { WeddingConfig } from "@/templates/types";
 
 interface TemplateConfig {
@@ -80,11 +80,7 @@ export default function TemplateRenderer() {
 
   // Show minimal loading state
   if (loading) {
-    return (
-      <div className="fixed inset-0 bg-white flex items-center justify-center">
-        <div className="animate-spin w-8 h-8 border-2 border-gray-300 border-t-gray-600 rounded-full"></div>
-      </div>
-    );
+    return <TypingLoader />;
   }
 
   // Show error state
@@ -128,7 +124,7 @@ export default function TemplateRenderer() {
   const TemplateComponent = templateDef.component;
 
   return (
-    <Suspense fallback={<LoadingScreen />}>
+    <Suspense fallback={<TypingLoader />}>
       <TemplateComponent config={templateConfig.config} templateId={templateConfig.templateId} />
     </Suspense>
   );

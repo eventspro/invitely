@@ -20,7 +20,7 @@ import PhotosPage from "@/pages/photos";
 import TemplatesPage from "@/pages/templates";
 import TranslationsPage from "@/pages/platform-translations";
 import NotFound from "@/pages/not-found";
-import { TypingLoader } from "@/components/TypingLoader";
+import TypingLoader from "@/components/TypingLoader";
 import PlatformDashboard from "@/pages/platform-dashboard";
 import TemplateRenderer from "@/components/template-renderer";
 import TemplateAdminPanel from "@/components/template-admin-panel";
@@ -160,7 +160,7 @@ function App() {
 
   // Show TypingLoader while maintenance check is in flight
   if (loading) {
-    return <TypingLoader show={true} />;
+    return <TypingLoader />;
   }
 
   if (shouldShowMaintenance) {
