@@ -148,8 +148,22 @@ export function LanguageProvider({ children, prefetchedData }: LanguageProviderP
     }
   };
 
-  // Load translations on mount
+  // Reload translations only when the user actively switches language.
+  // On initial mount, prefetchedData from bootstrap is already in translationsCache — no re-fetch needed.
+  const isInitialMount = React.useRef(true);
   useEffect(() => {
+    if (isInitialMount.current) {
+      isInitialMount.current = false;
+      // Skip the initial fetch if we already have prefetched DB data.
+      if (prefetchedData && typeof prefetchedData === 'object' &&
+          ('en' in prefetchedData || 'hy' in prefetchedData || 'ru' in prefetchedData)) {
+        if (import.meta.env.DEV) {
+          console.log('[4ever.am] ✅ Translations ready: using prefetched bootstrap data, skipping initial re-fetch');
+          console.log('[4ever.am] ✅ appReady = true');
+        }
+        return;
+      }
+    }
     fetchTranslations();
   }, [currentLanguage]);
 

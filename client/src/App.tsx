@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { Switch, Route, useLocation } from "wouter";
 import { queryClient } from "./lib/queryClient";
 import { QueryClientProvider } from "@tanstack/react-query";
@@ -13,20 +13,25 @@ import { PlatformAdminPanel } from "@/components/platform-admin/PlatformAdminPan
 import { PlatformAdminLogin } from "@/components/platform-admin/PlatformAdminLogin";
 import { TemplateAdminLogin } from "@/components/admin/TemplateAdminLogin";
 import { TemplateAdminDashboard } from "@/components/admin/TemplateAdminDashboard";
-import { weddingConfig } from "@/config/wedding-config";
 import Home from "@/pages/home";
 import MainPage from "@/pages/main";
 import PhotosPage from "@/pages/photos";
 import TemplatesPage from "@/pages/templates";
 import TranslationsPage from "@/pages/platform-translations";
 import NotFound from "@/pages/not-found";
-import TypingLoader from "@/components/TypingLoader";
 import PlatformDashboard from "@/pages/platform-dashboard";
 import TemplateRenderer from "@/components/template-renderer";
 import TemplateAdminPanel from "@/components/template-admin-panel";
 import TemplateIdentifierGuard from "@/components/TemplateIdentifierGuard";
 import ComingSoon from "@/pages/coming-soon";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
+
+// ─── Bootstrap data contract (shared with main.tsx via export) ────────────────
+export interface BootstrapData {
+  translations: Record<string, any>;
+  maintenanceEnabled: boolean;
+  maintenanceBypassed: boolean;
+}
 
 function Router() {
   return (
@@ -89,35 +94,16 @@ function Router() {
   );
 }
 
-function AppContent() {
+// AppContent receives pre-fetched maintenance data — no async gap, no null flash.
+function AppContent({
+  maintenanceEnabled,
+  maintenanceBypassed: initialBypassed,
+}: {
+  maintenanceEnabled: boolean;
+  maintenanceBypassed: boolean;
+}) {
   const [location] = useLocation();
-  const [maintenanceBypassed, setMaintenanceBypassed] = useState(false);
-  const [maintenanceEnabled, setMaintenanceEnabled] = useState(false);
-  const [maintenanceChecked, setMaintenanceChecked] = useState(false);
-
-  useEffect(() => {
-    const checkMaintenanceStatus = async () => {
-      try {
-        const response = await fetch("/api/maintenance");
-        if (!response.ok) throw new Error(`HTTP ${response.status}`);
-        const data = await response.json();
-        setMaintenanceEnabled(data.enabled);
-        const bypassKey = localStorage.getItem("maintenance-bypass");
-        const urlParams = new URLSearchParams(window.location.search);
-        if (bypassKey === "true" || urlParams.get("preview") === "true") {
-          setMaintenanceBypassed(true);
-        }
-      } catch (error) {
-        console.warn("Maintenance check failed, allowing access:", error);
-        setMaintenanceEnabled(false);
-      } finally {
-        setMaintenanceChecked(true);
-      }
-    };
-    checkMaintenanceStatus();
-  }, []);
-
-  if (!maintenanceChecked) return null;
+  const [maintenanceBypassed, setMaintenanceBypassed] = useState(initialBypassed);
 
   const isAdminRoute = location === "/admin";
   const shouldShowMaintenance = maintenanceEnabled && !maintenanceBypassed && !isAdminRoute;
@@ -136,35 +122,20 @@ function AppContent() {
   return <Router />;
 }
 
-function App() {
-  // loading=true until BOTH: 1200ms elapsed AND /api/translations has responded.
-  // This prevents any flash of static fallback text before DB translations load.
-  const [loading, setLoading] = useState(true);
-  const [prefetchedTranslations, setPrefetchedTranslations] = useState<any>(null);
-
-  useEffect(() => {
-    const translationsFetch = fetch("/api/translations")
-      .then((r) => r.json())
-      .then((data) => { setPrefetchedTranslations(data); return data; })
-      .catch(() => null);
-
-    const minDelay = new Promise<void>((resolve) => setTimeout(resolve, 1200));
-
-    Promise.all([translationsFetch, minDelay]).finally(() => setLoading(false));
-  }, []);
-
-  if (loading) {
-    return <TypingLoader />;
-  }
-
+// App receives fully-resolved bootstrap data from main.tsx.
+// By the time this component mounts, translations + maintenance are already loaded — no loader needed here.
+function App({ bootstrapData }: { bootstrapData: BootstrapData }) {
   return (
     <QueryClientProvider client={queryClient}>
       <ArmenianFontProvider>
-        <LanguageProvider prefetchedData={prefetchedTranslations}>
+        <LanguageProvider prefetchedData={bootstrapData.translations}>
           <TooltipProvider>
             <Toaster />
             <ErrorBoundary>
-              <AppContent />
+              <AppContent
+                maintenanceEnabled={bootstrapData.maintenanceEnabled}
+                maintenanceBypassed={bootstrapData.maintenanceBypassed}
+              />
             </ErrorBoundary>
           </TooltipProvider>
         </LanguageProvider>
