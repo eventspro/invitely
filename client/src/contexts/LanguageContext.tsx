@@ -166,18 +166,9 @@ export function LanguageProvider({ children }: LanguageProviderProps) {
     updateTranslationInCache
   };
 
-  // Show loading spinner while fetching API translations on initial load
-  if (isLoading) {
-    return (
-      <div className="flex items-center justify-center h-screen">
-        <div className="text-center">
-          <div className="inline-block h-8 w-8 animate-spin rounded-full border-4 border-solid border-rose-500 border-r-transparent mb-4"></div>
-          <p className="text-gray-600">Loading...</p>
-        </div>
-      </div>
-    );
-  }
-
+  // Do NOT render a blocking spinner here — the TypingLoader in App.tsx already
+  // covers the initial load window. Translations hydrate silently into the UI
+  // once the API responds; children render immediately with fallback strings.
   return (
     <LanguageContext.Provider value={value}>
       {children}

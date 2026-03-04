@@ -538,17 +538,7 @@ export default function MainPage() {
             )}
           </div>
           
-          {loading ? (
-            <div className="text-center py-12">
-              <div className="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-softGold"></div>
-              <p 
-                className="mt-4 text-charcoal/60"
-                data-i18n-key="templates.loading"
-              >
-                {t.templates?.loading || 'Loading templates...'}
-              </p>
-            </div>
-          ) : null}
+          {/* Templates load silently — no inline spinner needed */}
           
           <div className="grid sm:grid-cols-1 md:grid-cols-2 lg:grid-cols-2 gap-8">
             {templates.map((template, index) => (
