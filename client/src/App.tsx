@@ -89,9 +89,9 @@ function Router() {
   );
 }
 
-// AppContent lives inside LanguageProvider so it can use useLanguage().
-// It blocks rendering with TypingLoader until BOTH DB translations AND
-// the maintenance check are complete — preventing any flash of default text.
+// AppContent is mounted inside LanguageProvider, so it can call useLanguage().
+// It shows TypingLoader until BOTH translations from the DB are loaded AND
+// the maintenance check has completed — this prevents any flash of default text.
 function AppContent() {
   const { isLoading: translationsLoading } = useLanguage();
   const [location] = useLocation();
@@ -121,7 +121,7 @@ function AppContent() {
     checkMaintenanceStatus();
   }, []);
 
-  // Block until BOTH translations from DB are loaded AND maintenance is checked
+  // Show TypingLoader until translations are fetched from DB AND maintenance is checked
   if (translationsLoading || !maintenanceChecked) {
     return <TypingLoader />;
   }
