@@ -344,3 +344,13 @@
 .border-gold {
   border-color: #D4AF37;
 }
+
+/* ── TypingLoader cursor blink ───────────────────────────────── */
+@keyframes typing-cursor-blink {
+  0%, 100% { opacity: 1; }
+  50%       { opacity: 0; }
+}
+
+.typing-cursor {
+  animation: typing-cursor-blink 900ms step-start infinite;
+}

@@ -20,7 +20,7 @@ import PhotosPage from "@/pages/photos";
 import TemplatesPage from "@/pages/templates";
 import TranslationsPage from "@/pages/platform-translations";
 import NotFound from "@/pages/not-found";
-import LoadingScreen from "@/components/loading-screen";
+import { TypingLoader } from "@/components/TypingLoader";
 import PlatformDashboard from "@/pages/platform-dashboard";
 import TemplateRenderer from "@/components/template-renderer";
 import TemplateAdminPanel from "@/components/template-admin-panel";
@@ -158,13 +158,9 @@ function App() {
   const isAdminRoute = location === "/admin";
   const shouldShowMaintenance = maintenanceEnabled && !maintenanceBypassed && !isAdminRoute;
 
-  // Show minimal loading state only if really needed
+  // Show TypingLoader while maintenance check is in flight
   if (loading) {
-    return (
-      <div className="fixed inset-0 bg-white flex items-center justify-center">
-        <div className="animate-spin w-8 h-8 border-2 border-gray-300 border-t-gray-600 rounded-full"></div>
-      </div>
-    );
+    return <TypingLoader show={true} />;
   }
 
   if (shouldShowMaintenance) {

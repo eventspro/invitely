@@ -338,17 +338,9 @@ export default function MainPage() {
     };
   });
 
-  // Show loading state while translations are being fetched
-  if (translationsLoading) {
-    return (
-      <div className="min-h-screen bg-gradient-to-br from-cream via-white to-lightGold/20 flex items-center justify-center">
-        <div className="text-center">
-          <div className="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-softGold mb-4"></div>
-          <p className="text-charcoal/60">Loading translations...</p>
-        </div>
-      </div>
-    );
-  }
+  // Translations load in the background — no blocking spinner needed.
+  // The TypingLoader in App.tsx already covers the initial app load,
+  // and translations will hydrate into the UI once the query resolves.
 
   return (
     <div className="relative min-h-[100dvh] isolate">
