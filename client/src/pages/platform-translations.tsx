@@ -129,7 +129,7 @@ interface TranslationSections {
   footer: {
     about: string;
     services: { title: string; items: string[] };
-    contact: { title: string; items: string[] };
+    contact: { title: string; items: string[]; urls: string[] };
     copyright: string;
   };
 }
@@ -341,7 +341,8 @@ const defaultTranslations: TranslationSections = {
     },
     contact: {
       title: "Կապ",
-      items: ["Էլ. փոստ: info@weddingsites.com", "Հեռախոս: +1 (555) 123-4567", "Աջակցություն: support@weddingsites.com"]
+      items: ["Էլ. փոստ", "Հեռախոս", "Աջակցություն"],
+      urls: ["mailto:info@weddingsites.com", "tel:+15551234567", "mailto:support@weddingsites.com"]
     },
     copyright: "© 2026 WeddingSites. Բոլոր իրավունքները պաշտպանված են."
   }
@@ -486,7 +487,8 @@ export default function PlatformTranslations() {
                 },
                 contact: {
                   title: langData.footer?.contact?.title ?? '',
-                  items: langData.footer?.contact?.items || []
+                  items: langData.footer?.contact?.items || [],
+                  urls: langData.footer?.contact?.urls || []
                 },
                 copyright: langData.footer?.copyright ?? ''
               }
@@ -1802,19 +1804,44 @@ export default function PlatformTranslations() {
                     >
                       {translations.footer?.contact?.title || 'Contact'}
                     </div>
-                    <ul className="space-y-2">
+                    <ul className="space-y-3">
                       {(translations.footer?.contact?.items || []).map((item, index) => (
-                        <li key={index} contentEditable suppressContentEditableWarning
-                          onBlur={(e) => {
-                            const newItems = [...(translations.footer?.contact?.items || [])];
-                            newItems[index] = e.currentTarget.textContent || '';
-                            updateSection('footer', 'contact', { ...translations.footer.contact, items: newItems });
-                          }}
-                          className="text-gray-300 p-2 border-2 border-transparent hover:border-blue-300 rounded outline-none cursor-text"
-                        >
-                          {item}
+                        <li key={index} className="space-y-1">
+                          <div
+                            contentEditable
+                            suppressContentEditableWarning
+                            onBlur={(e) => {
+                              const newItems = [...(translations.footer?.contact?.items || [])];
+                              newItems[index] = e.currentTarget.textContent || '';
+                              updateSection('footer', 'contact', { ...translations.footer.contact, items: newItems });
+                            }}
+                            className="text-gray-300 text-sm px-2 py-1 border-2 border-transparent hover:border-blue-300 rounded outline-none cursor-text"
+                          >
+                            {item}
+                          </div>
+                          <input
+                            type="text"
+                            value={(translations.footer?.contact?.urls || [])[index] || ''}
+                            onChange={(e) => {
+                              const newUrls = [...(translations.footer?.contact?.urls || [])];
+                              newUrls[index] = e.target.value;
+                              updateSection('footer', 'contact', { ...translations.footer.contact, urls: newUrls });
+                            }}
+                            placeholder="https://... or mailto:... or tel:..."
+                            className="w-full text-xs text-blue-300 bg-transparent border border-gray-600 hover:border-blue-400 focus:border-blue-400 rounded px-2 py-1 outline-none placeholder-gray-600"
+                          />
                         </li>
                       ))}
+                      <li>
+                        <button
+                          onClick={() => {
+                            const newItems = [...(translations.footer?.contact?.items || []), 'New link'];
+                            const newUrls = [...(translations.footer?.contact?.urls || []), ''];
+                            updateSection('footer', 'contact', { ...translations.footer.contact, items: newItems, urls: newUrls });
+                          }}
+                          className="text-xs text-blue-400 hover:text-blue-300 mt-1"
+                        >+ Add link</button>
+                      </li>
                     </ul>
                   </div>
                 </div>

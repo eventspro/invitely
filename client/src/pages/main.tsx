@@ -425,7 +425,7 @@ export default function MainPage() {
               )}
               {t.common?.viewMore && t.common.viewMore.trim() && (
                 <a 
-                  href="#templates"
+                  href="#contact"
                   className="border-2 border-charcoal text-charcoal hover:bg-charcoal hover:text-white px-8 py-4 rounded-lg text-lg font-medium transition-all duration-300 transform hover:scale-105 flex items-center"
                 >
                   <span data-i18n-key="common.viewMore">{t.common.viewMore}</span> <Eye className="ml-2 h-5 w-5" />
@@ -883,12 +883,28 @@ export default function MainPage() {
               >
                 {t.footer?.contact?.title}
               </h4>
-              <p 
-                className="text-white/70 mb-4"
-                data-i18n-key="footer.contact.description"
-              >
-                {t.footer?.contact?.description}
-              </p>
+              {(((t.footer?.contact as any)?.items as string[]) || []).length > 0 && (
+                <ul className="space-y-2 text-white/70 mb-4">
+                  {(((t.footer?.contact as any)?.items as string[]) || []).map((item: string, idx: number) => {
+                    const url = ((t.footer?.contact as any)?.urls as string[])?.[idx];
+                    return url ? (
+                      <li key={idx}>
+                        <a href={url} target={url.startsWith('http') ? '_blank' : undefined} rel="noopener noreferrer" className="hover:text-white transition-colors underline-offset-2 hover:underline">{item}</a>
+                      </li>
+                    ) : (
+                      <li key={idx}>{item}</li>
+                    );
+                  })}
+                </ul>
+              )}
+              {!(((t.footer?.contact as any)?.items as string[]) || []).length && (
+                <p 
+                  className="text-white/70 mb-4"
+                  data-i18n-key="footer.contact.description"
+                >
+                  {t.footer?.contact?.description}
+                </p>
+              )}
               <div className="flex gap-4">
                 <a 
                   href="https://www.instagram.com/weddingsites_am" 

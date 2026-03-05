@@ -78,12 +78,12 @@ export const hy = {
   templatePlans: {
     badge: "Հարսանեկան Դիզայններ և Գնացուցակ",
     title: "Ընտրեք Կատարյալ Հարսանեկան Կայքը",
-    subtitle: "Ինտիմ հավաքույթներից մինչև վեհ տոնակատարությունները՝ գտիր այն դիզայնը, որը համապատասխանում է քո սիրո պատմությանը:",
+    subtitle: "Գտիր այն դիզայնը, որը համապատասխանում է քո սիրո պատմությանը:",
     featuresHeader: "Հնարավորություններ",
     plans: [
       {
         name: "Հիմնական",
-        description: "Կատարյալ է ինտիմ հարսանիքների համար հիմնական հնարավորություններով",
+        description: "Կատարյալ է հարսանիքների համար հիմնական հնարավորություններով",
         badge: ""
       },
       {
@@ -268,7 +268,10 @@ export const hy = {
       title: "Կապ",
       email: "Էլ. փոստ: info@weddingsites.com",
       phone: "Հեռախոս: +1 (555) 123-4567",
-      support: "Աջակցություն: support@weddingsites.com"
+      support: "Աջակցություն: support@weddingsites.com",
+      description: "",
+      items: [] as string[],
+      urls: [] as string[]
     },
     copyright: "© 2026 WeddingSites: Բոլոր իրավունքները պաշտպանված են:"
   },
@@ -294,7 +297,7 @@ export const hy = {
       basic: {
         name: "Հիմնական",
         price: "10,000 դրամ",
-        description: "Կատարյալ է ինտիմ հարսանիքների համար հիմնական գործառույթներով",
+        description: "Կատարյալ է  հարսանիքների համար հիմնական գործառույթներով",
         badge: ""
       },
       essential: {
