@@ -856,10 +856,16 @@ export default function MainPage() {
                 {t.footer?.services?.title}
               </h4>
               <ul className="space-y-2 text-white/70">
-                <li data-i18n-key="footer.services.items.0">{t.footer?.services?.items?.[0]}</li>
-                <li data-i18n-key="footer.services.items.1">{t.footer?.services?.items?.[1]}</li>
-                <li data-i18n-key="footer.services.items.2">{t.footer?.services?.items?.[2]}</li>
-                <li data-i18n-key="footer.services.items.3">{t.footer?.services?.items?.[3]}</li>
+                {(t.footer?.services?.items || []).map((item, idx) => {
+                  const url = ((t.footer?.services as any)?.urls as string[])?.[idx];
+                  return url ? (
+                    <li key={idx}>
+                      <a href={url} target={url.startsWith('http') ? '_blank' : undefined} rel="noopener noreferrer" className="hover:text-white transition-colors underline-offset-2 hover:underline">{item}</a>
+                    </li>
+                  ) : (
+                    <li key={idx}>{item}</li>
+                  );
+                })}
               </ul>
             </div>
             <div>

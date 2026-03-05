@@ -130,7 +130,8 @@ interface TranslationSections {
   };
   footer: {
     about: string;
-    services: { title: string; items: string[] };
+    aboutUrl: string;
+    services: { title: string; items: string[]; urls: string[] };
     contact: { title: string; items: string[]; urls: string[] };
     copyright: string;
   };
@@ -337,9 +338,11 @@ const defaultTranslations: TranslationSections = {
   },
   footer: {
     about: "Գեղեցիկ հարսանեկան կայքեր ձեր հատուկ օրվա համար",
+    aboutUrl: "",
     services: {
       title: "Ծառայություններ",
-      items: ["Հարսանեկան Կայքեր", "Ձևանմուշների Դիզայն", "Անհատական Մշակում", "Աջակցություն"]
+      items: ["Հարսանեկան Կայքեր", "Ձևանմուշների Դիզայն", "Անհատական Մշակում", "Աջակցություն"],
+      urls: ["", "", "", ""]
     },
     contact: {
       title: "Կապ",
@@ -395,37 +398,29 @@ export default function PlatformTranslations() {
   // Phase 3.2: Add plan state
   const [isAddPlanOpen, setIsAddPlanOpen] = useState(false);
 
-  // Footer contact link editor popup state
+  // Footer link editor popup state (generic, callback-based)
   const [linkEditorOpen, setLinkEditorOpen] = useState(false);
-  const [linkEditorIndex, setLinkEditorIndex] = useState<number | null>(null);
   const [linkEditorText, setLinkEditorText] = useState('');
   const [linkEditorUrl, setLinkEditorUrl] = useState('');
+  const [linkEditorOnSave, setLinkEditorOnSave] = useState<((text: string, url: string) => void) | null>(null);
+  const [linkEditorOnDelete, setLinkEditorOnDelete] = useState<(() => void) | null>(null);
 
-  const openLinkEditor = (index: number) => {
-    setLinkEditorIndex(index);
-    setLinkEditorText((translations.footer?.contact?.items || [])[index] || '');
-    setLinkEditorUrl((translations.footer?.contact?.urls || [])[index] || '');
+  const openLinkEditor = (text: string, url: string, onSave: (t: string, u: string) => void, onDelete?: () => void) => {
+    setLinkEditorText(text);
+    setLinkEditorUrl(url);
+    setLinkEditorOnSave(() => onSave);
+    setLinkEditorOnDelete(onDelete ? () => onDelete : null);
     setLinkEditorOpen(true);
   };
 
   const saveLinkEditor = () => {
-    if (linkEditorIndex === null) return;
-    const newItems = [...(translations.footer?.contact?.items || [])];
-    const newUrls = [...(translations.footer?.contact?.urls || [])];
-    newItems[linkEditorIndex] = linkEditorText;
-    newUrls[linkEditorIndex] = linkEditorUrl;
-    updateSection('footer', 'contact', { ...translations.footer.contact, items: newItems, urls: newUrls });
+    linkEditorOnSave?.(linkEditorText, linkEditorUrl);
     setLinkEditorOpen(false);
-    setLinkEditorIndex(null);
   };
 
   const deleteLinkEditor = () => {
-    if (linkEditorIndex === null) return;
-    const newItems = (translations.footer?.contact?.items || []).filter((_, i) => i !== linkEditorIndex);
-    const newUrls = (translations.footer?.contact?.urls || []).filter((_, i) => i !== linkEditorIndex);
-    updateSection('footer', 'contact', { ...translations.footer.contact, items: newItems, urls: newUrls });
+    linkEditorOnDelete?.();
     setLinkEditorOpen(false);
-    setLinkEditorIndex(null);
   };
 
   // Fetch pricing plans from database with fallback to config
@@ -516,9 +511,11 @@ export default function PlatformTranslations() {
               contact: ensureStructure({ title: '', subtitle: '', ctaButton: '' }, langData.contact),
               footer: {
                 about: langData.footer?.about ?? '',
+                aboutUrl: (langData.footer as any)?.aboutUrl ?? '',
                 services: {
                   title: langData.footer?.services?.title ?? '',
-                  items: langData.footer?.services?.items || []
+                  items: langData.footer?.services?.items || [],
+                  urls: (langData.footer?.services as any)?.urls || []
                 },
                 contact: {
                   title: langData.footer?.contact?.title ?? '',
@@ -1803,12 +1800,20 @@ export default function PlatformTranslations() {
                 <div className="grid md:grid-cols-3 gap-8 mb-8">
                   <div>
                     <h4 className="font-bold mb-4">About</h4>
-                    <div contentEditable suppressContentEditableWarning
-                      onBlur={(e) => updateSection('footer', 'about', e.currentTarget.textContent || '')}
-                      className="text-gray-300 p-2 border-2 border-transparent hover:border-blue-300 rounded outline-none cursor-text"
+                    <button
+                      onClick={() => openLinkEditor(
+                        translations.footer.about,
+                        (translations.footer as any).aboutUrl || '',
+                        (text, url) => {
+                          updateSection('footer', 'about', text);
+                          updateSection('footer', 'aboutUrl' as any, url);
+                        }
+                      )}
+                      className="w-full text-left text-gray-300 text-sm px-2 py-1.5 rounded border border-transparent hover:border-blue-400 hover:bg-white/5 transition-all flex items-start justify-between group"
                     >
-                      {translations.footer.about}
-                    </div>
+                      <span>{translations.footer.about || '(empty)'}</span>
+                      <Edit2 className="w-3 h-3 text-blue-400 opacity-0 group-hover:opacity-100 mt-0.5 flex-shrink-0" />
+                    </button>
                   </div>
                   <div>
                     <div contentEditable suppressContentEditableWarning
@@ -1819,17 +1824,58 @@ export default function PlatformTranslations() {
                     </div>
                     <ul className="space-y-2">
                       {(translations.footer?.services?.items || []).map((item, index) => (
-                        <li key={index} contentEditable suppressContentEditableWarning
-                          onBlur={(e) => {
-                            const newItems = [...(translations.footer?.services?.items || [])];
-                            newItems[index] = e.currentTarget.textContent || '';
-                            updateSection('footer', 'services', { ...translations.footer.services, items: newItems });
-                          }}
-                          className="text-gray-300 p-2 border-2 border-transparent hover:border-blue-300 rounded outline-none cursor-text"
-                        >
-                          {item}
+                        <li key={index}>
+                          <button
+                            onClick={() => openLinkEditor(
+                              item,
+                              (translations.footer?.services?.urls || [])[index] || '',
+                              (text, url) => {
+                                const newItems = [...(translations.footer?.services?.items || [])];
+                                const newUrls = [...(translations.footer?.services?.urls || [])];
+                                newItems[index] = text;
+                                newUrls[index] = url;
+                                updateSection('footer', 'services', { ...translations.footer.services, items: newItems, urls: newUrls });
+                              },
+                              () => {
+                                const newItems = (translations.footer?.services?.items || []).filter((_, i) => i !== index);
+                                const newUrls = (translations.footer?.services?.urls || []).filter((_, i) => i !== index);
+                                updateSection('footer', 'services', { ...translations.footer.services, items: newItems, urls: newUrls });
+                              }
+                            )}
+                            className="w-full text-left text-gray-300 text-sm px-2 py-1.5 rounded border border-transparent hover:border-blue-400 hover:bg-white/5 transition-all flex items-center justify-between group"
+                          >
+                            <span>{item || '(empty)'}</span>
+                            <span className="flex items-center gap-1 text-xs text-blue-400 opacity-0 group-hover:opacity-100 transition-opacity flex-shrink-0">
+                              <Edit2 className="w-3 h-3" />
+                              {(translations.footer?.services?.urls || [])[index] ? 'linked' : 'no url'}
+                            </span>
+                          </button>
                         </li>
                       ))}
+                      <li>
+                        <button
+                          onClick={() => {
+                            const idx = (translations.footer?.services?.items || []).length;
+                            const newItems = [...(translations.footer?.services?.items || []), 'New link'];
+                            const newUrls = [...(translations.footer?.services?.urls || []), ''];
+                            updateSection('footer', 'services', { ...translations.footer.services, items: newItems, urls: newUrls });
+                            setTimeout(() => openLinkEditor(
+                              'New link', '',
+                              (text, url) => {
+                                const ni = [...(translations.footer?.services?.items || []), text];
+                                const nu = [...(translations.footer?.services?.urls || []), url];
+                                updateSection('footer', 'services', { ...translations.footer.services, items: ni, urls: nu });
+                              },
+                              () => {
+                                const ni = (translations.footer?.services?.items || []).filter((_, i) => i !== idx);
+                                const nu = (translations.footer?.services?.urls || []).filter((_, i) => i !== idx);
+                                updateSection('footer', 'services', { ...translations.footer.services, items: ni, urls: nu });
+                              }
+                            ), 50);
+                          }}
+                          className="text-xs text-blue-400 hover:text-blue-300 mt-1"
+                        >+ Add link</button>
+                      </li>
                     </ul>
                   </div>
                   <div>
@@ -1843,11 +1889,26 @@ export default function PlatformTranslations() {
                       {(translations.footer?.contact?.items || []).map((item, index) => (
                         <li key={index}>
                           <button
-                            onClick={() => openLinkEditor(index)}
+                            onClick={() => openLinkEditor(
+                              item,
+                              (translations.footer?.contact?.urls || [])[index] || '',
+                              (text, url) => {
+                                const newItems = [...(translations.footer?.contact?.items || [])];
+                                const newUrls = [...(translations.footer?.contact?.urls || [])];
+                                newItems[index] = text;
+                                newUrls[index] = url;
+                                updateSection('footer', 'contact', { ...translations.footer.contact, items: newItems, urls: newUrls });
+                              },
+                              () => {
+                                const newItems = (translations.footer?.contact?.items || []).filter((_, i) => i !== index);
+                                const newUrls = (translations.footer?.contact?.urls || []).filter((_, i) => i !== index);
+                                updateSection('footer', 'contact', { ...translations.footer.contact, items: newItems, urls: newUrls });
+                              }
+                            )}
                             className="w-full text-left text-gray-300 text-sm px-2 py-1.5 rounded border border-transparent hover:border-blue-400 hover:bg-white/5 transition-all flex items-center justify-between group"
                           >
                             <span>{item || '(empty)'}</span>
-                            <span className="flex items-center gap-1 text-xs text-blue-400 opacity-0 group-hover:opacity-100 transition-opacity">
+                            <span className="flex items-center gap-1 text-xs text-blue-400 opacity-0 group-hover:opacity-100 transition-opacity flex-shrink-0">
                               <Edit2 className="w-3 h-3" />
                               {(translations.footer?.contact?.urls || [])[index] ? 'linked' : 'no url'}
                             </span>
@@ -1861,7 +1922,19 @@ export default function PlatformTranslations() {
                             const newItems = [...(translations.footer?.contact?.items || []), 'New link'];
                             const newUrls = [...(translations.footer?.contact?.urls || []), ''];
                             updateSection('footer', 'contact', { ...translations.footer.contact, items: newItems, urls: newUrls });
-                            setTimeout(() => openLinkEditor(idx), 50);
+                            setTimeout(() => openLinkEditor(
+                              'New link', '',
+                              (text, url) => {
+                                const ni = [...(translations.footer?.contact?.items || []), text];
+                                const nu = [...(translations.footer?.contact?.urls || []), url];
+                                updateSection('footer', 'contact', { ...translations.footer.contact, items: ni, urls: nu });
+                              },
+                              () => {
+                                const ni = (translations.footer?.contact?.items || []).filter((_, i) => i !== idx);
+                                const nu = (translations.footer?.contact?.urls || []).filter((_, i) => i !== idx);
+                                updateSection('footer', 'contact', { ...translations.footer.contact, items: ni, urls: nu });
+                              }
+                            ), 50);
                           }}
                           className="text-xs text-blue-400 hover:text-blue-300 mt-1"
                         >+ Add link</button>
@@ -2124,10 +2197,12 @@ export default function PlatformTranslations() {
             </div>
           </div>
           <DialogFooter className="flex-row justify-between gap-2">
-            <Button variant="destructive" size="sm" onClick={deleteLinkEditor}>
-              <Trash2 className="w-3.5 h-3.5 mr-1" />
-              Delete
-            </Button>
+            {linkEditorOnDelete ? (
+              <Button variant="destructive" size="sm" onClick={deleteLinkEditor}>
+                <Trash2 className="w-3.5 h-3.5 mr-1" />
+                Delete
+              </Button>
+            ) : <div />}
             <div className="flex gap-2">
               <Button variant="outline" size="sm" onClick={() => setLinkEditorOpen(false)}>Cancel</Button>
               <Button size="sm" onClick={saveLinkEditor}>Save</Button>
