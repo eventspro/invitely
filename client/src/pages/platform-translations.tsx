@@ -1904,9 +1904,14 @@ export default function PlatformTranslations() {
                       pricingPlans.map((plan: any, index: number) => {
                         // Handle both database format (planKey) and config format (id)
                         const planId = plan.planKey || plan.id;
-                        const planName = plan.nameKey || `templatePlans.plans.${index}.name`;
-                        const planBadge = plan.badge || (plan.badgeKey ? planId : null);
+                        // Display name: capitalize planKey directly (DB rows have no nameKey)
+                        const planDisplayName = planId
+                          ? planId.charAt(0).toUpperCase() + planId.slice(1)
+                          : `Plan ${index + 1}`;
+                        const planBadge = plan.badge || plan.badgeKey || null;
                         const isPopular = plan.popular || false;
+                        // Price already includes currency in DB (e.g. "23,000 AMD") — don't append currency again
+                        const priceDisplay = plan.price || '';
                         
                         return (
                           <div 
@@ -1928,29 +1933,33 @@ export default function PlatformTranslations() {
                                     ? plan.badgeColor 
                                     : plan.badgeColor || 'bg-blue-500'
                                 }`}>
-                                  {planId.charAt(0).toUpperCase() + planId.slice(1)}
+                                  {plan.badge || planDisplayName}
                                 </span>
                               </div>
                             )}
 
                             <div className="text-center mb-6">
                               <h3 className={`text-xl font-bold mb-2 ${isPopular ? 'text-white' : 'text-charcoal'}`}>
-                                {planName.split('.').pop() || planId}
+                                {planDisplayName}
                               </h3>
                               <div className="mb-3">
                                 <span className={`text-3xl font-bold ${isPopular ? 'text-white' : 'text-charcoal'}`}>
-                                  {plan.price} {plan.currency || ''}
+                                  {priceDisplay}
                                 </span>
                               </div>
                               <p className={`text-sm ${isPopular ? 'text-white/90' : 'text-charcoal/70'}`}>
-                                {plan.descriptionKey || plan.description || ''}
+                                {plan.description || ''}
                               </p>
                             </div>
 
                             <div className="space-y-3 mb-6">
                               {(plan.features || []).map((feature: any, idx: number) => {
                                 const FeatureIcon = getIconComponent(feature.icon || 'Check');
-                                const featureName = feature.translationKey?.split('.').pop() || feature.featureKey || 'Feature';
+                                // Extract human-readable label: last segment after the last dot or space-containing key
+                                const rawKey = feature.featureKey || feature.translationKey || '';
+                                const featureName = rawKey.includes('.')
+                                  ? rawKey.substring(rawKey.lastIndexOf('.') + 1)
+                                  : rawKey || 'Feature';
                                 const isIncluded = feature.included !== undefined ? feature.included : feature.isEnabled;
                                 
                                 return (
