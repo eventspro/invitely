@@ -430,7 +430,7 @@ export default function PlatformTranslations() {
             
             const mergedConfig = {
               common: ensureStructure({ viewMore: '', learnMore: '', getStarted: '' }, langData.common),
-              hero: ensureStructure({ title: '', subtitle: '', ctaButton: '', viewTemplatesButton: '' }, langData.hero),
+              hero: ensureStructure({ title: '', subtitle: '', ctaButton: '', viewTemplates: '', viewTemplatesButton: '' }, langData.hero),
               features: {
                 title: langData.features?.title ?? '',
                 subtitle: langData.features?.subtitle ?? '',
@@ -793,10 +793,10 @@ export default function PlatformTranslations() {
                     <span 
                       contentEditable 
                       suppressContentEditableWarning
-                      onBlur={(e) => updateSection('hero', 'ctaButton', e.currentTarget.textContent || '')}
+                      onBlur={(e) => updateSection('hero', 'viewTemplates', e.currentTarget.textContent || '')}
                       className="outline-none"
                     >
-                      {translations.hero.ctaButton}
+                      {translations.hero.viewTemplates}
                     </span>
                     <ArrowRight className="ml-2 h-5 w-5" />
                     <Edit2 className="w-4 h-4 absolute -right-6 top-1/2 -translate-y-1/2 text-blue-500 opacity-0 group-hover:opacity-100 transition-opacity" />
