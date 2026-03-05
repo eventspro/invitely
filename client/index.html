@@ -63,7 +63,27 @@
     </style>
   </head>
   <body>
-    <div id="root"></div>
+    <div id="root">
+      <!-- Static loader — shown immediately before any JS executes.
+           React replaces this content in one synchronous render after
+           bootstrap() resolves, so the app is NEVER shown before data is ready. -->
+      <div id="_sl_wrap" style="position:fixed;inset:0;z-index:9999;display:flex;align-items:center;justify-content:center;background:#ffffff;">
+        <h1 style="font-size:2.25rem;font-weight:600;letter-spacing:0.05em;color:#1f2937;font-family:system-ui,sans-serif;">
+          <span id="_sl_t"></span><span id="_sl_c" style="margin-left:2px;">|</span>
+        </h1>
+      </div>
+      <style>
+        @keyframes _sl_blink { 0%,49%{ opacity:1 } 50%,100%{ opacity:0 } }
+        #_sl_c { animation: _sl_blink 1s step-end infinite; }
+      </style>
+      <script>
+        (function(){
+          var t='4ever.am', i=0, el=document.getElementById('_sl_t');
+          function tick(){ if(i<t.length){ el.textContent+=t[i++]; setTimeout(tick,120); } }
+          tick();
+        })();
+      </script>
+    </div>
     <script type="module" src="/src/main.tsx"></script>
   </body>
 </html>
