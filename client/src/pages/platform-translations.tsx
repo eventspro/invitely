@@ -49,6 +49,7 @@ interface TranslationSections {
     title: string;
     subtitle: string;
     ctaButton: string;
+    viewTemplates: string;
     viewTemplatesButton: string;
   };
   features: {
@@ -143,6 +144,7 @@ const defaultTranslations: TranslationSections = {
     title: "Ստեղծեք Ձեր Կատարյալ Հարսանեկան Կայքը",
     subtitle: "Գեղեցիկ, հարմարեցվող հարսանեկան հրավիրատոմսերի կայքեր, որոնք արտահայտում են ձեր սիրո պատմությունը",
     ctaButton: "Տեսնել Բոլոր Ձևանմուշները",
+    viewTemplates: "Տեսնել Բոլոր Ձևանմուշները",
     viewTemplatesButton: "Տեսնել Ավելին"
   },
   features: {
