@@ -323,10 +323,10 @@ export default function PlatformDashboard() {
   const availableTemplates = getTemplateList();
   
   // Separate templates by version and type
-  const v1MainTemplates = templates.filter(template => template.isMain && !template.templateVersion || template.templateVersion === 1);
-  const v1ClonedTemplates = templates.filter(template => !template.isMain && (!template.templateVersion || template.templateVersion === 1));
-  const v2MainTemplates = templates.filter(template => template.isMain && template.templateVersion === 2);
-  const v2ClonedTemplates = templates.filter(template => !template.isMain && template.templateVersion === 2);
+  const v1MainTemplates   = templates.filter(t => t.isMain  && (!t.templateVersion || t.templateVersion === 1));
+  const v1ClonedTemplates = templates.filter(t => !t.isMain && (!t.templateVersion || t.templateVersion === 1));
+  const v2MainTemplates   = templates.filter(t => t.isMain  && t.templateVersion === 2);
+  const v2ClonedTemplates = templates.filter(t => !t.isMain && t.templateVersion === 2);
   
   // Legacy - for backwards compatibility
   const mainTemplates = templates.filter(template => template.isMain);
