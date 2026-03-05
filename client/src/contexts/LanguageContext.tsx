@@ -69,23 +69,21 @@ const LanguageContext = createContext<LanguageContextType | undefined>(undefined
 
 interface LanguageProviderProps {
   children: ReactNode;
-  prefetchedData: any; // Required — always provided by App after successful bootstrap
+  prefetchedData: any;      // Required — always provided by App after successful bootstrap
+  initialLanguage: string;  // Resolved by bootstrap() before React mounts — no useState race
 }
 
-export function LanguageProvider({ children, prefetchedData }: LanguageProviderProps) {
-  const getStoredLanguage = (): Language => {
-    if (typeof window !== 'undefined') {
-      const stored = localStorage.getItem('preferred-language') as Language;
-      if (stored && stored in languages) return stored;
-    }
-    return defaultLanguage;
-  };
+export function LanguageProvider({ children, prefetchedData, initialLanguage }: LanguageProviderProps) {
+  // Language is resolved in bootstrap() (outside React) from localStorage.
+  // Using it directly here means the very first render uses the correct language.
+  const validatedLang: Language =
+    initialLanguage in languages ? (initialLanguage as Language) : defaultLanguage;
 
-  const [currentLanguage, setCurrentLanguage] = useState<Language>(getStoredLanguage);
+  const [currentLanguage, setCurrentLanguage] = useState<Language>(validatedLang);
 
-  // ─── CRITICAL: Initial cache built synchronously from bootstrap data ──────
-  // Uses a closure over `prefetchedData` so the lazy initializer always has
-  // the resolved data available — no state swap after first render.
+  // ─── Translations cache built synchronously — no async gap, no flash ──────
+  // buildCacheFromPrefetch runs inside the lazy useState initializer, once.
+  // All three languages are pre-merged with static fallbacks before first render.
   const [translationsCache, setTranslationsCache] = useState<Record<Language, LanguageConfig>>(
     () => buildCacheFromPrefetch(prefetchedData)
   );
@@ -97,11 +95,10 @@ export function LanguageProvider({ children, prefetchedData }: LanguageProviderP
   // currentLanguage, which selects a different key from translationsCache.
   // fetchTranslations is ONLY called explicitly via refreshTranslations() (admin use).
 
-  // Persist language preference
+  // Persist language preference whenever the user switches language.
+  // (Read side is handled by bootstrap() before React mounts — no read here.)
   useEffect(() => {
-    if (typeof window !== 'undefined') {
-      localStorage.setItem('preferred-language', currentLanguage);
-    }
+    localStorage.setItem('preferred-language', currentLanguage);
   }, [currentLanguage]);
 
   const setLanguage = (language: Language) => {

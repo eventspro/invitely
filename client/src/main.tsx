@@ -30,10 +30,15 @@ async function bootstrap(): Promise<BootstrapData> {
     localStorage.getItem("maintenance-bypass") === "true" ||
     new URLSearchParams(window.location.search).get("preview") === "true";
 
+  // Resolve preferred language before React mounts so the first render is correct.
+  const storedLang = localStorage.getItem("preferred-language") ?? "en";
+  const initialLanguage = ["en", "hy", "ru"].includes(storedLang) ? storedLang : "en";
+
   if (import.meta.env.DEV) {
     console.log("[BOOT] ✅ translations ready:", Object.keys(translations));
     console.log("[BOOT] ✅ templates:", Array.isArray(templates) ? templates.length : "n/a");
     console.log("[BOOT] ✅ maintenance:", maintenance?.enabled, "| bypassed:", maintenanceBypassed);
+    console.log("[BOOT] ✅ initialLanguage:", initialLanguage);
   }
 
   return {
@@ -41,6 +46,7 @@ async function bootstrap(): Promise<BootstrapData> {
     templates: Array.isArray(templates) ? templates : [],
     maintenanceEnabled: Boolean(maintenance?.enabled),
     maintenanceBypassed,
+    initialLanguage,
   };
 }
 

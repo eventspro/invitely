@@ -33,6 +33,7 @@ export interface BootstrapData {
   templates: any[];           // raw /api/templates payload pre-fetched at boot
   maintenanceEnabled: boolean;
   maintenanceBypassed: boolean;
+  initialLanguage: string;   // preferred-language from localStorage, resolved before React mounts
 }
 
 function Router() {
@@ -131,7 +132,10 @@ function App({ bootstrapData }: { bootstrapData: BootstrapData }) {
     <QueryClientProvider client={queryClient}>
       <ArmenianFontProvider>
         <BootstrapProvider data={bootstrapData}>
-          <LanguageProvider prefetchedData={bootstrapData.translations}>
+          <LanguageProvider
+            initialLanguage={bootstrapData.initialLanguage}
+            prefetchedData={bootstrapData.translations}
+          >
             <TooltipProvider>
               <Toaster />
               <ErrorBoundary>
