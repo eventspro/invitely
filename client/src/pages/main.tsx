@@ -397,10 +397,10 @@ export default function MainPage() {
         <div className="absolute top-20 left-10 w-32 h-32 bg-softGold/10 rounded-full blur-0 sm:blur-xl animate-float z-0 pointer-events-none"></div>
         <div className="absolute bottom-20 right-10 w-40 h-40 bg-sageGreen/10 rounded-full blur-0 sm:blur-xl animate-float z-0 pointer-events-none" style={{ animationDelay: '1s' }}></div>
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative">
-          <div className="text-center animate-fade-in">
+          <div className="text-center">
             {t.hero?.title && t.hero.title.trim() && (
               <h1 
-                className="text-4xl md:text-6xl font-bold text-charcoal mb-6 animate-slide-up"
+                className="text-4xl md:text-6xl font-bold text-charcoal mb-6"
                 data-i18n-key="hero.title"
               >
                 {t.hero.title}
@@ -408,14 +408,13 @@ export default function MainPage() {
             )}
             {t.hero?.subtitle && t.hero.subtitle.trim() && (
               <p 
-                className="text-xl text-charcoal/70 mb-8 max-w-3xl mx-auto animate-slide-up" 
-                style={{ animationDelay: '0.2s' }}
+                className="text-xl text-charcoal/70 mb-8 max-w-3xl mx-auto"
                 data-i18n-key="hero.subtitle"
               >
                 {t.hero.subtitle}
               </p>
             )}
-            <div className="flex flex-col sm:flex-row gap-4 justify-center items-center animate-slide-up" style={{ animationDelay: '0.4s' }}>
+            <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
               {t.hero?.viewTemplates && t.hero.viewTemplates.trim() && (
                 <Link 
                   to="/templates"
@@ -462,8 +461,7 @@ export default function MainPage() {
             {features.map((feature, index) => (
               <div 
                 key={index} 
-                className="p-6 rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105 animate-fade-in"
-                style={{ animationDelay: `${index * 0.1}s` }}
+                className="p-6 rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105"
               >
                 <feature.icon className="h-12 w-12 text-softGold mb-4" />
                 <h3 
