@@ -6,6 +6,8 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
+import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
 import { useQuery } from "@tanstack/react-query";
 import { 
@@ -392,6 +394,39 @@ export default function PlatformTranslations() {
   
   // Phase 3.2: Add plan state
   const [isAddPlanOpen, setIsAddPlanOpen] = useState(false);
+
+  // Footer contact link editor popup state
+  const [linkEditorOpen, setLinkEditorOpen] = useState(false);
+  const [linkEditorIndex, setLinkEditorIndex] = useState<number | null>(null);
+  const [linkEditorText, setLinkEditorText] = useState('');
+  const [linkEditorUrl, setLinkEditorUrl] = useState('');
+
+  const openLinkEditor = (index: number) => {
+    setLinkEditorIndex(index);
+    setLinkEditorText((translations.footer?.contact?.items || [])[index] || '');
+    setLinkEditorUrl((translations.footer?.contact?.urls || [])[index] || '');
+    setLinkEditorOpen(true);
+  };
+
+  const saveLinkEditor = () => {
+    if (linkEditorIndex === null) return;
+    const newItems = [...(translations.footer?.contact?.items || [])];
+    const newUrls = [...(translations.footer?.contact?.urls || [])];
+    newItems[linkEditorIndex] = linkEditorText;
+    newUrls[linkEditorIndex] = linkEditorUrl;
+    updateSection('footer', 'contact', { ...translations.footer.contact, items: newItems, urls: newUrls });
+    setLinkEditorOpen(false);
+    setLinkEditorIndex(null);
+  };
+
+  const deleteLinkEditor = () => {
+    if (linkEditorIndex === null) return;
+    const newItems = (translations.footer?.contact?.items || []).filter((_, i) => i !== linkEditorIndex);
+    const newUrls = (translations.footer?.contact?.urls || []).filter((_, i) => i !== linkEditorIndex);
+    updateSection('footer', 'contact', { ...translations.footer.contact, items: newItems, urls: newUrls });
+    setLinkEditorOpen(false);
+    setLinkEditorIndex(null);
+  };
 
   // Fetch pricing plans from database with fallback to config
   const { data: dbPricingPlans, isLoading: plansLoading } = useQuery<any[]>({
@@ -1806,38 +1841,27 @@ export default function PlatformTranslations() {
                     </div>
                     <ul className="space-y-3">
                       {(translations.footer?.contact?.items || []).map((item, index) => (
-                        <li key={index} className="space-y-1">
-                          <div
-                            contentEditable
-                            suppressContentEditableWarning
-                            onBlur={(e) => {
-                              const newItems = [...(translations.footer?.contact?.items || [])];
-                              newItems[index] = e.currentTarget.textContent || '';
-                              updateSection('footer', 'contact', { ...translations.footer.contact, items: newItems });
-                            }}
-                            className="text-gray-300 text-sm px-2 py-1 border-2 border-transparent hover:border-blue-300 rounded outline-none cursor-text"
+                        <li key={index}>
+                          <button
+                            onClick={() => openLinkEditor(index)}
+                            className="w-full text-left text-gray-300 text-sm px-2 py-1.5 rounded border border-transparent hover:border-blue-400 hover:bg-white/5 transition-all flex items-center justify-between group"
                           >
-                            {item}
-                          </div>
-                          <input
-                            type="text"
-                            value={(translations.footer?.contact?.urls || [])[index] || ''}
-                            onChange={(e) => {
-                              const newUrls = [...(translations.footer?.contact?.urls || [])];
-                              newUrls[index] = e.target.value;
-                              updateSection('footer', 'contact', { ...translations.footer.contact, urls: newUrls });
-                            }}
-                            placeholder="https://... or mailto:... or tel:..."
-                            className="w-full text-xs text-blue-300 bg-transparent border border-gray-600 hover:border-blue-400 focus:border-blue-400 rounded px-2 py-1 outline-none placeholder-gray-600"
-                          />
+                            <span>{item || '(empty)'}</span>
+                            <span className="flex items-center gap-1 text-xs text-blue-400 opacity-0 group-hover:opacity-100 transition-opacity">
+                              <Edit2 className="w-3 h-3" />
+                              {(translations.footer?.contact?.urls || [])[index] ? 'linked' : 'no url'}
+                            </span>
+                          </button>
                         </li>
                       ))}
                       <li>
                         <button
                           onClick={() => {
+                            const idx = (translations.footer?.contact?.items || []).length;
                             const newItems = [...(translations.footer?.contact?.items || []), 'New link'];
                             const newUrls = [...(translations.footer?.contact?.urls || []), ''];
                             updateSection('footer', 'contact', { ...translations.footer.contact, items: newItems, urls: newUrls });
+                            setTimeout(() => openLinkEditor(idx), 50);
                           }}
                           className="text-xs text-blue-400 hover:text-blue-300 mt-1"
                         >+ Add link</button>
@@ -2068,6 +2092,49 @@ export default function PlatformTranslations() {
       </div>
         </>
       )}
+
+      {/* Footer contact link editor popup */}
+      <Dialog open={linkEditorOpen} onOpenChange={(open) => { if (!open) setLinkEditorOpen(false); }}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Edit Contact Link</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4 py-2">
+            <div className="space-y-1.5">
+              <Label htmlFor="link-text">Label text</Label>
+              <Input
+                id="link-text"
+                value={linkEditorText}
+                onChange={(e) => setLinkEditorText(e.target.value)}
+                placeholder="e.g. Email, Phone, Support"
+                autoFocus
+                onKeyDown={(e) => { if (e.key === 'Enter') saveLinkEditor(); }}
+              />
+            </div>
+            <div className="space-y-1.5">
+              <Label htmlFor="link-url">URL</Label>
+              <Input
+                id="link-url"
+                value={linkEditorUrl}
+                onChange={(e) => setLinkEditorUrl(e.target.value)}
+                placeholder="https://... or mailto:email@... or tel:+..."
+                onKeyDown={(e) => { if (e.key === 'Enter') saveLinkEditor(); }}
+              />
+              <p className="text-xs text-muted-foreground">Use <code>mailto:</code>, <code>tel:</code>, or a full URL</p>
+            </div>
+          </div>
+          <DialogFooter className="flex-row justify-between gap-2">
+            <Button variant="destructive" size="sm" onClick={deleteLinkEditor}>
+              <Trash2 className="w-3.5 h-3.5 mr-1" />
+              Delete
+            </Button>
+            <div className="flex gap-2">
+              <Button variant="outline" size="sm" onClick={() => setLinkEditorOpen(false)}>Cancel</Button>
+              <Button size="sm" onClick={saveLinkEditor}>Save</Button>
+            </div>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
