@@ -167,6 +167,7 @@ export interface WeddingConfig {
   // Footer
   footer: {
     thankYouMessage: string;
+    separator?: string; // Symbol shown between couple names (default: ∞)
   };
 
   // Email Configuration

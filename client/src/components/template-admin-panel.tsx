@@ -1273,6 +1273,45 @@ export default function TemplateAdminPanel() {
                     rows={2}
                   />
                 </div>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <Label htmlFor="footerGroomName">Groom Name (footer display)</Label>
+                    <Input
+                      id="footerGroomName"
+                      value={template.config.couple?.groomName || ""}
+                      onChange={(e) => updateConfig("couple.groomName", e.target.value)}
+                      placeholder="Groom's name"
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="footerBrideName">Bride Name (footer display)</Label>
+                    <Input
+                      id="footerBrideName"
+                      value={template.config.couple?.brideName || ""}
+                      onChange={(e) => updateConfig("couple.brideName", e.target.value)}
+                      placeholder="Bride's name"
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="footerDisplayDate">Display Date (footer)</Label>
+                    <Input
+                      id="footerDisplayDate"
+                      value={template.config.wedding?.displayDate || ""}
+                      onChange={(e) => updateConfig("wedding.displayDate", e.target.value)}
+                      placeholder="e.g. October 12th, 2026"
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="footerSeparator">Couple Name Separator</Label>
+                    <Input
+                      id="footerSeparator"
+                      value={template.config.footer?.separator || ""}
+                      onChange={(e) => updateConfig("footer.separator", e.target.value)}
+                      placeholder="∞"
+                    />
+                    <p className="text-xs text-gray-500 mt-1">Symbol shown between names (default: ∞)</p>
+                  </div>
+                </div>
               </CardContent>
             </Card>
           </TabsContent>
@@ -1754,10 +1793,7 @@ export default function TemplateAdminPanel() {
                       onChange={(e) => {
                         const newConfig = {
                           ...template.config,
-                          photos: {
-                            ...template.config.photos,
-                            title: e.target.value,
-                          }
+                          photos: { ...template.config.photos, title: e.target.value }
                         };
                         setTemplate(prev => prev ? { ...prev, config: newConfig } : null);
                       }}
@@ -1773,15 +1809,60 @@ export default function TemplateAdminPanel() {
                       onChange={(e) => {
                         const newConfig = {
                           ...template.config,
-                          photos: {
-                            ...template.config.photos,
-                            description: e.target.value,
-                          }
+                          photos: { ...template.config.photos, description: e.target.value }
                         };
                         setTemplate(prev => prev ? { ...prev, config: newConfig } : null);
                       }}
                       placeholder="Describe your photo gallery..."
                       rows={3}
+                    />
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label htmlFor="upload-button-text">Upload Button Text</Label>
+                    <Input
+                      id="upload-button-text"
+                      value={template.config.photos?.uploadButton || ""}
+                      onChange={(e) => {
+                        const newConfig = {
+                          ...template.config,
+                          photos: { ...template.config.photos, uploadButton: e.target.value }
+                        };
+                        setTemplate(prev => prev ? { ...prev, config: newConfig } : null);
+                      }}
+                      placeholder="Upload Photo"
+                    />
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label htmlFor="download-button-text">Download Button Text</Label>
+                    <Input
+                      id="download-button-text"
+                      value={template.config.photos?.downloadButton || ""}
+                      onChange={(e) => {
+                        const newConfig = {
+                          ...template.config,
+                          photos: { ...template.config.photos, downloadButton: e.target.value }
+                        };
+                        setTemplate(prev => prev ? { ...prev, config: newConfig } : null);
+                      }}
+                      placeholder="Download"
+                    />
+                  </div>
+
+                  <div className="space-y-2 md:col-span-2">
+                    <Label htmlFor="coming-soon-message">Coming Soon Message</Label>
+                    <Input
+                      id="coming-soon-message"
+                      value={template.config.photos?.comingSoonMessage || ""}
+                      onChange={(e) => {
+                        const newConfig = {
+                          ...template.config,
+                          photos: { ...template.config.photos, comingSoonMessage: e.target.value }
+                        };
+                        setTemplate(prev => prev ? { ...prev, config: newConfig } : null);
+                      }}
+                      placeholder="Photos coming soon"
                     />
                   </div>
                 </div>

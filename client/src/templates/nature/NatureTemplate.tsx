@@ -70,7 +70,7 @@ export default function NatureTemplate({ config, templateId }: NatureTemplatePro
           <div className="ornament w-full h-8 mb-8 opacity-50"></div>
           <h3 className="text-2xl font-serif font-bold mb-4 flex items-center justify-center gap-3">
             <span>{safeConfig.couple.groomName}</span>
-            <span className="mx-1" style={{ color: config.theme?.colors?.accent }}>🌿</span>
+            <span className="mx-1" style={{ color: config.theme?.colors?.accent }}>{safeConfig.footer?.separator || '🌿'}</span>
             <span>{safeConfig.couple.brideName}</span>
           </h3>
           <p className="text-lg mb-8 opacity-90 max-w-2xl mx-auto leading-relaxed">

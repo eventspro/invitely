@@ -114,7 +114,7 @@ export default function ProTemplate({ config, templateId }: ProTemplateProps) {
           <div className="ornament w-full h-8 mb-8 opacity-50"></div>
           <h3 className="text-2xl font-serif font-bold mb-4 flex items-center justify-center gap-3">
             <span>{safeConfig.couple.groomName}</span>
-            <span className="mx-1" style={{ color: config.theme?.colors?.accent || config.theme?.colors?.primary }}>∞</span>
+            <span className="mx-1" style={{ color: config.theme?.colors?.accent || config.theme?.colors?.primary }}>{safeConfig.footer?.separator || '∞'}</span>
             <span>{safeConfig.couple.brideName}</span>
           </h3>
           <p className="text-white/70 mb-6">{safeConfig.footer.thankYouMessage}</p>
