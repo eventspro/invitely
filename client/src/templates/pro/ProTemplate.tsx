@@ -3,6 +3,7 @@
 import React, { useEffect } from "react";
 import type { WeddingConfig } from "../types";
 import { defaultConfig } from "./config";
+import { TemplateFooter } from "../shared/TemplateFooter";
 import Navigation from "@/components/navigation";
 import HeroSection from "@/components/hero-section";
 import CountdownTimer from "@/components/countdown-timer";
@@ -108,19 +109,15 @@ export default function ProTemplate({ config, templateId }: ProTemplateProps) {
         ))}
       </main>
       
-      {/* Footer */}
-      <footer className="bg-charcoal text-white py-12">
-        <div className="max-w-4xl mx-auto px-4 text-center">
-          <div className="ornament w-full h-8 mb-8 opacity-50"></div>
-          <h3 className="text-2xl font-serif font-bold mb-4 flex items-center justify-center gap-3">
-            <span>{safeConfig.couple.groomName}</span>
-            <span className="mx-1" style={{ color: config.theme?.colors?.accent || config.theme?.colors?.primary }}>{safeConfig.footer?.separator || '∞'}</span>
-            <span>{safeConfig.couple.brideName}</span>
-          </h3>
-          <p className="text-white/70 mb-6">{safeConfig.footer.thankYouMessage}</p>
-          <p className="text-white/50 text-sm">{safeConfig.wedding.displayDate}</p>
-        </div>
-      </footer>
+      {/* Footer — all content driven by config, editable in admin panel */}
+      <TemplateFooter
+        config={safeConfig}
+        themeColors={{ accent: config.theme?.colors?.accent, primary: config.theme?.colors?.primary }}
+        defaultSeparator="∞"
+        footerClassName="bg-charcoal text-white py-12"
+        thankYouClassName="text-white/70 mb-6"
+        dateClassName="text-white/50 text-sm"
+      />
 
       <MapModal config={safeConfig} />
     </div>

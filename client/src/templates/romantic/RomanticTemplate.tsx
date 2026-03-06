@@ -4,6 +4,7 @@
 import React, { useEffect } from "react";
 import type { WeddingConfig } from "../types";
 import { defaultConfig as romanticDefaultConfig } from "./config";
+import { TemplateFooter } from "../shared/TemplateFooter";
 import Navigation from "@/components/navigation";
 import HeroSection from "@/components/hero-section";
 import CountdownTimer from "@/components/countdown-timer";
@@ -63,26 +64,16 @@ export default function RomanticTemplate({ config, templateId }: RomanticTemplat
         {sections.photos?.enabled !== false && <PhotoSection config={safeConfig} templateId={templateId} />}
       </main>
       
-      {/* Footer */}
-      <footer className="py-12" style={{
-        background: (config.theme?.colors?.primary || safeConfig.theme?.colors?.primary) && (config.theme?.colors?.secondary || safeConfig.theme?.colors?.secondary) ? `linear-gradient(135deg, ${config.theme?.colors?.primary || safeConfig.theme?.colors?.primary} 0%, ${config.theme?.colors?.secondary || safeConfig.theme?.colors?.secondary} 100%)` : undefined,
-        color: 'white'
-      }}>
-        <div className="max-w-4xl mx-auto px-4 text-center">
-          <div className="ornament w-full h-8 mb-8 opacity-50"></div>
-          <h3 className="text-2xl font-serif font-bold mb-4 flex items-center justify-center gap-3">
-            <span>{safeConfig.couple.groomName}</span>
-            <span className="mx-1" style={{ color: config.theme?.colors?.accent }}>{safeConfig.footer?.separator || '💕'}</span>
-            <span>{safeConfig.couple.brideName}</span>
-          </h3>
-          <p className="text-lg mb-8 opacity-90 max-w-2xl mx-auto leading-relaxed">
-            {safeConfig.footer.thankYouMessage}
-          </p>
-          <div className="text-sm opacity-75">
-            {safeConfig.wedding.displayDate}
-          </div>
-        </div>
-      </footer>
+      {/* Footer — all content driven by config, editable in admin panel */}
+      <TemplateFooter
+        config={safeConfig}
+        themeColors={{ accent: config.theme?.colors?.accent, primary: config.theme?.colors?.primary }}
+        defaultSeparator="💕"
+        footerStyle={{
+          background: (config.theme?.colors?.primary || safeConfig.theme?.colors?.primary) && (config.theme?.colors?.secondary || safeConfig.theme?.colors?.secondary) ? `linear-gradient(135deg, ${config.theme?.colors?.primary || safeConfig.theme?.colors?.primary} 0%, ${config.theme?.colors?.secondary || safeConfig.theme?.colors?.secondary} 100%)` : undefined,
+          color: 'white'
+        }}
+      />
       
       <MapModal config={safeConfig} />
     </div>
