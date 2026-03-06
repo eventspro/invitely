@@ -99,12 +99,12 @@ function toDisplayTemplates(apiTemplates: Template[]): DisplayTemplate[] {
   const allowedNames = ['Template 1', 'Template 2', 'Template 3', 'Template 4', 'Template 5'];
   const main = apiTemplates.filter(t => t.isMain && allowedNames.includes(t.name));
   return main.map((template, index) => {
-    let preview = `/template_previews/template-preview-${Math.min(index + 1, 5)}.jpg`;
-    if (template.slug.includes('harut')) preview = '/template_previews/img1.jpg';
-    else if (template.slug.includes('forest') || template.slug.includes('lily')) preview = '/template_previews/img2.jpg';
-    else if (template.slug.includes('michael') || template.slug.includes('sarah')) preview = '/template_previews/img4.jpg';
-    else if (template.slug.includes('alexander') || template.slug.includes('isabella')) preview = '/template_previews/img4.avif';
-    else if (template.slug.includes('david') || template.slug.includes('rose')) preview = '/template_previews/img5.jpeg';
+    let preview = `/template_previews/template-preview-${Math.min(index + 1, 5)}.webp`;
+    if (template.slug.includes('harut')) preview = '/template_previews/img1.webp';
+    else if (template.slug.includes('forest') || template.slug.includes('lily')) preview = '/template_previews/img2.webp';
+    else if (template.slug.includes('michael') || template.slug.includes('sarah')) preview = '/template_previews/img3.webp';
+    else if (template.slug.includes('alexander') || template.slug.includes('isabella')) preview = '/template_previews/img4.webp';
+    else if (template.slug.includes('david') || template.slug.includes('rose')) preview = '/template_previews/img5.webp';
     return { id: template.slug, name: template.name, preview, demoUrl: `/${template.slug}`, features: getTemplateFeatures(template) };
   });
 }
@@ -426,7 +426,7 @@ export default function MainPage() {
               {t.common?.viewMore && t.common.viewMore.trim() && (
                 <a 
                   href="#contact"
-                  className="border-2 border-charcoal text-charcoal hover:bg-charcoal hover:text-white px-8 py-4 rounded-lg text-lg font-medium transition-all duration-300 transform hover:scale-105 flex items-center"
+                  className="border-2 border-charcoal text-charcoal hover:text-white px-8 py-4 rounded-lg text-lg font-medium transition-all duration-300 transform hover:scale-105 flex items-center"
                 >
                   <span data-i18n-key="common.viewMore">{t.common.viewMore}</span> <Eye className="ml-2 h-5 w-5" />
                 </a>
@@ -856,7 +856,7 @@ export default function MainPage() {
                 {t.footer?.services?.title}
               </h4>
               <ul className="space-y-2 text-white/70">
-                {(t.footer?.services?.items || []).map((item, idx) => {
+                {((t.footer?.services?.items as unknown as string[]) || []).map((item: string, idx: number) => {
                   const url = ((t.footer?.services as any)?.urls as string[])?.[idx];
                   return url ? (
                     <li key={idx}>
