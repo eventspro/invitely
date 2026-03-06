@@ -18,6 +18,11 @@ export default function LanguageSelector() {
     setIsOpen(false);
   };
 
+  // Only show AM and EN on the public-facing site; RU remains in the translation system
+  const visibleLanguages = (Object.keys(availableLanguages) as Language[]).filter(
+    (lang) => lang !== 'ru'
+  );
+
   return (
     <div className="relative">
       <button
@@ -44,7 +49,7 @@ export default function LanguageSelector() {
           {/* Dropdown */}
           <div className="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg border border-gray-200 z-20">
             <div className="py-2">
-              {(Object.keys(availableLanguages) as Language[]).map((language) => (
+              {visibleLanguages.map((language) => (
                 <button
                   key={language}
                   onClick={() => handleLanguageChange(language)}

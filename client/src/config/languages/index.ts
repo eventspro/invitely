@@ -9,5 +9,5 @@ export const languages = {
   ru: 'Русский'
 };
 
-export const defaultLanguage = 'en';
+export const defaultLanguage = 'hy';
 export type Language = keyof typeof languages;

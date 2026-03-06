@@ -31,8 +31,8 @@ async function bootstrap(): Promise<BootstrapData> {
     new URLSearchParams(window.location.search).get("preview") === "true";
 
   // Resolve preferred language before React mounts so the first render is correct.
-  const storedLang = localStorage.getItem("preferred-language") ?? "en";
-  const initialLanguage = ["en", "hy", "ru"].includes(storedLang) ? storedLang : "en";
+  const storedLang = localStorage.getItem("preferred-language") ?? "hy";
+  const initialLanguage = ["en", "hy", "ru"].includes(storedLang) ? storedLang : "hy";
 
   if (import.meta.env.DEV) {
     console.log("[BOOT] ✅ translations ready:", Object.keys(translations));
