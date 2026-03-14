@@ -263,20 +263,19 @@ export default function TemplateAdminPanel() {
 
   const updateConfig = (path: string, value: any) => {
     if (!template) return;
-    
-    const newConfig = { ...template.config };
+
     const keys = path.split('.');
-    let current: any = newConfig;
-    
-    // Navigate to the parent object
-    for (let i = 0; i < keys.length - 1; i++) {
-      if (!current[keys[i]]) current[keys[i]] = {};
-      current = current[keys[i]];
+
+    // Recursively produce a new immutable copy at every level,
+    // correctly handling both arrays and plain objects.
+    function setDeep(obj: any, [key, ...rest]: string[], val: any): any {
+      const clone = Array.isArray(obj) ? [...obj] : { ...(obj ?? {}) };
+      const idx = Array.isArray(clone) ? Number(key) : key;
+      clone[idx as any] = rest.length === 0 ? val : setDeep(clone[idx as any], rest, val);
+      return clone;
     }
-    
-    // Set the value
-    current[keys[keys.length - 1]] = value;
-    
+
+    const newConfig = setDeep(template.config, keys, value);
     setTemplate({ ...template, config: newConfig });
   };
 

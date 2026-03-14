@@ -357,7 +357,7 @@ export default function HeroSection({ config = weddingConfig }: HeroSectionProps
           >
             {config.couple?.groomName && <span>{config.couple.groomName}</span>}
             {config.couple?.groomName && config.couple?.brideName && (
-              <span className="mx-1" style={{ color: config.theme?.colors?.accent }}>∞</span>
+              <span className="mx-1" style={{ color: config.theme?.colors?.accent }}>{config.footer?.separator || '∞'}</span>
             )}
             {config.couple?.brideName && <span>{config.couple.brideName}</span>}
           </h1>
