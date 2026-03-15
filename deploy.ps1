@@ -12,8 +12,11 @@ Write-Host "Deploying to Vercel..." -ForegroundColor Yellow
 $deployOutput = vercel --prod 2>&1 | Out-String
 Write-Host $deployOutput
 
-# Extract deployment URL from output
-$deploymentUrl = $deployOutput | Select-String -Pattern "https://invitely-[a-z0-9]+-haruts-projects-9810c546\.vercel\.app" | ForEach-Object { $_.Matches.Value } | Select-Object -First 1
+# Extract deployment URL from output (matches both preview and production URLs)
+$deploymentUrl = $deployOutput | Select-String -Pattern "https://invitely-[\w]+-haruts-projects-9810c546\.vercel\.app" | ForEach-Object { $_.Matches.Value } | Select-Object -First 1
+if (-not $deploymentUrl) {
+    $deploymentUrl = $deployOutput | Select-String -Pattern "Production: (https://\S+\.vercel\.app)" | ForEach-Object { $_.Matches.Groups[1].Value } | Select-Object -First 1
+}
 
 if ($deploymentUrl) {
     Write-Host "Deployment successful: $deploymentUrl" -ForegroundColor Green
