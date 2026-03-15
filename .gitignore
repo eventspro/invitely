@@ -30,3 +30,7 @@ uploads
 *.cert
 config/secrets.*
 credentials.*
+
+# Backup files and logs (contain sensitive DB data — never commit)
+backups/
+logs/

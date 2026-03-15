@@ -50,8 +50,13 @@ export async function setupVite(app: Express, server: Server) {
   app.use("*", async (req, res, next) => {
     const url = req.originalUrl;
 
-    // Don't serve HTML for API routes
-    if (url.startsWith('/api/')) {
+    // Don't serve HTML for API routes or any request that has a file extension
+    // (e.g. /manifest.json, /sw.js, /robots.txt).  Those are static assets that
+    // Vite's own middleware (or Express static) should handle.  Passing them
+    // through transformIndexHtml causes the JSON/CSS/JS plugins to be invoked
+    // on the wrong content and throws "Failed to parse JSON file." errors.
+    const pathname = url.split('?')[0];
+    if (url.startsWith('/api/') || /\.\w{1,8}$/.test(pathname)) {
       return next();
     }
 
