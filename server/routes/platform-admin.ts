@@ -1,33 +1,80 @@
 import express from 'express';
 import { db } from '../db.js';
 import { managementUsers, orders, userAdminPanels, templates } from '../../shared/schema.js';
-import { eq, and, desc } from 'drizzle-orm';
-import { hashPassword, generateToken } from '../middleware/auth.js';
+import { eq, desc } from 'drizzle-orm';
+import { hashPassword } from '../middleware/auth.js';
+import jwt from 'jsonwebtoken';
 
 const router = express.Router();
 
-// Get all Ultimate customers
+// ─── Auth middleware (reuses the same JWT_SECRET as admin.ts) ─────────────────
+const authenticatePlatformAdmin = (req: any, res: any, next: any) => {
+  const token = req.headers.authorization?.replace('Bearer ', '');
+  if (!token) return res.status(401).json({ error: 'Authentication required' });
+  try {
+    jwt.verify(token, process.env.JWT_SECRET || 'fallback-secret');
+    next();
+  } catch {
+    return res.status(401).json({ error: 'Invalid or expired token' });
+  }
+};
+
+router.use(authenticatePlatformAdmin);
+
+// ─── GET all customers (active + inactive) with template name ─────────────────
 router.get('/ultimate-customers', async (req, res) => {
   try {
-    const customers = await db.select({
-      id: managementUsers.id,
-      email: managementUsers.email,
-      firstName: managementUsers.firstName,
-      lastName: managementUsers.lastName,
-      templateId: userAdminPanels.templateId,
-      templateSlug: userAdminPanels.templateSlug,
-      createdAt: managementUsers.createdAt,
-      isActive: userAdminPanels.isActive
-    })
-    .from(managementUsers)
-    .leftJoin(userAdminPanels, eq(managementUsers.id, userAdminPanels.userId))
-    .where(eq(userAdminPanels.isActive, true))
-    .orderBy(desc(managementUsers.createdAt));
+    const customers = await db
+      .select({
+        id: managementUsers.id,
+        email: managementUsers.email,
+        firstName: managementUsers.firstName,
+        lastName: managementUsers.lastName,
+        templateId: userAdminPanels.templateId,
+        templateSlug: userAdminPanels.templateSlug,
+        templateName: templates.name,
+        createdAt: managementUsers.createdAt,
+        isActive: userAdminPanels.isActive,
+        panelId: userAdminPanels.id,
+      })
+      .from(managementUsers)
+      .leftJoin(userAdminPanels, eq(managementUsers.id, userAdminPanels.userId))
+      .leftJoin(templates, eq(userAdminPanels.templateId, templates.id))
+      .orderBy(desc(managementUsers.createdAt));
 
     res.json(customers);
   } catch (error) {
     console.error('Get customers error:', error);
     res.status(500).json({ error: 'Failed to fetch customers' });
+  }
+});
+
+// ─── GET all templates grouped by main / cloned ───────────────────────────────
+router.get('/templates', async (req, res) => {
+  try {
+    const allTemplates = await db
+      .select({
+        id: templates.id,
+        name: templates.name,
+        slug: templates.slug,
+        templateKey: templates.templateKey,
+        ownerEmail: templates.ownerEmail,
+        isMain: templates.isMain,
+        sourceTemplateId: templates.sourceTemplateId,
+        maintenance: templates.maintenance,
+        createdAt: templates.createdAt,
+      })
+      .from(templates)
+      .orderBy(desc(templates.createdAt));
+
+    res.json({
+      mainTemplates: allTemplates.filter(t => t.isMain),
+      clonedTemplates: allTemplates.filter(t => !t.isMain),
+      all: allTemplates,
+    });
+  } catch (error) {
+    console.error('Get templates error:', error);
+    res.status(500).json({ error: 'Failed to fetch templates' });
   }
 });
 
@@ -152,14 +199,43 @@ router.put('/customer/:customerId', async (req, res) => {
       .where(eq(managementUsers.id, customerId));
 
     // Update admin panel status
-    await db.update(userAdminPanels)
-      .set({ isActive })
-      .where(eq(userAdminPanels.userId, customerId));
+    if (typeof isActive === 'boolean') {
+      await db.update(userAdminPanels)
+        .set({ isActive })
+        .where(eq(userAdminPanels.userId, customerId));
+    }
 
     res.json({ success: true, message: 'Customer updated successfully' });
   } catch (error) {
     console.error('Update customer error:', error);
     res.status(500).json({ error: 'Failed to update customer' });
+  }
+});
+
+// ─── PATCH deactivate / activate ─────────────────────────────────────────────
+router.patch('/customer/:customerId/deactivate', async (req, res) => {
+  try {
+    const { customerId } = req.params;
+    await db.update(userAdminPanels)
+      .set({ isActive: false })
+      .where(eq(userAdminPanels.userId, customerId));
+    res.json({ success: true, message: 'Customer deactivated' });
+  } catch (error) {
+    console.error('Deactivate error:', error);
+    res.status(500).json({ error: 'Failed to deactivate customer' });
+  }
+});
+
+router.patch('/customer/:customerId/activate', async (req, res) => {
+  try {
+    const { customerId } = req.params;
+    await db.update(userAdminPanels)
+      .set({ isActive: true })
+      .where(eq(userAdminPanels.userId, customerId));
+    res.json({ success: true, message: 'Customer activated' });
+  } catch (error) {
+    console.error('Activate error:', error);
+    res.status(500).json({ error: 'Failed to activate customer' });
   }
 });
 

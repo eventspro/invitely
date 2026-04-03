@@ -25,7 +25,10 @@ export const PlatformAdminLogin: React.FC = () => {
       if (response.ok) {
         const data = await response.json();
         localStorage.setItem('admin-token', data.token);
-        setLocation('/platform');
+        // Honor ?next= redirect param so /platform-admin/login?next=/platform-admin lands back there
+        const params = new URLSearchParams(window.location.search);
+        const next = params.get('next');
+        setLocation(next && next.startsWith('/') ? next : '/platform');
       } else {
         const error = await response.json();
         alert('Login failed: ' + (error.message || 'Invalid credentials'));
