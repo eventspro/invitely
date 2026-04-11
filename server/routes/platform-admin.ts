@@ -1,7 +1,7 @@
 import express from 'express';
 import { db } from '../db.js';
-import { managementUsers, orders, userAdminPanels, templates } from '../../shared/schema.js';
-import { eq, desc } from 'drizzle-orm';
+import { managementUsers, orders, userAdminPanels, templates, platformSettings } from '../../shared/schema.js';
+import { eq, desc, sql } from 'drizzle-orm';
 import { hashPassword } from '../middleware/auth.js';
 import jwt from 'jsonwebtoken';
 
@@ -36,6 +36,7 @@ router.get('/ultimate-customers', async (req, res) => {
         createdAt: managementUsers.createdAt,
         isActive: userAdminPanels.isActive,
         panelId: userAdminPanels.id,
+        role: userAdminPanels.role,
       })
       .from(managementUsers)
       .leftJoin(userAdminPanels, eq(managementUsers.id, userAdminPanels.userId))
@@ -103,48 +104,53 @@ router.post('/create-ultimate-customer', async (req, res) => {
     // Hash password
     const hashedPassword = await hashPassword(password);
 
-    // Create user
-    const [user] = await db.insert(managementUsers).values({
-      email,
-      firstName,
-      lastName,
-      passwordHash: hashedPassword,
-      status: 'active',
-      emailVerified: true // Skip email verification for admin-created users
-    }).returning();
+    // All three inserts in a single transaction — if any step fails, everything rolls back
+    let createdUser: typeof managementUsers.$inferSelect;
+    await db.transaction(async (tx) => {
+      // Create user
+      const [user] = await tx.insert(managementUsers).values({
+        email,
+        firstName,
+        lastName,
+        passwordHash: hashedPassword,
+        status: 'active',
+        emailVerified: true // Skip email verification for admin-created users
+      }).returning();
+      createdUser = user;
 
-    // Generate order number
-    const orderNumber = `ORD-${Date.now()}-${Math.random().toString(36).substr(2, 9).toUpperCase()}`;
+      // Generate order number
+      const orderNumber = `ORD-${Date.now()}-${Math.random().toString(36).substr(2, 9).toUpperCase()}`;
 
-    // Create order record
-    const [order] = await db.insert(orders).values({
-      orderNumber,
-      userId: user.id,
-      templateId,
-      templatePlan: 'ultimate',
-      amount: '37000.00',
-      paymentMethod: 'cash',
-      status: 'completed',
-      adminAccessGranted: true
-    }).returning();
+      // Create order record
+      const [order] = await tx.insert(orders).values({
+        orderNumber,
+        userId: user.id,
+        templateId,
+        templatePlan: 'ultimate',
+        amount: '37000.00',
+        paymentMethod: 'cash',
+        status: 'completed',
+        adminAccessGranted: true
+      }).returning();
 
-    // Create admin panel access
-    await db.insert(userAdminPanels).values({
-      userId: user.id,
-      templateId,
-      templateSlug,
-      orderId: order.id,
-      isActive: true
+      // Create admin panel access
+      await tx.insert(userAdminPanels).values({
+        userId: user.id,
+        templateId,
+        templateSlug,
+        orderId: order.id,
+        isActive: true
+      });
     });
 
     res.json({
       success: true,
       message: 'Ultimate customer created successfully',
       customer: {
-        id: user.id,
-        email: user.email,
-        firstName: user.firstName,
-        lastName: user.lastName,
+        id: createdUser!.id,
+        email: createdUser!.email,
+        firstName: createdUser!.firstName,
+        lastName: createdUser!.lastName,
         templateSlug,
         adminUrl: `/${templateSlug}/admin`
       }
@@ -170,7 +176,8 @@ router.get('/customer/:customerId', async (req, res) => {
       createdAt: managementUsers.createdAt,
       templateId: userAdminPanels.templateId,
       templateSlug: userAdminPanels.templateSlug,
-      isActive: userAdminPanels.isActive
+      isActive: userAdminPanels.isActive,
+      role: userAdminPanels.role,
     })
     .from(managementUsers)
     .leftJoin(userAdminPanels, eq(managementUsers.id, userAdminPanels.userId))
@@ -191,18 +198,33 @@ router.get('/customer/:customerId', async (req, res) => {
 router.put('/customer/:customerId', async (req, res) => {
   try {
     const { customerId } = req.params;
-    const { firstName, lastName, email, isActive } = req.body;
+    const { firstName, lastName, email, isActive, role } = req.body;
 
-    // Update user
+    // Update user details
     await db.update(managementUsers)
       .set({ firstName, lastName, email })
       .where(eq(managementUsers.id, customerId));
 
-    // Update admin panel status
+    // Update role explicitly (typed, so Drizzle can map camelCase→snake_case)
+    if (role === 'customer' || role === 'super_admin') {
+      const updated = await db.update(userAdminPanels)
+        .set({ role: role as string })
+        .where(eq(userAdminPanels.userId, customerId))
+        .returning({ id: userAdminPanels.id });
+      if (updated.length === 0) {
+        console.warn(`[platform-admin] PUT /customer/${customerId}: role update matched 0 panel rows`);
+      }
+    }
+
+    // Update isActive explicitly
     if (typeof isActive === 'boolean') {
-      await db.update(userAdminPanels)
+      const updated = await db.update(userAdminPanels)
         .set({ isActive })
-        .where(eq(userAdminPanels.userId, customerId));
+        .where(eq(userAdminPanels.userId, customerId))
+        .returning({ id: userAdminPanels.id });
+      if (updated.length === 0) {
+        console.warn(`[platform-admin] PUT /customer/${customerId}: isActive update matched 0 panel rows`);
+      }
     }
 
     res.json({ success: true, message: 'Customer updated successfully' });
@@ -216,9 +238,14 @@ router.put('/customer/:customerId', async (req, res) => {
 router.patch('/customer/:customerId/deactivate', async (req, res) => {
   try {
     const { customerId } = req.params;
-    await db.update(userAdminPanels)
+    const updated = await db.update(userAdminPanels)
       .set({ isActive: false })
-      .where(eq(userAdminPanels.userId, customerId));
+      .where(eq(userAdminPanels.userId, customerId))
+      .returning({ id: userAdminPanels.id });
+    if (updated.length === 0) {
+      console.warn(`[platform-admin] deactivate: no panel row found for userId=${customerId}`);
+      return res.status(404).json({ error: 'No admin panel found for this customer' });
+    }
     res.json({ success: true, message: 'Customer deactivated' });
   } catch (error) {
     console.error('Deactivate error:', error);
@@ -229,13 +256,67 @@ router.patch('/customer/:customerId/deactivate', async (req, res) => {
 router.patch('/customer/:customerId/activate', async (req, res) => {
   try {
     const { customerId } = req.params;
-    await db.update(userAdminPanels)
+    const updated = await db.update(userAdminPanels)
       .set({ isActive: true })
-      .where(eq(userAdminPanels.userId, customerId));
+      .where(eq(userAdminPanels.userId, customerId))
+      .returning({ id: userAdminPanels.id });
+    if (updated.length === 0) {
+      console.warn(`[platform-admin] activate: no panel row found for userId=${customerId}`);
+      return res.status(404).json({ error: 'No admin panel found for this customer' });
+    }
     res.json({ success: true, message: 'Customer activated' });
   } catch (error) {
     console.error('Activate error:', error);
     res.status(500).json({ error: 'Failed to activate customer' });
+  }
+});
+
+router.delete('/customer/:customerId', async (req, res) => {
+  try {
+    const { customerId } = req.params;
+    await db.delete(userAdminPanels).where(eq(userAdminPanels.userId, customerId));
+    await db.delete(managementUsers).where(eq(managementUsers.id, customerId));
+    res.json({ success: true, message: 'Customer deleted' });
+  } catch (error) {
+    console.error('Delete customer error:', error);
+    res.status(500).json({ error: 'Failed to delete customer' });
+  }
+});
+
+// ─── PUT /site-settings — update social_links (and other site-level settings) ─
+router.put('/site-settings', async (req, res) => {
+  try {
+    const { instagram, telegram, facebook } = req.body as {
+      instagram?: string;
+      telegram?: string;
+      facebook?: string;
+    };
+
+    const value = { instagram: instagram ?? '', telegram: telegram ?? '', facebook: facebook ?? '' };
+
+    const [existing] = await db
+      .select()
+      .from(platformSettings)
+      .where(eq(platformSettings.key, 'social_links'))
+      .limit(1);
+
+    if (existing) {
+      await db
+        .update(platformSettings)
+        .set({ value, updatedAt: new Date() })
+        .where(eq(platformSettings.key, 'social_links'));
+    } else {
+      await db.insert(platformSettings).values({
+        key: 'social_links',
+        value,
+        description: 'Social media links displayed on the homepage contact section',
+      });
+    }
+
+    res.json({ success: true, value });
+  } catch (error) {
+    console.error('Update site settings error:', error);
+    res.status(500).json({ error: 'Failed to update site settings' });
   }
 });
 

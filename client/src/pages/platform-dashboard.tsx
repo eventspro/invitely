@@ -82,7 +82,17 @@ export default function PlatformDashboard() {
     ownerEmail: "",
     sourceTemplate: undefined,
   });
+  const [superAdminMode, setSuperAdminMode] = useState(false);
+  const [superAdminUser, setSuperAdminUser] = useState<any>(null);
   const { toast } = useToast();
+
+  // ── Social links state ───────────────────────────────────────────────────────
+  const [socialLinks, setSocialLinks] = useState({
+    instagram: '',
+    telegram: '',
+    facebook: '',
+  });
+  const [settingsSaving, setSettingsSaving] = useState(false);
 
   useEffect(() => {
     checkAuthentication();
@@ -91,10 +101,40 @@ export default function PlatformDashboard() {
   useEffect(() => {
     if (authenticated) {
       loadTemplates();
+      // Load social links from platform settings
+      fetch('/api/site-settings')
+        .then((r) => r.ok ? r.json() : null)
+        .then((d) => {
+          if (d) {
+            setSocialLinks({
+              instagram: d.instagram || '',
+              telegram: d.telegram || '',
+              facebook: d.facebook || '',
+            });
+          }
+        })
+        .catch(() => {});
     }
   }, [authenticated]);
 
   const checkAuthentication = () => {
+    // Check super admin customer mode first
+    if (localStorage.getItem('superAdminMode') === 'true') {
+      const token = localStorage.getItem('templateAdminToken');
+      const userStr = localStorage.getItem('templateAdminUser');
+      if (token && userStr) {
+        try {
+          const user = JSON.parse(userStr);
+          setSuperAdminMode(true);
+          setSuperAdminUser(user);
+          setAuthenticated(true);
+          setLoading(false);
+          return;
+        } catch {}
+      }
+      localStorage.removeItem('superAdminMode');
+    }
+
     const token = localStorage.getItem("admin-token");
     if (!token) {
       setAuthenticated(false);
@@ -120,29 +160,92 @@ export default function PlatformDashboard() {
     });
   };
 
+  const handleLogout = () => {
+    localStorage.removeItem("admin-token");
+    localStorage.removeItem("templateAdminToken");
+    localStorage.removeItem("templateAdminUser");
+    localStorage.removeItem("superAdminMode");
+    setSuperAdminMode(false);
+    setSuperAdminUser(null);
+    setAuthenticated(false);
+  };
+
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
-      const response = await fetch("/api/admin/login", {
+      // Try platform admin login first (username + password)
+      const adminResponse = await fetch("/api/admin/login", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(loginForm),
       });
 
-      if (response.ok) {
-        const data = await response.json();
+      if (adminResponse.ok) {
+        const data = await adminResponse.json();
         localStorage.setItem("admin-token", data.token);
         setAuthenticated(true);
         toast({ title: "Login successful", description: "Welcome to the platform dashboard" });
-      } else {
-        toast({ title: "Login failed", description: "Invalid credentials", variant: "destructive" });
+        return;
       }
+
+      // Try super admin customer login (email + password)
+      const customerResponse = await fetch("/api/auth/template-login", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email: loginForm.username, password: loginForm.password }),
+      });
+
+      if (customerResponse.ok) {
+        const data = await customerResponse.json();
+        if (data.user?.role === 'super_admin') {
+          localStorage.setItem('templateAdminToken', data.token);
+          localStorage.setItem('templateAdminUser', JSON.stringify(data.user));
+          localStorage.setItem('superAdminMode', 'true');
+          setSuperAdminMode(true);
+          setSuperAdminUser(data.user);
+          setAuthenticated(true);
+          toast({ title: "Login successful", description: `Welcome, ${data.user.email}` });
+          return;
+        }
+      }
+
+      toast({ title: "Login failed", description: "Invalid credentials", variant: "destructive" });
     } catch (error) {
       toast({ title: "Login error", description: "Failed to connect to server", variant: "destructive" });
     }
   };
 
   const loadTemplates = async () => {
+    // Super admin: load only their own template using the public config API
+    if (localStorage.getItem('superAdminMode') === 'true') {
+      try {
+        const userStr = localStorage.getItem('templateAdminUser');
+        const user = userStr ? JSON.parse(userStr) : null;
+        if (!user?.templateId) return;
+        const response = await fetch(`/api/templates/${user.templateId}/config`);
+        if (response.ok) {
+          const data = await response.json();
+          setTemplates([{
+            id: data.templateId || user.templateId,
+            name: data.name || user.templateSlug || 'Your Template',
+            slug: data.slug || user.templateSlug || '',
+            templateKey: data.templateKey || 'pro',
+            ownerEmail: user.email,
+            maintenance: data.maintenance || false,
+            isMain: false,
+            sourceTemplateId: undefined,
+            templateVersion: data.templateVersion,
+            stats: { totalRsvps: 0, attending: 0, notAttending: 0 },
+            createdAt: new Date().toISOString(),
+            updatedAt: new Date().toISOString(),
+          }]);
+        }
+      } catch (error) {
+        console.error("Failed to load template:", error);
+      }
+      return;
+    }
+
     try {
       const token = localStorage.getItem("admin-token");
       const response = await fetch("/api/admin/templates", {
@@ -248,6 +351,32 @@ export default function PlatformDashboard() {
     }
   };
 
+  const handleSaveSettings = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setSettingsSaving(true);
+    try {
+      const token = localStorage.getItem('admin-token');
+      const res = await fetch('/api/platform-admin/site-settings', {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify(socialLinks),
+      });
+      if (res.ok) {
+        toast({ title: 'Saved', description: 'Social media links updated successfully' });
+      } else {
+        const d = await res.json();
+        toast({ title: 'Error', description: d.error ?? 'Failed to save', variant: 'destructive' });
+      }
+    } catch {
+      toast({ title: 'Error', description: 'Network error', variant: 'destructive' });
+    } finally {
+      setSettingsSaving(false);
+    }
+  };
+
   const deleteTemplate = async (template: Template) => {
     if (!confirm(`Are you sure you want to delete "${template.name}"? This action cannot be undone.`)) {
       return;
@@ -293,7 +422,7 @@ export default function PlatformDashboard() {
           <CardContent>
             <form onSubmit={handleLogin} className="space-y-4">
               <div>
-                <Label htmlFor="username">Username</Label>
+                <Label htmlFor="username">Username or Email</Label>
                 <Input
                   id="username"
                   type="text"
@@ -385,26 +514,28 @@ export default function PlatformDashboard() {
             </Button>
           </Link>
         </div>
-        
-        <div className="flex gap-2">
-          <Button
-            variant="outline"
-            size="sm"
-            className="flex-1"
-            onClick={() => openCloneDialog(template)}
-          >
-            <Copy className="w-4 h-4 mr-1" />
-            Clone
-          </Button>
-          <Button
-            variant="outline"
-            size="sm"
-            className="text-red-600 hover:text-red-700"
-            onClick={() => deleteTemplate(template)}
-          >
-            <Trash2 className="w-4 h-4" />
-          </Button>
-        </div>
+
+        {!superAdminMode && (
+          <div className="flex gap-2">
+            <Button
+              variant="outline"
+              size="sm"
+              className="flex-1"
+              onClick={() => openCloneDialog(template)}
+            >
+              <Copy className="w-4 h-4 mr-1" />
+              Clone
+            </Button>
+            <Button
+              variant="outline"
+              size="sm"
+              className="text-red-600 hover:text-red-700"
+              onClick={() => deleteTemplate(template)}
+            >
+              <Trash2 className="w-4 h-4" />
+            </Button>
+          </div>
+        )}
 
         {/* Metadata */}
         <div className="text-xs text-gray-500">
@@ -418,6 +549,38 @@ export default function PlatformDashboard() {
     </Card>
   );
 
+  // ─── Super Admin view: scoped to only their assigned template ───────────
+  if (superAdminMode) {
+    return (
+      <div className="min-h-screen bg-gray-50">
+        <div className="bg-white border-b">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div className="flex justify-between items-center py-6">
+              <div>
+                <h1 className="text-3xl font-bold text-gray-900">Wedding Platform</h1>
+                <p className="text-gray-600">Your template management</p>
+              </div>
+              <div className="flex items-center gap-4">
+                <span className="text-sm text-gray-500">{superAdminUser?.email}</span>
+                <Button variant="outline" onClick={handleLogout}>Sign out</Button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+          <div className="mb-6">
+            <h2 className="text-2xl font-bold text-gray-900">Your Template</h2>
+            <p className="text-gray-600">View and edit your wedding website</p>
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {templates.map(renderTemplateCard)}
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-gray-50">
       {/* Header */}
@@ -428,7 +591,10 @@ export default function PlatformDashboard() {
               <h1 className="text-3xl font-bold text-gray-900">Wedding Platform</h1>
               <p className="text-gray-600">Manage wedding invitation templates</p>
             </div>
-            <div className="flex gap-4">
+            <div className="flex gap-4 items-center">
+              <Button variant="outline" size="sm" onClick={handleLogout}>
+                Sign out
+              </Button>
               <Button variant="outline" className="bg-white" asChild>
                 <Link href="/platform/translations">
                   <Globe className="w-4 h-4 mr-2" />
@@ -798,28 +964,50 @@ export default function PlatformDashboard() {
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
                   <Wrench className="w-5 h-5" />
-                  Platform Settings
+                  Social Media Links
                 </CardTitle>
                 <CardDescription>
-                  Configure platform-wide settings
+                  Configure the social media links shown in the Contact section of the homepage.
                 </CardDescription>
               </CardHeader>
               <CardContent>
-                <div className="text-center py-12">
-                  <Wrench className="w-16 h-16 text-gray-400 mx-auto mb-4" />
-                  <h3 className="text-lg font-semibold text-gray-900 mb-2">Platform Configuration</h3>
-                  <p className="text-gray-600 mb-4">
-                    Key-value configuration store for platform settings
-                  </p>
-                  <div className="text-left max-w-2xl mx-auto space-y-2 text-sm text-gray-600 bg-gray-50 p-4 rounded">
-                    <p><strong>Settings API:</strong> <code>/api/platform-settings</code></p>
-                    <p><strong>Bulk Update:</strong> <code>/api/platform-settings/bulk</code></p>
-                    <p className="mt-3">Available settings: maintenance_mode, default_language, email_notifications, etc.</p>
+                <form onSubmit={handleSaveSettings} className="space-y-4 max-w-lg">
+                  <div>
+                    <Label htmlFor="settings-instagram">Instagram URL</Label>
+                    <Input
+                      id="settings-instagram"
+                      type="url"
+                      placeholder="https://www.instagram.com/yourpage"
+                      value={socialLinks.instagram}
+                      onChange={(e) => setSocialLinks((s) => ({ ...s, instagram: e.target.value }))}
+                    />
                   </div>
-                  <p className="text-sm text-gray-500 mt-4">
-                    UI for managing settings coming soon
-                  </p>
-                </div>
+                  <div>
+                    <Label htmlFor="settings-telegram">Telegram URL</Label>
+                    <Input
+                      id="settings-telegram"
+                      type="url"
+                      placeholder="https://t.me/yourpage"
+                      value={socialLinks.telegram}
+                      onChange={(e) => setSocialLinks((s) => ({ ...s, telegram: e.target.value }))}
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="settings-facebook">Facebook URL</Label>
+                    <Input
+                      id="settings-facebook"
+                      type="url"
+                      placeholder="https://www.facebook.com/yourpage"
+                      value={socialLinks.facebook}
+                      onChange={(e) => setSocialLinks((s) => ({ ...s, facebook: e.target.value }))}
+                    />
+                  </div>
+                  <div className="flex justify-end pt-2">
+                    <Button type="submit" disabled={settingsSaving}>
+                      {settingsSaving ? 'Saving…' : 'Save Settings'}
+                    </Button>
+                  </div>
+                </form>
               </CardContent>
             </Card>
           </TabsContent>

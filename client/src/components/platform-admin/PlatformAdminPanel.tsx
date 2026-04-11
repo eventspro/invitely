@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { useLocation } from 'wouter';
 
 // ─── Types ────────────────────────────────────────────────────────────────────
@@ -25,6 +25,7 @@ interface Customer {
   createdAt: string;
   isActive?: boolean | null;
   panelId?: string | null;
+  role?: string | null;
 }
 
 interface CreateForm {
@@ -40,21 +41,36 @@ type Tab = 'overview' | 'customers' | 'templates';
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 const fmtDate = (d: string) =>
-  new Date(d).toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' });
+  new Date(d).toLocaleDateString('en-US', {
+    year: 'numeric',
+    month: 'short',
+    day: 'numeric',
+  });
 
-const initials = (firstName?: string | null, lastName?: string | null) =>
-  `${(firstName?.[0] ?? '').toUpperCase()}${(lastName?.[0] ?? '').toUpperCase()}` || '?';
+const initials = (firstName?: string | null, lastName?: string | null) => {
+  const value = `${(firstName?.[0] ?? '').toUpperCase()}${(lastName?.[0] ?? '').toUpperCase()}`;
+  return value || '?';
+};
 
 const TEMPLATE_KEY_LABELS: Record<string, string> = {
-  pro: 'Pro', classic: 'Classic', elegant: 'Elegant', romantic: 'Romantic', nature: 'Nature',
+  pro: 'Pro',
+  classic: 'Classic',
+  elegant: 'Elegant',
+  romantic: 'Romantic',
+  nature: 'Nature',
 };
 
 // ─── Sub-components ───────────────────────────────────────────────────────────
-const StatCard: React.FC<{ label: string; value: number | string; color: string; icon: string }> = ({
-  label, value, color, icon,
-}) => (
+const StatCard: React.FC<{
+  label: string;
+  value: number | string;
+  color: string;
+  icon: string;
+}> = ({ label, value, color, icon }) => (
   <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-5 flex items-center gap-4">
-    <div className={`w-12 h-12 rounded-full flex items-center justify-center text-xl ${color}`}>{icon}</div>
+    <div className={`w-12 h-12 rounded-full flex items-center justify-center text-xl ${color}`}>
+      {icon}
+    </div>
     <div>
       <p className="text-2xl font-bold text-gray-900">{value}</p>
       <p className="text-sm text-gray-500">{label}</p>
@@ -63,9 +79,11 @@ const StatCard: React.FC<{ label: string; value: number | string; color: string;
 );
 
 const Badge: React.FC<{ active: boolean }> = ({ active }) => (
-  <span className={`inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-semibold ${
-    active ? 'bg-emerald-100 text-emerald-700' : 'bg-red-100 text-red-600'
-  }`}>
+  <span
+    className={`inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-semibold ${
+      active ? 'bg-emerald-100 text-emerald-700' : 'bg-red-100 text-red-600'
+    }`}
+  >
     <span className={`w-1.5 h-1.5 rounded-full ${active ? 'bg-emerald-500' : 'bg-red-400'}`} />
     {active ? 'Active' : 'Inactive'}
   </span>
@@ -79,6 +97,7 @@ const KeyBadge: React.FC<{ k: string }> = ({ k }) => {
     romantic: 'bg-pink-100 text-pink-700',
     nature: 'bg-green-100 text-green-700',
   };
+
   return (
     <span className={`px-2 py-0.5 rounded text-xs font-medium ${colors[k] ?? 'bg-gray-100 text-gray-600'}`}>
       {TEMPLATE_KEY_LABELS[k] ?? k}
@@ -86,10 +105,11 @@ const KeyBadge: React.FC<{ k: string }> = ({ k }) => {
   );
 };
 
-// ─── Modal wrapper ────────────────────────────────────────────────────────────
-const Modal: React.FC<{ title: string; onClose: () => void; children: React.ReactNode }> = ({
-  title, onClose, children,
-}) => (
+const Modal: React.FC<{
+  title: string;
+  onClose: () => void;
+  children: React.ReactNode;
+}> = ({ title, onClose, children }) => (
   <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm">
     <div className="bg-white rounded-2xl shadow-2xl w-full max-w-lg max-h-[90vh] overflow-y-auto">
       <div className="flex items-center justify-between px-6 py-4 border-b border-gray-100">
@@ -106,23 +126,29 @@ const Modal: React.FC<{ title: string; onClose: () => void; children: React.Reac
   </div>
 );
 
-const FormRow: React.FC<{ label: string; children: React.ReactNode; hint?: string }> = ({
-  label, children, hint,
-}) => (
+const FormRow: React.FC<{
+  label: string;
+  children: React.ReactNode;
+  hint?: string;
+}> = ({ label, children, hint }) => (
   <div>
     <label className="block text-sm font-medium text-gray-700 mb-1">{label}</label>
     {children}
-    {hint && <p className="mt-1 text-xs text-gray-400">{hint}</p>}
+    {hint ? <p className="mt-1 text-xs text-gray-400">{hint}</p> : null}
   </div>
 );
 
-const inputCls = 'w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent';
-const btnPrimary = 'px-4 py-2 bg-indigo-600 text-white text-sm font-medium rounded-lg hover:bg-indigo-700 active:scale-95 transition-all disabled:opacity-50';
-const btnSecondary = 'px-4 py-2 bg-white text-gray-700 text-sm font-medium rounded-lg border border-gray-200 hover:bg-gray-50 active:scale-95 transition-all';
+const inputCls =
+  'w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent';
+const btnPrimary =
+  'px-4 py-2 bg-indigo-600 text-white text-sm font-medium rounded-lg hover:bg-indigo-700 active:scale-95 transition-all disabled:opacity-50';
+const btnSecondary =
+  'px-4 py-2 bg-white text-gray-700 text-sm font-medium rounded-lg border border-gray-200 hover:bg-gray-50 active:scale-95 transition-all';
 
 // ─── Main Panel ───────────────────────────────────────────────────────────────
 export const PlatformAdminPanel: React.FC = () => {
   const [, setLocation] = useLocation();
+
   const [tab, setTab] = useState<Tab>('overview');
   const [loading, setLoading] = useState(true);
   const [customers, setCustomers] = useState<Customer[]>([]);
@@ -130,32 +156,67 @@ export const PlatformAdminPanel: React.FC = () => {
   const [clonedTemplates, setClonedTemplates] = useState<TemplateItem[]>([]);
   const [showCreate, setShowCreate] = useState(false);
   const [editTarget, setEditTarget] = useState<Customer | null>(null);
-  const [editForm, setEditForm] = useState({ firstName: '', lastName: '', email: '' });
+  const [editForm, setEditForm] = useState({
+    firstName: '',
+    lastName: '',
+    email: '',
+    role: 'customer' as string,
+  });
   const [createForm, setCreateForm] = useState<CreateForm>({
-    email: '', firstName: '', lastName: '', password: '', templateId: '', templateSlug: '',
+    email: '',
+    firstName: '',
+    lastName: '',
+    password: '',
+    templateId: '',
+    templateSlug: '',
   });
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState('');
   const [toast, setToast] = useState('');
+  const [deleteTarget, setDeleteTarget] = useState<Customer | null>(null);
+  const [deleting, setDeleting] = useState(false);
 
-  const showToast = (msg: string) => {
+  const toastTimerRef = useRef<number | null>(null);
+
+  const showToast = useCallback((msg: string) => {
     setToast(msg);
-    setTimeout(() => setToast(''), 3500);
-  };
+
+    if (toastTimerRef.current) {
+      window.clearTimeout(toastTimerRef.current);
+    }
+
+    toastTimerRef.current = window.setTimeout(() => {
+      setToast('');
+      toastTimerRef.current = null;
+    }, 3500);
+  }, []);
+
+  useEffect(() => {
+    return () => {
+      if (toastTimerRef.current) {
+        window.clearTimeout(toastTimerRef.current);
+      }
+    };
+  }, []);
 
   const authHeaders = useCallback((): Record<string, string> => {
     const token = localStorage.getItem('admin-token') ?? '';
-    return { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` };
+    return {
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${token}`,
+    };
   }, []);
 
-  // ── Load data ──────────────────────────────────────────────────────────────
   const loadData = useCallback(async () => {
     setLoading(true);
+    setError('');
+
     const token = localStorage.getItem('admin-token');
     if (!token) {
       setLocation('/platform-admin/login?next=/platform-admin');
       return;
     }
+
     try {
       const [cRes, tRes] = await Promise.all([
         fetch('/api/platform-admin/ultimate-customers', {
@@ -172,11 +233,20 @@ export const PlatformAdminPanel: React.FC = () => {
         return;
       }
 
-      if (cRes.ok) setCustomers(await cRes.json());
+      if (cRes.ok) {
+        const customersData = (await cRes.json()) as Customer[];
+        setCustomers(customersData ?? []);
+      } else {
+        setCustomers([]);
+      }
+
       if (tRes.ok) {
         const d = await tRes.json();
         setMainTemplates(d.mainTemplates ?? []);
         setClonedTemplates(d.clonedTemplates ?? []);
+      } else {
+        setMainTemplates([]);
+        setClonedTemplates([]);
       }
     } catch {
       setError('Failed to load data. Please refresh.');
@@ -185,12 +255,12 @@ export const PlatformAdminPanel: React.FC = () => {
     }
   }, [setLocation]);
 
-  // Auth check + initial load
   useEffect(() => {
     if (!localStorage.getItem('admin-token')) {
       setLocation('/platform-admin/login?next=/platform-admin');
       return;
     }
+
     loadData();
   }, [loadData, setLocation]);
 
@@ -199,93 +269,155 @@ export const PlatformAdminPanel: React.FC = () => {
     setLocation('/platform-admin/login');
   };
 
-  // ── Create customer ────────────────────────────────────────────────────────
   const handleCreate = async (e: React.FormEvent) => {
     e.preventDefault();
     setSaving(true);
     setError('');
+
     try {
       const res = await fetch('/api/platform-admin/create-ultimate-customer', {
         method: 'POST',
         headers: authHeaders(),
         body: JSON.stringify(createForm),
       });
+
       const data = await res.json();
-      if (res.ok) {
-        setShowCreate(false);
-        setCreateForm({ email: '', firstName: '', lastName: '', password: '', templateId: '', templateSlug: '' });
-        showToast(`✅ Customer created — admin: /${createForm.templateSlug}/admin`);
-        await loadData();
-      } else {
+
+      if (!res.ok) {
         setError(data.error ?? data.message ?? 'Failed to create customer');
+        return;
       }
+
+      const createdSlug = createForm.templateSlug;
+
+      setShowCreate(false);
+      setCreateForm({
+        email: '',
+        firstName: '',
+        lastName: '',
+        password: '',
+        templateId: '',
+        templateSlug: '',
+      });
+
+      showToast(`✅ Customer created — admin URL: /${createdSlug}/admin`);
+      await loadData();
+    } catch {
+      setError('Network error while creating customer');
     } finally {
       setSaving(false);
     }
   };
 
-  // ── Edit customer ──────────────────────────────────────────────────────────
   const openEdit = (c: Customer) => {
     setEditTarget(c);
-    setEditForm({ firstName: c.firstName ?? '', lastName: c.lastName ?? '', email: c.email });
+    setEditForm({
+      firstName: c.firstName ?? '',
+      lastName: c.lastName ?? '',
+      email: c.email,
+      role: c.role ?? 'customer',
+    });
     setError('');
   };
 
   const handleSaveEdit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!editTarget) return;
+
     setSaving(true);
+    setError('');
+
     try {
       const res = await fetch(`/api/platform-admin/customer/${editTarget.id}`, {
         method: 'PUT',
         headers: authHeaders(),
         body: JSON.stringify(editForm),
       });
-      if (res.ok) {
-        setEditTarget(null);
-        showToast('✅ Customer updated');
-        await loadData();
-      } else {
+
+      if (!res.ok) {
         const d = await res.json();
         setError(d.error ?? 'Failed to update');
+        return;
       }
+
+      setEditTarget(null);
+      showToast('✅ Customer updated');
+      await loadData();
+    } catch {
+      setError('Network error while updating customer');
     } finally {
       setSaving(false);
     }
   };
 
-  // ── Toggle active / inactive ───────────────────────────────────────────────
   const toggleStatus = async (c: Customer) => {
     const action = c.isActive ? 'deactivate' : 'activate';
-    const res = await fetch(`/api/platform-admin/customer/${c.id}/${action}`, {
-      method: 'PATCH',
-      headers: { Authorization: `Bearer ${localStorage.getItem('admin-token') ?? ''}` },
-    });
-    if (res.ok) {
+    setError('');
+
+    try {
+      const res = await fetch(`/api/platform-admin/customer/${c.id}/${action}`, {
+        method: 'PATCH',
+        headers: {
+          Authorization: `Bearer ${localStorage.getItem('admin-token') ?? ''}`,
+        },
+      });
+
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        setError(data.error ?? `Failed to ${action} customer`);
+        return;
+      }
+
       showToast(`✅ Customer ${action}d`);
       await loadData();
+    } catch {
+      setError(`Network error while trying to ${action} customer`);
     }
   };
 
-  // ── Password / slug generators ─────────────────────────────────────────────
+  const handleDelete = async () => {
+    if (!deleteTarget) return;
+    setDeleting(true);
+    try {
+      const res = await fetch(`/api/platform-admin/customer/${deleteTarget.id}`, {
+        method: 'DELETE',
+        headers: { Authorization: `Bearer ${localStorage.getItem('admin-token') ?? ''}` },
+      });
+      if (res.ok) {
+        setDeleteTarget(null);
+        showToast(`🗑️ Customer deleted`);
+        await loadData();
+      } else {
+        const d = await res.json();
+        setError(d.error ?? 'Failed to delete customer');
+        setDeleteTarget(null);
+      }
+    } finally {
+      setDeleting(false);
+    }
+  };
+
   const generatePassword = () => {
     const chars = 'ABCDEFGHJKMNPQRSTUVWXYZabcdefghjkmnpqrstuvwxyz23456789!@#';
-    setCreateForm(f => ({
+    setCreateForm((f) => ({
       ...f,
-      password: Array.from({ length: 12 }, () => chars[Math.floor(Math.random() * chars.length)]).join(''),
+      password: Array.from(
+        { length: 12 },
+        () => chars[Math.floor(Math.random() * chars.length)]
+      ).join(''),
     }));
   };
 
   const generateSlug = () => {
-    const slug = `${createForm.firstName}${createForm.lastName}`.toLowerCase().replace(/[^a-z0-9]/g, '');
-    setCreateForm(f => ({ ...f, templateSlug: slug }));
+    const slug = `${createForm.firstName}${createForm.lastName}`
+      .toLowerCase()
+      .replace(/[^a-z0-9]/g, '');
+    setCreateForm((f) => ({ ...f, templateSlug: slug }));
   };
 
-  // ── Derived stats ──────────────────────────────────────────────────────────
-  const activeCount = customers.filter(c => c.isActive).length;
+  const activeCount = customers.filter((c) => c.isActive).length;
   const inactiveCount = customers.length - activeCount;
 
-  // ─────────────────────────────────────────────────────────────────────────
   if (loading) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
@@ -299,14 +431,12 @@ export const PlatformAdminPanel: React.FC = () => {
 
   return (
     <div className="min-h-screen bg-slate-50">
-      {/* ── Toast notification ── */}
       {toast && (
         <div className="fixed top-4 right-4 z-50 bg-gray-900 text-white text-sm px-4 py-3 rounded-xl shadow-lg">
           {toast}
         </div>
       )}
 
-      {/* ── Header ── */}
       <header className="bg-white border-b border-gray-100 sticky top-0 z-40">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between gap-4">
           <div className="flex items-center gap-3 shrink-0">
@@ -319,16 +449,13 @@ export const PlatformAdminPanel: React.FC = () => {
             </div>
           </div>
 
-          {/* Tab navigation */}
           <nav className="hidden sm:flex gap-1 bg-gray-100 rounded-xl p-1">
-            {(['overview', 'customers', 'templates'] as Tab[]).map(t => (
+            {(['overview', 'customers', 'templates'] as Tab[]).map((t) => (
               <button
                 key={t}
                 onClick={() => setTab(t)}
                 className={`px-4 py-1.5 rounded-lg text-sm font-medium capitalize transition-colors ${
-                  tab === t
-                    ? 'bg-white text-indigo-600 shadow-sm'
-                    : 'text-gray-500 hover:text-gray-700'
+                  tab === t ? 'bg-white text-indigo-600 shadow-sm' : 'text-gray-500 hover:text-gray-700'
                 }`}
               >
                 {t === 'overview' ? '📊 Overview' : t === 'customers' ? '👥 Customers' : '🎨 Templates'}
@@ -344,9 +471,8 @@ export const PlatformAdminPanel: React.FC = () => {
           </button>
         </div>
 
-        {/* Mobile tab bar */}
         <div className="sm:hidden flex border-t border-gray-100">
-          {(['overview', 'customers', 'templates'] as Tab[]).map(t => (
+          {(['overview', 'customers', 'templates'] as Tab[]).map((t) => (
             <button
               key={t}
               onClick={() => setTab(t)}
@@ -361,25 +487,29 @@ export const PlatformAdminPanel: React.FC = () => {
       </header>
 
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        {/* Global error banner */}
         {error && (
           <div className="mb-6 bg-red-50 border border-red-200 text-red-700 text-sm px-4 py-3 rounded-xl flex items-center justify-between">
             <span>{error}</span>
-            <button onClick={() => setError('')} className="text-red-400 hover:text-red-600 ml-4">✕</button>
+            <button onClick={() => setError('')} className="text-red-400 hover:text-red-600 ml-4">
+              ✕
+            </button>
           </div>
         )}
 
-        {/* ══════════════════════════════ OVERVIEW ══════════════════════════════ */}
         {tab === 'overview' && (
           <div className="space-y-6">
             <div>
               <h1 className="text-2xl font-bold text-gray-900">Overview</h1>
               <p className="text-gray-500 text-sm mt-1">
-                {new Date().toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}
+                {new Date().toLocaleDateString('en-US', {
+                  weekday: 'long',
+                  year: 'numeric',
+                  month: 'long',
+                  day: 'numeric',
+                })}
               </p>
             </div>
 
-            {/* Stats */}
             <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
               <StatCard label="Total Customers" value={customers.length} color="bg-indigo-100 text-indigo-600" icon="👥" />
               <StatCard label="Active" value={activeCount} color="bg-emerald-100 text-emerald-600" icon="✅" />
@@ -387,7 +517,6 @@ export const PlatformAdminPanel: React.FC = () => {
               <StatCard label="Cloned Templates" value={clonedTemplates.length} color="bg-amber-100 text-amber-600" icon="🔀" />
             </div>
 
-            {/* Recent customers */}
             <div className="bg-white rounded-2xl shadow-sm border border-gray-100">
               <div className="px-6 py-4 border-b border-gray-100 flex items-center justify-between">
                 <h2 className="font-semibold text-gray-900">Recent Customers</h2>
@@ -395,8 +524,9 @@ export const PlatformAdminPanel: React.FC = () => {
                   View all →
                 </button>
               </div>
+
               <div className="divide-y divide-gray-50">
-                {customers.slice(0, 5).map(c => (
+                {customers.slice(0, 5).map((c) => (
                   <div key={c.id} className="px-6 py-3 flex items-center gap-4">
                     <div className="w-8 h-8 rounded-full bg-indigo-100 flex items-center justify-center text-xs font-bold text-indigo-600 shrink-0">
                       {initials(c.firstName, c.lastName)}
@@ -411,13 +541,22 @@ export const PlatformAdminPanel: React.FC = () => {
                       {c.templateSlug ? `/${c.templateSlug}` : '—'}
                     </p>
                     <Badge active={!!c.isActive} />
+                    {c.role === 'super_admin' && (
+                      <span className="inline-flex items-center px-1.5 py-0.5 rounded text-xs font-medium bg-amber-100 text-amber-700">
+                        Super Admin
+                      </span>
+                    )}
                   </div>
                 ))}
+
                 {customers.length === 0 && (
                   <div className="px-6 py-10 text-center text-gray-400 text-sm">
                     No customers yet.{' '}
                     <button
-                      onClick={() => { setTab('customers'); setShowCreate(true); }}
+                      onClick={() => {
+                        setTab('customers');
+                        setShowCreate(true);
+                      }}
                       className="text-indigo-600 hover:underline"
                     >
                       Create the first one
@@ -427,36 +566,46 @@ export const PlatformAdminPanel: React.FC = () => {
               </div>
             </div>
 
-            {/* Quick actions */}
             <div className="grid sm:grid-cols-2 gap-4">
               <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-5">
                 <h3 className="font-semibold text-gray-900 mb-3 text-sm">Main Templates</h3>
                 <div className="space-y-2">
-                  {mainTemplates.slice(0, 5).map(t => (
+                  {mainTemplates.slice(0, 5).map((t) => (
                     <div key={t.id} className="flex items-center justify-between">
                       <span className="text-sm text-gray-700 truncate">{t.name}</span>
-                      <a href={`/${t.slug}`} target="_blank" rel="noreferrer" className="text-indigo-500 hover:text-indigo-700 text-xs shrink-0 ml-2">
+                      <a
+                        href={`/${t.slug}`}
+                        target="_blank"
+                        rel="noreferrer"
+                        className="text-indigo-500 hover:text-indigo-700 text-xs shrink-0 ml-2"
+                      >
                         View ↗
                       </a>
                     </div>
                   ))}
                 </div>
               </div>
+
               <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-5">
                 <h3 className="font-semibold text-gray-900 mb-3 text-sm">Quick Actions</h3>
                 <div className="space-y-2">
                   <button
-                    onClick={() => { setTab('customers'); setShowCreate(true); }}
+                    onClick={() => {
+                      setTab('customers');
+                      setShowCreate(true);
+                    }}
                     className="w-full text-left px-3 py-2 rounded-lg bg-indigo-50 text-indigo-700 text-sm hover:bg-indigo-100 transition-colors"
                   >
                     ＋ Create new customer
                   </button>
+
                   <button
                     onClick={() => setTab('templates')}
                     className="w-full text-left px-3 py-2 rounded-lg bg-violet-50 text-violet-700 text-sm hover:bg-violet-100 transition-colors"
                   >
                     🎨 Browse all templates
                   </button>
+
                   <a
                     href="/platform"
                     className="block px-3 py-2 rounded-lg bg-gray-50 text-gray-700 text-sm hover:bg-gray-100 transition-colors"
@@ -469,7 +618,6 @@ export const PlatformAdminPanel: React.FC = () => {
           </div>
         )}
 
-        {/* ══════════════════════════════ CUSTOMERS ═════════════════════════════ */}
         {tab === 'customers' && (
           <div className="space-y-6">
             <div className="flex items-start justify-between gap-4">
@@ -479,7 +627,14 @@ export const PlatformAdminPanel: React.FC = () => {
                   {activeCount} active · {inactiveCount} inactive · {customers.length} total
                 </p>
               </div>
-              <button onClick={() => { setShowCreate(true); setError(''); }} className={btnPrimary}>
+
+              <button
+                onClick={() => {
+                  setShowCreate(true);
+                  setError('');
+                }}
+                className={btnPrimary}
+              >
                 ＋ New Customer
               </button>
             </div>
@@ -497,14 +652,19 @@ export const PlatformAdminPanel: React.FC = () => {
                     <thead>
                       <tr className="bg-gray-50 text-left">
                         <th className="px-5 py-3 text-xs font-semibold text-gray-400 uppercase tracking-wider">Customer</th>
-                        <th className="px-5 py-3 text-xs font-semibold text-gray-400 uppercase tracking-wider hidden sm:table-cell">Template Access</th>
-                        <th className="px-5 py-3 text-xs font-semibold text-gray-400 uppercase tracking-wider hidden md:table-cell">Created</th>
+                        <th className="px-5 py-3 text-xs font-semibold text-gray-400 uppercase tracking-wider hidden sm:table-cell">
+                          Template Access
+                        </th>
+                        <th className="px-5 py-3 text-xs font-semibold text-gray-400 uppercase tracking-wider hidden md:table-cell">
+                          Created
+                        </th>
                         <th className="px-5 py-3 text-xs font-semibold text-gray-400 uppercase tracking-wider">Status</th>
                         <th className="px-5 py-3 text-xs font-semibold text-gray-400 uppercase tracking-wider text-right">Actions</th>
                       </tr>
                     </thead>
+
                     <tbody className="divide-y divide-gray-50">
-                      {customers.map(c => (
+                      {customers.map((c) => (
                         <tr key={c.id} className="hover:bg-gray-50/50 transition-colors">
                           <td className="px-5 py-4">
                             <div className="flex items-center gap-3">
@@ -519,6 +679,7 @@ export const PlatformAdminPanel: React.FC = () => {
                               </div>
                             </div>
                           </td>
+
                           <td className="px-5 py-4 hidden sm:table-cell">
                             {c.templateSlug ? (
                               <div>
@@ -541,20 +702,28 @@ export const PlatformAdminPanel: React.FC = () => {
                                     /{c.templateSlug}/admin
                                   </a>
                                 </div>
-                                {c.templateName && (
-                                  <p className="text-xs text-gray-300 mt-0.5">{c.templateName}</p>
-                                )}
+                                {c.templateName && <p className="text-xs text-gray-300 mt-0.5">{c.templateName}</p>}
                               </div>
                             ) : (
                               <span className="text-gray-300 text-sm">—</span>
                             )}
                           </td>
+
                           <td className="px-5 py-4 text-sm text-gray-400 hidden md:table-cell">
                             {fmtDate(c.createdAt)}
                           </td>
+
                           <td className="px-5 py-4">
-                            <Badge active={!!c.isActive} />
+                            <div className="flex items-center gap-1.5 flex-wrap">
+                              <Badge active={!!c.isActive} />
+                              {c.role === 'super_admin' && (
+                                <span className="inline-flex items-center px-1.5 py-0.5 rounded text-xs font-medium bg-amber-100 text-amber-700">
+                                  Super Admin
+                                </span>
+                              )}
+                            </div>
                           </td>
+
                           <td className="px-5 py-4 text-right">
                             <div className="flex items-center justify-end gap-2">
                               <button
@@ -563,6 +732,7 @@ export const PlatformAdminPanel: React.FC = () => {
                               >
                                 Edit
                               </button>
+
                               <button
                                 onClick={() => toggleStatus(c)}
                                 className={`text-xs px-3 py-1.5 rounded-lg border transition-colors ${
@@ -572,6 +742,13 @@ export const PlatformAdminPanel: React.FC = () => {
                                 }`}
                               >
                                 {c.isActive ? 'Deactivate' : 'Activate'}
+                              </button>
+                              <button
+                                onClick={() => setDeleteTarget(c)}
+                                className="text-xs px-3 py-1.5 rounded-lg border border-gray-200 text-gray-400 hover:border-red-300 hover:text-red-500 hover:bg-red-50 transition-colors"
+                                title="Delete customer"
+                              >
+                                🗑
                               </button>
                             </div>
                           </td>
@@ -585,7 +762,6 @@ export const PlatformAdminPanel: React.FC = () => {
           </div>
         )}
 
-        {/* ══════════════════════════════ TEMPLATES ═════════════════════════════ */}
         {tab === 'templates' && (
           <div className="space-y-8">
             <div>
@@ -595,7 +771,6 @@ export const PlatformAdminPanel: React.FC = () => {
               </p>
             </div>
 
-            {/* ── Main templates ─────────────────────────────────────────────── */}
             <section>
               <div className="flex items-center gap-3 mb-4">
                 <div className="w-2 h-6 rounded-full bg-violet-500" />
@@ -604,6 +779,7 @@ export const PlatformAdminPanel: React.FC = () => {
                   {mainTemplates.length}
                 </span>
               </div>
+
               {mainTemplates.length === 0 ? (
                 <p className="text-gray-400 text-sm py-4 pl-5">No main templates found.</p>
               ) : (
@@ -613,24 +789,41 @@ export const PlatformAdminPanel: React.FC = () => {
                       <thead>
                         <tr className="bg-gray-50">
                           <th className="px-5 py-3 text-left text-xs font-semibold text-gray-400 uppercase">Name</th>
-                          <th className="px-5 py-3 text-left text-xs font-semibold text-gray-400 uppercase hidden sm:table-cell">Slug</th>
+                          <th className="px-5 py-3 text-left text-xs font-semibold text-gray-400 uppercase hidden sm:table-cell">
+                            Slug
+                          </th>
                           <th className="px-5 py-3 text-left text-xs font-semibold text-gray-400 uppercase">Style</th>
-                          <th className="px-5 py-3 text-left text-xs font-semibold text-gray-400 uppercase hidden md:table-cell">Owner Email</th>
-                          <th className="px-5 py-3 text-left text-xs font-semibold text-gray-400 uppercase hidden md:table-cell">Maintenance</th>
+                          <th className="px-5 py-3 text-left text-xs font-semibold text-gray-400 uppercase hidden md:table-cell">
+                            Owner Email
+                          </th>
+                          <th className="px-5 py-3 text-left text-xs font-semibold text-gray-400 uppercase hidden md:table-cell">
+                            Maintenance
+                          </th>
                           <th className="px-5 py-3 text-right text-xs font-semibold text-gray-400 uppercase">Links</th>
                         </tr>
                       </thead>
+
                       <tbody className="divide-y divide-gray-50">
-                        {mainTemplates.map(t => (
+                        {mainTemplates.map((t) => (
                           <tr key={t.id} className="hover:bg-gray-50 transition-colors">
                             <td className="px-5 py-3 text-sm font-medium text-gray-900">{t.name}</td>
-                            <td className="px-5 py-3 font-mono text-xs text-indigo-500 hidden sm:table-cell">/{t.slug}</td>
-                            <td className="px-5 py-3"><KeyBadge k={t.templateKey} /></td>
-                            <td className="px-5 py-3 text-xs text-gray-400 hidden md:table-cell">{t.ownerEmail ?? '—'}</td>
+                            <td className="px-5 py-3 font-mono text-xs text-indigo-500 hidden sm:table-cell">
+                              /{t.slug}
+                            </td>
+                            <td className="px-5 py-3">
+                              <KeyBadge k={t.templateKey} />
+                            </td>
+                            <td className="px-5 py-3 text-xs text-gray-400 hidden md:table-cell">
+                              {t.ownerEmail ?? '—'}
+                            </td>
                             <td className="px-5 py-3 hidden md:table-cell">
-                              {t.maintenance
-                                ? <span className="text-xs bg-yellow-100 text-yellow-700 px-2 py-0.5 rounded-full">On</span>
-                                : <span className="text-xs text-gray-300">Off</span>}
+                              {t.maintenance ? (
+                                <span className="text-xs bg-yellow-100 text-yellow-700 px-2 py-0.5 rounded-full">
+                                  On
+                                </span>
+                              ) : (
+                                <span className="text-xs text-gray-300">Off</span>
+                              )}
                             </td>
                             <td className="px-5 py-3 text-right">
                               <a
@@ -651,7 +844,6 @@ export const PlatformAdminPanel: React.FC = () => {
               )}
             </section>
 
-            {/* ── Cloned templates ───────────────────────────────────────────── */}
             <section>
               <div className="flex items-center gap-3 mb-4">
                 <div className="w-2 h-6 rounded-full bg-amber-400" />
@@ -660,6 +852,7 @@ export const PlatformAdminPanel: React.FC = () => {
                   {clonedTemplates.length}
                 </span>
               </div>
+
               {clonedTemplates.length === 0 ? (
                 <p className="text-gray-400 text-sm py-4 pl-5">No cloned templates yet.</p>
               ) : (
@@ -669,23 +862,35 @@ export const PlatformAdminPanel: React.FC = () => {
                       <thead>
                         <tr className="bg-gray-50">
                           <th className="px-5 py-3 text-left text-xs font-semibold text-gray-400 uppercase">Name</th>
-                          <th className="px-5 py-3 text-left text-xs font-semibold text-gray-400 uppercase hidden sm:table-cell">Slug</th>
+                          <th className="px-5 py-3 text-left text-xs font-semibold text-gray-400 uppercase hidden sm:table-cell">
+                            Slug
+                          </th>
                           <th className="px-5 py-3 text-left text-xs font-semibold text-gray-400 uppercase">Style</th>
-                          <th className="px-5 py-3 text-left text-xs font-semibold text-gray-400 uppercase hidden md:table-cell">Cloned From</th>
-                          <th className="px-5 py-3 text-left text-xs font-semibold text-gray-400 uppercase hidden md:table-cell">Owner Email</th>
+                          <th className="px-5 py-3 text-left text-xs font-semibold text-gray-400 uppercase hidden md:table-cell">
+                            Cloned From
+                          </th>
+                          <th className="px-5 py-3 text-left text-xs font-semibold text-gray-400 uppercase hidden md:table-cell">
+                            Owner Email
+                          </th>
                           <th className="px-5 py-3 text-right text-xs font-semibold text-gray-400 uppercase">Links</th>
                         </tr>
                       </thead>
+
                       <tbody className="divide-y divide-gray-50">
-                        {clonedTemplates.map(t => {
+                        {clonedTemplates.map((t) => {
                           const parent =
-                            mainTemplates.find(m => m.id === t.sourceTemplateId) ??
-                            clonedTemplates.find(m => m.id === t.sourceTemplateId);
+                            mainTemplates.find((m) => m.id === t.sourceTemplateId) ??
+                            clonedTemplates.find((m) => m.id === t.sourceTemplateId);
+
                           return (
                             <tr key={t.id} className="hover:bg-gray-50 transition-colors">
                               <td className="px-5 py-3 text-sm font-medium text-gray-900">{t.name}</td>
-                              <td className="px-5 py-3 font-mono text-xs text-indigo-500 hidden sm:table-cell">/{t.slug}</td>
-                              <td className="px-5 py-3"><KeyBadge k={t.templateKey} /></td>
+                              <td className="px-5 py-3 font-mono text-xs text-indigo-500 hidden sm:table-cell">
+                                /{t.slug}
+                              </td>
+                              <td className="px-5 py-3">
+                                <KeyBadge k={t.templateKey} />
+                              </td>
                               <td className="px-5 py-3 text-xs text-gray-400 hidden md:table-cell">
                                 {parent ? (
                                   <span className="bg-gray-100 px-2 py-0.5 rounded font-mono">{parent.name}</span>
@@ -693,7 +898,9 @@ export const PlatformAdminPanel: React.FC = () => {
                                   <span className="text-gray-300">—</span>
                                 )}
                               </td>
-                              <td className="px-5 py-3 text-xs text-gray-400 hidden md:table-cell">{t.ownerEmail ?? '—'}</td>
+                              <td className="px-5 py-3 text-xs text-gray-400 hidden md:table-cell">
+                                {t.ownerEmail ?? '—'}
+                              </td>
                               <td className="px-5 py-3 text-right">
                                 <div className="flex gap-2 justify-end">
                                   <a
@@ -727,30 +934,33 @@ export const PlatformAdminPanel: React.FC = () => {
         )}
       </main>
 
-      {/* ══════════════════════════════ MODALS ════════════════════════════════ */}
-
-      {/* Create Customer */}
       {showCreate && (
-        <Modal title="Create New Customer" onClose={() => { setShowCreate(false); setError(''); }}>
+        <Modal
+          title="Create New Customer"
+          onClose={() => {
+            setShowCreate(false);
+            setError('');
+          }}
+        >
           <form onSubmit={handleCreate} className="space-y-4">
-            {error && (
-              <div className="bg-red-50 text-red-600 text-sm px-3 py-2 rounded-lg">{error}</div>
-            )}
+            {error && <div className="bg-red-50 text-red-600 text-sm px-3 py-2 rounded-lg">{error}</div>}
+
             <div className="grid grid-cols-2 gap-3">
               <FormRow label="First Name">
                 <input
                   required
                   className={inputCls}
                   value={createForm.firstName}
-                  onChange={e => setCreateForm(f => ({ ...f, firstName: e.target.value }))}
+                  onChange={(e) => setCreateForm((f) => ({ ...f, firstName: e.target.value }))}
                 />
               </FormRow>
+
               <FormRow label="Last Name">
                 <input
                   required
                   className={inputCls}
                   value={createForm.lastName}
-                  onChange={e => setCreateForm(f => ({ ...f, lastName: e.target.value }))}
+                  onChange={(e) => setCreateForm((f) => ({ ...f, lastName: e.target.value }))}
                 />
               </FormRow>
             </div>
@@ -761,7 +971,7 @@ export const PlatformAdminPanel: React.FC = () => {
                 required
                 className={inputCls}
                 value={createForm.email}
-                onChange={e => setCreateForm(f => ({ ...f, email: e.target.value }))}
+                onChange={(e) => setCreateForm((f) => ({ ...f, email: e.target.value }))}
               />
             </FormRow>
 
@@ -770,21 +980,23 @@ export const PlatformAdminPanel: React.FC = () => {
                 required
                 className={inputCls}
                 value={createForm.templateId}
-                onChange={e => setCreateForm(f => ({ ...f, templateId: e.target.value }))}
+                onChange={(e) => setCreateForm((f) => ({ ...f, templateId: e.target.value }))}
               >
                 <option value="">— Select a template —</option>
+
                 {mainTemplates.length > 0 && (
                   <optgroup label="⭐ Main Templates">
-                    {mainTemplates.map(t => (
+                    {mainTemplates.map((t) => (
                       <option key={t.id} value={t.id}>
                         {t.name} ({t.slug})
                       </option>
                     ))}
                   </optgroup>
                 )}
+
                 {clonedTemplates.length > 0 && (
                   <optgroup label="🔀 Cloned Templates">
-                    {clonedTemplates.map(t => (
+                    {clonedTemplates.map((t) => (
                       <option key={t.id} value={t.id}>
                         {t.name} ({t.slug})
                       </option>
@@ -804,11 +1016,14 @@ export const PlatformAdminPanel: React.FC = () => {
                   className={inputCls}
                   placeholder="e.g. harutatev"
                   value={createForm.templateSlug}
-                  onChange={e =>
-                    setCreateForm(f => ({ ...f, templateSlug: e.target.value.toLowerCase().replace(/[^a-z0-9-]/g, '') }))
+                  onChange={(e) =>
+                    setCreateForm((f) => ({
+                      ...f,
+                      templateSlug: e.target.value.toLowerCase().replace(/[^a-z0-9-]/g, ''),
+                    }))
                   }
                 />
-                <button type="button" onClick={generateSlug} className={btnSecondary + ' shrink-0'}>
+                <button type="button" onClick={generateSlug} className={`${btnSecondary} shrink-0`}>
                   Auto
                 </button>
               </div>
@@ -820,16 +1035,23 @@ export const PlatformAdminPanel: React.FC = () => {
                   required
                   className={inputCls}
                   value={createForm.password}
-                  onChange={e => setCreateForm(f => ({ ...f, password: e.target.value }))}
+                  onChange={(e) => setCreateForm((f) => ({ ...f, password: e.target.value }))}
                 />
-                <button type="button" onClick={generatePassword} className={btnSecondary + ' shrink-0'}>
+                <button type="button" onClick={generatePassword} className={`${btnSecondary} shrink-0`}>
                   Generate
                 </button>
               </div>
             </FormRow>
 
             <div className="flex justify-end gap-3 pt-2">
-              <button type="button" onClick={() => { setShowCreate(false); setError(''); }} className={btnSecondary}>
+              <button
+                type="button"
+                onClick={() => {
+                  setShowCreate(false);
+                  setError('');
+                }}
+                className={btnSecondary}
+              >
                 Cancel
               </button>
               <button type="submit" disabled={saving} className={btnPrimary}>
@@ -840,50 +1062,98 @@ export const PlatformAdminPanel: React.FC = () => {
         </Modal>
       )}
 
-      {/* Edit Customer */}
+      {deleteTarget && (
+        <Modal title="Delete Customer" onClose={() => setDeleteTarget(null)}>
+          <div className="space-y-4">
+            <div className="bg-red-50 border border-red-100 rounded-xl p-4 text-sm text-red-700">
+              <p className="font-semibold mb-1">This action cannot be undone.</p>
+              <p>You are about to permanently delete the customer account for:</p>
+              <p className="mt-2 font-medium">{deleteTarget.firstName ?? ''} {deleteTarget.lastName ?? ''} — {deleteTarget.email}</p>
+              {deleteTarget.templateSlug && (
+                <p className="mt-1 text-red-500 text-xs">Their admin panel access to <span className="font-mono">/{deleteTarget.templateSlug}</span> will also be removed.</p>
+              )}
+            </div>
+            <div className="flex justify-end gap-3">
+              <button onClick={() => setDeleteTarget(null)} className={btnSecondary} disabled={deleting}>
+                Cancel
+              </button>
+              <button
+                onClick={handleDelete}
+                disabled={deleting}
+                className="px-4 py-2 bg-red-600 text-white text-sm font-medium rounded-lg hover:bg-red-700 active:scale-95 transition-all disabled:opacity-50"
+              >
+                {deleting ? 'Deleting…' : 'Yes, delete customer'}
+              </button>
+            </div>
+          </div>
+        </Modal>
+      )}
+
       {editTarget && (
         <Modal title="Edit Customer" onClose={() => setEditTarget(null)}>
           <form onSubmit={handleSaveEdit} className="space-y-4">
-            {error && (
-              <div className="bg-red-50 text-red-600 text-sm px-3 py-2 rounded-lg">{error}</div>
-            )}
+            {error && <div className="bg-red-50 text-red-600 text-sm px-3 py-2 rounded-lg">{error}</div>}
+
             <div className="grid grid-cols-2 gap-3">
               <FormRow label="First Name">
                 <input
                   className={inputCls}
                   value={editForm.firstName}
-                  onChange={e => setEditForm(f => ({ ...f, firstName: e.target.value }))}
+                  onChange={(e) => setEditForm((f) => ({ ...f, firstName: e.target.value }))}
                 />
               </FormRow>
+
               <FormRow label="Last Name">
                 <input
                   className={inputCls}
                   value={editForm.lastName}
-                  onChange={e => setEditForm(f => ({ ...f, lastName: e.target.value }))}
+                  onChange={(e) => setEditForm((f) => ({ ...f, lastName: e.target.value }))}
                 />
               </FormRow>
             </div>
+
             <FormRow label="Email">
               <input
                 type="email"
                 required
                 className={inputCls}
                 value={editForm.email}
-                onChange={e => setEditForm(f => ({ ...f, email: e.target.value }))}
+                onChange={(e) => setEditForm((f) => ({ ...f, email: e.target.value }))}
               />
+            </FormRow>
+
+            <FormRow label="Role">
+              <select
+                className={inputCls}
+                value={editForm.role}
+                onChange={(e) => setEditForm((f) => ({ ...f, role: e.target.value }))}
+              >
+                <option value="customer">Customer</option>
+                <option value="super_admin">Super Admin</option>
+              </select>
             </FormRow>
 
             {editTarget.templateSlug && (
               <div className="bg-gray-50 rounded-xl px-4 py-3 text-sm text-gray-500 space-y-1">
                 <div>
                   Site:{' '}
-                  <a href={`/${editTarget.templateSlug}`} target="_blank" rel="noreferrer" className="text-indigo-600 hover:underline">
+                  <a
+                    href={`/${editTarget.templateSlug}`}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="text-indigo-600 hover:underline"
+                  >
                     /{editTarget.templateSlug}
                   </a>
                 </div>
                 <div>
                   Admin:{' '}
-                  <a href={`/${editTarget.templateSlug}/admin`} target="_blank" rel="noreferrer" className="text-indigo-600 hover:underline">
+                  <a
+                    href={`/${editTarget.templateSlug}/admin`}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="text-indigo-600 hover:underline"
+                  >
                     /{editTarget.templateSlug}/admin
                   </a>
                 </div>

@@ -4,15 +4,42 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Heart, Lock } from "lucide-react";
 
-interface MaintenanceModeProps {
-  onPasswordCorrect: () => void;
+interface MaintenanceConfig {
+  password?: string;
+  title?: string;
+  subtitle?: string;
+  message?: string;
+  countdownText?: string;
+  passwordPrompt?: string;
+  wrongPassword?: string;
+  enterPassword?: string;
 }
 
-export function MaintenanceMode({ onPasswordCorrect }: MaintenanceModeProps) {
+interface MaintenanceModeProps {
+  onPasswordCorrect: () => void;
+  config?: MaintenanceConfig;
+  weddingDate?: string;
+  weddingDisplayDate?: string;
+  coupleName?: string;
+}
+
+export function MaintenanceMode({ onPasswordCorrect, config, weddingDate: weddingDateProp, weddingDisplayDate, coupleName }: MaintenanceModeProps) {
   const [password, setPassword] = useState("");
   const [showPasswordInput, setShowPasswordInput] = useState(false);
   const [error, setError] = useState("");
   const [isLoading, setIsLoading] = useState(false);
+
+  // Merge template config over defaults
+  const cfg = {
+    password: config?.password ?? weddingConfig.maintenance.password,
+    title: config?.title || weddingConfig.maintenance.title,
+    subtitle: config?.subtitle || weddingConfig.maintenance.subtitle,
+    message: config?.message || weddingConfig.maintenance.message,
+    countdownText: config?.countdownText || weddingConfig.maintenance.countdownText,
+    passwordPrompt: config?.passwordPrompt || weddingConfig.maintenance.passwordPrompt,
+    wrongPassword: config?.wrongPassword || weddingConfig.maintenance.wrongPassword,
+    enterPassword: config?.enterPassword || weddingConfig.maintenance.enterPassword,
+  };
 
   const handlePasswordSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -22,19 +49,22 @@ export function MaintenanceMode({ onPasswordCorrect }: MaintenanceModeProps) {
     // Simulate API call delay
     await new Promise((resolve) => setTimeout(resolve, 1000));
 
-    if (password === weddingConfig.maintenance.password) {
+    if (password === cfg.password) {
       onPasswordCorrect();
     } else {
-      setError(weddingConfig.maintenance.wrongPassword);
+      setError(cfg.wrongPassword);
     }
     setIsLoading(false);
   };
 
   // Calculate days until wedding
-  const weddingDate = new Date(weddingConfig.wedding.date);
+  const dateStr = weddingDateProp || weddingConfig.wedding.date;
+  const weddingDateObj = new Date(dateStr);
   const today = new Date();
-  const diffTime = weddingDate.getTime() - today.getTime();
+  const diffTime = weddingDateObj.getTime() - today.getTime();
   const daysUntil = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+  const displayDate = weddingDisplayDate || weddingConfig.wedding.displayDate;
+  const displayCoupleName = coupleName || `${weddingConfig.couple?.groomName ?? ''} ∞ ${weddingConfig.couple?.brideName ?? ''}`;
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-cream-50 via-cream-100 to-gold-50 flex items-center justify-center px-4">
@@ -49,21 +79,21 @@ export function MaintenanceMode({ onPasswordCorrect }: MaintenanceModeProps) {
         {/* Main Content */}
         <div className="space-y-6">
           <h1 className="text-4xl md:text-5xl font-playfair font-bold text-charcoal-900 leading-tight">
-            {weddingConfig.maintenance.title}
+            {cfg.title}
           </h1>
           
           <p className="text-xl text-gold-600 font-medium">
-            {weddingConfig.maintenance.subtitle}
+            {cfg.subtitle}
           </p>
 
           <p className="text-lg text-charcoal-700 leading-relaxed max-w-sm mx-auto">
-            {weddingConfig.maintenance.message}
+            {cfg.message}
           </p>
 
           {/* Wedding Countdown */}
           {daysUntil > 0 && (
             <div className="bg-white/50 backdrop-blur-sm rounded-lg p-6 border border-gold-200 shadow-sm">
-              <p className="text-sm text-charcoal-600 mb-2">{weddingConfig.maintenance.countdownText}</p>
+              <p className="text-sm text-charcoal-600 mb-2">{cfg.countdownText}</p>
               <div className="text-3xl font-bold text-gold-600">
                 {daysUntil} {weddingConfig.countdown?.labels?.days}
               </div>
@@ -81,13 +111,13 @@ export function MaintenanceMode({ onPasswordCorrect }: MaintenanceModeProps) {
               data-testid="show-password-input"
             >
               <Lock className="w-4 h-4 mr-2" />
-              {weddingConfig.maintenance.enterPassword}
+              {cfg.enterPassword}
             </Button>
           ) : (
             <form onSubmit={handlePasswordSubmit} className="space-y-4">
               <div className="space-y-2">
                 <p className="text-sm text-charcoal-600">
-                  {weddingConfig.maintenance.passwordPrompt}
+                  {cfg.passwordPrompt}
                 </p>
                 <Input
                   type="password"
@@ -133,8 +163,8 @@ export function MaintenanceMode({ onPasswordCorrect }: MaintenanceModeProps) {
 
         {/* Footer */}
         <div className="pt-8 text-sm text-charcoal-500">
-          <p>Հարութ ∞ Տաթև</p>
-          <p className="mt-1">{weddingConfig.wedding.displayDate}</p>
+          <p>{displayCoupleName}</p>
+          <p className="mt-1">{displayDate}</p>
         </div>
       </div>
     </div>

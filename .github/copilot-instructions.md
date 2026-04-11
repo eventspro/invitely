@@ -7,13 +7,18 @@ This is a **multi-tenant Armenian wedding platform** enabling couples to create 
 - **Backend**: Express.js + Drizzle ORM (PostgreSQL) deployed as Vercel serverless functions
 - **Frontend**: React SPA with Wouter routing, TanStack Query for server state, and Context for app state  
 - **Templates**: Lazy-loaded modular system with JSONB configs stored per template instance
-- **Database**: Template-scoped data isolation with comprehensive Zod validation schemas (PostgreSQL via Neon)
-- **Storage**: Multi-provider object storage abstraction (Cloudflare R2 primary, Google Cloud, AWS S3 fallback) with presigned URLs
+- **Database**: Template-scoped data isolation with comprehensive Zod validation schemas
+- **Storage**: Multi-provider object storage abstraction (Cloudflare R2, Google Cloud, AWS S3) with presigned URLs
 - **Email Service**: Brevo integration for RSVP notifications with template-scoped routing
 - **Authentication**: JWT-based auth with separate systems for template admins vs. platform admins
 - **SSL/TLS Security**: Enterprise-grade SSL-safe media serving with HTTP 206 range request support
 - **SEO Integration**: Schema.org structured data, multilingual sitemap, and dynamic meta tags
-- **Rate Limiting**: Express rate limiter (100 requests per 15 minutes on API routes)
+
+### Why This Architecture?
+- **Multi-tenant isolation**: Each wedding site (template) has its own data scope (rsvps, photos, config) via `templateId` foreign keys
+- **Serverless deployment**: Express app runs on Vercel as serverless function (`server/index.ts`), Vite builds static frontend
+- **Lazy template loading**: `React.lazy()` in `client/src/templates/index.ts` enables code-splitting per template variant
+- **JSONB flexibility**: Wedding configs (200+ options) stored as JSONB in DB, avoiding schema migrations for config changes
 
 ## Key Development Patterns
 
@@ -21,7 +26,7 @@ This is a **multi-tenant Armenian wedding platform** enabling couples to create 
 Templates are located in `client/src/templates/` with this pattern:
 ```
 templates/
-├── index.ts          # Template registry and lazy loading (TemplateDefinition interface)
+├── index.ts          # Template registry and lazy loading
 ├── types.ts          # Shared WeddingConfig interface (200+ lines)
 ├── pro/
 │   ├── ProTemplate.tsx
@@ -36,29 +41,27 @@ templates/
 
 **Critical Template Patterns:**
 - Always use the `WeddingConfig` type from `templates/types.ts` - it defines 200+ configuration options
-- Template configs stored in database as JSONB, loaded via `/api/templates/:identifier/config` (supports ID or slug)
+- Template configs stored in database as JSONB, loaded via `/api/templates/:id/config`
 - Lazy loading: Templates registered in `index.ts` with `React.lazy()` for code splitting
-- Template variants: Multiple templates can extend base layouts with different themes
+- Template variants (elegant, romantic, nature) extend base Pro layout with different color schemes
 - Dynamic config loading: `loadTemplateConfig()` function imports configs based on template key
-- Each template includes: key, name, description, defaultConfig, component (lazy), previewImage, features array
+- **Config precedence**: Database JSONB overrides template defaults, enabling per-instance customization
+
+**Adding New Templates:**
+1. Create directory in `client/src/templates/{template-name}/`
+2. Add `{TemplateName}Template.tsx` component and `config.ts` with `defaultConfig` export
+3. Register in `templates/index.ts`: add to `templates` object and `loadTemplateConfig()` switch
+4. Run `tsx scripts/create-{template-name}-template.ts` to seed database instance
+5. Template component receives `config: WeddingConfig` and optional `templateId: string` props
 
 ### Database Schema Key Points
-- `templates` table stores template instances with `config` JSONB field and `template_version` for versioning
-- **Translation System** (dual approach):
-  - `translations` table: JSONB-based bulk translations per language (1 row in production)
-  - `translation_keys` table: Granular translation keys with sections (252 rows in production)
-  - `translation_values` table: Key-value pairs per language (325 rows in production)
-- **Pricing System**:
-  - `pricing_plans` table: Plan definitions (5 rows: basic, essential, professional, premium, ultimate)
-  - `plan_features` table: Available features (9 rows)
-  - `plan_feature_associations` table: Plan-to-feature mappings (45 rows)
-- `platform_settings` table: Key-value configuration store (1 row in production)
-- Template-scoped foreign keys: `rsvps.templateId`, `guestPhotos.templateId`, etc.
-- Use Zod schemas from `shared/schema.ts` for all data validation
-- Key insert schemas: `insertRsvpSchema`, `insertUserSchema`, `insertOrderSchema`, `insertTemplateSchema`, `insertGuestPhotoSchema`
-- All schemas include Armenian bilingual error messages for validation
-- Run migrations with `npm run db:migrate` (includes seeding default template)
-- Maintenance mode: `templates.maintenance` and `templates.maintenancePassword` fields
+- `templates` table stores template instances with `config` JSONB field (holds entire WeddingConfig)
+- Template-scoped foreign keys: `rsvps.templateId`, `guestPhotos.templateId`, `images.templateId`, etc.
+- **User management**: `managementUsers` table (new system) vs. legacy `users` table
+- **Order tracking**: `orders` table links users to templates, determines admin panel access (Ultimate plan)
+- Use Zod schemas from `shared/schema.ts` for all data validation (275+ lines)
+- Run migrations with `npm run db:migrate` (includes seeding default template via `scripts/migrate-default-template.ts`)
+- Schema changes: Modify `shared/schema.ts` → `npm run db:generate` → review migration → `npm run db:push`
 
 ### Development Workflow
 ```bash
@@ -67,30 +70,23 @@ npm run dev          # Runs Express server on localhost:5001 (serves both API + 
 
 # Database operations  
 npm run db:push      # Push Drizzle schema changes to database
-npm run db:migrate   # Run migrations + seed default template
+npm run db:migrate   # Run migrations + seed default template via scripts/migrate-default-template.ts
 npm run db:generate  # Generate migration files from schema changes
 
 # Testing
-npx playwright test  # E2E tests with auto-start dev server (port 5001)
+npx playwright test  # E2E tests with auto-start dev server
 npm run check        # TypeScript type checking across entire project
 
 # Production build
-npm run build        # Vite build (dist/public) + esbuild server bundle (dist/index.js)
+npm run build        # Vite build + esbuild server bundle
 npm run vercel-build # Vercel-optimized build (same as npm run build)
-npm run preview      # Test production build locally (runs dist/index.js)
+npm run preview      # Test production build locally
 
-# Deployment
-npm run deploy:production  # Deploy to production (vercel.json)
-npm run deploy:staging     # Deploy to staging (vercel.staging.json)
-
-# Template management scripts (PowerShell/tsx compatible)
+# Template management scripts (PowerShell-compatible)
 tsx scripts/create-{template}-template.ts    # Create new template instances
 tsx scripts/apply-armenian-to-all-templates.ts  # Apply Armenian localization
 tsx scripts/check-template-status.ts         # Verify template health
 tsx scripts/migrate-default-template.ts      # Initial template seeding
-
-# Environment setup (Windows)
-setup-env.bat        # Interactive environment variable configuration
 ```
 
 ### API Route Patterns & Authentication
@@ -102,10 +98,6 @@ Routes in `server/routes/` follow RESTful conventions with multi-layered authent
 - `server/routes/admin.ts` - Platform admin endpoints (order processing, user management)
 - `server/routes/auth.ts` - Authentication endpoints (login, registration, password reset)
 - `server/routes/platform-admin.ts` - Platform-level administration
-- `server/routes/translations.ts` - JSONB-based multi-language translation management (bulk configs)
-- `server/routes/translation-keys.ts` - Granular key-value translation system (252 keys, 325 values)
-- `server/routes/pricing.ts` - Pricing plans and feature management (5 plans, 9 features, 45 associations)
-- `server/routes/platform-settings.ts` - Platform-wide configuration key-value store
 
 **Authentication Middleware** (defined in `server/middleware/auth.ts`):
 - `authenticateUser` - Validates JWT token, extracts user from token payload
@@ -156,47 +148,37 @@ Routes in `server/routes/` follow RESTful conventions with multi-layered authent
 - **Shadcn/UI components** in `client/src/components/ui/` (Radix UI primitives)
 - **Path aliases**: `@/` → `client/src/`, `@shared/` → `shared/`, `@assets/` → `public/attached_assets/`
 - **State management**: TanStack Query for server state, Context for app-level state
-- **Styling**: Tailwind with custom CSS variables for wedding themes
+- **Styling**: Tailwind CSS v3 with custom CSS variables for wedding themes
 - **Build chunking**: Vendor (React), router (Wouter), UI (Radix) chunks for optimal loading
 - **Asset handling**: Vercel routes with proper caching headers (31536000s for assets, 86400s for previews)
-- **Development**: Vite dev server with proxy to Express backend, Rep390+ lines)
-  - Core tables: templates, managementUsers, orders, userAdminPanels, rsvps, guestPhotos, images
-  - Translation tables: translations (JSONB), translationKeys, translationValues (key-value)
-  - Pricing tables: pricingPlans, planFeatures, planFeatureAssociations
-  - Platform: platformSettings (key-value config store)
+- **Development**: Vite dev server with proxy to Express backend on port 5001, Replit error overlay for debugging
+- **Client root**: `client/` directory, `client/index.html` entry point, built to `dist/public/`
+
+### Critical Files to Understand
+- `shared/schema.ts` - Complete database schema with Zod validation (275+ lines)
+  - Tables: templates, managementUsers, orders, userAdminPanels, rsvps, guestPhotos, images
   - All validation schemas with Armenian bilingual error messages
-  - Translation schemas: insertTranslationSchema, updateTranslationSchema, insertTranslationKeySchema, insertTranslationValueSchema
-  - Pricing schemas: insertPricingPlanSchema, insertPlanFeatureSchema, insertPlanFeatureAssociation (290+ lines)
-  - Tables: templates, managementUsers, orders, userAdminPanels, rsvps, guestPhotos, images, translations
-  - All validation schemas with Armenian bilingual error messages
-  - Translation schemas: insertTranslationSchema, updateTranslationSchema
-- `client/src/templates/types.ts` - WeddingConfig interface (285+ lines of config options)
-  - Defines all customizable template properties (colors, fonts, sections, content, locations, timeline, RSVP forms)
+- `client/src/templates/types.ts` - WeddingConfig interface (200+ lines of config options)
+  - Defines all customizable template properties (colors, fonts, sections, content)
 - `client/src/templates/index.ts` - Template registry with lazy loading
-  - Central registry of all available templates (pro, classic, elegant, romantic, nature)
-  - `TemplateDefinition` interface and `loadTemplateConfig()` function for dynamic config imports
+  - Central registry of all available templates
+  - `loadTemplateConfig()` function for dynamic config imports
 - `server/index.ts` - Express server setup with environment validation and error handling
   - SSL/HTTPS redirect logic for production
   - Security headers (HSTS, CORS, CSP)
-  - Health check endpoint (`/health`)
 - `server/middleware/auth.ts` - Authentication middleware and JWT handling
   - Token generation/verification, password hashing
   - Multi-layered access control (user, template admin, platform admin)
-  - `authenticateUser`, `requireAdminPanelAccess`, `optionalAuth` middleware
 - `server/email.ts` - Brevo email service with template-scoped routing and Armenian localization
   - RSVP notifications with 3-tier recipient priority
-  - Functions: `sendTemplateRsvpNotificationEmails()`, `sendTemplateRsvpConfirmationEmail()`
 - `server/routes/templates.ts` - Template management, RSVP processing, and admin endpoints
   - Core template CRUD operations and public API
 - `server/routes/admin-panel.ts` - Template owner dashboard and analytics
   - RSVP management, photo management, Google Drive integration
-- `server/routes/auth.ts` - Authentication endpoints (login, registration, password reset)
 - `vite.config.ts` - Development proxy, build chunking, and path resolution
   - Manual chunks for optimal loading (vendor, router, UI)
-  - Path aliases: `@/` → `client/src/`, `@shared/` → `shared/`, `@assets/` → `public/attached_assets/`
 - `vercel.json` - Serverless deployment configuration with asset routing
   - Route prioritization (API before static), caching headers
-  - SEO routes (robots.txt, sitemap.xml)
 
 ### Armenian Localization
 This platform specifically supports **Armenian weddings** with:
@@ -270,11 +252,32 @@ if (range) {
 ## Common Development Tasks
 
 - **Adding new templates**: Create in `templates/`, register in `templates/index.ts`, add to database
-- **Schema changes**: Modify `shared/schema.ts`, run `npm run db:push`, test with validation
+- **Schema changes**: Modify `shared/schema.ts`, run `npm run db:generate`, review migration, run `npm run db:push`, test with validation
 - **Template customization**: Use admin panel at `/admin/dashboard` or update config via API
 - **Testing**: Focus on template rendering, RSVP validation, and authentication flows
 - **SSL Media Issues**: Use PowerShell test scripts to validate SSL headers and range requests
 - **Incident Documentation**: Create structured reports following `incidents/INCIDENT_TEMPLATE.md`
+- **Environment setup**: Run `setup-env.bat` on Windows to configure `.env` file
+
+## Quick Reference
+
+**Key Port Numbers:**
+- Dev server: `5001` (Express with Vite middleware)
+- Vite dev server proxy: `/api` → `http://localhost:5001`
+
+**Critical Environment Variables:**
+- `DATABASE_URL` - PostgreSQL connection string (required)
+- `JWT_SECRET` - Token signing secret (required for production)
+- `BREVO_API_KEY` - Email service API key (optional, disables emails if missing)
+- `NODE_ENV` - `development` | `staging` | `production`
+
+**Template File Structure:**
+```
+client/src/templates/{name}/
+├── {Name}Template.tsx  # Main component (receives config prop)
+├── config.ts           # exports defaultConfig: WeddingConfig
+└── components/         # Template-specific components (optional)
+```
 
 ## Critical SSL/TLS Development Patterns
 When working with media serving endpoints:
@@ -285,16 +288,11 @@ When working with media serving endpoints:
 5. **Use Vercel route prioritization** - API routes before static serving for SSL-safe handling
 
 ## Important Conventions
-- Always validate template configs against `WeddingConfig` type before database storage
-- Use `insertRsvpSchema` for RSVP validation (supports Armenian error messages)  
-- Template components must handle missing config properties with safe defaults
-- Database queries are template-scoped using `templateId` foreign keys
-
-## Development Environment Notes
-- **Database**: PostgreSQL with Drizzle ORM, no MongoDB (despite MCP tools availability)
 - **Authentication**: Development mode bypasses auth - uses mock users for testing
 - **File uploads**: Multi-provider abstraction supports Cloudflare R2, Google Cloud Storage and AWS S3
 - **Build system**: Vite with manual chunks for vendor, router, and UI components
 - **Error handling**: Development runtime error overlay via Replit plugin
 - **SSL Testing**: Use PowerShell for Windows (`test-ssl-*.ps1`) or Node.js (`test-ssl-*.js`) for cross-platform
 - **Staging Environment**: `npm run deploy:staging` with `vercel.staging.json` configuration
+- **TypeScript**: Strict mode enabled, use `npm run check` before committing
+- **Imports**: Use ESM (`import`/`export`), all server files use `.js` extensions in imports despite being TypeScript

@@ -34,6 +34,7 @@ export interface AuthenticatedRequest extends Request {
     orderId: string | null;
     isActive: boolean | null;
     templatePlan: string;
+    role: string;
   };
 }
 
@@ -171,6 +172,7 @@ export const requireAdminPanelAccess = async (req: AuthenticatedRequest, res: Re
       templateId: userAdminPanels.templateId,
       orderId: userAdminPanels.orderId,
       isActive: userAdminPanels.isActive,
+      role: userAdminPanels.role,
       templatePlan: orders.templatePlan
     })
     .from(userAdminPanels)
@@ -196,7 +198,8 @@ export const requireAdminPanelAccess = async (req: AuthenticatedRequest, res: Re
 
     req.adminPanel = {
       ...adminPanel,
-      templatePlan: adminPanel.templatePlan || 'basic'
+      templatePlan: adminPanel.templatePlan || 'basic',
+      role: adminPanel.role || 'customer'
     };
     next();
   } catch (error) {
@@ -262,3 +265,18 @@ declare global {
     }
   }
 }
+
+// Requires the caller to have super_admin role (must run after requireAdminPanelAccess)
+export const requireSuperAdminRole = (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
+  if (req.adminPanel?.role !== 'super_admin') {
+    securityEvent('admin_insufficient_role', {
+      userId: req.user?.id,
+      templateId: req.adminPanel?.templateId,
+      route: req.path,
+      ip: req.ip,
+      status: 403
+    });
+    return res.status(403).json({ error: 'Super Admin role required' });
+  }
+  next();
+};

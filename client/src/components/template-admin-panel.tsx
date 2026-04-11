@@ -88,6 +88,29 @@ export default function TemplateAdminPanel() {
   }, [authenticated, templateId]);
 
   const checkAuthentication = async () => {
+    // Super admin customer mode: validate via templateAdminToken
+    if (localStorage.getItem('superAdminMode') === 'true') {
+      const token = localStorage.getItem('templateAdminToken');
+      const userStr = localStorage.getItem('templateAdminUser');
+      if (!token || !userStr) {
+        window.location.href = "/platform";
+        return;
+      }
+      try {
+        const user = JSON.parse(userStr);
+        // Security: super admin can only access their own template
+        if (user.templateId && user.templateId !== templateId) {
+          window.location.href = "/platform";
+          return;
+        }
+        setAuthenticated(true);
+        return;
+      } catch {
+        window.location.href = "/platform";
+        return;
+      }
+    }
+
     const token = localStorage.getItem("admin-token");
     if (!token) {
       // No token, redirect to platform dashboard for login
@@ -121,6 +144,58 @@ export default function TemplateAdminPanel() {
   const loadTemplateData = async () => {
     try {
       setLoading(true);
+      const isSuperAdmin = localStorage.getItem('superAdminMode') === 'true';
+
+      // Super admin: use the public config endpoint + admin-panel RSVP endpoint with their token
+      if (isSuperAdmin) {
+        const superAdminToken = localStorage.getItem('templateAdminToken');
+        const configResponse = await fetch(`/api/templates/${templateId}/config`);
+        if (configResponse.ok) {
+          const configData = await configResponse.json();
+
+          // Fetch RSVP stats from dashboard
+          let stats = { totalRsvps: 0, attending: 0, notAttending: 0 };
+          try {
+            const dashRes = await fetch(`/api/admin-panel/${templateId}/dashboard`, {
+              headers: { Authorization: `Bearer ${superAdminToken}` },
+            });
+            if (dashRes.ok) {
+              const dash = await dashRes.json();
+              stats = {
+                totalRsvps: dash.rsvpStats?.totalRsvps ?? 0,
+                attending: dash.rsvpStats?.attendingCount ?? 0,
+                notAttending: dash.rsvpStats?.notAttendingCount ?? 0,
+              };
+            }
+          } catch { /* non-critical */ }
+
+          setTemplate({
+            id: configData.templateId || templateId || '',
+            name: configData.name || '',
+            slug: configData.slug || '',
+            templateKey: configData.templateKey || 'pro',
+            config: configData.config,
+            maintenance: configData.maintenance || false,
+            stats,
+          });
+
+          // Load RSVPs
+          try {
+            const rsvpRes = await fetch(`/api/admin-panel/${templateId}/rsvps`, {
+              headers: { Authorization: `Bearer ${superAdminToken}` },
+            });
+            if (rsvpRes.ok) {
+              const rsvpData = await rsvpRes.json();
+              setRsvps(Array.isArray(rsvpData) ? rsvpData : (rsvpData.rsvps ?? []));
+            }
+          } catch { /* non-critical */ }
+        } else {
+          toast({ title: "Error", description: "Failed to load template", variant: "destructive" });
+        }
+        setLoading(false);
+        return;
+      }
+
       const token = localStorage.getItem("admin-token");
       
       // Load template info with enriched configuration (includes images)
@@ -207,6 +282,28 @@ export default function TemplateAdminPanel() {
     
     try {
       setSaving(true);
+      const isSuperAdmin = localStorage.getItem('superAdminMode') === 'true';
+
+      // Super admin: call the scoped config endpoint with their own token
+      if (isSuperAdmin) {
+        const token = localStorage.getItem('templateAdminToken');
+        const response = await fetch(`/api/admin-panel/${template.id}/config`, {
+          method: "PUT",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify({ config: template.config, maintenance: template.maintenance }),
+        });
+        if (response.ok) {
+          toast({ title: "Saved", description: "Template configuration has been saved" });
+        } else {
+          const err = await response.json().catch(() => ({}));
+          throw new Error(err.error || "Failed to save");
+        }
+        return;
+      }
+
       const token = localStorage.getItem("admin-token");
       
       const response = await fetch(`/api/admin/templates/${template.id}`, {
@@ -2221,6 +2318,61 @@ export default function TemplateAdminPanel() {
                     checked={template.maintenance}
                     onCheckedChange={(checked) => setTemplate({ ...template, maintenance: checked })}
                   />
+                </div>
+
+                {/* Maintenance page text settings */}
+                <div className="space-y-4 border rounded-lg p-4 bg-gray-50">
+                  <p className="text-sm font-medium text-gray-700">Maintenance Page Content</p>
+
+                  <div>
+                    <Label htmlFor="maint-title">Title</Label>
+                    <Input
+                      id="maint-title"
+                      value={template.config?.maintenance?.title ?? ''}
+                      onChange={(e) => updateConfig('maintenance.title', e.target.value)}
+                      placeholder="Coming Soon"
+                    />
+                  </div>
+
+                  <div>
+                    <Label htmlFor="maint-subtitle">Subtitle</Label>
+                    <Input
+                      id="maint-subtitle"
+                      value={template.config?.maintenance?.subtitle ?? ''}
+                      onChange={(e) => updateConfig('maintenance.subtitle', e.target.value)}
+                      placeholder="We're getting married!"
+                    />
+                  </div>
+
+                  <div>
+                    <Label htmlFor="maint-message">Message</Label>
+                    <Input
+                      id="maint-message"
+                      value={template.config?.maintenance?.message ?? ''}
+                      onChange={(e) => updateConfig('maintenance.message', e.target.value)}
+                      placeholder="Our wedding website is coming soon..."
+                    />
+                  </div>
+
+                  <div>
+                    <Label htmlFor="maint-password">Bypass Password</Label>
+                    <Input
+                      id="maint-password"
+                      value={template.config?.maintenance?.password ?? ''}
+                      onChange={(e) => updateConfig('maintenance.password', e.target.value)}
+                      placeholder="Secret password to preview the site"
+                    />
+                  </div>
+
+                  <div>
+                    <Label htmlFor="maint-enter-pwd">Enter Password Button Text</Label>
+                    <Input
+                      id="maint-enter-pwd"
+                      value={template.config?.maintenance?.enterPassword ?? ''}
+                      onChange={(e) => updateConfig('maintenance.enterPassword', e.target.value)}
+                      placeholder="Մուտքագրել կոդը"
+                    />
+                  </div>
                 </div>
                 
                 <div>

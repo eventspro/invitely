@@ -11,7 +11,7 @@ import {
   orders 
 } from '../../shared/schema.js';
 import { eq, and, desc, count, sql } from 'drizzle-orm';
-import { authenticateUser, requireAdminPanelAccess, AuthenticatedRequest } from '../middleware/auth.js';
+import { authenticateUser, requireAdminPanelAccess, requireSuperAdminRole, AuthenticatedRequest } from '../middleware/auth.js';
 import multer from 'multer';
 import path from 'path';
 import fs from 'fs/promises';
@@ -563,6 +563,62 @@ router.get('/:templateId/activity', authenticateUser, requireAdminPanelAccess, a
   } catch (error) {
     console.error('Get activity logs error:', error);
     res.status(500).json({ error: 'Failed to get activity logs' });
+  }
+});
+
+// Super Admin: update only the config field of the customer's own template
+// Requires: valid JWT + active ultimate panel + super_admin role
+router.put('/:templateId/config', authenticateUser, requireAdminPanelAccess, requireSuperAdminRole, async (req: AuthenticatedRequest, res) => {
+  try {
+    const { templateId } = req.params;
+
+    // Hard-enforce that the templateId in the URL matches the panel assigned to this user
+    if (req.adminPanel?.templateId !== templateId) {
+      return res.status(403).json({ error: 'You can only edit your own template' });
+    }
+
+    const { config, maintenance } = req.body;
+    if (!config || typeof config !== 'object') {
+      return res.status(400).json({ error: 'config object is required' });
+    }
+
+    // Fetch the existing config to merge — never allow a full replace to wipe platform fields
+    const [existing] = await db
+      .select({ config: templates.config })
+      .from(templates)
+      .where(eq(templates.id, templateId))
+      .limit(1);
+
+    if (!existing) {
+      return res.status(404).json({ error: 'Template not found' });
+    }
+
+    const merged = { ...(existing.config as object ?? {}), ...config };
+
+    const updateFields: Record<string, unknown> = { config: merged, updatedAt: new Date() };
+    if (typeof maintenance === 'boolean') updateFields.maintenance = maintenance;
+
+    await db
+      .update(templates)
+      .set(updateFields)
+      .where(eq(templates.id, templateId));
+
+    // Log the action
+    if (req.user) {
+      await db.insert(activityLogs).values({
+        userId: req.user.id,
+        templateId,
+        action: 'super_admin_config_update',
+        entityType: 'template',
+        entityId: templateId,
+        details: { updatedKeys: Object.keys(config) },
+      });
+    }
+
+    res.json({ success: true, message: 'Template config updated' });
+  } catch (error) {
+    console.error('Super admin config update error:', error);
+    res.status(500).json({ error: 'Failed to update template config' });
   }
 });
 

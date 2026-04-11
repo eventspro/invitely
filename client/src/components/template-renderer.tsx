@@ -103,7 +103,18 @@ export default function TemplateRenderer() {
 
   // Show maintenance mode if enabled and not bypassed
   if (templateConfig.maintenance && !maintenanceBypassed) {
-    return <MaintenanceMode onPasswordCorrect={handlePasswordCorrect} />;
+    const mc = templateConfig.config?.maintenance;
+    const w = templateConfig.config?.wedding;
+    const couple = templateConfig.config?.couple;
+    return (
+      <MaintenanceMode
+        onPasswordCorrect={handlePasswordCorrect}
+        config={mc}
+        weddingDate={w?.date}
+        weddingDisplayDate={w?.displayDate}
+        coupleName={couple?.groomName && couple?.brideName ? `${couple.groomName} ∞ ${couple.brideName}` : undefined}
+      />
+    );
   }
 
   // Get the template definition

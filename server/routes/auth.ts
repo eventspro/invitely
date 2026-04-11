@@ -253,6 +253,7 @@ router.post('/login', authLimiter, async (req, res) => {
         templateName: templates.name,
         templateSlug: templates.slug,
         isActive: userAdminPanels.isActive,
+        role: userAdminPanels.role,
       })
       .from(userAdminPanels)
       .innerJoin(templates, eq(userAdminPanels.templateId, templates.id))
@@ -289,10 +290,109 @@ router.post('/login', authLimiter, async (req, res) => {
 
 // Template-specific customer login - this endpoint is deprecated
 // Users should login through the regular /login endpoint
-router.post('/template-login', authLimiter, async (req, res) => {
-  res.status(404).json({ 
-    error: 'This endpoint is deprecated. Please use /login instead.' 
-  });
+router.post('/template-login', async (req, res) => {
+  // Delegate to the standard login endpoint logic, scoped to the given templateSlug.
+  // Kept as a separate route so TemplateAdminLogin.tsx doesn't need to be modified.
+  try {
+    const { email, password, templateSlug } = req.body;
+
+    if (!email || !password) {
+      return res.status(400).json({ error: 'Email and password are required' });
+    }
+
+    const userResult = await db
+      .select({
+        id: managementUsers.id,
+        email: managementUsers.email,
+        passwordHash: managementUsers.passwordHash,
+        firstName: managementUsers.firstName,
+        lastName: managementUsers.lastName,
+        status: managementUsers.status,
+        emailVerified: managementUsers.emailVerified,
+      })
+      .from(managementUsers)
+      .where(eq(managementUsers.email, email.toLowerCase()))
+      .limit(1);
+
+    if (userResult.length === 0) {
+      return res.status(401).json({ error: 'Invalid email or password' });
+    }
+
+    const user = userResult[0];
+
+    if (user.status !== 'active') {
+      return res.status(401).json({ error: 'Account is suspended or deleted' });
+    }
+
+    const passwordValid = await comparePassword(password, user.passwordHash);
+    if (!passwordValid) {
+      return res.status(401).json({ error: 'Invalid email or password' });
+    }
+
+    await db
+      .update(managementUsers)
+      .set({ lastLogin: new Date() })
+      .where(eq(managementUsers.id, user.id));
+
+    // Fetch admin panel(s) — optionally filter by templateSlug
+    const adminPanelQuery = db
+      .select({
+        id: userAdminPanels.id,
+        templateId: userAdminPanels.templateId,
+        templateName: templates.name,
+        templateSlug: templates.slug,
+        isActive: userAdminPanels.isActive,
+        role: userAdminPanels.role,
+      })
+      .from(userAdminPanels)
+      .innerJoin(templates, eq(userAdminPanels.templateId, templates.id))
+      .innerJoin(orders, eq(userAdminPanels.orderId, orders.id))
+      .where(
+        and(
+          eq(userAdminPanels.userId, user.id),
+          eq(userAdminPanels.isActive, true),
+          eq(orders.status, 'completed')
+        )
+      );
+
+    const adminPanelResult = await adminPanelQuery;
+
+    // If a templateSlug was provided, ensure this user has access to it
+    if (templateSlug) {
+      const hasAccess = adminPanelResult.some(p => p.templateSlug === templateSlug);
+      if (!hasAccess) {
+        return res.status(403).json({ error: 'You do not have access to this template' });
+      }
+    }
+
+    const token = generateToken(user.id, user.email);
+
+    // Return the panel matching the requested slug (or all panels if none specified)
+    const matchingPanel = templateSlug
+      ? adminPanelResult.find(p => p.templateSlug === templateSlug) ?? null
+      : null;
+
+    res.json({
+      message: 'Login successful',
+      user: {
+        id: user.id,
+        email: user.email,
+        firstName: user.firstName,
+        lastName: user.lastName,
+        emailVerified: user.emailVerified,
+        hasAdminAccess: adminPanelResult.length > 0,
+        adminPanels: adminPanelResult,
+        // Convenience: expose the matched panel's role at top level
+        role: matchingPanel?.role ?? (adminPanelResult[0]?.role ?? 'customer'),
+        templateSlug: matchingPanel?.templateSlug ?? templateSlug,
+        templateId: matchingPanel?.templateId ?? adminPanelResult[0]?.templateId,
+      },
+      token
+    });
+  } catch (error) {
+    console.error('Template login error:', error);
+    res.status(500).json({ error: 'Login failed' });
+  }
 });
 
 // Verify email

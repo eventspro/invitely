@@ -54,6 +54,7 @@ export const userAdminPanels = pgTable("user_admin_panels", {
   templateSlug: text("template_slug").notNull().unique(), // URL slug for customer access
   orderId: varchar("order_id").references(() => orders.id, { onDelete: "cascade" }),
   isActive: boolean("is_active").default(true),
+  role: text("role").default("customer"), // 'customer' | 'super_admin'
   googleDriveFolderId: text("google_drive_folder_id"),
   settings: jsonb("settings"), // custom admin panel settings
   createdAt: timestamp("created_at").default(sql`now()`),

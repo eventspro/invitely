@@ -51,6 +51,8 @@ export function registerTemplateRoutes(app: Express) {
       const response = {
         templateId: template.id,
         templateKey: template.templateKey,
+        name: template.name,
+        slug: template.slug,
         config: template.config,
         maintenance: template.maintenance
       };

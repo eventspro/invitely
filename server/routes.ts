@@ -1,7 +1,9 @@
 import type { Express } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage.js";
-import { insertRsvpSchema } from "../shared/schema.js";
+import { insertRsvpSchema, platformSettings } from "../shared/schema.js";
+import { db } from "./db.js";
+import { eq } from "drizzle-orm";
 import { z } from "zod";
 import { sendRsvpNotificationEmails, sendRsvpConfirmationEmail, testEmailService } from "./email.js";
 import {
@@ -117,6 +119,21 @@ export async function registerRoutes(app: Express): Promise<Server> {
   
   // Register configurable pricing routes (for pricing plan management)
   registerConfigurablePricingRoutes(app);
+
+  // ─── Public site settings endpoint ──────────────────────────────────────────
+  app.get('/api/site-settings', async (_req, res) => {
+    try {
+      const [row] = await db
+        .select()
+        .from(platformSettings)
+        .where(eq(platformSettings.key, 'social_links'))
+        .limit(1);
+      res.json((row?.value as Record<string, string>) ?? {});
+    } catch (error) {
+      console.error('Error fetching site settings:', error);
+      res.status(500).json({ error: 'Failed to fetch site settings' });
+    }
+  });
   
   // Legacy RSVP endpoint - redirect to template-scoped endpoint
   app.post("/api/rsvp", async (req, res) => {

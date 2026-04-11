@@ -58,31 +58,39 @@ function unflattenObject(flat: Record<string, string>): any {
 }
 
 // Initialize translations in database from defaults
-async function initializeTranslations() {
-  try {
-    // Check if translations exist
-    const existingCount = await db.select().from(translations).limit(1);
-    
-    if (existingCount.length === 0) {
-      console.log('🔄 Initializing translations database...');
+async function initializeTranslations(retries = 3, delayMs = 3000) {
+  for (let attempt = 1; attempt <= retries; attempt++) {
+    try {
+      // Check if translations exist
+      const existingCount = await db.select().from(translations).limit(1);
       
-      for (const [lang, config] of Object.entries(defaultTranslations)) {
-        const flattened = flattenObject(config);
+      if (existingCount.length === 0) {
+        console.log('🔄 Initializing translations database...');
         
-        for (const [key, value] of Object.entries(flattened)) {
-          await db.insert(translations).values({
-            language: lang,
-            translationKey: key,
-            value: value,
-            category: key.split('.')[0]
-          });
+        for (const [lang, config] of Object.entries(defaultTranslations)) {
+          const flattened = flattenObject(config);
+          
+          for (const [key, value] of Object.entries(flattened)) {
+            await db.insert(translations).values({
+              language: lang,
+              translationKey: key,
+              value: value,
+              category: key.split('.')[0]
+            });
+          }
         }
+        
+        console.log('✅ Translations initialized');
       }
-      
-      console.log('✅ Translations initialized');
+      return; // success
+    } catch (error) {
+      if (attempt < retries) {
+        console.warn(`⚠️ Translations init attempt ${attempt}/${retries} failed, retrying in ${delayMs}ms...`);
+        await new Promise(resolve => setTimeout(resolve, delayMs));
+      } else {
+        console.error('❌ Failed to initialize translations after all retries:', (error as Error).message);
+      }
     }
-  } catch (error) {
-    console.error('❌ Failed to initialize translations:', error);
   }
 }
 

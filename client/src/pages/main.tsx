@@ -116,6 +116,28 @@ export default function MainPage() {
   const bootstrap = useBootstrap();
   const [selectedPlan, setSelectedPlan] = useState<string>("standard");
 
+  // ── Social links: fetched from platform settings ─────────────────────────────
+  const [socialLinks, setSocialLinks] = useState({
+    instagram: 'https://www.instagram.com/weddingsites_am',
+    telegram: 'https://t.me/weddingsites_am',
+    facebook: 'https://www.facebook.com/weddingsites.am',
+  });
+
+  useEffect(() => {
+    fetch('/api/site-settings')
+      .then((r) => r.ok ? r.json() : null)
+      .then((d) => {
+        if (d && (d.instagram || d.telegram || d.facebook)) {
+          setSocialLinks({
+            instagram: d.instagram || 'https://www.instagram.com/weddingsites_am',
+            telegram: d.telegram || 'https://t.me/weddingsites_am',
+            facebook: d.facebook || 'https://www.facebook.com/weddingsites.am',
+          });
+        }
+      })
+      .catch(() => {/* use defaults */});
+  }, []);
+
   // ── Templates: use pre-fetched bootstrap data when available ────────────────
   // bootstrap.templates was fetched in main.tsx before this component ever rendered.
   // Only fall back to an on-mount fetch if bootstrap data is empty (shouldn't happen).
@@ -799,7 +821,7 @@ export default function MainPage() {
             )}
             <div className="flex flex-col sm:flex-row gap-4 justify-center items-center flex-wrap">
               <a 
-                href="https://www.instagram.com/weddingsites_am" 
+                href={socialLinks.instagram} 
                 target="_blank" 
                 rel="noopener noreferrer"
                 className="bg-gradient-to-r from-purple-600 via-pink-500 to-orange-400 hover:opacity-90 text-white px-8 py-4 rounded-lg text-lg font-medium transition-all flex items-center gap-3"
@@ -809,7 +831,7 @@ export default function MainPage() {
                 <span data-i18n-key="socialMedia.instagram.label">{t.socialMedia?.instagram?.label}</span>
               </a>
               <a 
-                href="https://t.me/weddingsites_am" 
+                href={socialLinks.telegram} 
                 target="_blank" 
                 rel="noopener noreferrer"
                 className="bg-[#0088cc] hover:bg-[#0088cc]/90 text-white px-8 py-4 rounded-lg text-lg font-medium transition-colors flex items-center gap-3"
@@ -819,7 +841,7 @@ export default function MainPage() {
                 <span data-i18n-key="socialMedia.telegram.label">{t.socialMedia?.telegram?.label}</span>
               </a>
               <a 
-                href="https://www.facebook.com/weddingsites.am" 
+                href={socialLinks.facebook} 
                 target="_blank" 
                 rel="noopener noreferrer"
                 className="bg-[#1877f2] hover:bg-[#1877f2]/90 text-white px-8 py-4 rounded-lg text-lg font-medium transition-colors flex items-center gap-3"
