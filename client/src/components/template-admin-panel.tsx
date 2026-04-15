@@ -243,9 +243,13 @@ export default function TemplateAdminPanel() {
         return;
       }
       
-      // Load RSVPs for this template
+      // Load RSVPs for this template.
+      // /api/templates/:id/rsvps requires a management-user JWT (authenticateUser).
+      // Use templateAdminToken when present (set at login for platform-admin users
+      // who also have a managementUsers record), otherwise fall back to admin-token.
+      const rsvpToken = localStorage.getItem("templateAdminToken") || token;
       const rsvpResponse = await fetch(`/api/templates/${templateId}/rsvps`, {
-        headers: { Authorization: `Bearer ${token}` },
+        headers: { Authorization: `Bearer ${rsvpToken}` },
       });
       
       if (rsvpResponse.ok) {
@@ -1676,6 +1680,7 @@ export default function TemplateAdminPanel() {
                       accept="audio/mp3,audio/mpeg"
                       className="w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-pink-50 file:text-pink-700 hover:file:bg-pink-100"
                       onChange={async (e) => {
+                        const input = e.target;
                         const file = e.target.files?.[0];
                         if (!file) return;
 
@@ -1695,8 +1700,17 @@ export default function TemplateAdminPanel() {
                           const formData = new FormData();
                           formData.append('music', file);
 
-                          const token = localStorage.getItem("admin-token");
-                          
+                          // Use the correct token for the current auth mode.
+                          // stream-upload requires a management-user JWT (authenticateUser).
+                          // - super_admin customers: always use templateAdminToken
+                          // - platform admin: templateAdminToken is set at login when the
+                          //   platform admin also has a managementUsers record; fall back
+                          //   to admin-token only if it's absent.
+                          const isSuperAdmin = localStorage.getItem('superAdminMode') === 'true';
+                          const token = isSuperAdmin
+                            ? localStorage.getItem('templateAdminToken')
+                            : (localStorage.getItem('templateAdminToken') || localStorage.getItem('admin-token'));
+
                           // Stream upload through server to R2 (fast, no CORS issues)
                           const response = await fetch(`/api/templates/${template.id}/music/stream-upload`, {
                             method: 'POST',
@@ -1712,7 +1726,7 @@ export default function TemplateAdminPanel() {
 
                           const data = await response.json();
                           
-                          // Update config with new music URL
+                          // Update config with new music URL and persist to DB
                           const newConfig = {
                             ...template.config,
                             music: {
@@ -1723,6 +1737,27 @@ export default function TemplateAdminPanel() {
                           };
                           setTemplate(prev => prev ? { ...prev, config: newConfig } : null);
 
+                          // Persist the updated audioUrl to the database immediately,
+                          // using the same route/token as saveTemplate() for each mode.
+                          const isSuperAdminSave = localStorage.getItem('superAdminMode') === 'true';
+                          if (isSuperAdminSave) {
+                            const saveToken = localStorage.getItem('templateAdminToken');
+                            await fetch(`/api/admin-panel/${template.id}/config`, {
+                              method: 'PUT',
+                              headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${saveToken}` },
+                              body: JSON.stringify({ config: newConfig }),
+                            });
+                          } else {
+                            const saveToken = localStorage.getItem('admin-token');
+                            await fetch(`/api/admin/templates/${template.id}`, {
+                              method: 'PUT',
+                              headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${saveToken}` },
+                              body: JSON.stringify({ config: newConfig }),
+                            });
+                          }
+
+                          // Reset the file input so the user can re-select the same file
+                          input.value = '';
                           toast({ title: "Success", description: "Music uploaded successfully!" });
                         } catch (error) {
                           console.error('Music upload error:', error);
@@ -1743,7 +1778,8 @@ export default function TemplateAdminPanel() {
                             {template.config.music.audioUrl.split('/').pop()}
                           </p>
                         </div>
-                        <audio controls className="h-10">
+                        {/* key forces the audio element to remount when the URL changes */}
+                        <audio key={template.config.music.audioUrl} controls className="h-10">
                           <source src={template.config.music.audioUrl} type="audio/mpeg" />
                         </audio>
                         <Button
@@ -1756,11 +1792,11 @@ export default function TemplateAdminPanel() {
                               const filename = template.config.music?.audioUrl?.split('/').pop();
                               if (!filename) return;
                               
-                              const token = localStorage.getItem("admin-token");
+                              const delToken = localStorage.getItem('templateAdminToken') || localStorage.getItem('admin-token');
                               const response = await fetch(`/api/templates/${template.id}/music/${filename}`, {
                                 method: 'DELETE',
                                 headers: {
-                                  Authorization: `Bearer ${token}`,
+                                  Authorization: `Bearer ${delToken}`,
                                 },
                               });
 
@@ -1768,7 +1804,7 @@ export default function TemplateAdminPanel() {
                                 throw new Error('Delete failed');
                               }
 
-                              // Update config to remove music URL
+                              // Update config to remove music URL and persist to DB
                               const newConfig = {
                                 ...template.config,
                                 music: {
@@ -1778,6 +1814,25 @@ export default function TemplateAdminPanel() {
                                 }
                               };
                               setTemplate(prev => prev ? { ...prev, config: newConfig } : null);
+
+                              // Persist the cleared audioUrl to the database immediately,
+                              // using the same route/token as saveTemplate() for each mode.
+                              const isSuperAdminSave = localStorage.getItem('superAdminMode') === 'true';
+                              if (isSuperAdminSave) {
+                                const saveToken = localStorage.getItem('templateAdminToken');
+                                await fetch(`/api/admin-panel/${template.id}/config`, {
+                                  method: 'PUT',
+                                  headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${saveToken}` },
+                                  body: JSON.stringify({ config: newConfig }),
+                                });
+                              } else {
+                                const saveToken = localStorage.getItem('admin-token');
+                                await fetch(`/api/admin/templates/${template.id}`, {
+                                  method: 'PUT',
+                                  headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${saveToken}` },
+                                  body: JSON.stringify({ config: newConfig }),
+                                });
+                              }
 
                               toast({ title: "Success", description: "Music removed successfully!" });
                             } catch (error) {

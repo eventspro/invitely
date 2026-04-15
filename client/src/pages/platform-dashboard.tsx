@@ -183,6 +183,27 @@ export default function PlatformDashboard() {
       if (adminResponse.ok) {
         const data = await adminResponse.json();
         localStorage.setItem("admin-token", data.token);
+
+        // Also fetch a management-user token (silently) so that endpoints
+        // protected by authenticateUser (RSVPs, music upload, etc.) work when
+        // the platform admin navigates into a template admin panel.
+        // We do NOT set superAdminMode — platform admin must stay in full mode.
+        try {
+          const mgmtResponse = await fetch("/api/auth/template-login", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ email: loginForm.username, password: loginForm.password }),
+          });
+          if (mgmtResponse.ok) {
+            const mgmtData = await mgmtResponse.json();
+            if (mgmtData.token) {
+              localStorage.setItem("templateAdminToken", mgmtData.token);
+            }
+          }
+        } catch {
+          // Non-critical — platform admin still logs in even without mgmt token
+        }
+
         setAuthenticated(true);
         toast({ title: "Login successful", description: "Welcome to the platform dashboard" });
         return;
