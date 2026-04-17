@@ -24,7 +24,7 @@
     "backup:storage": "tsx scripts/backup-storage.ts",
     "restore": "tsx scripts/restore.ts",
     "restore:list": "tsx scripts/restore.ts --list",
-    "deploy:staging": "cross-env NODE_ENV=staging npm run build && vercel --local-config vercel.staging.json --prod",
+    "deploy:staging": "cross-env NODE_ENV=staging npm run build && cross-env VERCEL_PROJECT_ID=prj_0qLtA6P0YiyHYJC8ieINdlVbw9m2 VERCEL_ORG_ID=team_iYC5E2xig78ZFNdysPsVmntj vercel --local-config vercel.staging.json --prod --yes",
     "deploy:production": "cross-env NODE_ENV=production npm run build && powershell -ExecutionPolicy Bypass -File deploy.ps1",
     "deploy": "powershell -ExecutionPolicy Bypass -File deploy.ps1",
     "staging:dev": "cross-env NODE_ENV=staging tsx server/index.ts",

@@ -34,3 +34,6 @@ credentials.*
 # Backup files and logs (contain sensitive DB data — never commit)
 backups/
 logs/
+
+# Staging Vercel project link
+.vercel-staging/
