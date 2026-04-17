@@ -390,7 +390,7 @@ export default function HeroSection({ config = weddingConfig }: HeroSectionProps
         )}
 
         {/* Music Player */}
-        {musicButtonText && (
+        {config.music?.enabled !== false && (
           <div className="mt-8 flex justify-center">
             <button
               onClick={toggleMusic}
@@ -412,15 +412,17 @@ export default function HeroSection({ config = weddingConfig }: HeroSectionProps
               ) : (
                 <Play className="w-5 h-5" />
               )}
-              <span 
-                ref={musicButtonRef}
-                style={{ 
-                  fontFamily: getBodyFont(config.theme?.fonts),
-                  ...(containsArmenianText(musicButtonText) ? getArmenianTextStyles(config.theme?.fonts?.body) : {})
-                }}
-              >
-                {musicButtonText}
-              </span>
+              {musicButtonText && (
+                <span 
+                  ref={musicButtonRef}
+                  style={{ 
+                    fontFamily: getBodyFont(config.theme?.fonts),
+                    ...(containsArmenianText(musicButtonText) ? getArmenianTextStyles(config.theme?.fonts?.body) : {})
+                  }}
+                >
+                  {musicButtonText}
+                </span>
+              )}
             </button>
           </div>
         )}

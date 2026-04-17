@@ -38,7 +38,7 @@ export const defaultConfig: WeddingConfig = {
     title: "Mark Your Calendar",
     description: "Save the date for our wedding",
     monthTitle: "Wedding Date",
-    dayLabels: ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"]
+    dayLabels: ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"]
   },
   locations: {
     sectionTitle: "Wedding Locations",

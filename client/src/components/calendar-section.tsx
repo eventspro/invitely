@@ -21,6 +21,7 @@ export default function CalendarSection({ config = weddingConfig }: CalendarSect
   const generateCalendar = () => {
     if (!config.wedding?.date) {
       // Fallback to hardcoded October 2025 if no date
+      // Fallback: October 2025 starting from Monday (Oct 1 = Wednesday = index 2)
       return [
         ["", "", "1", "2", "3", "4", "5"],
         ["6", "7", "8", "9", "10", "11", "12"],
@@ -40,11 +41,9 @@ export default function CalendarSection({ config = weddingConfig }: CalendarSect
     const numDays = lastDay.getDate();
     
     // Get what day of week the month starts (0 = Sunday, 1 = Monday, ..., 6 = Saturday)
-    // Armenian week format: Կիր Երկ Երք Չոր Հնգ Ուրբ Շբթ (Sunday through Saturday)
-    // JavaScript: 0=Sunday, 1=Monday, 2=Tuesday, 3=Wednesday, 4=Thursday, 5=Friday, 6=Saturday
-    // Armenian:   0=Sunday, 1=Monday, 2=Tuesday, 3=Wednesday, 4=Thursday, 5=Friday, 6=Saturday
-    // The formats match exactly, so no conversion needed!
-    let startDayOfWeek = firstDay.getDay();
+    // Armenian week starts on Monday, so shift: Mon=0, Tue=1, ..., Sun=6
+    const jsDayOfWeek = firstDay.getDay(); // 0=Sun,1=Mon,...,6=Sat
+    let startDayOfWeek = (jsDayOfWeek + 6) % 7; // Mon=0, Tue=1, ..., Sun=6
     
     const weeks: string[][] = [];
     let currentWeek: string[] = [];
