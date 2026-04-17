@@ -173,8 +173,9 @@ export default function PlatformDashboard() {
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
-      // Try platform admin login first (username + password)
-      const adminResponse = await fetch("/api/admin/login", {
+      // Only try platform admin login if the username doesn't look like an email
+      const isEmail = loginForm.username.includes('@');
+      const adminResponse = isEmail ? null : await fetch("/api/admin/login", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(loginForm),
