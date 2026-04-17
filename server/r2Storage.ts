@@ -12,8 +12,8 @@ export class CloudflareR2Storage {
 
   constructor() {
     const accountId = process.env.CLOUDFLARE_R2_ACCOUNT_ID;
-    const accessKey = process.env.CLOUDFLARE_R2_ACCESS_KEY;
-    const secretKey = process.env.CLOUDFLARE_R2_SECRET_KEY;
+    const accessKey = process.env.CLOUDFLARE_R2_ACCESS_KEY || process.env.CLOUDFLARE_R2_ACCESS_KEY_ID;
+    const secretKey = process.env.CLOUDFLARE_R2_SECRET_KEY || process.env.CLOUDFLARE_R2_SECRET_ACCESS_KEY;
     this.bucketName = process.env.CLOUDFLARE_R2_BUCKET_NAME || '';
     this.publicUrl = process.env.CLOUDFLARE_R2_PUBLIC_URL || '';
 

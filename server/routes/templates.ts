@@ -245,8 +245,8 @@ export function registerTemplateRoutes(app: Express) {
           // Only try R2 if all required env vars are present
           if (process.env.CLOUDFLARE_R2_BUCKET_NAME && 
               process.env.CLOUDFLARE_R2_ACCOUNT_ID &&
-              process.env.CLOUDFLARE_R2_ACCESS_KEY &&
-              process.env.CLOUDFLARE_R2_SECRET_KEY &&
+              (process.env.CLOUDFLARE_R2_ACCESS_KEY || process.env.CLOUDFLARE_R2_ACCESS_KEY_ID) &&
+              (process.env.CLOUDFLARE_R2_SECRET_KEY || process.env.CLOUDFLARE_R2_SECRET_ACCESS_KEY) &&
               process.env.CLOUDFLARE_R2_PUBLIC_URL) {
             
             const { r2Storage } = await import('../r2Storage.js');
