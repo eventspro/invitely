@@ -44,7 +44,7 @@ export const ImageUploader: React.FC<ImageUploaderProps> = ({
   React.useEffect(() => {
     const loadImages = async () => {
       try {
-        const token = localStorage.getItem('admin-token');
+        const token = localStorage.getItem('templateAdminToken') || localStorage.getItem('admin-token');
         const headers: HeadersInit = {
           'Content-Type': 'application/json',
         };
@@ -83,7 +83,7 @@ export const ImageUploader: React.FC<ImageUploaderProps> = ({
     setError(null);
 
     try {
-      const token = localStorage.getItem('admin-token');
+      const token = localStorage.getItem('templateAdminToken') || localStorage.getItem('admin-token');
       
       const uploadPromises = Array.from(files).map(async (file) => {
         if (!acceptedTypes.includes(file.type)) {
@@ -137,7 +137,7 @@ export const ImageUploader: React.FC<ImageUploaderProps> = ({
 
   const removeImage = useCallback(async (imageId: string) => {
     try {
-      const token = localStorage.getItem('admin-token');
+      const token = localStorage.getItem('templateAdminToken') || localStorage.getItem('admin-token');
       const headers: HeadersInit = {
         'Content-Type': 'application/json',
       };

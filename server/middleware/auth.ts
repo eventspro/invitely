@@ -26,6 +26,7 @@ export interface AuthenticatedRequest extends Request {
     firstName?: string;
     lastName?: string;
     status: string;
+    isPlatformAdmin?: boolean;
   };
   adminPanel?: {
     id: string;
@@ -117,6 +118,17 @@ export const authenticateUser = async (req: AuthenticatedRequest, res: Response,
       return res.status(status).json({ error: isAdminRoute ? 'Not found' : 'Invalid or expired token' });
     }
 
+    // Platform admin tokens have role:'admin' but no userId — grant access directly
+    if (decoded.role === 'admin' && decoded.username && !decoded.userId) {
+      req.user = {
+        id: decoded.username,
+        email: `${decoded.username}@platform.internal`,
+        status: 'active',
+        isPlatformAdmin: true,
+      };
+      return next();
+    }
+
     // Get user from database
     const [user] = await db.select({
       id: managementUsers.id,
@@ -163,6 +175,20 @@ export const requireAdminPanelAccess = async (req: AuthenticatedRequest, res: Re
     const templateId = req.params.templateId || req.body.templateId;
     if (!templateId) {
       return res.status(400).json({ error: 'Template ID required' });
+    }
+
+    // Platform admins have unrestricted access to all templates
+    if (req.user.isPlatformAdmin) {
+      req.adminPanel = {
+        id: 'platform-admin',
+        userId: req.user.id,
+        templateId,
+        orderId: null,
+        isActive: true,
+        templatePlan: 'ultimate',
+        role: 'super_admin',
+      };
+      return next();
     }
 
     // Check if user has admin panel access for this template
