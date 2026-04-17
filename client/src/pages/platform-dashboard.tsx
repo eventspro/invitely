@@ -181,7 +181,7 @@ export default function PlatformDashboard() {
         body: JSON.stringify(loginForm),
       });
 
-      if (adminResponse.ok) {
+      if (adminResponse && adminResponse.ok) {
         const data = await adminResponse.json();
         localStorage.setItem("admin-token", data.token);
 
