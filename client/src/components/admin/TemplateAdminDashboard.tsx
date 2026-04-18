@@ -120,7 +120,16 @@ export const TemplateAdminDashboard: React.FC<TemplateAdminDashboardProps> = ({ 
   };
 
   const setCouple = (field: keyof NonNullable<ConfigDraft['couple']>, value: string) =>
-    setConfigDraft(d => ({ ...d, couple: { ...d.couple, [field]: value } }));
+    setConfigDraft(d => {
+      const updated = { ...d.couple, [field]: value };
+      // Auto-sync combinedNames when groomName or brideName changes
+      if (field === 'groomName' || field === 'brideName') {
+        const groom = field === 'groomName' ? value : (d.couple?.groomName ?? '');
+        const bride = field === 'brideName' ? value : (d.couple?.brideName ?? '');
+        if (groom && bride) updated.combinedNames = `${groom} & ${bride}`;
+      }
+      return { ...d, couple: updated };
+    });
 
   const setWedding = (field: keyof NonNullable<ConfigDraft['wedding']>, value: string) =>
     setConfigDraft(d => ({ ...d, wedding: { ...d.wedding, [field]: value } }));
