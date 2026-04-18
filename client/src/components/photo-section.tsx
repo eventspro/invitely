@@ -22,10 +22,10 @@ export default function PhotoSection({ config = weddingConfig, templateId }: Pho
   // Set Swiper theme color based on config
   const swiperThemeColor = config.theme?.colors?.primary || '#007aff';
 
-  // Get love story images - only use uploaded images, no fallback
+  // Get love story images - use uploaded images if available, fallback to default
   const loveStoryImages = config.photos?.images && config.photos.images.length > 0 
     ? config.photos.images 
-    : [];
+    : [weddingPhoto];
 
   const openPhotoGallery = () => {
     // TODO: Open Google Drive or Yandex Disk link when available
@@ -83,11 +83,7 @@ export default function PhotoSection({ config = weddingConfig, templateId }: Pho
   };
 
   const LoveStoryGallery = () => {
-    if (loveStoryImages.length === 0) {
-      return null;
-    }
-
-    if (loveStoryImages.length === 1) {
+    if (loveStoryImages.length <= 1) {
       return (
         <div className="relative group overflow-hidden rounded-xl">
           <img 
@@ -148,11 +144,6 @@ export default function PhotoSection({ config = weddingConfig, templateId }: Pho
       </div>
     );
   };
-
-  // Hide entire section if no images uploaded
-  if (loveStoryImages.length === 0) {
-    return null;
-  }
 
   return (
     <section 

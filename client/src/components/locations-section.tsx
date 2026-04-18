@@ -116,7 +116,7 @@ export default function LocationsSection({ config = weddingConfig }: LocationsSe
                     onClick={() => openMap(venue.id || index.toString())}
                     className="text-white px-4 py-2 rounded-lg transition-colors duration-300 flex items-center hover:opacity-90"
                     style={{
-                      backgroundColor: config.theme?.colors?.accent 
+                      backgroundColor: config.theme?.colors?.buttonColor || config.theme?.colors?.accent
                     }}
                     data-testid={`button-venue-map-${venue.id || index}`}
                   >

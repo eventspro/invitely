@@ -276,6 +276,7 @@ export interface WeddingConfig {
       accent?: string;
       background?: string;
       textColor?: string;
+      buttonColor?: string;
     };
     fonts?: {
       heading?: string;

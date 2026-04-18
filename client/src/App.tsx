@@ -141,7 +141,7 @@ function App({ bootstrapData }: { bootstrapData: BootstrapData }) {
               <ErrorBoundary>
                 <AppContent
                   maintenanceEnabled={bootstrapData.maintenanceEnabled}
-                  maintenanceBypassed={bootstrapData.maintenanceBypassed}
+                  maintenanceBypassed={bootstrapData.maintenanceBypassed} 
                 />
               </ErrorBoundary>
             </TooltipProvider>

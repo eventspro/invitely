@@ -1503,6 +1503,24 @@ export default function TemplateAdminPanel() {
                           />
                         </div>
                       </div>
+                      <div>
+                        <Label htmlFor="buttonColor">Map Buttons Color</Label>
+                        <div className="flex gap-2 items-center">
+                          <Input
+                            id="buttonColor"
+                            type="color"
+                            value={template.config.theme?.colors?.buttonColor || template.config.theme?.colors?.accent || '#000000'}
+                            onChange={(e) => updateConfig("theme.colors.buttonColor", e.target.value)}
+                            className="w-16 h-10"
+                          />
+                          <Input
+                            value={template.config.theme?.colors?.buttonColor || ''}
+                            onChange={(e) => updateConfig("theme.colors.buttonColor", e.target.value)}
+                            placeholder="Defaults to Accent Color"
+                            className="flex-1"
+                          />
+                        </div>
+                      </div>
                     </div>
                   </div>
                   

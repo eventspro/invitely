@@ -19,6 +19,16 @@ interface ConfigDraft {
   couple?: { groomName?: string; brideName?: string; combinedNames?: string };
   wedding?: { date?: string; displayDate?: string };
   hero?: { invitation?: string; welcomeMessage?: string };
+  theme?: {
+    colors?: {
+      primary?: string;
+      secondary?: string;
+      accent?: string;
+      background?: string;
+      textColor?: string;
+    };
+    fonts?: { heading?: string; body?: string };
+  };
 }
 
 export const TemplateAdminDashboard: React.FC<TemplateAdminDashboardProps> = ({ templateSlug }) => {
@@ -79,6 +89,19 @@ export const TemplateAdminDashboard: React.FC<TemplateAdminDashboardProps> = ({ 
             invitation: c.hero?.invitation ?? '',
             welcomeMessage: c.hero?.welcomeMessage ?? '',
           },
+          theme: {
+            colors: {
+              primary: c.theme?.colors?.primary ?? '',
+              secondary: c.theme?.colors?.secondary ?? '',
+              accent: c.theme?.colors?.accent ?? '',
+              background: c.theme?.colors?.background ?? '',
+              textColor: c.theme?.colors?.textColor ?? '',
+            },
+            fonts: {
+              heading: c.theme?.fonts?.heading ?? '',
+              body: c.theme?.fonts?.body ?? '',
+            },
+          },
         });
       })
       .catch(() => setSaveMessage({ type: 'error', text: 'Failed to load current config.' }))
@@ -120,22 +143,19 @@ export const TemplateAdminDashboard: React.FC<TemplateAdminDashboardProps> = ({ 
   };
 
   const setCouple = (field: keyof NonNullable<ConfigDraft['couple']>, value: string) =>
-    setConfigDraft(d => {
-      const updated = { ...d.couple, [field]: value };
-      // Auto-sync combinedNames when groomName or brideName changes
-      if (field === 'groomName' || field === 'brideName') {
-        const groom = field === 'groomName' ? value : (d.couple?.groomName ?? '');
-        const bride = field === 'brideName' ? value : (d.couple?.brideName ?? '');
-        if (groom && bride) updated.combinedNames = `${groom} & ${bride}`;
-      }
-      return { ...d, couple: updated };
-    });
+    setConfigDraft(d => ({ ...d, couple: { ...d.couple, [field]: value } }));
 
   const setWedding = (field: keyof NonNullable<ConfigDraft['wedding']>, value: string) =>
     setConfigDraft(d => ({ ...d, wedding: { ...d.wedding, [field]: value } }));
 
   const setHero = (field: keyof NonNullable<ConfigDraft['hero']>, value: string) =>
     setConfigDraft(d => ({ ...d, hero: { ...d.hero, [field]: value } }));
+
+  const setThemeColor = (field: keyof NonNullable<NonNullable<ConfigDraft['theme']>['colors']>, value: string) =>
+    setConfigDraft(d => ({
+      ...d,
+      theme: { ...d.theme, colors: { ...d.theme?.colors, [field]: value } },
+    }));
 
   if (loading) {
     return (
@@ -309,6 +329,39 @@ export const TemplateAdminDashboard: React.FC<TemplateAdminDashboardProps> = ({ 
                           className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
                         />
                       </div>
+                    </div>
+                  </section>
+
+                  {/* Theme Colors */}
+                  <section>
+                    <h3 className="text-base font-semibold text-gray-700 mb-3 border-b pb-2">Theme Colors</h3>
+                    <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-4">
+                      {([
+                        { field: 'primary' as const, label: 'Primary' },
+                        { field: 'secondary' as const, label: 'Secondary' },
+                        { field: 'accent' as const, label: 'Buttons & Accents' },
+                        { field: 'background' as const, label: 'Background' },
+                        { field: 'textColor' as const, label: 'Text Color' },
+                      ] as const).map(({ field, label }) => (
+                        <div key={field}>
+                          <label className="block text-sm font-medium text-gray-700 mb-1">{label}</label>
+                          <div className="flex items-center gap-2">
+                            <input
+                              type="color"
+                              value={configDraft.theme?.colors?.[field] || '#000000'}
+                              onChange={e => setThemeColor(field, e.target.value)}
+                              className="w-10 h-10 rounded border border-gray-300 cursor-pointer p-0.5"
+                            />
+                            <input
+                              type="text"
+                              value={configDraft.theme?.colors?.[field] ?? ''}
+                              onChange={e => setThemeColor(field, e.target.value)}
+                              placeholder="#rrggbb"
+                              className="flex-1 border border-gray-300 rounded-md px-2 py-1.5 text-xs font-mono focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                            />
+                          </div>
+                        </div>
+                      ))}
                     </div>
                   </section>
 
