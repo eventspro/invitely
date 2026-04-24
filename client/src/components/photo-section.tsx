@@ -103,7 +103,7 @@ export default function PhotoSection({ config = weddingConfig, templateId }: Pho
       <div className="relative overflow-hidden rounded-xl">
         <Swiper
           modules={[Navigation, Pagination, Autoplay]}
-          spaceBetween={30}
+          spaceBetween={0}
           slidesPerView={1}
           navigation={{
             enabled: true,
@@ -132,11 +132,12 @@ export default function PhotoSection({ config = weddingConfig, templateId }: Pho
           } as React.CSSProperties}
         >
           {loveStoryImages.map((imageUrl, index) => (
-            <SwiperSlide key={index}>
+            <SwiperSlide key={index} style={{ backfaceVisibility: 'hidden' }}>
               <img 
                 src={imageUrl} 
                 alt={`Love story image ${index + 1}`}
                 className="w-full h-full object-cover"
+                style={{ backfaceVisibility: 'hidden', transform: 'translateZ(0)' }}
               />
             </SwiperSlide>
           ))}
