@@ -55,11 +55,17 @@ export default function LocationImageUploader({
     try {
       const formData = new FormData();
       formData.append('image', file);
-      formData.append('templateId', templateId);
       formData.append('category', `location-${locationName}`);
 
-      const response = await fetch('/api/images/upload', {
+      const token = localStorage.getItem('templateAdminToken') || localStorage.getItem('admin-token');
+      const headers: HeadersInit = {};
+      if (token) {
+        headers['Authorization'] = `Bearer ${token}`;
+      }
+
+      const response = await fetch(`/api/templates/${templateId}/photos/upload`, {
         method: 'POST',
+        headers,
         body: formData,
       });
 

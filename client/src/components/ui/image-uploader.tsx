@@ -303,18 +303,21 @@ export const ImageUploader: React.FC<ImageUploaderProps> = ({
         </div>
       )}
 
-      {existingImages.length > 0 && (
+      {(() => {
+        const apiImageUrls = new Set(images.map(img => img.url));
+        const orphanImages = existingImages.filter(url => !apiImageUrls.has(url));
+        return orphanImages.length > 0 && (
         <div className="mt-4 grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-          {existingImages.map((imageUrl, index) => {
-            // Find the corresponding image data if available
-            const imageData = images.find(img => img.url === imageUrl);
+          {orphanImages.map((imageUrl, index) => {
+            // These images are only in the config, not yet in the DB
+            const imageData = undefined;
             
             return (
-              <div key={imageData?.id || `existing-${index}`} className="relative group">
+              <div key={`existing-${index}`} className="relative group">
                 <div className="aspect-square rounded-lg overflow-hidden bg-gray-100">
                   <SafeImage
                     src={imageUrl}
-                    alt={imageData?.filename || `Image ${index + 1}`}
+                    alt={`Image ${index + 1}`}
                     className="w-full h-full"
                     showErrorMessage={true}
                     onError={() => {
@@ -322,29 +325,26 @@ export const ImageUploader: React.FC<ImageUploaderProps> = ({
                     }}
                   />
                 </div>
-                <Button
-                  variant="destructive"
-                  size="sm"
-                  className="absolute top-2 right-2 h-6 w-6 p-0 opacity-0 group-hover:opacity-100 transition-opacity"
-                  disabled={disabled || uploading}
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    if (imageData) {
-                      // Image exists in database, delete properly
-                      removeImage(imageData.id);
-                    } else if (allowDeleteWithoutId) {
-                      // Image only in config, just remove from UI
+                {allowDeleteWithoutId && (
+                  <Button
+                    variant="destructive"
+                    size="sm"
+                    className="absolute top-2 right-2 h-6 w-6 p-0 opacity-0 group-hover:opacity-100 transition-opacity"
+                    disabled={disabled || uploading}
+                    onClick={(e) => {
+                      e.stopPropagation();
                       removeImageByUrl(imageUrl);
-                    }
-                  }}
-                >
-                  <X className="h-3 w-3" />
-                </Button>
+                    }}
+                  >
+                    <X className="h-3 w-3" />
+                  </Button>
+                )}
               </div>
             );
           })}
         </div>
-      )}
+        );
+      })()}
     </div>
   );
 };

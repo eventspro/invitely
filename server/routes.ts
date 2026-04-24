@@ -845,8 +845,19 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const heroImages = allImages.filter(img => img.category === 'hero').map(img => img.url);
       const galleryImages = allImages.filter(img => img.category === 'gallery').map(img => img.url);
       
-      // Enrich configuration with images
+      // Enrich configuration with images.
+      // Gallery: DB records (category='gallery') are authoritative. Merge with any JSONB-stored
+      // URLs that are not already in the DB list, but EXCLUDE any URL that exists in the DB
+      // under a non-gallery category (prevents misclassified location/hero images leaking in).
       const config = template.config as any;
+      const nonGalleryUrls = new Set(
+        allImages.filter(img => img.category !== 'gallery').map(img => img.url)
+      );
+      const jsonbGalleryImages: string[] = (config.photos?.images || [])
+        .filter((url: string) => !nonGalleryUrls.has(url));
+      const mergedGalleryImages = Array.from(
+        new Set([...galleryImages, ...jsonbGalleryImages])
+      );
       const enrichedConfig = {
         ...config,
         hero: {
@@ -855,7 +866,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         },
         photos: {
           ...config.photos,
-          images: galleryImages.length > 0 ? galleryImages : config.photos?.images || []
+          images: mergedGalleryImages
         }
       };
       
@@ -870,7 +881,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Set cache headers for better performance
       res.setHeader('Cache-Control', 'public, max-age=300'); // 5 minutes
       
-      console.log(`✅ Template config loaded: ${heroImages.length} hero, ${galleryImages.length} gallery images`);
+      console.log(`✅ Template config loaded: ${heroImages.length} hero, ${galleryImages.length} gallery (DB) + ${jsonbGalleryImages.length} gallery (JSONB) = ${mergedGalleryImages.length} total`);
       res.json(templateInfo);
     } catch (error) {
       console.error("❌ Get template config error:", error);

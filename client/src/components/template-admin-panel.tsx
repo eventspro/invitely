@@ -1911,15 +1911,10 @@ export default function TemplateAdminPanel() {
               sectionTitle="Hero Banner"
               existingImages={template.config.hero?.images || []}
               onImagesUpdate={(images) => {
-                // Update local state immediately for UI responsiveness
-                const newConfig = {
-                  ...template.config,
-                  hero: {
-                    ...template.config.hero,
-                    images: images,
-                  }
-                };
-                setTemplate(prev => prev ? { ...prev, config: newConfig } : null);
+                setTemplate(prev => prev ? {
+                  ...prev,
+                  config: { ...prev.config, hero: { ...prev.config.hero, images } }
+                } : null);
               }}
               maxImages={5}
             />
@@ -1931,15 +1926,10 @@ export default function TemplateAdminPanel() {
               sectionTitle="Love Story Gallery"
               existingImages={template.config.photos?.images || []}
               onImagesUpdate={(images) => {
-                // Update local state immediately for UI responsiveness
-                const newConfig = {
-                  ...template.config,
-                  photos: {
-                    ...template.config.photos,
-                    images: images,
-                  }
-                };
-                setTemplate(prev => prev ? { ...prev, config: newConfig } : null);
+                setTemplate(prev => prev ? {
+                  ...prev,
+                  config: { ...prev.config, photos: { ...prev.config.photos, images } }
+                } : null);
               }}
               maxImages={20}
             />

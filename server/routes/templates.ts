@@ -237,41 +237,40 @@ export function registerTemplateRoutes(app: Express) {
       // Create image record in database with template scope
       let imageUrl: string = `/api/images/serve/${req.file.filename}`; // Default fallback
       
-      // Use R2 storage in production if configured, otherwise use local storage
+      // Use R2 storage if configured (regardless of environment).
+      // This ensures images uploaded from local dev are also accessible on production.
       let useR2 = false;
       
-      if (process.env.VERCEL) {
-        try {
-          // Only try R2 if all required env vars are present
-          if (process.env.CLOUDFLARE_R2_BUCKET_NAME && 
-              process.env.CLOUDFLARE_R2_ACCOUNT_ID &&
-              (process.env.CLOUDFLARE_R2_ACCESS_KEY || process.env.CLOUDFLARE_R2_ACCESS_KEY_ID) &&
-              (process.env.CLOUDFLARE_R2_SECRET_KEY || process.env.CLOUDFLARE_R2_SECRET_ACCESS_KEY) &&
-              process.env.CLOUDFLARE_R2_PUBLIC_URL) {
+      try {
+        // Try R2 if all required env vars are present
+        if (process.env.CLOUDFLARE_R2_BUCKET_NAME && 
+            process.env.CLOUDFLARE_R2_ACCOUNT_ID &&
+            (process.env.CLOUDFLARE_R2_ACCESS_KEY || process.env.CLOUDFLARE_R2_ACCESS_KEY_ID) &&
+            (process.env.CLOUDFLARE_R2_SECRET_KEY || process.env.CLOUDFLARE_R2_SECRET_ACCESS_KEY) &&
+            process.env.CLOUDFLARE_R2_PUBLIC_URL) {
+          
+          const { r2Storage } = await import('../r2Storage.js');
+          if (r2Storage.isConfigured()) {
+            const fileBuffer = fs.readFileSync(req.file.path);
+            const r2Result = await r2Storage.uploadImage(
+              templateId,
+              fileBuffer,
+              req.file.originalname,
+              req.file.mimetype,
+              category
+            );
+            imageUrl = r2Result.url;
+            console.log(`☁️ Image uploaded to R2: ${r2Result.url}`);
+            useR2 = true;
             
-            const { r2Storage } = await import('../r2Storage.js');
-            if (r2Storage.isConfigured()) {
-              const fileBuffer = fs.readFileSync(req.file.path);
-              const r2Result = await r2Storage.uploadImage(
-                templateId,
-                fileBuffer,
-                req.file.originalname,
-                req.file.mimetype,
-                category
-              );
-              imageUrl = r2Result.url;
-              console.log(`☁️ Image uploaded to R2: ${r2Result.url}`);
-              useR2 = true;
-              
-              // Clean up local temp file
-              fs.unlinkSync(req.file.path);
-            }
-          } else {
-            console.log('⚠️ R2 environment variables not fully configured, using local storage');
+            // Clean up local temp file
+            fs.unlinkSync(req.file.path);
           }
-        } catch (r2Error) {
-          console.warn('⚠️ R2 upload failed, using local storage:', r2Error);
+        } else {
+          console.log('⚠️ R2 environment variables not fully configured, using local storage');
         }
+      } catch (r2Error) {
+        console.warn('⚠️ R2 upload failed, using local storage:', r2Error);
       }
       
       // Fall back to local storage if R2 wasn't used
