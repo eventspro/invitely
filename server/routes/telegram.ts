@@ -284,31 +284,49 @@ router.patch(
 
 // ─── POST /api/telegram/webhook ───────────────────────────────────────────────
 // Telegram sends updates here. Verified via X-Telegram-Bot-Api-Secret-Token header.
+// IMPORTANT: We do ALL processing first, then send 200.
+// In Vercel serverless, sending the response early can cause the function to be
+// killed before async work (DB writes, sendTelegramMessage) completes.
 router.post("/webhook", async (req: Request, res: Response) => {
-  // Always respond 200 to Telegram immediately — any non-200 causes retries
-  res.status(200).end();
+  console.log("[TG webhook] Received request");
 
   try {
-    // Verify webhook secret if configured
+    // Verify webhook secret
     const expectedSecret = process.env.TELEGRAM_WEBHOOK_SECRET;
     if (expectedSecret) {
       const receivedSecret = req.headers["x-telegram-bot-api-secret-token"];
       if (receivedSecret !== expectedSecret) {
-        console.warn("Telegram webhook: invalid secret token — ignoring update");
-        return;
+        console.warn(
+          `[TG webhook] Secret mismatch — received="${String(receivedSecret).slice(0, 8)}..." expected="${expectedSecret.slice(0, 8)}..."`,
+        );
+        return res.status(200).end(); // still 200 to avoid Telegram retries
       }
+    } else {
+      console.warn("[TG webhook] TELEGRAM_WEBHOOK_SECRET not configured — skipping secret check");
     }
 
     const update = req.body;
+    console.log(
+      `[TG webhook] update_id=${update?.update_id} text="${update?.message?.text}" chat_id=${update?.message?.chat?.id}`,
+    );
+
     const message = update?.message;
-    if (!message?.text || !message?.chat?.id) return;
+    if (!message?.text || !message?.chat?.id) {
+      console.log("[TG webhook] No message text or chat.id — ignoring");
+      return res.status(200).end();
+    }
 
     const chatId = String(message.chat.id);
-    const text: string = message.text.trim();
+    // Robust: trim, case-insensitive, collapse whitespace
+    const text: string = message.text.trim().replace(/\s+/g, " ");
 
-    // Expected format: "CONNECT ABCDEF1234567890"
-    const match = text.match(/^CONNECT\s+([A-Fa-f0-9]{16})$/i);
-    if (!match) return; // Not a connection attempt — ignore silently
+    // Parse CONNECT command
+    const match = text.match(/^CONNECT\s+([A-Fa-f0-9]{16})\s*$/i);
+    console.log(`[TG webhook] CONNECT match: ${match ? match[1] : "none"} (text="${text}")`);
+
+    if (!match) {
+      return res.status(200).end(); // Not a CONNECT command — ignore silently
+    }
 
     const code = match[1].toUpperCase();
     const now = new Date();
@@ -320,31 +338,21 @@ router.post("/webhook", async (req: Request, res: Response) => {
       .where(eq(telegramConnectionTokens.token, code))
       .limit(1);
 
-    if (!tokenRow) {
-      await sendTelegramMessage(
+    console.log(
+      `[TG webhook] Token lookup code=${code}: found=${!!tokenRow} usedAt=${tokenRow?.usedAt ?? "null"} expiresAt=${tokenRow?.expiresAt}`,
+    );
+
+    if (!tokenRow || tokenRow.usedAt !== null || tokenRow.expiresAt < now) {
+      const sent = await sendTelegramMessage(
         chatId,
-        "❌ Invalid or unknown connection code. Please generate a new code from your admin panel.",
+        "This connection code is invalid or expired. Please generate a new one.",
+        undefined,
       );
-      return;
+      console.log(`[TG webhook] Sent invalid/expired reply: ${sent}`);
+      return res.status(200).end();
     }
 
-    if (tokenRow.usedAt !== null) {
-      await sendTelegramMessage(
-        chatId,
-        "❌ This code has already been used. Please generate a new code from your admin panel.",
-      );
-      return;
-    }
-
-    if (tokenRow.expiresAt < now) {
-      await sendTelegramMessage(
-        chatId,
-        "❌ This code has expired (15-minute limit). Please generate a new code from your admin panel.",
-      );
-      return;
-    }
-
-    // Find the customer's admin panel for this template
+    // Find the customer's admin panel
     const [panel] = await db
       .select({ id: userAdminPanels.id, settings: userAdminPanels.settings })
       .from(userAdminPanels)
@@ -357,22 +365,28 @@ router.post("/webhook", async (req: Request, res: Response) => {
       )
       .limit(1);
 
+    console.log(
+      `[TG webhook] Panel lookup templateId=${tokenRow.templateId} userId=${tokenRow.userId}: found=${!!panel}`,
+    );
+
     if (!panel) {
-      await sendTelegramMessage(
+      const sent = await sendTelegramMessage(
         chatId,
         "❌ Could not find your admin panel. Please contact support.",
+        undefined,
       );
-      return;
+      console.log(`[TG webhook] Sent no-panel reply: ${sent}`);
+      return res.status(200).end();
     }
 
-    // Fetch template name for confirmation message
+    // Fetch template name
     const [tmpl] = await db
       .select({ name: templates.name })
       .from(templates)
       .where(eq(templates.id, tokenRow.templateId))
       .limit(1);
 
-    // Save chatId + mark enabled + record connected time
+    // Save chatId + enable + record connected time
     const updatedSettings: Record<string, unknown> = {
       ...((panel.settings ?? {}) as Record<string, unknown>),
       telegramChatId: chatId,
@@ -385,24 +399,25 @@ router.post("/webhook", async (req: Request, res: Response) => {
       .set({ settings: updatedSettings, updatedAt: now })
       .where(eq(userAdminPanels.id, panel.id));
 
-    // Mark token as used
     await db
       .update(telegramConnectionTokens)
       .set({ usedAt: now })
       .where(eq(telegramConnectionTokens.id, tokenRow.id));
 
     const templateName = tmpl?.name ?? "your template";
-    await sendTelegramMessage(
+    const sent = await sendTelegramMessage(
       chatId,
-      `✅ <b>Connected successfully!</b>\n\nYou will now receive RSVP notifications for <b>${templateName}</b> in this chat.\n\nTo disable, go to your admin panel → Settings → Telegram.`,
+      `✅ Connected! You will now receive RSVP notifications for <b>${templateName}</b>.`,
     );
 
     console.log(
-      `✅ Telegram connected: templateId=${tokenRow.templateId} chatId=${chatId}`,
+      `✅ [TG webhook] Connected templateId=${tokenRow.templateId} chatId=${chatId} messageSent=${sent}`,
     );
+
+    return res.status(200).end();
   } catch (err) {
-    console.error("Telegram webhook processing error:", err);
-    // We already sent 200, so no further action
+    console.error("[TG webhook] Processing error:", err);
+    return res.status(200).end(); // always 200 to prevent Telegram retries
   }
 });
 
