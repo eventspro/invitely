@@ -32,7 +32,12 @@ import {
   ChevronDown,
   Copy,
   Calendar,
-  Music
+  Music,
+  MessageCircle,
+  Send,
+  Loader2,
+  Link as LinkIcon,
+  Unlink
 } from "lucide-react";
 import type { WeddingConfig } from "@/templates/types";
 import { ImageUploader } from "@/components/ui/image-uploader";
@@ -77,6 +82,16 @@ export default function TemplateAdminPanel() {
   const [selectedRsvp, setSelectedRsvp] = useState<Rsvp | null>(null);
   const { toast } = useToast();
 
+  // Telegram state
+  const [tgStatus, setTgStatus] = useState<{
+    connected: boolean;
+    enabled: boolean;
+    connectedAt: string | null;
+    lastTestAt: string | null;
+  } | null>(null);
+  const [tgCode, setTgCode] = useState<{ code: string; botUsername: string } | null>(null);
+  const [tgLoading, setTgLoading] = useState(false);
+
   useEffect(() => {
     checkAuthentication();
   }, []);
@@ -84,6 +99,7 @@ export default function TemplateAdminPanel() {
   useEffect(() => {
     if (authenticated && templateId) {
       loadTemplateData();
+      loadTelegramStatus();
     }
   }, [authenticated, templateId]);
 
@@ -280,6 +296,92 @@ export default function TemplateAdminPanel() {
       setLoading(false);
     }
   };
+
+  // ── Telegram helpers ──────────────────────────────────────────────
+  const tgAuthHeader = (): Record<string, string> => {
+    const token = localStorage.getItem('templateAdminToken') || localStorage.getItem('admin-token');
+    return token ? { 'Authorization': `Bearer ${token}` } : {};
+  };
+
+  const loadTelegramStatus = async () => {
+    if (!templateId) return;
+    try {
+      const res = await fetch(`/api/telegram/${templateId}/status`, { headers: tgAuthHeader() });
+      if (res.ok) setTgStatus(await res.json());
+    } catch { /* silently ignore */ }
+  };
+
+  const generateConnectCode = async () => {
+    if (!templateId) return;
+    setTgLoading(true);
+    try {
+      const res = await fetch(`/api/telegram/${templateId}/connect-code`, {
+        method: 'POST',
+        headers: tgAuthHeader(),
+      });
+      if (res.ok) {
+        const data = await res.json();
+        setTgCode({ code: data.code, botUsername: data.botUsername });
+      } else {
+        toast({ title: "Error", description: "Failed to generate code", variant: "destructive" });
+      }
+    } finally {
+      setTgLoading(false);
+    }
+  };
+
+  const sendTelegramTest = async () => {
+    if (!templateId) return;
+    setTgLoading(true);
+    try {
+      const res = await fetch(`/api/telegram/${templateId}/test`, {
+        method: 'POST',
+        headers: tgAuthHeader(),
+      });
+      if (res.ok) {
+        toast({ title: "Test sent!", description: "Check your Telegram." });
+        await loadTelegramStatus();
+      } else {
+        const body = await res.json().catch(() => ({}));
+        toast({ title: "Error", description: body.error || "Failed to send test", variant: "destructive" });
+      }
+    } finally {
+      setTgLoading(false);
+    }
+  };
+
+  const disconnectTelegram = async () => {
+    if (!templateId) return;
+    setTgLoading(true);
+    try {
+      const res = await fetch(`/api/telegram/${templateId}/disconnect`, {
+        method: 'DELETE',
+        headers: tgAuthHeader(),
+      });
+      if (res.ok) {
+        setTgStatus(null);
+        setTgCode(null);
+        toast({ title: "Disconnected", description: "Telegram notifications disabled." });
+      }
+    } finally {
+      setTgLoading(false);
+    }
+  };
+
+  const toggleTelegramEnabled = async (enabled: boolean) => {
+    if (!templateId) return;
+    try {
+      const res = await fetch(`/api/telegram/${templateId}/enabled`, {
+        method: 'PATCH',
+        headers: { ...tgAuthHeader(), 'Content-Type': 'application/json' },
+        body: JSON.stringify({ enabled }),
+      });
+      if (res.ok) {
+        setTgStatus(prev => prev ? { ...prev, enabled } : null);
+      }
+    } catch { /* silently ignore */ }
+  };
+  // ─────────────────────────────────────────────────────────────────
 
   const saveTemplate = async () => {
     if (!template) return;
@@ -2432,6 +2534,138 @@ export default function TemplateAdminPanel() {
                     </p>
                   </div>
                 </div>
+              </CardContent>
+            </Card>
+
+            {/* Telegram Notifications */}
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <MessageCircle className="w-5 h-5 text-blue-500" />
+                  Telegram Notifications
+                </CardTitle>
+                <CardDescription>
+                  Receive instant RSVP notifications in Telegram
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                {tgStatus?.connected ? (
+                  <div className="space-y-4">
+                    <div className="flex items-center gap-2 text-green-600 font-medium">
+                      <CheckCircle className="w-5 h-5" />
+                      Connected
+                      {tgStatus.connectedAt && (
+                        <span className="text-sm text-gray-500 font-normal ml-1">
+                          since {new Date(tgStatus.connectedAt).toLocaleDateString()}
+                        </span>
+                      )}
+                    </div>
+
+                    <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                      <div>
+                        <p className="text-sm font-medium">Notifications enabled</p>
+                        <p className="text-xs text-gray-500">Toggle to pause without disconnecting</p>
+                      </div>
+                      <Switch
+                        checked={tgStatus.enabled}
+                        onCheckedChange={toggleTelegramEnabled}
+                      />
+                    </div>
+
+                    {tgStatus.lastTestAt && (
+                      <p className="text-xs text-gray-500">
+                        Last test: {new Date(tgStatus.lastTestAt).toLocaleString()}
+                      </p>
+                    )}
+
+                    <div className="flex gap-2">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={sendTelegramTest}
+                        disabled={tgLoading || !tgStatus.enabled}
+                        className="flex items-center gap-1"
+                      >
+                        {tgLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Send className="w-4 h-4" />}
+                        Send test
+                      </Button>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={disconnectTelegram}
+                        disabled={tgLoading}
+                        className="flex items-center gap-1 text-red-600 hover:text-red-700"
+                      >
+                        <Unlink className="w-4 h-4" />
+                        Disconnect
+                      </Button>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="space-y-4">
+                    <p className="text-sm text-gray-600">
+                      Connect your Telegram account to receive instant RSVP notifications.
+                    </p>
+
+                    {tgCode ? (
+                      <div className="space-y-3 p-4 bg-blue-50 border border-blue-200 rounded-lg">
+                        <p className="text-sm font-medium text-blue-800">
+                          Send this code to our bot:
+                        </p>
+                        <div className="flex items-center gap-2">
+                          <code className="text-lg font-mono font-bold tracking-widest text-blue-900 bg-white px-3 py-1 rounded border">
+                            CONNECT {tgCode.code}
+                          </code>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => {
+                              navigator.clipboard.writeText(`CONNECT ${tgCode.code}`);
+                              toast({ title: "Copied!" });
+                            }}
+                          >
+                            <Copy className="w-4 h-4" />
+                          </Button>
+                        </div>
+                        <p className="text-sm text-blue-700">
+                          Open{" "}
+                          <a
+                            href={`https://t.me/${tgCode.botUsername}`}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="underline font-medium"
+                          >
+                            @{tgCode.botUsername}
+                          </a>{" "}
+                          in Telegram and send the code above. Valid for 15 minutes.
+                        </p>
+                        <div className="flex gap-2">
+                          <Button variant="outline" size="sm" onClick={loadTelegramStatus} className="flex items-center gap-1">
+                            <CheckCircle className="w-4 h-4" />
+                            Check status
+                          </Button>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => setTgCode(null)}
+                            className="text-gray-500"
+                          >
+                            Cancel
+                          </Button>
+                        </div>
+                      </div>
+                    ) : (
+                      <Button
+                        onClick={generateConnectCode}
+                        disabled={tgLoading}
+                        className="flex items-center gap-2"
+                      >
+                        {tgLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : <LinkIcon className="w-4 h-4" />}
+                        Connect Telegram
+                      </Button>
+                    )}
+                  </div>
+                )}
               </CardContent>
             </Card>
 

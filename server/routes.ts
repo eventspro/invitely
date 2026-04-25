@@ -21,6 +21,7 @@ import { URL } from "url";
 import authRoutes from './routes/auth.js';
 import adminPanelRoutes from './routes/admin-panel.js';
 import platformAdminRoutes from './routes/platform-admin.js';
+import telegramRoutes from './routes/telegram.js';
 import { registerTemplateRoutes } from './routes/templates.js';
 import { registerTranslationRoutes } from './routes/translations.js';
 import { registerConfigurablePricingRoutes } from './routes/configurable-pricing.js';
@@ -112,6 +113,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
   
   // Register platform admin routes (for platform owner)
   app.use('/api/platform-admin', platformAdminRoutes);
+  
+  // Register Telegram routes (connection codes, webhook, test, disconnect)
+  app.use('/api/telegram', telegramRoutes);
   
   // Register template routes (for template-specific endpoints)
   registerTemplateRoutes(app);

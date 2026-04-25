@@ -198,6 +198,17 @@ export const planFeatureAssociations = pgTable("plan_feature_associations", {
   createdAt: timestamp("created_at").default(sql`now()`),
 });
 
+// Telegram bot connection tokens — temporary pairing codes for linking Telegram chat to template
+export const telegramConnectionTokens = pgTable("telegram_connection_tokens", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  templateId: varchar("template_id").notNull().references(() => templates.id, { onDelete: "cascade" }),
+  userId: varchar("user_id").notNull().references(() => managementUsers.id, { onDelete: "cascade" }),
+  token: text("token").notNull().unique(),
+  expiresAt: timestamp("expires_at").notNull(),
+  usedAt: timestamp("used_at"),
+  createdAt: timestamp("created_at").default(sql`now()`),
+});
+
 // Platform settings table
 export const platformSettings = pgTable("platform_settings", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
@@ -498,3 +509,4 @@ export type UpdateTranslationKey = z.infer<typeof updateTranslationKeySchema>;
 export type TranslationValue = typeof translationValues.$inferSelect;
 export type InsertTranslationValue = z.infer<typeof insertTranslationValueSchema>;
 export type UpdateTranslationValue = z.infer<typeof updateTranslationValueSchema>;
+export type TelegramConnectionToken = typeof telegramConnectionTokens.$inferSelect;

@@ -6,6 +6,7 @@ import { z } from "zod";
 import { authenticateUser, requireAdminPanelAccess } from "../middleware/auth.js";
 import { rsvpLimiter, uploadLimiter } from "../middleware/rateLimiter.js";
 import { sendTemplateRsvpNotificationEmails, sendTemplateRsvpConfirmationEmail } from "../email.js";
+import { sendRsvpTelegramNotification } from "../telegram.js";
 import multer from "multer";
 import path from "path";
 import fs from "fs";
@@ -119,6 +120,13 @@ export function registerTemplateRoutes(app: Express) {
       } catch (emailError) {
         console.error("Email notification error:", emailError);
         // Continue with success response even if emails fail
+      }
+
+      // Send Telegram notification — non-blocking, never fails RSVP
+      try {
+        await sendRsvpTelegramNotification(rsvp, template.id, template.name);
+      } catch (telegramError) {
+        console.error("Telegram notification error:", telegramError);
       }
       
       res.json({ 
