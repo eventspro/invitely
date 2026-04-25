@@ -1,13 +1,16 @@
 import React, { useState, useRef, useCallback } from 'react';
-import { Upload, X } from 'lucide-react';
+import { Upload, X, Pencil } from 'lucide-react';
 import { Button } from './button';
 import { Alert, AlertDescription } from './alert';
 import { SafeImage } from './safe-image';
+import ImageEditModal from './image-edit-modal';
+import type { SavedImage, ImageEditSettings } from './image-edit-modal';
 
 interface ImageFile {
   id: string;
   filename: string;
   url: string;
+  editSettings?: ImageEditSettings;
 }
 
 interface ImageUploaderProps {
@@ -15,6 +18,8 @@ interface ImageUploaderProps {
   category: string;
   onImagesUploaded?: (imageUrls: string[]) => void;
   onImageRemoved?: (imageUrl: string) => void;
+  /** Called when an existing image is edited and saved — replaces old URL with new URL atomically. */
+  onImageReplaced?: (oldUrl: string, newUrl: string) => void;
   existingImages?: string[];
   maxFiles?: number;
   acceptedTypes?: string[];
@@ -28,6 +33,7 @@ export const ImageUploader: React.FC<ImageUploaderProps> = ({
   category,
   onImagesUploaded,
   onImageRemoved,
+  onImageReplaced,
   existingImages = [],
   maxFiles = 10,
   acceptedTypes = ['image/jpeg', 'image/png', 'image/webp', 'image/gif'],
@@ -39,6 +45,7 @@ export const ImageUploader: React.FC<ImageUploaderProps> = ({
   const [uploading, setUploading] = useState(false);
   const [dragActive, setDragActive] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [editingImage, setEditingImage] = useState<ImageFile | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   React.useEffect(() => {
@@ -286,6 +293,21 @@ export const ImageUploader: React.FC<ImageUploaderProps> = ({
                   }}
                 />
               </div>
+              {/* Edit button */}
+              <Button
+                variant="secondary"
+                size="sm"
+                className="absolute top-2 left-2 h-6 w-6 p-0 opacity-0 group-hover:opacity-100 transition-opacity shadow"
+                disabled={disabled || uploading}
+                title="Edit image"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setEditingImage(image);
+                }}
+              >
+                <Pencil className="h-3 w-3" />
+              </Button>
+              {/* Delete button */}
               <Button
                 variant="destructive"
                 size="sm"
@@ -301,6 +323,44 @@ export const ImageUploader: React.FC<ImageUploaderProps> = ({
             </div>
           ))}
         </div>
+      )}
+
+      {/* Image edit modal — builder only, shown when a thumbnail's edit button is clicked */}
+      {editingImage && (
+        <ImageEditModal
+          isOpen={true}
+          imageId={editingImage.id}
+          imageUrl={editingImage.url}
+          imageName={(editingImage as any).name || editingImage.filename || 'image'}
+          templateId={templateId}
+          category={category}
+          initialEditSettings={editingImage.editSettings}
+          onClose={() => setEditingImage(null)}
+          onSaved={(oldId, newImage: SavedImage) => {
+            // Replace old image record with the newly uploaded edited version
+            setImages((prev) =>
+              prev.map((img) =>
+                img.id === oldId
+                  ? { id: newImage.id, filename: newImage.filename, url: newImage.url, editSettings: newImage.editSettings }
+                  : img
+              )
+            );
+            // Sync parent config atomically: replace old URL with new URL in one call
+            // to avoid the stale-closure duplication bug that occurs when calling
+            // onImageRemoved + onImagesUploaded as two separate updates.
+            const old = images.find((img) => img.id === oldId);
+            if (old) {
+              if (onImageReplaced) {
+                onImageReplaced(old.url, newImage.url);
+              } else {
+                // Fallback for callers that haven't adopted onImageReplaced
+                onImageRemoved?.(old.url);
+                onImagesUploaded?.([newImage.url]);
+              }
+            }
+            setEditingImage(null);
+          }}
+        />
       )}
 
       {(() => {

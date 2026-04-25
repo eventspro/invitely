@@ -176,9 +176,10 @@ export default function HeroSection({ config = weddingConfig }: HeroSectionProps
   };
 
   useEffect(() => {
-    // Check if music is enabled in config
+    // Check if music is enabled in manual_button mode only.
+    // When autoplay mode is active (music.autoplay === true), audio is managed by Navigation.
     const musicEnabled = config.sections?.music?.enabled !== false && config.music?.enabled !== false;
-    if (!musicEnabled) {
+    if (!musicEnabled || config.music?.autoplay === true) {
       setAudioLoaded(false);
       return;
     }
@@ -207,7 +208,7 @@ export default function HeroSection({ config = weddingConfig }: HeroSectionProps
         audioRef.current = null;
       }
     };
-  }, [config.music?.audioUrl, config.music?.enabled, config.music?.volume, config.sections?.music?.enabled]);
+  }, [config.music?.audioUrl, config.music?.enabled, config.music?.volume, config.music?.autoplay, config.sections?.music?.enabled]);
 
   const toggleMusic = async () => {
     if (!audioRef.current) return;
@@ -389,8 +390,8 @@ export default function HeroSection({ config = weddingConfig }: HeroSectionProps
           </p>
         )}
 
-        {/* Music Player */}
-        {config.music?.enabled !== false && (
+        {/* Music Player — shown only in manual_button mode, not autoplay mode */}
+        {config.music?.enabled !== false && !config.music?.autoplay && (
           <div className="mt-8 flex justify-center">
             <button
               onClick={toggleMusic}

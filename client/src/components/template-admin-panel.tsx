@@ -816,6 +816,50 @@ export default function TemplateAdminPanel() {
                           />
                         </div>
                       </div>
+
+                      {/* Address line styling */}
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                          <Label htmlFor={`location-address-color-${index}`}>Address Text Color</Label>
+                          <div className="flex items-center gap-2 mt-1">
+                            <input
+                              type="color"
+                              id={`location-address-color-${index}`}
+                              value={venue.addressColor || '#888888'}
+                              onChange={(e) => {
+                                const currentVenues = [...(template.config.locations?.venues || [])];
+                                currentVenues[index] = { ...currentVenues[index], addressColor: e.target.value };
+                                updateConfig("locations.venues", currentVenues);
+                              }}
+                              className="h-9 w-12 rounded border cursor-pointer"
+                            />
+                            <Input
+                              value={venue.addressColor || ''}
+                              onChange={(e) => {
+                                const currentVenues = [...(template.config.locations?.venues || [])];
+                                currentVenues[index] = { ...currentVenues[index], addressColor: e.target.value };
+                                updateConfig("locations.venues", currentVenues);
+                              }}
+                              placeholder="e.g. #8b3a52 or rgba(0,0,0,0.5)"
+                              className="flex-1"
+                            />
+                          </div>
+                        </div>
+                        <div>
+                          <Label htmlFor={`location-address-fontsize-${index}`}>Address Font Size</Label>
+                          <Input
+                            id={`location-address-fontsize-${index}`}
+                            value={venue.addressFontSize || ''}
+                            onChange={(e) => {
+                              const currentVenues = [...(template.config.locations?.venues || [])];
+                              currentVenues[index] = { ...currentVenues[index], addressFontSize: e.target.value };
+                              updateConfig("locations.venues", currentVenues);
+                            }}
+                            placeholder="e.g. 0.75rem, 14px, 1rem"
+                            className="mt-1"
+                          />
+                        </div>
+                      </div>
                     </div>
                   ))}
                   
@@ -1657,33 +1701,60 @@ export default function TemplateAdminPanel() {
                 </CardDescription>
               </CardHeader>
               <CardContent className="space-y-6">
-                {/* Music Enable/Disable */}
-                <div className="flex items-center justify-between p-4 bg-muted/50 rounded-lg">
-                  <div className="space-y-1">
-                    <h4 className="font-medium">Enable Background Music</h4>
-                    <p className="text-sm text-muted-foreground">
-                      Allow guests to play background music on your wedding website
-                    </p>
-                  </div>
-                  <label className="relative inline-flex items-center cursor-pointer">
-                    <input
-                      type="checkbox"
-                      className="sr-only peer"
-                      checked={template.config.music?.enabled !== false}
-                      onChange={(e) => {
-                        const newConfig = {
-                          ...template.config,
+                {/* Music Playback Mode — mutually exclusive three-way selector */}
+                {(() => {
+                  const currentMode = !template.config.music?.enabled
+                    ? 'disabled'
+                    : template.config.music?.autoplay
+                    ? 'autoplay_header_control'
+                    : 'manual_button';
+
+                  const setMode = (mode: 'disabled' | 'manual_button' | 'autoplay_header_control') => {
+                    setTemplate(prev => {
+                      if (!prev) return null;
+                      return {
+                        ...prev,
+                        config: {
+                          ...prev.config,
                           music: {
-                            ...template.config.music,
-                            enabled: e.target.checked,
+                            ...prev.config.music,
+                            enabled: mode !== 'disabled',
+                            autoplay: mode === 'autoplay_header_control',
                           }
-                        };
-                        setTemplate(prev => prev ? { ...prev, config: newConfig } : null);
-                      }}
-                    />
-                    <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-pink-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-pink-600"></div>
-                  </label>
-                </div>
+                        }
+                      };
+                    });
+                  };
+
+                  return (
+                    <div className="space-y-3">
+                      <h4 className="font-medium">Music Playback Mode</h4>
+                      <p className="text-sm text-muted-foreground">Choose how background music works for your guests. Only one mode can be active at a time.</p>
+                      <div className="space-y-2">
+                        {[
+                          { value: 'disabled', label: 'Music Disabled', desc: 'No music plays, no controls shown.' },
+                          { value: 'manual_button', label: 'Manual Play Button', desc: 'A play/pause button is shown in the hero section. Guests start music themselves.' },
+                          { value: 'autoplay_header_control', label: 'Autoplay with Header Mute/Unmute', desc: 'Music starts automatically when guests open the site. A mute/unmute button appears in the header.' },
+                        ].map(option => (
+                          <label key={option.value} className={`flex items-start gap-3 p-3 rounded-lg border cursor-pointer transition-colors ${currentMode === option.value ? 'border-pink-400 bg-pink-50' : 'border-gray-200 hover:bg-muted/50'}`}>
+                            <input
+                              type="radio"
+                              name="musicMode"
+                              value={option.value}
+                              checked={currentMode === option.value}
+                              onChange={() => setMode(option.value as 'disabled' | 'manual_button' | 'autoplay_header_control')}
+                              className="mt-0.5 accent-pink-600"
+                            />
+                            <div>
+                              <p className="font-medium text-sm">{option.label}</p>
+                              <p className="text-xs text-muted-foreground">{option.desc}</p>
+                            </div>
+                          </label>
+                        ))}
+                      </div>
+                    </div>
+                  );
+                })()}
 
                 {/* Music Upload */}
                 <div className="space-y-4">

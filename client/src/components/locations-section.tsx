@@ -106,8 +106,9 @@ export default function LocationsSection({ config = weddingConfig }: LocationsSe
                     {venue.description}
                   </p>
                   {venue.address && (
-                    <p className="text-xs mb-4" style={{
-                      color: `${config.theme?.colors?.primary}50`
+                    <p className="mb-4" style={{
+                      color: venue.addressColor || `${config.theme?.colors?.primary}50`,
+                      fontSize: venue.addressFontSize || '0.75rem'
                     }} data-testid={`text-venue-address-${venue.id || index}`}>
                       📍 {venue.address}
                     </p>

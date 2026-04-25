@@ -1,5 +1,6 @@
 import type { Express } from "express";
 import { createServer, type Server } from "http";
+import http from "http";
 import { storage } from "./storage.js";
 import { insertRsvpSchema, platformSettings } from "../shared/schema.js";
 import { db } from "./db.js";
@@ -24,6 +25,7 @@ import { registerTemplateRoutes } from './routes/templates.js';
 import { registerTranslationRoutes } from './routes/translations.js';
 import { registerConfigurablePricingRoutes } from './routes/configurable-pricing.js';
 import { adminLimiter, authLimiter } from './middleware/rateLimiter.js';
+import { authenticateUser } from './middleware/auth.js';
 
 // Configure multer for file uploads
 const uploadsDir = process.env.VERCEL ? '/tmp/uploads' : path.join(process.cwd(), 'uploads');
@@ -609,6 +611,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Get images for a template
+  // NOTE: /api/images/proxy must be registered BEFORE this parameterized route
+  // otherwise Express matches "proxy" as :templateId
   app.get("/api/images/:templateId", async (req, res) => {
     try {
       const { templateId } = req.params;
@@ -690,6 +694,83 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Error serving template preview image:", error);
       res.status(500).json({ error: "Failed to serve template preview image" });
+    }
+  });
+
+  // ── Image proxy for builder canvas use ─────────────────────────────────────
+  // Fetches an image server-side and returns it with CORS headers so the
+  // browser's Canvas API can read pixel data without a cross-origin taint.
+  // Uses /api/img-proxy (NOT /api/images/proxy) to avoid being shadowed by
+  // the /api/images/:templateId parameterized route registered above.
+  // Auth is NOT required: images are already publicly accessible; the URL
+  // allowlist below is the SSRF guard.
+  app.get("/api/img-proxy", async (req: any, res: any) => {
+    try {
+      const rawUrl = typeof req.query.url === "string" ? req.query.url : undefined;
+      console.log("[proxy] rawUrl:", rawUrl);
+      if (!rawUrl) {
+        return res.status(400).json({ error: "Missing url parameter" });
+      }
+
+      // ── URL allowlist ──
+      let parsedUrl: URL;
+      try {
+        parsedUrl = new URL(rawUrl);
+      } catch {
+        return res.status(400).json({ error: "Invalid url parameter" });
+      }
+
+      const r2PublicUrl = process.env.CLOUDFLARE_R2_PUBLIC_URL || "";
+      const localHost = req.get("host") || "localhost:5001";
+      const localOrigin = `${req.protocol || "http"}://${localHost}`;
+
+      let r2Host = "";
+      try { r2Host = r2PublicUrl ? new URL(r2PublicUrl).hostname : ""; } catch { /* ignore */ }
+
+      const isR2 = !!r2Host && parsedUrl.hostname === r2Host;
+      const isLocal =
+        parsedUrl.pathname.startsWith("/api/images/serve/") ||
+        parsedUrl.pathname.startsWith("/api/assets/") ||
+        parsedUrl.hostname === localHost.split(":")[0];
+
+      console.log("[proxy] allowlist:", { r2Host, isR2, isLocal, host: parsedUrl.hostname });
+      if (!isR2 && !isLocal) {
+        console.warn("[proxy] blocked origin:", parsedUrl.hostname);
+        return res.status(403).json({ error: "Proxying this URL is not permitted" });
+      }
+
+      const fetchUrl = isLocal && !rawUrl.startsWith("http")
+        ? `${localOrigin}${rawUrl}`
+        : rawUrl;
+      console.log("[proxy] fetching:", fetchUrl);
+
+      // Use global fetch (Node 18+) — handles redirects, SSL, and all edge cases automatically
+      const upstream = await fetch(fetchUrl);
+      const ct = upstream.headers.get("content-type") || "";
+      console.log("[proxy] upstream status:", upstream.status, "ct:", ct);
+
+      if (!upstream.ok) {
+        return res.status(upstream.status).json({ error: "Upstream fetch failed" });
+      }
+
+      const allowedCt = ["image/jpeg", "image/png", "image/webp", "image/gif", "image/jfif", "image/pjpeg", "application/octet-stream"];
+      if (!allowedCt.some((t) => ct.startsWith(t))) {
+        console.warn("[proxy] blocked content-type:", ct);
+        return res.status(415).json({ error: "Upstream returned unsupported content type" });
+      }
+
+      const body = Buffer.from(await upstream.arrayBuffer());
+      const outCt = ct.startsWith("application/octet-stream") ? "image/jpeg" : ct;
+
+      res.setHeader("Content-Type", outCt);
+      res.setHeader("Content-Length", body.length);
+      res.setHeader("Access-Control-Allow-Origin", "*");
+      res.setHeader("Cache-Control", "no-store");
+      res.setHeader("X-Content-Type-Options", "nosniff");
+      res.status(200).send(body);
+    } catch (error) {
+      console.error("[proxy] error:", error);
+      res.status(502).json({ error: "Proxy failed" });
     }
   });
 

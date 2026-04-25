@@ -40,6 +40,14 @@ export default function SectionImageUploader({
     onImagesUpdate?.(updatedImages);
   }, [existingImages, onImagesUpdate]);
 
+  // Atomic replace: swap old URL for new URL in a single onImagesUpdate call.
+  // This avoids the stale-closure duplication bug caused by calling
+  // handleImageRemoved + handleImagesUploaded as two sequential updates.
+  const handleImageReplaced = useCallback((oldUrl: string, newUrl: string) => {
+    const updatedImages = existingImages.map(url => url === oldUrl ? newUrl : url);
+    onImagesUpdate?.(updatedImages);
+  }, [existingImages, onImagesUpdate]);
+
   const nextImage = useCallback(() => {
     setCurrentImageIndex(prev => 
       prev + 1 >= existingImages.length ? 0 : prev + 1
@@ -166,6 +174,7 @@ export default function SectionImageUploader({
           maxFiles={maxImages}
           onImagesUploaded={handleImagesUploaded}
           onImageRemoved={handleImageRemoved}
+          onImageReplaced={handleImageReplaced}
           disabled={disabled}
           existingImages={existingImages}
         />

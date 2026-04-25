@@ -60,6 +60,8 @@ export interface WeddingConfig {
       latitude?: number; // GPS coordinates
       longitude?: number; // GPS coordinates
       address?: string; // Full address for display
+      addressColor?: string; // Override color for the address line
+      addressFontSize?: string; // Override font size for the address line (e.g. '0.75rem', '14px')
     }>;
   };
 
