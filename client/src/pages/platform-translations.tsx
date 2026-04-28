@@ -347,7 +347,7 @@ const defaultTranslations: TranslationSections = {
     contact: {
       title: "Կապ",
       items: ["Էլ. փոստ", "Հեռախոս", "Աջակցություն"],
-      urls: ["mailto:info@weddingsites.com", "tel:+15551234567", "mailto:support@weddingsites.com"]
+      urls: ["mailto:eventsplatform.am@gmail.com", "tel:+37493333213", "mailto:eventsplatform.am@gmail.com"]
     },
     copyright: "© 2026 WeddingSites. Բոլոր իրավունքները պաշտպանված են."
   }

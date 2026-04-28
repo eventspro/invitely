@@ -266,9 +266,9 @@ export const hy = {
     },
     contact: {
       title: "Կապ",
-      email: "Էլ. փոստ: info@weddingsites.com",
-      phone: "Հեռախոս: +1 (555) 123-4567",
-      support: "Աջակցություն: support@weddingsites.com",
+      email: "Էլ. փոստ: eventsplatform.am@gmail.com",
+      phone: "Հեռախոս: +374 (93) 333-213",
+      support: "Աջակցություն: eventsplatform.am@gmail.com",
       description: "",
       items: [] as string[],
       urls: [] as string[]

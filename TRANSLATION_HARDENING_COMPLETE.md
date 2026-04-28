@@ -135,7 +135,7 @@ footer: {
     title: "Contact Us"
     description: "Reach out on social media"
   }
-  copyright: "© 2025 WeddingSites..."
+  copyright: "© 2026 4ever..."
 }
 ```
 
