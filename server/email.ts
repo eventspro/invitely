@@ -279,7 +279,9 @@ export async function sendTemplateRsvpNotificationEmails(rsvp: Rsvp, template: a
       console.log(`📧 Using fallback couple emails`);
     }
     
-    const coupleNames = couple.combinedNames || `${couple.groomName || "Groom"} & ${couple.brideName || "Bride"}`;
+    const coupleNames = (couple.groomName && couple.brideName)
+      ? `${couple.groomName} & ${couple.brideName}`
+      : couple.combinedNames || `${couple.groomName || "Groom"} & ${couple.brideName || "Bride"}`;
     const weddingDate = wedding.displayDate || wedding.date || "Wedding Day";
     
     // Get customizable email content
@@ -357,7 +359,9 @@ export async function sendTemplateRsvpConfirmationEmail(rsvp: Rsvp, template: an
     const locations = config.locations || [];
     const email = config.email || {};
     
-    const coupleNames = couple.combinedNames || `${couple.groomName || "Groom"} & ${couple.brideName || "Bride"}`;
+    const coupleNames = (couple.groomName && couple.brideName)
+      ? `${couple.groomName} & ${couple.brideName}`
+      : couple.combinedNames || `${couple.groomName || "Groom"} & ${couple.brideName || "Bride"}`;
     const weddingDate = wedding.displayDate || wedding.date || "Wedding Day";
     
     // Get customizable email content
