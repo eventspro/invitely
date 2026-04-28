@@ -77,7 +77,9 @@ export function registerAdminRoutes(app: Express) {
           };
         })
       );
-      
+
+      res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate');
+      res.setHeader('Pragma', 'no-cache');
       res.json(templatesWithStats);
     } catch (error) {
       console.error("Get templates error:", error);

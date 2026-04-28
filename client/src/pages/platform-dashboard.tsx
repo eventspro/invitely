@@ -144,7 +144,8 @@ export default function PlatformDashboard() {
     
     // Verify token with server
     fetch("/api/admin/templates", {
-      headers: { Authorization: `Bearer ${token}` }
+      headers: { Authorization: `Bearer ${token}` },
+      cache: "no-store",
     }).then(response => {
       if (response.ok) {
         setAuthenticated(true);
@@ -272,6 +273,7 @@ export default function PlatformDashboard() {
       const token = localStorage.getItem("admin-token");
       const response = await fetch("/api/admin/templates", {
         headers: { Authorization: `Bearer ${token}` },
+        cache: "no-store",
       });
 
       if (response.ok) {
