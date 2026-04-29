@@ -250,9 +250,6 @@ export default function TemplatesPage() {
               <a href="/#features" className="text-gray-700 hover:text-rose-500 transition-colors">
                 {t.navigation.features}
               </a>
-              <Link to="/templates" className="text-rose-500 font-medium">
-                {t.navigation.templates}
-              </Link>
               <a href="/#pricing" className="text-gray-700 hover:text-rose-500 transition-colors">
                 {t.navigation.pricing}
               </a>

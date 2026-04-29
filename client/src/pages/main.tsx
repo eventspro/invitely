@@ -391,11 +391,6 @@ export default function MainPage() {
                   <span data-i18n-key="navigation.features">{t.navigation.features}</span>
                 </a>
               )}
-              {t.navigation?.templates && (
-                <Link to="/templates" className="text-charcoal hover:text-softGold transition-colors">
-                  <span data-i18n-key="navigation.templates">{t.navigation.templates}</span>
-                </Link>
-              )}
               {t.navigation?.pricing && (
                 <a href="#pricing" className="text-charcoal hover:text-softGold transition-colors">
                   <span data-i18n-key="navigation.pricing">{t.navigation.pricing}</span>
