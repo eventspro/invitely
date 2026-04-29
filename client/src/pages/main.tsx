@@ -300,6 +300,14 @@ export default function MainPage() {
     return <IconComponent className={size} />;
   };
 
+  // Map templateKey -> real slug from bootstrap data for correct pricing plan preview links
+  const templateKeyToSlug: Record<string, string> = {};
+  bootstrap.templates.forEach((tmpl: any) => {
+    if (tmpl.templateKey && tmpl.slug) {
+      templateKeyToSlug[tmpl.templateKey] = tmpl.slug;
+    }
+  });
+
   // Build template plans from centralized config + translations
   const templatePlans: TemplatePlan[] = getEnabledItems(defaultContentConfig.pricingPlans).map(plan => {
     // Extract the feature name from translation key (e.g., "templatePlans.features.Wedding Timeline" -> "Wedding Timeline")
@@ -308,6 +316,11 @@ export default function MainPage() {
       return parts[parts.length - 1]; // Get last part
     };
 
+    // plan.templateRoute = "/classic" — the part after "/" is the templateKey
+    const templateKey = plan.templateRoute.replace(/^\//, '');
+    const realSlug = templateKeyToSlug[templateKey];
+    const resolvedRoute = realSlug ? `/${realSlug}` : plan.templateRoute;
+
     return {
       id: plan.id,
       name: t.templatePlans?.plans?.[plan.order]?.name || plan.id,
@@ -315,7 +328,7 @@ export default function MainPage() {
       badge: plan.badgeKey ? (t.templatePlansSection?.planBadges as any)?.[plan.id] : undefined,
       badgeColor: plan.badgeColor,
       description: t.templatePlans?.plans?.[plan.order]?.description || "",
-      templateRoute: plan.templateRoute,
+      templateRoute: resolvedRoute,
       popular: plan.popular,
       features: plan.features.map(f => {
         const featureName = getFeatureName(f.translationKey);
@@ -748,53 +761,22 @@ export default function MainPage() {
               {t.faq?.title || "Frequently Asked Questions"}
             </h3>
             <div className="max-w-4xl mx-auto space-y-6">
-              <div className="backdrop-blur-sm rounded-xl p-6 shadow-lg">
-                <h4 className="text-lg font-semibold text-charcoal mb-3 flex items-center">
-                  <Gift className="w-5 h-5 mr-2 text-rose-500" />
-                  <span data-i18n-key="faq.items.0.question">
-                    {t.faq?.items?.[0]?.question || "What's included in each plan?"}
-                  </span>
-                </h4>
-                <p className="text-charcoal/70" data-i18n-key="faq.items.0.answer">
-                  {t.faq?.items?.[0]?.answer || "Each plan includes a beautifully designed wedding website template, RSVP functionality, and guest management. Higher tiers add premium features like photo galleries, music integration, admin panels, and physical QR code cards."}
-                </p>
-              </div>
-              
-              <div className="backdrop-blur-sm rounded-xl p-6 shadow-lg">
-                <h4 className="text-lg font-semibold text-charcoal mb-3 flex items-center">
-                  <Settings className="w-5 h-5 mr-2 text-rose-500" />
-                  <span data-i18n-key="faq.items.1.question">
-                    {t.faq?.items?.[1]?.question || "Can I customize my template?"}
-                  </span>
-                </h4>
-                <p className="text-charcoal/70" data-i18n-key="faq.items.1.answer">
-                  {t.faq?.items?.[1]?.answer || "Absolutely! All templates are fully customizable. You can change colors, fonts, content, photos, and layout elements to match your wedding style. Professional and higher plans include an admin panel for easy customization."}
-                </p>
-              </div>
-              
-              <div className="backdrop-blur-sm rounded-xl p-6 shadow-lg">
-                <h4 className="text-lg font-semibold text-charcoal mb-3 flex items-center">
-                  <QrCode className="w-5 h-5 mr-2 text-rose-500" />
-                  <span data-i18n-key="faq.items.2.question">
-                    {t.faq?.items?.[2]?.question || "What are QR Code Cards?"}
-                  </span>
-                </h4>
-                <p className="text-charcoal/70" data-i18n-key="faq.items.2.answer">
-                  {t.faq?.items?.[2]?.answer || "QR Code Cards are physical cards with QR codes that link directly to your wedding website. Perfect for wedding invitations, table settings, or save-the-dates. Premium includes 50 cards, Ultimate includes 100 cards."}
-                </p>
-              </div>
-              
-              <div className="backdrop-blur-sm rounded-xl p-6 shadow-lg">
-                <h4 className="text-lg font-semibold text-charcoal mb-3 flex items-center">
-                  <Calendar className="w-5 h-5 mr-2 text-rose-500" />
-                  <span data-i18n-key="faq.items.3.question">
-                    {t.faq?.items?.[3]?.question || "How do I manage RSVPs?"}
-                  </span>
-                </h4>
-                <p className="text-charcoal/70" data-i18n-key="faq.items.3.answer">
-                  {t.faq?.items?.[3]?.answer || "All plans include RSVP functionality where guests can confirm attendance and meal preferences. You can export guest lists and track responses in real-time through your website dashboard."}
-                </p>
-              </div>
+              {((t.faq?.items as any[]) || []).map((item: any, idx: number) => {
+                if (!item?.question) return null;
+                const faqIcons = [Gift, Settings, QrCode, Calendar, Star, Heart, MessageCircle, Mail];
+                const IconComponent = faqIcons[idx % faqIcons.length];
+                return (
+                  <div key={idx} className="backdrop-blur-sm rounded-xl p-6 shadow-lg">
+                    <h4 className="text-lg font-semibold text-charcoal mb-3 flex items-center">
+                      <IconComponent className="w-5 h-5 mr-2 text-rose-500" />
+                      <span data-i18n-key={`faq.items.${idx}.question`}>{item.question}</span>
+                    </h4>
+                    <p className="text-charcoal/70" data-i18n-key={`faq.items.${idx}.answer`}>
+                      {item.answer}
+                    </p>
+                  </div>
+                );
+              })}
             </div>
           </div>
         </div>
@@ -858,7 +840,7 @@ export default function MainPage() {
       {/* Footer */}
       <footer className="bg-charcoal text-white py-12">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="grid md:grid-cols-4 gap-8">
+          <div className="grid md:grid-cols-3 gap-8">
             <div>
               <div className="flex items-center mb-4">
                 <img src="/Logo.png" alt="4ever.am" className="h-12 w-auto brightness-0 invert" />
@@ -890,6 +872,7 @@ export default function MainPage() {
                 })}
               </ul>
             </div>
+            {(Object.values(t.footer?.features?.items || {}) as string[]).some(item => !!item) && (
             <div>
               <h4 
                 className="font-semibold mb-4"
@@ -898,12 +881,12 @@ export default function MainPage() {
                 {t.footer?.features?.title}
               </h4>
               <ul className="space-y-2 text-white/70">
-                <li data-i18n-key="footer.features.items.0">{t.footer?.features?.items?.[0]}</li>
-                <li data-i18n-key="footer.features.items.1">{t.footer?.features?.items?.[1]}</li>
-                <li data-i18n-key="footer.features.items.2">{t.footer?.features?.items?.[2]}</li>
-                <li data-i18n-key="footer.features.items.3">{t.footer?.features?.items?.[3]}</li>
+                {(Object.values(t.footer?.features?.items || {}) as string[]).map((item: string, idx: number) =>
+                  item ? <li key={idx} data-i18n-key={`footer.features.items.${idx}`}>{item}</li> : null
+                )}
               </ul>
             </div>
+            )}
             <div>
               <h4 
                 className="font-semibold mb-4"

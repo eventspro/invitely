@@ -2,7 +2,7 @@
 import type { Express } from "express";
 import { db } from "../db.js";
 import { translations } from "../../shared/schema.js";
-import { eq, and, sql } from "drizzle-orm";
+import { eq, and, sql, like } from "drizzle-orm";
 import { z } from "zod";
 
 // Import default translations for initialization
@@ -307,12 +307,27 @@ export function registerTranslationRoutes(app: Express) {
   // Bulk update translations
   app.post("/api/translations/bulk", async (req, res) => {
     try {
-      const { language, updates } = req.body;
+      const { language, updates, prefixesToClear } = req.body;
       
       if (!['en', 'hy', 'ru'].includes(language)) {
         return res.status(400).json({ message: "Invalid language" });
       }
       
+      // Delete stale indexed array entries (e.g. footer.services.items.2 left over after shortening an array)
+      if (Array.isArray(prefixesToClear) && prefixesToClear.length > 0) {
+        for (const prefix of prefixesToClear) {
+          if (typeof prefix === 'string' && /^[a-zA-Z0-9._-]+$/.test(prefix)) {
+            await db
+              .delete(translations)
+              .where(and(
+                eq(translations.language, language),
+                like(translations.translationKey, `${prefix}.%`)
+              ));
+          }
+        }
+        console.log(`🗑️ Cleared stale array keys for prefixes: ${prefixesToClear.join(', ')}`);
+      }
+
       console.log(`🔄 Starting bulk UPSERT for ${Object.keys(updates).length} translations in ${language}`);
       const startTime = Date.now();
       

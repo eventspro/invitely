@@ -675,6 +675,23 @@ export default function PlatformTranslations() {
 
       const updates = flattenObject(translations);
 
+      // Collect array prefixes to clear stale indexed keys in DB before upserting.
+      // Without this, deleting an item at index 2 leaves the old DB entry and it
+      // reappears on the next page load.
+      const prefixesToClear: string[] = [];
+      const collectArrayPrefixes = (obj: any, prefix = '') => {
+        for (const key in obj) {
+          const value = obj[key];
+          const newKey = prefix ? `${prefix}.${key}` : key;
+          if (Array.isArray(value)) {
+            prefixesToClear.push(newKey);
+          } else if (typeof value === 'object' && value !== null) {
+            collectArrayPrefixes(value, newKey);
+          }
+        }
+      };
+      collectArrayPrefixes(translations);
+
       console.log(`Saving ${Object.keys(updates).length} translation keys...`);
       console.log('🔍 DEBUG: Checking common section:', {
         'translations.common': translations.common,
@@ -686,7 +703,8 @@ export default function PlatformTranslations() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ 
           language: currentLanguage, 
-          updates 
+          updates,
+          prefixesToClear
         })
       });
 

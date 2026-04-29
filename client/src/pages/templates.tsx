@@ -1,8 +1,9 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useLocation, Link } from "wouter";
 import { useQuery } from "@tanstack/react-query";
 import { useTranslation } from "@/hooks/useLanguage";
 import LanguageSelector from "@/components/LanguageSelector";
+import { SiInstagram, SiTelegram, SiFacebook } from "react-icons/si";
 import { 
   Check, 
   X, 
@@ -19,6 +20,7 @@ import {
   Users,
   Heart,
   Mail,
+  Phone,
   Download,
   Upload,
   QrCode,
@@ -160,7 +162,29 @@ interface Template {
 export default function TemplatesPage() {
   const [, navigate] = useLocation();
   const [selectedPlan, setSelectedPlan] = useState<string | null>(null);
+  const [contactModalOpen, setContactModalOpen] = useState(false);
   const { translations: t } = useTranslation();
+
+  const [socialLinks, setSocialLinks] = useState({
+    instagram: 'https://www.instagram.com/weddingsites_am',
+    telegram: 'https://t.me/weddingsites_am',
+    facebook: 'https://www.facebook.com/weddingsites.am',
+  });
+
+  useEffect(() => {
+    fetch('/api/site-settings')
+      .then((r) => r.ok ? r.json() : null)
+      .then((d) => {
+        if (d && (d.instagram || d.telegram || d.facebook)) {
+          setSocialLinks({
+            instagram: d.instagram || 'https://www.instagram.com/weddingsites_am',
+            telegram: d.telegram || 'https://t.me/weddingsites_am',
+            facebook: d.facebook || 'https://www.facebook.com/weddingsites.am',
+          });
+        }
+      })
+      .catch(() => {/* use defaults */});
+  }, []);
 
   // Fetch templates from API
   const { data: templates, isLoading, error } = useQuery<Template[]>({
@@ -174,8 +198,7 @@ export default function TemplatesPage() {
 
   const handleSelectPlan = (templateId: string) => {
     setSelectedPlan(templateId);
-    // Here you would integrate with payment/booking system
-    console.log('Selected template:', templateId);
+    setContactModalOpen(true);
   };
 
   // Create template plans from fetched data
@@ -463,6 +486,65 @@ export default function TemplatesPage() {
           </div>
         </div>
       </section>
+
+      {/* Contact Modal */}
+      {contactModalOpen && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm"
+          onClick={() => setContactModalOpen(false)}
+        >
+          <div
+            className="relative bg-white rounded-2xl shadow-2xl p-8 max-w-sm w-full mx-4"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <button
+              className="absolute top-4 right-4 text-gray-400 hover:text-gray-700 transition-colors"
+              onClick={() => setContactModalOpen(false)}
+              aria-label="Close"
+            >
+              <X className="w-6 h-6" />
+            </button>
+            <div className="text-center mb-6">
+              <Heart className="w-10 h-10 text-rose-500 mx-auto mb-3" />
+              <h3 className="text-2xl font-bold text-gray-900 mb-1">
+                {t.contactSection?.title || "Կապ Մեզ Հետ"}
+              </h3>
+              <p className="text-gray-500 text-sm">
+                {t.contactSection?.subtitle || "Կապվեք մեզ ցանկացած հարթակով"}
+              </p>
+            </div>
+            <div className="space-y-3">
+              <a
+                href={socialLinks.telegram}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex items-center gap-3 w-full bg-[#0088cc] hover:bg-[#0088cc]/90 text-white px-5 py-3 rounded-xl font-medium transition-colors"
+              >
+                <SiTelegram className="w-5 h-5 flex-shrink-0" />
+                <span>{t.socialMedia?.telegram?.label || "Telegram"}</span>
+              </a>
+              <a
+                href={socialLinks.instagram}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex items-center gap-3 w-full bg-gradient-to-r from-purple-600 via-pink-500 to-orange-400 hover:opacity-90 text-white px-5 py-3 rounded-xl font-medium transition-opacity"
+              >
+                <SiInstagram className="w-5 h-5 flex-shrink-0" />
+                <span>{t.socialMedia?.instagram?.label || "Instagram"}</span>
+              </a>
+              <a
+                href={socialLinks.facebook}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex items-center gap-3 w-full bg-[#1877f2] hover:bg-[#1877f2]/90 text-white px-5 py-3 rounded-xl font-medium transition-colors"
+              >
+                <SiFacebook className="w-5 h-5 flex-shrink-0" />
+                <span>{t.socialMedia?.facebook?.label || "Facebook"}</span>
+              </a>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
