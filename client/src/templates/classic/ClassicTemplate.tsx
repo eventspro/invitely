@@ -53,7 +53,7 @@ export default function ClassicTemplate({ config, templateId }: ClassicTemplateP
       background: (config.theme?.colors?.background || safeConfig.theme?.colors?.background) ? `linear-gradient(135deg, ${config.theme?.colors?.background || safeConfig.theme?.colors?.background} 0%, ${config.theme?.colors?.background || safeConfig.theme?.colors?.background} 100%)` : undefined,
       color: safeConfig.theme?.colors?.textColor
     }}>
-      <Navigation />
+      <Navigation config={safeConfig} />
       <main>
         {sections.hero?.enabled !== false && <HeroSection config={safeConfig} />}
         {sections.countdown?.enabled !== false && <CountdownTimer config={safeConfig} />}

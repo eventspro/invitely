@@ -9,9 +9,9 @@ config();
 // Complete Armenian configuration to apply to all templates
 const armenianConfig = {
   couple: {
-    groomName: "Հարութ",
-    brideName: "Տաթև", 
-    combinedNames: "Հարութ & Տաթև"
+    groomName: "Փեսա",
+    brideName: "Հարսնացու", 
+    combinedNames: "Փեսա & Հարսնացու"
   },
   wedding: {
     date: "2024-08-18T15:00:00",

@@ -1,12 +1,12 @@
-// Wedding Website Configuration
+﻿// Wedding Website Configuration
 // Edit this file to customize all text content on your website
 
 export const weddingConfig = {
   // Couple Information
   couple: {
-    groomName: "Հարութ",
-    brideName: "Տաթև",
-    combinedNames: "Հարութ & Տաթև",
+    groomName: "Groom",
+    brideName: "Bride",
+    combinedNames: "Groom & Bride",
   },
 
   // Wedding Date & Time
@@ -154,10 +154,10 @@ export const weddingConfig = {
   // Photo Sharing Configuration (Guest Photo Upload)
   photoSharing: {
     enabled: true,
-    pageTitle: "Հարութ & Տաթև",
+    pageTitle: "", // Computed at runtime from couple.groomName & couple.brideName
     pageSubtitle: "Wedding Photos 📸",
     welcomeCard: {
-      title: "Հարութ & Տաթև",
+      title: "", // Computed at runtime from couple.groomName & couple.brideName
       subtitle: "Wedding Photos 📸",
       description: "Share your beautiful memories from our special day",
       nameLabel: "Your Name / Ձեր անունը",

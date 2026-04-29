@@ -40,17 +40,22 @@ export default function PhotosPage() {
     loadTemplateConfig();
   }, []);
 
-  const photoSharingConfig = config.photoSharing || {
+  const coupleTitle = `${config.couple.groomName} & ${config.couple.brideName}`;
+  const photoSharingConfig = {
     enabled: true,
-    pageTitle: config.couple.combinedNames,
     pageSubtitle: "Wedding Photos 📸",
+    ...(config.photoSharing ?? {}),
+    // Always derive title from current couple names (overrides any stale DB value)
+    pageTitle: coupleTitle,
     welcomeCard: {
-      title: config.couple.combinedNames,
       subtitle: "Wedding Photos 📸",
       description: "Share your beautiful memories from our special day",
       nameLabel: "Your Name / Ձեր անունը",
       namePlaceholder: "Enter your name",
       submitButton: "Start Sharing Photos 🎉",
+      ...(config.photoSharing?.welcomeCard ?? {}),
+      // Always override title with couple names
+      title: coupleTitle,
     },
     uploadSection: {
       welcomeMessage: "Welcome, {guestName}!",
@@ -62,10 +67,12 @@ export default function PhotosPage() {
       uploadSuccessMessage: "{count} նկար(ներ) հաջողությամբ ավելացվեցին! Շնորհակալություն {guestName}! (Ընդամենը: {totalCount})",
       uploadErrorMessage: "Սխալ վերբեռնելիս: Խնդրում ենք կրկին փորձել:",
       uploadInstructions: "Click or drag photos to upload. You can upload up to {maxPhotos} photos.",
+      ...(config.photoSharing?.uploadSection ?? {}),
     },
     limits: {
       maxPhotos: 25,
       maxFileSize: 10,
+      ...(config.photoSharing?.limits ?? {}),
     },
   };
 

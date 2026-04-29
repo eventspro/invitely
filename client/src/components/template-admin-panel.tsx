@@ -574,7 +574,12 @@ export default function TemplateAdminPanel() {
                   <Input
                     id="groomName"
                     value={template.config.couple?.groomName || ""}
-                    onChange={(e) => updateConfig("couple.groomName", e.target.value)}
+                    onChange={(e) => {
+                      const groom = e.target.value;
+                      updateConfig("couple.groomName", groom);
+                      const bride = template.config.couple?.brideName || "";
+                      if (groom && bride) updateConfig("couple.combinedNames", `${groom} & ${bride}`);
+                    }}
                   />
                 </div>
                 <div>
@@ -582,7 +587,12 @@ export default function TemplateAdminPanel() {
                   <Input
                     id="brideName"
                     value={template.config.couple?.brideName || ""}
-                    onChange={(e) => updateConfig("couple.brideName", e.target.value)}
+                    onChange={(e) => {
+                      const bride = e.target.value;
+                      updateConfig("couple.brideName", bride);
+                      const groom = template.config.couple?.groomName || "";
+                      if (groom && bride) updateConfig("couple.combinedNames", `${groom} & ${bride}`);
+                    }}
                   />
                 </div>
                 <div>
@@ -1525,7 +1535,12 @@ export default function TemplateAdminPanel() {
                     <Input
                       id="footerGroomName"
                       value={template.config.couple?.groomName || ""}
-                      onChange={(e) => updateConfig("couple.groomName", e.target.value)}
+                      onChange={(e) => {
+                        const groom = e.target.value;
+                        updateConfig("couple.groomName", groom);
+                        const bride = template.config.couple?.brideName || "";
+                        if (groom && bride) updateConfig("couple.combinedNames", `${groom} & ${bride}`);
+                      }}
                       placeholder="Groom's name"
                     />
                   </div>
@@ -1534,7 +1549,12 @@ export default function TemplateAdminPanel() {
                     <Input
                       id="footerBrideName"
                       value={template.config.couple?.brideName || ""}
-                      onChange={(e) => updateConfig("couple.brideName", e.target.value)}
+                      onChange={(e) => {
+                        const bride = e.target.value;
+                        updateConfig("couple.brideName", bride);
+                        const groom = template.config.couple?.groomName || "";
+                        if (groom && bride) updateConfig("couple.combinedNames", `${groom} & ${bride}`);
+                      }}
                       placeholder="Bride's name"
                     />
                   </div>

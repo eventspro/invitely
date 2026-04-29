@@ -1,13 +1,12 @@
 import { useState, useRef, useEffect } from "react";
 import { Volume2, VolumeX } from "lucide-react";
-import { weddingConfig } from "@/config/wedding-config";
 import type { WeddingConfig } from "@/templates/types";
 
 interface NavigationProps {
   config?: WeddingConfig;
 }
 
-export default function Navigation({ config = weddingConfig }: NavigationProps) {
+export default function Navigation({ config }: NavigationProps) {
   // Autoplay header control mode: music enabled + autoplay flag set
   const isAutoplayMode = config.music?.enabled === true && config.music?.autoplay === true;
 

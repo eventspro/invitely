@@ -180,9 +180,7 @@ export async function sendRsvpNotificationEmails(rsvp: Rsvp): Promise<boolean> {
 
 export async function sendRsvpConfirmationEmail(rsvp: Rsvp): Promise<boolean> {
   if (!(await initializeEmailService())) {
-    console.log(
-      "Email service not configured. Skipping RSVP confirmation email.",
-    );
+    console.log("Email service not configured. Skipping RSVP confirmation email.");
     return false;
   }
 
@@ -193,45 +191,15 @@ export async function sendRsvpConfirmationEmail(rsvp: Rsvp): Promise<boolean> {
         : "Ցավոք, որ չեք կարողանա գալ: Ցանկանում ենք ձեզ բարելավություն: 💙";
 
     const success = await sendEmail({
-      from: "noreply@4ever.am", // Use your verified domain
+      from: "noreply@4ever.am",
       to: rsvp.email || "",
-      subject: "Ձեր հաստատումը ստացվել է - Հարսանիք 10 Հոկտեմբեր 2025",
-      text: `Սիրելի ${rsvp.firstName},\n\nՇնորհակալություն ձեր հաստատման համար:\n\n${attendanceText}\n\n${rsvp.attendance === "attending" ? "Ծիսակարգություն - Սուրբ Գրիգոր Լուսավորիչ Եկեղեցի, Ժամը 16:00\nՀանդես - BAYAZET HALL, Ժամը 19:00\n\nՄենք շատ ենք սիրում ձեզ և սպասում ենք այս հատուկ օրը ձեզ հետ կիսելուն:" : ""}\n\nՀարցերի դեպքում կապվեք մեզ հետ:\nharutavetisyan0@gmail.com | tatevhovsepyan22@gmail.com\n\nՀարգանքով,\nՀարութ և Տաթև`,
+      subject: "Ձեր հաստատումը ստացվել է",
+      text: `Սիրելի ${rsvp.firstName},\n\nՇնորհակալություն ձեր հաստատման համար:\n\n${attendanceText}\n\nՀարգանքով,\nՀարսանեկան թիմ`,
       html: `
         <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
-          <div style="text-align: center; margin-bottom: 30px;">
-            <h1 style="color: #E4A5B8; font-style: italic;">Հարութ & Տաթև</h1>
-            <p style="color: #666; font-size: 18px;">10 Հոկտեմբեր 2025</p>
-          </div>
-          
           <div style="background-color: #f9f9f9; padding: 25px; border-radius: 15px; text-align: center;">
-            <h2 style="color: #333; margin-bottom: 15px;">Շնորհակալություն ${rsvp.firstName}ը!</h2>
+            <h2 style="color: #333; margin-bottom: 15px;">Շնորհակալություն ${rsvp.firstName}!</h2>
             <p style="font-size: 16px; line-height: 1.6; color: #555;">${attendanceText}</p>
-            
-            ${
-              rsvp.attendance === "attending"
-                ? `
-              <div style="margin: 20px 0; padding: 15px; background-color: white; border-radius: 10px;">
-                <h3 style="color: #E4A5B8; margin-bottom: 10px;">📍 Ծիսակարգություն</h3>
-                <p><strong>Սուրբ Գրիգոր Լուսավորիչ Եկեղեցի</strong><br/>
-                Ժամը 16:00</p>
-                
-                <h3 style="color: #E4A5B8; margin: 15px 0 10px 0;">🍾 Հանդես</h3>
-                <p><strong>BAYAZET HALL</strong><br/>
-                Ժամը 19:00</p>
-              </div>
-              
-              <p style="color: #666; font-size: 14px; margin-top: 20px;">
-                Մենք շատ ենք սիրում ձեզ և սպասում ենք այս հատուկ օրը ձեզ հետ կիսելուն: 💐
-              </p>
-            `
-                : ""
-            }
-          </div>
-          
-          <div style="text-align: center; margin-top: 20px; color: #999; font-size: 12px;">
-            <p>Հարցերի դեպքում կապվեք մեզ հետ:</p>
-            <p>harutavetisyan0@gmail.com | tatevhovsepyan22@gmail.com</p>
           </div>
         </div>
       `,
@@ -246,6 +214,7 @@ export async function sendRsvpConfirmationEmail(rsvp: Rsvp): Promise<boolean> {
     return false;
   }
 }
+
 
 // Template-scoped email functions with customizable templates
 export async function sendTemplateRsvpNotificationEmails(rsvp: Rsvp, template: any): Promise<boolean> {
