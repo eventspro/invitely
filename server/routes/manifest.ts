@@ -51,25 +51,25 @@ export function registerManifestRoutes(app: express.Application) {
         categories: ['photo', 'social'],
         icons: [
           {
-            src: '/favicon1.png',
+            src: '/Favicon1.png',
             sizes: '192x192',
             type: 'image/png',
           },
           {
-            src: '/favicon1.png',
+            src: '/Favicon1.png',
             sizes: '512x512',
             type: 'image/png',
           },
         ],
         screenshots: [
           {
-            src: '/favicon1.png',
+            src: '/Favicon1.png',
             sizes: '1280x720',
             type: 'image/png',
             form_factor: 'wide',
           },
           {
-            src: '/favicon1.png',
+            src: '/Favicon1.png',
             sizes: '750x1334',
             type: 'image/png',
             form_factor: 'narrow',
