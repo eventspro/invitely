@@ -445,14 +445,6 @@ export default function MainPage() {
               </p>
             )}
             <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
-              {t.hero?.viewTemplates && t.hero.viewTemplates.trim() && (
-                <Link 
-                  to="/templates"
-                  className="bg-softGold hover:bg-softGold/90 text-white px-8 py-4 rounded-lg text-lg font-medium transition-all duration-300 transform hover:scale-105 flex items-center"
-                >
-                  <span data-i18n-key="hero.viewTemplates">{t.hero.viewTemplates}</span> <ArrowRight className="ml-2 h-5 w-5" />
-                </Link>
-              )}
               {t.common?.viewMore && t.common.viewMore.trim() && (
                 <a 
                   href="#contact"

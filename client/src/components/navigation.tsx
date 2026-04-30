@@ -8,7 +8,7 @@ interface NavigationProps {
 
 export default function Navigation({ config }: NavigationProps) {
   // Autoplay header control mode: music enabled + autoplay flag set
-  const isAutoplayMode = config.music?.enabled === true && config.music?.autoplay === true;
+  const isAutoplayMode = config?.music?.enabled === true && config?.music?.autoplay === true;
 
   // Start muted — Chrome and Safari both allow muted autoplay.
   // The mute button is shown immediately so the user can unmute on first interaction.
@@ -27,12 +27,12 @@ export default function Navigation({ config }: NavigationProps) {
       return;
     }
 
-    const musicUrl = config.music?.audioUrl;
+    const musicUrl = config?.music?.audioUrl;
     if (!musicUrl) return;
 
     const audio = new Audio(musicUrl);
     audio.loop = true;
-    audio.volume = config.music?.volume || 0.3;
+    audio.volume = config?.music?.volume || 0.3;
     // Always start muted — the only reliable cross-browser autoplay strategy.
     // Chrome policy and Safari both allow muted autoplay without a user gesture.
     audio.muted = true;
@@ -52,16 +52,16 @@ export default function Navigation({ config }: NavigationProps) {
       audio.pause();
       audioRef.current = null;
     };
-  }, [isAutoplayMode, config.music?.audioUrl, config.music?.volume]);
+  }, [isAutoplayMode, config?.music?.audioUrl, config?.music?.volume]);
 
   const toggleMute = async () => {
     if (!audioRef.current) {
       // Audio was blocked entirely — start on first user gesture (guaranteed to work)
-      const musicUrl = config.music?.audioUrl;
+      const musicUrl = config?.music?.audioUrl;
       if (!musicUrl) return;
       const audio = new Audio(musicUrl);
       audio.loop = true;
-      audio.volume = config.music?.volume || 0.3;
+      audio.volume = config?.music?.volume || 0.3;
       audio.muted = false;
       audioRef.current = audio;
       try {
@@ -101,14 +101,14 @@ export default function Navigation({ config }: NavigationProps) {
     >
       <div className="max-w-6xl mx-auto px-4 py-4 relative">
         {/* Couple Names Only */}
-        {(config.couple?.groomName || config.couple?.brideName) && (
+        {(config?.couple?.groomName || config?.couple?.brideName) && (
           <div className="flex justify-center">
             <span className="text-xl font-serif font-bold flex items-center gap-2 text-charcoal">
-              {config.couple?.groomName && <span>{config.couple.groomName}</span>}
-              {config.couple?.groomName && config.couple?.brideName && (
-                <span className="mx-1" style={{ color: config.theme?.colors?.accent || config.theme?.colors?.primary }}>{config.footer?.separator || '∞'}</span>
+              {config?.couple?.groomName && <span>{config.couple.groomName}</span>}
+              {config?.couple?.groomName && config?.couple?.brideName && (
+                <span className="mx-1" style={{ color: config?.theme?.colors?.accent || config?.theme?.colors?.primary }}>{config?.footer?.separator || '∞'}</span>
               )}
-              {config.couple?.brideName && <span>{config.couple.brideName}</span>}
+              {config?.couple?.brideName && <span>{config.couple.brideName}</span>}
             </span>
           </div>
         )}
@@ -125,8 +125,8 @@ export default function Navigation({ config }: NavigationProps) {
                 (isMuted || !audioStarted) ? "animate-[music-pulse_1.5s_ease-in-out_infinite]" : "",
               ].join(" ")}
               style={{
-                color: config.theme?.colors?.primary || '#888',
-                background: `${config.theme?.colors?.accent || config.theme?.colors?.primary || '#c0a080'}18`,
+                color: config?.theme?.colors?.primary || '#888',
+                background: `${config?.theme?.colors?.accent || config?.theme?.colors?.primary || '#c0a080'}18`,
               }}
               aria-label={isMuted || !audioStarted ? 'Play music' : 'Mute music'}
               data-testid="button-header-music-toggle"
