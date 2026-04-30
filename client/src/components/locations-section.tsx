@@ -82,6 +82,7 @@ export default function LocationsSection({ config = weddingConfig }: LocationsSe
                   src={venue.image || getDefaultImage(venue.title)} 
                   alt={venue.title} 
                   className="w-full h-48 object-cover" 
+                  style={{ objectPosition: `${venue.imagePositionX ?? 50}% ${venue.imagePositionY ?? 50}%` }}
                   data-testid={`img-venue-${venue.id || index}`}
                 />
                 <div className="p-6">

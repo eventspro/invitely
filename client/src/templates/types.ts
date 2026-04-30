@@ -57,6 +57,8 @@ export interface WeddingConfig {
       mapButton: string;
       mapIcon: string; // Configurable map icon text/symbol
       image?: string; // Location image URL
+      imagePositionX?: number; // Focal point X (0-100%, default 50)
+      imagePositionY?: number; // Focal point Y (0-100%, default 50)
       latitude?: number; // GPS coordinates
       longitude?: number; // GPS coordinates
       address?: string; // Full address for display

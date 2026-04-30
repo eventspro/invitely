@@ -827,12 +827,19 @@ export default function TemplateAdminPanel() {
                         templateId={template.id}
                         locationName={`venue-${venue.id || index}`}
                         currentImage={venue.image}
+                        currentPositionX={venue.imagePositionX}
+                        currentPositionY={venue.imagePositionY}
                         currentLatitude={venue.latitude}
                         currentLongitude={venue.longitude}
                         currentAddress={venue.address}
                         onImageUpdate={(imageUrl) => {
                           const currentVenues = [...(template.config.locations?.venues || [])];
                           currentVenues[index] = { ...currentVenues[index], image: imageUrl };
+                          updateConfig("locations.venues", currentVenues);
+                        }}
+                        onPositionUpdate={(x, y) => {
+                          const currentVenues = [...(template.config.locations?.venues || [])];
+                          currentVenues[index] = { ...currentVenues[index], imagePositionX: x, imagePositionY: y };
                           updateConfig("locations.venues", currentVenues);
                         }}
                         onCoordinatesUpdate={(lat, lng) => {
