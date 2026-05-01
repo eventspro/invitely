@@ -135,7 +135,8 @@ export const authenticateUser = async (req: AuthenticatedRequest, res: Response,
       email: managementUsers.email,
       firstName: managementUsers.firstName,
       lastName: managementUsers.lastName,
-      status: managementUsers.status
+      status: managementUsers.status,
+      isOwner: managementUsers.isOwner
     }).from(managementUsers)
     .where(and(
       eq(managementUsers.id, decoded.userId),
@@ -153,7 +154,8 @@ export const authenticateUser = async (req: AuthenticatedRequest, res: Response,
       email: user.email,
       firstName: user.firstName || undefined,
       lastName: user.lastName || undefined,
-      status: user.status || 'active'
+      status: user.status || 'active',
+      isPlatformAdmin: user.isOwner === true
     };
 
     next();

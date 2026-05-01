@@ -19,6 +19,7 @@ interface Customer {
   email: string;
   firstName?: string | null;
   lastName?: string | null;
+  isOwner?: boolean | null;
   templateId?: string | null;
   templateName?: string | null;
   templateSlug?: string | null;
@@ -175,6 +176,10 @@ export const PlatformAdminPanel: React.FC = () => {
   const [toast, setToast] = useState('');
   const [deleteTarget, setDeleteTarget] = useState<Customer | null>(null);
   const [deleting, setDeleting] = useState(false);
+  const [assignTarget, setAssignTarget] = useState<TemplateItem | null>(null);
+  const [assignUserId, setAssignUserId] = useState('');
+  const [assignSlug, setAssignSlug] = useState('');
+  const [assigning, setAssigning] = useState(false);
 
   const toastTimerRef = useRef<number | null>(null);
 
@@ -375,6 +380,27 @@ export const PlatformAdminPanel: React.FC = () => {
     }
   };
 
+  const toggleOwner = async (c: Customer) => {
+    const next = !c.isOwner;
+    setError('');
+    try {
+      const res = await fetch(`/api/platform-admin/customer/${c.id}/set-owner`, {
+        method: 'PATCH',
+        headers: authHeaders(),
+        body: JSON.stringify({ isOwner: next }),
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        setError(data.error ?? 'Failed to update owner status');
+        return;
+      }
+      showToast(next ? `👑 ${c.email} is now owner` : `👤 ${c.email} owner status removed`);
+      await loadData();
+    } catch {
+      setError('Network error while updating owner status');
+    }
+  };
+
   const handleDelete = async () => {
     if (!deleteTarget) return;
     setDeleting(true);
@@ -406,6 +432,43 @@ export const PlatformAdminPanel: React.FC = () => {
         () => chars[Math.floor(Math.random() * chars.length)]
       ).join(''),
     }));
+  };
+
+  const openAssign = (t: TemplateItem) => {
+    setAssignTarget(t);
+    setAssignUserId('');
+    setAssignSlug(t.slug);
+    setError('');
+  };
+
+  const handleAssign = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!assignTarget) return;
+    setAssigning(true);
+    setError('');
+    try {
+      const res = await fetch('/api/platform-admin/assign-template', {
+        method: 'POST',
+        headers: authHeaders(),
+        body: JSON.stringify({
+          userId: assignUserId,
+          templateId: assignTarget.id,
+          templateSlug: assignSlug,
+        }),
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        setError(data.error ?? 'Failed to assign template');
+        return;
+      }
+      setAssignTarget(null);
+      showToast(`✅ ${data.message} — admin: ${data.adminUrl}`);
+      await loadData();
+    } catch {
+      setError('Network error while assigning template');
+    } finally {
+      setAssigning(false);
+    }
   };
 
   const generateSlug = () => {
@@ -541,6 +604,11 @@ export const PlatformAdminPanel: React.FC = () => {
                       {c.templateSlug ? `/${c.templateSlug}` : '—'}
                     </p>
                     <Badge active={!!c.isActive} />
+                    {c.isOwner && (
+                      <span className="inline-flex items-center px-1.5 py-0.5 rounded text-xs font-medium bg-yellow-100 text-yellow-700">
+                        👑 Owner
+                      </span>
+                    )}
                     {c.role === 'super_admin' && (
                       <span className="inline-flex items-center px-1.5 py-0.5 rounded text-xs font-medium bg-amber-100 text-amber-700">
                         Super Admin
@@ -716,6 +784,11 @@ export const PlatformAdminPanel: React.FC = () => {
                           <td className="px-5 py-4">
                             <div className="flex items-center gap-1.5 flex-wrap">
                               <Badge active={!!c.isActive} />
+                              {c.isOwner && (
+                                <span className="inline-flex items-center px-1.5 py-0.5 rounded text-xs font-medium bg-yellow-100 text-yellow-700">
+                                  👑 Owner
+                                </span>
+                              )}
                               {c.role === 'super_admin' && (
                                 <span className="inline-flex items-center px-1.5 py-0.5 rounded text-xs font-medium bg-amber-100 text-amber-700">
                                   Super Admin
@@ -743,6 +816,19 @@ export const PlatformAdminPanel: React.FC = () => {
                               >
                                 {c.isActive ? 'Deactivate' : 'Activate'}
                               </button>
+
+                              <button
+                                onClick={() => toggleOwner(c)}
+                                className={`text-xs px-3 py-1.5 rounded-lg border transition-colors ${
+                                  c.isOwner
+                                    ? 'border-yellow-300 text-yellow-700 hover:bg-yellow-50'
+                                    : 'border-gray-200 text-gray-400 hover:border-yellow-300 hover:text-yellow-600 hover:bg-yellow-50'
+                                }`}
+                                title={c.isOwner ? 'Remove owner access' : 'Grant owner access (all templates)'}
+                              >
+                                {c.isOwner ? '👑 Owner' : '👤 Owner'}
+                              </button>
+
                               <button
                                 onClick={() => setDeleteTarget(c)}
                                 className="text-xs px-3 py-1.5 rounded-lg border border-gray-200 text-gray-400 hover:border-red-300 hover:text-red-500 hover:bg-red-50 transition-colors"
@@ -919,6 +1005,13 @@ export const PlatformAdminPanel: React.FC = () => {
                                   >
                                     Admin ↗
                                   </a>
+                                  <button
+                                    onClick={() => openAssign(t)}
+                                    className="text-xs px-2.5 py-1 rounded-lg bg-emerald-50 text-emerald-600 hover:bg-emerald-100 transition-colors"
+                                    title="Assign this template to an existing customer"
+                                  >
+                                    Assign
+                                  </button>
                                 </div>
                               </td>
                             </tr>
@@ -1166,6 +1259,64 @@ export const PlatformAdminPanel: React.FC = () => {
               </button>
               <button type="submit" disabled={saving} className={btnPrimary}>
                 {saving ? 'Saving…' : 'Save Changes'}
+              </button>
+            </div>
+          </form>
+        </Modal>
+      )}
+
+      {assignTarget && (
+        <Modal
+          title={`Assign "${assignTarget.name}" to Customer`}
+          onClose={() => { setAssignTarget(null); setError(''); }}
+        >
+          <form onSubmit={handleAssign} className="space-y-4">
+            {error && <div className="bg-red-50 text-red-600 text-sm px-3 py-2 rounded-lg">{error}</div>}
+
+            <div className="bg-amber-50 border border-amber-200 rounded-xl px-4 py-3 text-sm text-amber-700">
+              This grants an existing customer full admin-panel access (Ultimate plan) to this template.
+            </div>
+
+            <FormRow label="Customer">
+              <select
+                required
+                className={inputCls}
+                value={assignUserId}
+                onChange={(e) => setAssignUserId(e.target.value)}
+              >
+                <option value="">— Select a customer —</option>
+                {customers.map((c) => (
+                  <option key={c.id} value={c.id}>
+                    {c.firstName ?? ''} {c.lastName ?? ''} ({c.email})
+                  </option>
+                ))}
+              </select>
+            </FormRow>
+
+            <FormRow
+              label="Admin URL slug"
+              hint={assignSlug ? `Customer admin: /${assignSlug}/admin` : undefined}
+            >
+              <input
+                required
+                className={inputCls}
+                value={assignSlug}
+                onChange={(e) =>
+                  setAssignSlug(e.target.value.toLowerCase().replace(/[^a-z0-9-]/g, ''))
+                }
+              />
+            </FormRow>
+
+            <div className="flex justify-end gap-3 pt-2">
+              <button
+                type="button"
+                onClick={() => { setAssignTarget(null); setError(''); }}
+                className={btnSecondary}
+              >
+                Cancel
+              </button>
+              <button type="submit" disabled={assigning} className={btnPrimary}>
+                {assigning ? 'Assigning…' : 'Grant Access'}
               </button>
             </div>
           </form>

@@ -19,6 +19,7 @@ export const managementUsers = pgTable("management_users", {
   lastName: text("last_name"),
   phone: text("phone"),
   status: text("status").default("active"), // active, suspended, deleted
+  isOwner: boolean("is_owner").default(false), // true = project owner, bypasses per-template access checks
   emailVerified: boolean("email_verified").default(false),
   emailVerificationToken: text("email_verification_token"),
   passwordResetToken: text("password_reset_token"),

@@ -30,6 +30,7 @@ router.get('/ultimate-customers', async (req, res) => {
         email: managementUsers.email,
         firstName: managementUsers.firstName,
         lastName: managementUsers.lastName,
+        isOwner: managementUsers.isOwner,
         templateId: userAdminPanels.templateId,
         templateSlug: userAdminPanels.templateSlug,
         templateName: templates.name,
@@ -172,6 +173,7 @@ router.get('/customer/:customerId', async (req, res) => {
       email: managementUsers.email,
       firstName: managementUsers.firstName,
       lastName: managementUsers.lastName,
+      isOwner: managementUsers.isOwner,
       status: managementUsers.status,
       createdAt: managementUsers.createdAt,
       templateId: userAdminPanels.templateId,
@@ -271,6 +273,105 @@ router.patch('/customer/:customerId/activate', async (req, res) => {
   }
 });
 
+// ─── POST /assign-template — grant an existing customer access to a template ──
+router.post('/assign-template', async (req, res) => {
+  try {
+    const { userId, templateId, templateSlug } = req.body as {
+      userId?: string;
+      templateId?: string;
+      templateSlug?: string;
+    };
+
+    if (!userId || !templateId || !templateSlug) {
+      return res.status(400).json({ error: 'userId, templateId, and templateSlug are required' });
+    }
+
+    // Validate slug format
+    if (!/^[a-z0-9-]+$/.test(templateSlug)) {
+      return res.status(400).json({ error: 'Template slug must contain only lowercase letters, numbers, and hyphens' });
+    }
+
+    // Verify user exists
+    const [user] = await db
+      .select({ id: managementUsers.id, email: managementUsers.email })
+      .from(managementUsers)
+      .where(eq(managementUsers.id, userId))
+      .limit(1);
+
+    if (!user) {
+      return res.status(404).json({ error: 'User not found' });
+    }
+
+    // Verify template exists
+    const [template] = await db
+      .select({ id: templates.id, name: templates.name })
+      .from(templates)
+      .where(eq(templates.id, templateId))
+      .limit(1);
+
+    if (!template) {
+      return res.status(404).json({ error: 'Template not found' });
+    }
+
+    // Check if assignment already exists
+    const [existing] = await db
+      .select({ id: userAdminPanels.id })
+      .from(userAdminPanels)
+      .where(and(eq(userAdminPanels.userId, userId), eq(userAdminPanels.templateId, templateId)))
+      .limit(1);
+
+    if (existing) {
+      return res.status(409).json({ error: 'This customer already has access to that template' });
+    }
+
+    // Check if templateSlug is taken by another panel
+    const [slugTaken] = await db
+      .select({ id: userAdminPanels.id })
+      .from(userAdminPanels)
+      .where(eq(userAdminPanels.templateSlug, templateSlug))
+      .limit(1);
+
+    if (slugTaken) {
+      return res.status(409).json({ error: `Template slug "${templateSlug}" is already in use` });
+    }
+
+    const orderNumber = `ORD-${Date.now()}-${Math.random().toString(36).substr(2, 9).toUpperCase()}`;
+
+    await db.transaction(async (tx) => {
+      const [order] = await tx
+        .insert(orders)
+        .values({
+          orderNumber,
+          userId,
+          templateId,
+          templatePlan: 'ultimate',
+          amount: '37000.00',
+          paymentMethod: 'cash',
+          status: 'completed',
+          adminAccessGranted: true,
+        })
+        .returning();
+
+      await tx.insert(userAdminPanels).values({
+        userId,
+        templateId,
+        templateSlug,
+        orderId: order.id,
+        isActive: true,
+      });
+    });
+
+    return res.json({
+      success: true,
+      message: `Access granted to ${user.email} for template "${template.name}"`,
+      adminUrl: `/${templateSlug}/admin`,
+    });
+  } catch (error) {
+    console.error('Assign template error:', error);
+    return res.status(500).json({ error: 'Failed to assign template' });
+  }
+});
+
 router.delete('/customer/:customerId', async (req, res) => {
   try {
     const { customerId } = req.params;
@@ -280,6 +381,33 @@ router.delete('/customer/:customerId', async (req, res) => {
   } catch (error) {
     console.error('Delete customer error:', error);
     res.status(500).json({ error: 'Failed to delete customer' });
+  }
+});
+
+// ─── PATCH /customer/:customerId/set-owner — grant or revoke owner status ─────
+router.patch('/customer/:customerId/set-owner', async (req, res) => {
+  try {
+    const { customerId } = req.params;
+    const { isOwner } = req.body as { isOwner?: boolean };
+
+    if (typeof isOwner !== 'boolean') {
+      return res.status(400).json({ error: 'isOwner must be a boolean' });
+    }
+
+    const [updated] = await db
+      .update(managementUsers)
+      .set({ isOwner })
+      .where(eq(managementUsers.id, customerId))
+      .returning({ id: managementUsers.id, email: managementUsers.email, isOwner: managementUsers.isOwner });
+
+    if (!updated) {
+      return res.status(404).json({ error: 'User not found' });
+    }
+
+    return res.json({ success: true, ...updated });
+  } catch (error) {
+    console.error('Set owner error:', error);
+    return res.status(500).json({ error: 'Failed to update owner status' });
   }
 });
 
