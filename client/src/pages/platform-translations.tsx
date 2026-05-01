@@ -822,23 +822,25 @@ export default function PlatformTranslations() {
               </div>
               
               <div className="text-center max-w-4xl mx-auto py-12">
-                <div 
-                  contentEditable 
-                  suppressContentEditableWarning
-                  onBlur={(e) => updateSection('hero', 'title', e.currentTarget.textContent || '')}
-                  className="text-4xl md:text-5xl font-bold text-charcoal mb-4 text-center block w-full cursor-pointer hover:bg-blue-50 hover:outline hover:outline-2 hover:outline-blue-300 rounded transition-all relative group outline-none"
-                >
-                  {translations.hero.title}
+                <div className="relative group mb-4">
+                  <div 
+                    contentEditable 
+                    suppressContentEditableWarning
+                    onBlur={(e) => updateSection('hero', 'title', e.currentTarget.textContent || '')}
+                    className="text-4xl md:text-5xl font-bold text-charcoal text-center block w-full cursor-pointer hover:bg-blue-50 hover:outline hover:outline-2 hover:outline-blue-300 rounded transition-all outline-none"
+                    dangerouslySetInnerHTML={{ __html: translations.hero.title || '' }}
+                  />
                   <Edit2 className="w-4 h-4 absolute -right-6 top-1/2 -translate-y-1/2 text-blue-500 opacity-0 group-hover:opacity-100 transition-opacity" />
                 </div>
                 
-                <div 
-                  contentEditable 
-                  suppressContentEditableWarning
-                  onBlur={(e) => updateSection('hero', 'subtitle', e.currentTarget.textContent || '')}
-                  className="text-xl text-charcoal/70 mb-8 block cursor-pointer hover:bg-blue-50 hover:outline hover:outline-2 hover:outline-blue-300 rounded transition-all relative group outline-none"
-                >
-                  {translations.hero.subtitle}
+                <div className="relative group mb-8">
+                  <div 
+                    contentEditable 
+                    suppressContentEditableWarning
+                    onBlur={(e) => updateSection('hero', 'subtitle', e.currentTarget.textContent || '')}
+                    className="text-xl text-charcoal/70 block cursor-pointer hover:bg-blue-50 hover:outline hover:outline-2 hover:outline-blue-300 rounded transition-all outline-none"
+                    dangerouslySetInnerHTML={{ __html: translations.hero.subtitle || '' }}
+                  />
                   <Edit2 className="w-4 h-4 absolute -right-6 top-1/2 -translate-y-1/2 text-blue-500 opacity-0 group-hover:opacity-100 transition-opacity" />
                 </div>
                 
@@ -849,9 +851,8 @@ export default function PlatformTranslations() {
                       suppressContentEditableWarning
                       onBlur={(e) => updateSection('hero', 'viewTemplates', e.currentTarget.textContent || '')}
                       className="outline-none"
-                    >
-                      {translations.hero.viewTemplates}
-                    </span>
+                      dangerouslySetInnerHTML={{ __html: translations.hero.viewTemplates || '' }}
+                    />
                     <ArrowRight className="ml-2 h-5 w-5" />
                     <Edit2 className="w-4 h-4 absolute -right-6 top-1/2 -translate-y-1/2 text-blue-500 opacity-0 group-hover:opacity-100 transition-opacity" />
                   </div>
@@ -861,9 +862,8 @@ export default function PlatformTranslations() {
                       suppressContentEditableWarning
                       onBlur={(e) => updateSection('common', 'viewMore', e.currentTarget.textContent || '')}
                       className="outline-none"
-                    >
-                      {translations.common.viewMore}
-                    </span>
+                      dangerouslySetInnerHTML={{ __html: translations.common.viewMore || '' }}
+                    />
                     <Eye className="ml-2 h-5 w-5" />
                     <Edit2 className="w-4 h-4 absolute -right-6 top-1/2 -translate-y-1/2 text-blue-500 opacity-0 group-hover:opacity-100 transition-opacity" />
                   </div>
@@ -1361,22 +1361,24 @@ export default function PlatformTranslations() {
               </div>
 
               <Card className="p-8">
-                <div 
-                  contentEditable 
-                  suppressContentEditableWarning
-                  onBlur={(e) => updateSection('pricing', 'title', e.currentTarget.textContent || '')}
-                  className="text-3xl font-bold text-center mb-4 p-4 cursor-pointer hover:bg-blue-50 hover:outline hover:outline-2 hover:outline-blue-300 rounded transition-all relative group outline-none"
-                >
-                  {translations?.pricing?.title || 'Pricing Title'}
+                <div className="relative group mb-4">
+                  <div 
+                    contentEditable 
+                    suppressContentEditableWarning
+                    onBlur={(e) => updateSection('pricing', 'title', e.currentTarget.textContent || '')}
+                    className="text-3xl font-bold text-center p-4 cursor-pointer hover:bg-blue-50 hover:outline hover:outline-2 hover:outline-blue-300 rounded transition-all outline-none"
+                    dangerouslySetInnerHTML={{ __html: translations?.pricing?.title || 'Pricing Title' }}
+                  />
                   <Edit2 className="w-4 h-4 absolute -right-6 top-1/2 -translate-y-1/2 text-blue-500 opacity-0 group-hover:opacity-100 transition-opacity" />
                 </div>
-                <div 
-                  contentEditable 
-                  suppressContentEditableWarning
-                  onBlur={(e) => updateSection('pricing', 'subtitle', e.currentTarget.textContent || '')}
-                  className="text-lg text-gray-600 text-center mb-8 p-4 cursor-pointer hover:bg-blue-50 hover:outline hover:outline-2 hover:outline-blue-300 rounded transition-all relative group outline-none"
-                >
-                  {translations?.pricing?.subtitle || 'Pricing Subtitle'}
+                <div className="relative group mb-8">
+                  <div 
+                    contentEditable 
+                    suppressContentEditableWarning
+                    onBlur={(e) => updateSection('pricing', 'subtitle', e.currentTarget.textContent || '')}
+                    className="text-lg text-gray-600 text-center p-4 cursor-pointer hover:bg-blue-50 hover:outline hover:outline-2 hover:outline-blue-300 rounded transition-all outline-none"
+                    dangerouslySetInnerHTML={{ __html: translations?.pricing?.subtitle || 'Pricing Subtitle' }}
+                  />
                   <Edit2 className="w-4 h-4 absolute -right-6 top-1/2 -translate-y-1/2 text-blue-500 opacity-0 group-hover:opacity-100 transition-opacity" />
                 </div>
 
@@ -1521,9 +1523,8 @@ export default function PlatformTranslations() {
                       suppressContentEditableWarning
                       onBlur={(e) => updateSection('templatePlansSection', 'badge', e.currentTarget.textContent || '')}
                       className="outline-none"
-                    >
-                      {translations.templatePlansSection.badge}
-                    </span>
+                      dangerouslySetInnerHTML={{ __html: translations.templatePlansSection.badge || '' }}
+                    />
                     <Edit2 className="w-4 h-4 absolute -right-6 top-1/2 -translate-y-1/2 text-blue-500 opacity-0 group-hover:opacity-100 transition-opacity" />
                   </div>
                 </div>
@@ -1531,13 +1532,14 @@ export default function PlatformTranslations() {
                 {/* Title */}
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">Section Title</label>
-                  <div 
-                    contentEditable 
-                    suppressContentEditableWarning
-                    onBlur={(e) => updateSection('templatePlansSection', 'title', e.currentTarget.textContent || '')}
-                    className="text-3xl md:text-4xl font-bold text-charcoal mb-4 cursor-pointer hover:bg-blue-50 hover:outline hover:outline-2 hover:outline-blue-300 rounded p-3 transition-all relative group outline-none"
-                  >
-                    {translations.templatePlansSection.title}
+                  <div className="relative group mb-4">
+                    <div 
+                      contentEditable 
+                      suppressContentEditableWarning
+                      onBlur={(e) => updateSection('templatePlansSection', 'title', e.currentTarget.textContent || '')}
+                      className="text-3xl md:text-4xl font-bold text-charcoal cursor-pointer hover:bg-blue-50 hover:outline hover:outline-2 hover:outline-blue-300 rounded p-3 transition-all outline-none"
+                      dangerouslySetInnerHTML={{ __html: translations.templatePlansSection.title || '' }}
+                    />
                     <Edit2 className="w-4 h-4 absolute -right-6 top-1/2 -translate-y-1/2 text-blue-500 opacity-0 group-hover:opacity-100 transition-opacity" />
                   </div>
                 </div>
@@ -1545,13 +1547,14 @@ export default function PlatformTranslations() {
                 {/* Subtitle */}
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">Section Subtitle</label>
-                  <div 
-                    contentEditable 
-                    suppressContentEditableWarning
-                    onBlur={(e) => updateSection('templatePlansSection', 'subtitle', e.currentTarget.textContent || '')}
-                    className="text-lg text-charcoal/70 cursor-pointer hover:bg-blue-50 hover:outline hover:outline-2 hover:outline-blue-300 rounded p-3 transition-all relative group outline-none"
-                  >
-                    {translations.templatePlansSection.subtitle}
+                  <div className="relative group">
+                    <div 
+                      contentEditable 
+                      suppressContentEditableWarning
+                      onBlur={(e) => updateSection('templatePlansSection', 'subtitle', e.currentTarget.textContent || '')}
+                      className="text-lg text-charcoal/70 cursor-pointer hover:bg-blue-50 hover:outline hover:outline-2 hover:outline-blue-300 rounded p-3 transition-all outline-none"
+                      dangerouslySetInnerHTML={{ __html: translations.templatePlansSection.subtitle || '' }}
+                    />
                     <Edit2 className="w-4 h-4 absolute -right-6 top-1/2 -translate-y-1/2 text-blue-500 opacity-0 group-hover:opacity-100 transition-opacity" />
                   </div>
                 </div>
@@ -1568,9 +1571,8 @@ export default function PlatformTranslations() {
                           suppressContentEditableWarning
                           onBlur={(e) => updateNestedSection('templatePlansSection', `planBadges.${plan}`, e.currentTarget.textContent || '')}
                           className="p-2 border-2 border-transparent hover:border-blue-300 rounded outline-none cursor-text bg-gray-50 text-sm"
-                        >
-                          {(translations.templatePlansSection as any)?.planBadges?.[plan]}
-                        </div>
+                          dangerouslySetInnerHTML={{ __html: (translations.templatePlansSection as any)?.planBadges?.[plan] || '' }}
+                        />
                       </div>
                     ))}
                   </div>
@@ -1588,9 +1590,8 @@ export default function PlatformTranslations() {
                           suppressContentEditableWarning
                           onBlur={(e) => updateNestedSection('templatePlansSection', `planDescriptions.${plan}`, e.currentTarget.textContent || '')}
                           className="p-2 border-2 border-transparent hover:border-blue-300 rounded outline-none cursor-text bg-gray-50 text-sm"
-                        >
-                          {(translations.templatePlansSection as any)?.planDescriptions?.[plan]}
-                        </div>
+                          dangerouslySetInnerHTML={{ __html: (translations.templatePlansSection as any)?.planDescriptions?.[plan] || '' }}
+                        />
                       </div>
                     ))}
                   </div>
@@ -1608,9 +1609,8 @@ export default function PlatformTranslations() {
                           suppressContentEditableWarning
                           onBlur={(e) => updateNestedSection('templatePlansSection', `features.${featureKey}`, e.currentTarget.textContent || '')}
                           className="flex-1 p-2 border-2 border-transparent hover:border-blue-300 rounded outline-none cursor-text bg-gray-50 text-sm"
-                        >
-                          {(translations.templatePlansSection as any)?.features?.[featureKey]}
-                        </div>
+                          dangerouslySetInnerHTML={{ __html: (translations.templatePlansSection as any)?.features?.[featureKey] || '' }}
+                        />
                       </div>
                     ))}
                   </div>

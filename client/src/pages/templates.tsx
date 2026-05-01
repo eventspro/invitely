@@ -1,8 +1,8 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import { useLocation, Link } from "wouter";
 import { useQuery } from "@tanstack/react-query";
 import { useTranslation } from "@/hooks/useLanguage";
-import LanguageSelector from "@/components/LanguageSelector";
+
 import { SiInstagram, SiTelegram, SiFacebook } from "react-icons/si";
 import { 
   Check, 
@@ -51,24 +51,34 @@ interface TemplatePlan {
   popular?: boolean;
 }
 
-// Template pricing plans mapped to actual template keys
-const getTemplatePricingPlans = (t: any) => ({
+interface ConfigurablePlan {
+  id: string;
+  planKey: string;
+  price: string;
+  badgeColor: string | null;
+  popular: boolean;
+  enabled: boolean;
+}
+
+// Template pricing plans mapped to actual template keys.
+// priceOverrides come from /api/configurable-pricing-plans (keyed by planKey).
+const getTemplatePricingPlans = (t: any, priceOverrides: Record<string, string> = {}) => ({
   classic: {
-    price: "10,000 AMD",
+    price: priceOverrides["basic"] ?? "7,000 AMD",
     badge: t.templatePlansSection.planBadges.basic,
     badgeColor: "bg-gray-500",
     description: t.templatePlansSection.planDescriptions.basic,
     planType: "basic"
   },
   elegant: {
-    price: "17,000 AMD", 
+    price: priceOverrides["standard"] ?? "17,000 AMD",
     badge: t.templatePlansSection.planBadges.standard,
     badgeColor: "bg-blue-500",
     description: t.templatePlansSection.planDescriptions.standard,
     planType: "standard"
   },
   romantic: {
-    price: "23,000 AMD",
+    price: priceOverrides["premium"] ?? "23,000 AMD",
     badge: t.templatePlansSection.planBadges.premium,
     badgeColor: "bg-green-500",
     description: t.templatePlansSection.planDescriptions.premium,
@@ -76,16 +86,16 @@ const getTemplatePricingPlans = (t: any) => ({
     popular: true
   },
   pro: {
-    price: "31,000 AMD",
-    badge: t.templatePlansSection.planBadges.deluxe, 
+    price: priceOverrides["advanced"] ?? "31,000 AMD",
+    badge: t.templatePlansSection.planBadges.deluxe,
     badgeColor: "bg-purple-500",
     description: t.templatePlansSection.planDescriptions.deluxe,
     planType: "advanced"
   },
   nature: {
-    price: "37,000 AMD",
+    price: priceOverrides["deluxe"] ?? "37,000 AMD",
     badge: "Luxury",
-    badgeColor: "bg-orange-500", 
+    badgeColor: "bg-orange-500",
     description: t.templatePlansSection.planDescriptions.deluxe,
     planType: "deluxe"
   }
@@ -186,6 +196,18 @@ export default function TemplatesPage() {
       .catch(() => {/* use defaults */});
   }, []);
 
+  // Fetch configurable pricing plans from platform
+  const { data: configurablePlans } = useQuery<ConfigurablePlan[]>({
+    queryKey: ['/api/configurable-pricing-plans'],
+    staleTime: 5 * 60 * 1000,
+  });
+
+  const planPriceMap = useMemo(() => {
+    const map: Record<string, string> = {};
+    configurablePlans?.forEach(plan => { map[plan.planKey] = plan.price; });
+    return map;
+  }, [configurablePlans]);
+
   // Fetch templates from API
   const { data: templates, isLoading, error } = useQuery<Template[]>({
     queryKey: ['/api/templates'],
@@ -203,7 +225,7 @@ export default function TemplatesPage() {
 
   // Create template plans from fetched data
   const templatePlans = templates?.map(template => {
-    const templatePricingPlans = getTemplatePricingPlans(t);
+    const templatePricingPlans = getTemplatePricingPlans(t, planPriceMap);
     const pricingPlan = templatePricingPlans[template.templateKey as keyof typeof templatePricingPlans];
     const featuresByPlan = getFeaturesByPlan(t);
     const features = featuresByPlan[pricingPlan?.planType as keyof typeof featuresByPlan] || [];
@@ -258,7 +280,6 @@ export default function TemplatesPage() {
               </a>
             </div>
             <div className="flex items-center space-x-4">
-              <LanguageSelector />
               <Link 
                 to="/"
                 className="bg-rose-500 hover:bg-rose-600 text-white px-4 py-2 rounded-lg transition-colors"
@@ -374,7 +395,7 @@ export default function TemplatesPage() {
                       className="w-full flex items-center gap-2"
                     >
                       <Eye className="w-4 h-4" />
-                      {t.templatesPage?.previewTemplate || "Preview Template"}
+                      {t.templatesPage?.previewTemplate}
                     </Button>
                     <Button
                       onClick={() => handleSelectPlan(plan.id)}
@@ -386,7 +407,7 @@ export default function TemplatesPage() {
                           : ''
                       }`}
                     >
-                      {t.templatesPage?.choosePlan || "Choose Plan"}
+                      {t.templatesPage?.choosePlan}
                       <ArrowRight className="w-4 h-4" />
                     </Button>
                   </div>
@@ -402,13 +423,13 @@ export default function TemplatesPage() {
       {!isLoading && templatePlans.length > 0 && (
       <section className="py-20 px-4 bg-white">
         <div className="max-w-7xl mx-auto">
-          <h2 className="text-4xl font-bold text-center mb-12">{t.templatesPage?.comparisonTitle || "Feature Comparison"}</h2>
+          {t.templatesPage?.comparisonTitle && <h2 className="text-4xl font-bold text-center mb-12">{t.templatesPage.comparisonTitle}</h2>}
           
           <div className="overflow-x-auto">
             <table className="w-full border-collapse bg-white rounded-lg shadow-lg overflow-hidden">
               <thead>
                 <tr className="bg-gray-50">
-                  <th className="p-4 text-left font-semibold">{t.templatesPage?.featuresHeader || "Features"}</th>
+                  <th className="p-4 text-left font-semibold">{t.templatesPage?.featuresHeader}</th>
                   {templatePlans.map((plan) => (
                     <th key={plan.id} className="p-4 text-center font-semibold min-w-[150px]">
                       {plan.name}
@@ -504,10 +525,10 @@ export default function TemplatesPage() {
             <div className="text-center mb-6">
               <Heart className="w-10 h-10 text-rose-500 mx-auto mb-3" />
               <h3 className="text-2xl font-bold text-gray-900 mb-1">
-                {t.contactSection?.title || "Կապ Մեզ Հետ"}
+                {t.contactSection?.title}
               </h3>
               <p className="text-gray-500 text-sm">
-                {t.contactSection?.subtitle || "Կապվեք մեզ ցանկացած հարթակով"}
+                {t.contactSection?.subtitle}
               </p>
             </div>
             <div className="space-y-3">
@@ -518,7 +539,7 @@ export default function TemplatesPage() {
                 className="flex items-center gap-3 w-full bg-[#0088cc] hover:bg-[#0088cc]/90 text-white px-5 py-3 rounded-xl font-medium transition-colors"
               >
                 <SiTelegram className="w-5 h-5 flex-shrink-0" />
-                <span>{t.socialMedia?.telegram?.label || "Telegram"}</span>
+                <span>{t.socialMedia?.telegram?.label}</span>
               </a>
               <a
                 href={socialLinks.instagram}
@@ -527,7 +548,7 @@ export default function TemplatesPage() {
                 className="flex items-center gap-3 w-full bg-gradient-to-r from-purple-600 via-pink-500 to-orange-400 hover:opacity-90 text-white px-5 py-3 rounded-xl font-medium transition-opacity"
               >
                 <SiInstagram className="w-5 h-5 flex-shrink-0" />
-                <span>{t.socialMedia?.instagram?.label || "Instagram"}</span>
+                <span>{t.socialMedia?.instagram?.label}</span>
               </a>
               <a
                 href={socialLinks.facebook}
@@ -536,7 +557,7 @@ export default function TemplatesPage() {
                 className="flex items-center gap-3 w-full bg-[#1877f2] hover:bg-[#1877f2]/90 text-white px-5 py-3 rounded-xl font-medium transition-colors"
               >
                 <SiFacebook className="w-5 h-5 flex-shrink-0" />
-                <span>{t.socialMedia?.facebook?.label || "Facebook"}</span>
+                <span>{t.socialMedia?.facebook?.label}</span>
               </a>
             </div>
           </div>

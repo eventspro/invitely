@@ -21,6 +21,7 @@ export async function sendTelegramMessage(
   chatId: string,
   text: string,
   parseMode: "HTML" | "MarkdownV2" | undefined = "HTML",
+  replyMarkup?: object,
 ): Promise<boolean> {
   const token = getBotToken();
   if (!token) {
@@ -31,10 +32,14 @@ export async function sendTelegramMessage(
   }
   try {
     const url = `${TELEGRAM_API_BASE}/bot${token}/sendMessage`;
+    const body: Record<string, unknown> = { chat_id: chatId, text, parse_mode: parseMode };
+    if (replyMarkup) {
+      body.reply_markup = replyMarkup;
+    }
     const res = await fetch(url, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ chat_id: chatId, text, parse_mode: parseMode }),
+      body: JSON.stringify(body),
     });
     if (!res.ok) {
       const body = await res.text().catch(() => "");

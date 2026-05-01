@@ -20,7 +20,7 @@ function deepMerge(base: any, override: any): any {
   const result: any = { ...base };
   for (const key in override) {
     const v = override[key];
-    if (v === null || v === undefined || v === '') continue; // keep static default
+    if (v === null || v === undefined) continue; // keep static default for absent values only
     if (Array.isArray(v)) {
       result[key] = v.length > 0 ? v : base[key]; // only overwrite non-empty arrays
     } else if (typeof v === 'object') {

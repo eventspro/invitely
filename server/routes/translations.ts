@@ -119,7 +119,7 @@ export function registerTranslationRoutes(app: Express) {
       
       // Group by language and unflatten (with proper array support)
       for (const t of allTranslations) {
-        if (!t.language || !t.translationKey || !t.value) {
+        if (!t.language || !t.translationKey || t.value === null || t.value === undefined) {
           console.warn("⚠️ Invalid translation entry:", t);
           continue;
         }

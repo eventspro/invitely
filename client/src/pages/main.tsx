@@ -30,9 +30,9 @@ import {
 import { SiInstagram, SiTelegram, SiFacebook } from "react-icons/si";
 import { Link } from "wouter";
 import { useTranslation, useLocaleFormat, useLanguage } from "@/hooks/useLanguage";
-import LanguageSelector from "@/components/LanguageSelector";
 import { defaultContentConfig, getEnabledItems } from "@shared/content-config";
 import { useBootstrap } from "@/contexts/BootstrapContext";
+import { SaleWheelModal } from "@/components/SaleWheelModal";
 
 // Template interface based on database schema
 interface Template {
@@ -115,6 +115,7 @@ export default function MainPage() {
   const { isLoading: translationsLoading } = useLanguage();
   const bootstrap = useBootstrap();
   const [selectedPlan, setSelectedPlan] = useState<string>("standard");
+  const [showSaleWheel, setShowSaleWheel] = useState(false);
 
   // ── Social links: fetched from platform settings ─────────────────────────────
   const [socialLinks, setSocialLinks] = useState({
@@ -370,6 +371,11 @@ export default function MainPage() {
       </div>
       {/* Content wrapper */}
       <div className="relative z-10">
+      {/* Sale Wheel Modal */}
+      {showSaleWheel && (
+        <SaleWheelModal onClose={() => setShowSaleWheel(false)} />
+      )}
+
       {/* Navigation */}
       <nav className="bg-white/90 backdrop-blur-sm shadow-sm sticky top-0 z-50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -403,7 +409,14 @@ export default function MainPage() {
               )}
             </div>
             <div className="flex items-center space-x-4">
-              <LanguageSelector />
+              {/* Spin & Win trigger button */}
+              <button
+                onClick={() => setShowSaleWheel(true)}
+                className="bg-amber-500 hover:bg-amber-600 text-white px-4 py-2 rounded-lg transition-colors text-sm font-semibold flex items-center gap-1.5"
+                aria-label="Ստաց՛ր քո նվերը"
+              >
+                🎁 Ստացի՛ր քո նվերը
+              </button>
               {t.hero?.cta && (
                 <a 
                   href="#contact" 
@@ -555,18 +568,20 @@ export default function MainPage() {
                       to={template.demoUrl}
                       className="inline-flex items-center bg-white hover:bg-gray-100 text-charcoal px-6 py-3 rounded-lg transition-all duration-300 font-semibold shadow-lg transform translate-y-4 group-hover:translate-y-0"
                     >
-                      <span data-i18n-key="templates.viewDemo">{t.templates?.viewDemo || 'View Live Demo'}</span> <ArrowRight className="ml-2 h-4 w-4" />
+                      <span data-i18n-key="templates.viewDemo">{t.templates?.viewDemo}</span> <ArrowRight className="ml-2 h-4 w-4" />
                     </Link>
                   </div>
                   {/* Template label */}
                   <div className="absolute top-4 left-4">
-                    <span className="bg-white/90 backdrop-blur-sm text-charcoal px-3 py-1 rounded-full text-sm font-medium shadow-lg" data-i18n-key="templates.templateLabel">
-                      {t.templates?.templateLabel || 'Template'}
-                    </span>
+                    {t.templates?.templateLabel && (
+                      <span className="bg-white/90 backdrop-blur-sm text-charcoal px-3 py-1 rounded-full text-sm font-medium shadow-lg" data-i18n-key="templates.templateLabel">
+                        {t.templates.templateLabel}
+                      </span>
+                    )}
                   </div>
                 </div>
                 <div className="p-6">
-                  <h3 className="text-xl font-bold text-charcoal mb-2" data-i18n-key={`templates.items.${index}.name`}>{t.templates?.items?.[index]?.name || template.name}</h3>
+                  <h3 className="text-xl font-bold text-charcoal mb-2" data-i18n-key={`templates.items.${index}.name`}>{t.templates?.items?.[index]?.name}</h3>
                   <p className="text-charcoal/60 mb-4 text-sm" data-i18n-key="templates.cardSubtitle">{t.templates?.cardSubtitle}</p>
                   {/* <h4 className="font-semibold text-charcoal mb-3 text-sm" data-i18n-key="templates.featuresLabel">{t.templates?.featuresLabel}:</h4> */}
                   {/* <div className="flex flex-wrap gap-2">
@@ -587,12 +602,12 @@ export default function MainPage() {
       <section id="pricing" className="py-20">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-16">
-            <div className="inline-flex items-center bg-gradient-to-r from-rose-500 to-pink-500 text-white px-6 py-2 rounded-full text-sm font-medium mb-6">
-              <Crown className="w-4 h-4 mr-2" />
-              {t.templatePlansSection?.badge && (
+            {t.templatePlansSection?.badge && (
+              <div className="inline-flex items-center bg-gradient-to-r from-rose-500 to-pink-500 text-white px-6 py-2 rounded-full text-sm font-medium mb-6">
+                <Crown className="w-4 h-4 mr-2" />
                 <span data-i18n-key="templatePlansSection.badge">{t.templatePlansSection.badge}</span>
-              )}
-            </div>
+              </div>
+            )}
             {t.templatePlansSection?.title && (
               <h2 
                 className="text-4xl md:text-5xl font-bold text-charcoal mb-6"
@@ -681,7 +696,7 @@ export default function MainPage() {
                       : 'bg-gradient-to-r from-rose-500 to-pink-500 text-white hover:from-rose-600 hover:to-pink-600 shadow-md'
                   }`}
                 >
-                  <span data-i18n-key="templatePlans.viewTemplate">{t.templatePlans?.viewTemplate || 'View Template'}</span>
+                  <span data-i18n-key="templatePlans.viewTemplate">{t.templatePlans?.viewTemplate}</span>
                 </Link>
               </div>
             ))}
@@ -744,9 +759,11 @@ export default function MainPage() {
 
           {/* FAQ Section */}
           <div className="mt-20">
-            <h3 className="text-3xl font-bold text-center text-charcoal mb-12" data-i18n-key="faq.title">
-              {t.faq?.title || "Frequently Asked Questions"}
-            </h3>
+            {t.faq?.title && (
+              <h3 className="text-3xl font-bold text-center text-charcoal mb-12" data-i18n-key="faq.title">
+                {t.faq.title}
+              </h3>
+            )}
             <div className="max-w-4xl mx-auto space-y-6">
               {((t.faq?.items as any[]) || []).map((item: any, idx: number) => {
                 if (!item?.question) return null;
