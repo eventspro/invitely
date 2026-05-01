@@ -1,7 +1,7 @@
 import express from 'express';
 import { db } from '../db.js';
 import { managementUsers, orders, userAdminPanels, templates, platformSettings } from '../../shared/schema.js';
-import { eq, desc, sql } from 'drizzle-orm';
+import { eq, desc, sql, and } from 'drizzle-orm';
 import { hashPassword } from '../middleware/auth.js';
 import jwt from 'jsonwebtoken';
 
