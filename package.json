@@ -16,7 +16,7 @@
     "db:push": "drizzle-kit push",
     "db:migrate": "drizzle-kit push && tsx scripts/migrate-default-template.ts",
     "db:generate": "drizzle-kit generate",
-    "postbuild": "cp -r public/attached_assets dist/ 2>/dev/null || xcopy public\\attached_assets dist\\attached_assets /E /I /Q 2>nul || echo 'Assets copy completed'",
+    "postbuild": "cp -r public/attached_assets dist/ 2>/dev/null || xcopy public\\attached_assets dist\\attached_assets /E /I /Q /Y 2>nul || echo 'Assets copy completed'",
     "backup": "tsx scripts/backup.ts",
     "backup:dry": "tsx scripts/backup.ts --dry-run",
     "backup:schema": "tsx scripts/backup-schema.ts",
