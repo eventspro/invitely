@@ -413,7 +413,7 @@ export default function MainPage() {
               <button
                 onClick={() => setShowSaleWheel(true)}
                 className="bg-amber-500 hover:bg-amber-600 text-white px-4 py-2 rounded-lg transition-colors text-sm font-semibold flex items-center gap-1.5"
-                aria-label="Ստաց՛ր քո նվերը"
+                aria-label="Ստացի՛ր քո նվերը"
               >
                 🎁 Ստացի՛ր քո նվերը
               </button>
