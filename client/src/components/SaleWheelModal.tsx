@@ -29,10 +29,15 @@ export const PRIZES = [
 
 const SLICE_DEG = 360 / PRIZES.length; // degrees per slice
 
-// Segment colours (alternating warm palette)
+// Premium segment colours — rich, distinct, high-contrast
 const SEGMENT_COLORS = [
-  "#F59E0B", "#EF4444", "#8B5CF6",
-  "#10B981", "#3B82F6", "#F97316", "#EC4899",
+  "#E74C3C", // deep red
+  "#E67E22", // burnt orange
+  "#D4AC0D", // gold
+  "#27AE60", // emerald
+  "#2471A3", // ocean blue
+  "#7D3C98", // deep purple
+  "#148F77", // teal
 ];
 
 // ─── Read owner test key from URL (?swtest=<secret>) ────────────────────────
@@ -46,6 +51,18 @@ function getTestKey(): string | null {
 
 const SESSION_KEY = "sw_participated";
 
+// ─── Helpers ─────────────────────────────────────────────────────────────────
+function hexToRgb(hex: string) {
+  const r = parseInt(hex.slice(1, 3), 16);
+  const g = parseInt(hex.slice(3, 5), 16);
+  const b = parseInt(hex.slice(5, 7), 16);
+  return { r, g, b };
+}
+function lighten(hex: string, amount: number) {
+  const { r, g, b } = hexToRgb(hex);
+  return `rgb(${Math.min(255, r + amount)},${Math.min(255, g + amount)},${Math.min(255, b + amount)})`;
+}
+
 // ─── Canvas wheel renderer ────────────────────────────────────────────────────
 function drawWheel(canvas: HTMLCanvasElement, rotation: number) {
   const ctx = canvas.getContext("2d");
@@ -53,49 +70,94 @@ function drawWheel(canvas: HTMLCanvasElement, rotation: number) {
   const size = canvas.width;
   const cx = size / 2;
   const cy = size / 2;
-  const r = size / 2 - 4;
+  const r = size / 2 - 8;
 
   ctx.clearRect(0, 0, size, size);
 
+  // ── Outer decorative ring ─────────────────────────────────────────────────
+  ctx.beginPath();
+  ctx.arc(cx, cy, r + 7, 0, Math.PI * 2);
+  const outerGrad = ctx.createLinearGradient(0, 0, size, size);
+  outerGrad.addColorStop(0, "#1a1a2e");
+  outerGrad.addColorStop(1, "#2d2d44");
+  ctx.fillStyle = outerGrad;
+  ctx.fill();
+
+  // ── Gold separator ring ───────────────────────────────────────────────────
+  ctx.beginPath();
+  ctx.arc(cx, cy, r + 3, 0, Math.PI * 2);
+  ctx.strokeStyle = "#C9A227";
+  ctx.lineWidth = 2.5;
+  ctx.stroke();
+
+  // ── Slices ────────────────────────────────────────────────────────────────
   PRIZES.forEach((prize, i) => {
     const startAngle = ((i * SLICE_DEG - 90 + rotation) * Math.PI) / 180;
     const endAngle = (((i + 1) * SLICE_DEG - 90 + rotation) * Math.PI) / 180;
+    const midAngle  = (startAngle + endAngle) / 2;
+    const base = SEGMENT_COLORS[i % SEGMENT_COLORS.length];
 
-    // Slice
+    // Radial gradient: lighter at centre, richer at edge
+    const grad = ctx.createRadialGradient(cx, cy, r * 0.1, cx, cy, r);
+    grad.addColorStop(0, lighten(base, 50));
+    grad.addColorStop(1, base);
+
     ctx.beginPath();
     ctx.moveTo(cx, cy);
     ctx.arc(cx, cy, r, startAngle, endAngle);
     ctx.closePath();
-    ctx.fillStyle = SEGMENT_COLORS[i % SEGMENT_COLORS.length];
+    ctx.fillStyle = grad;
     ctx.fill();
-    ctx.strokeStyle = "#fff";
-    ctx.lineWidth = 2;
+
+    // White separator lines
+    ctx.strokeStyle = "rgba(255,255,255,0.5)";
+    ctx.lineWidth = 1.5;
     ctx.stroke();
 
-    // Emoji + label text
+    // ── Text group ─────────────────────────────────────────────────────────
     ctx.save();
     ctx.translate(cx, cy);
-    const midAngle = ((i + 0.5) * SLICE_DEG - 90 + rotation) * (Math.PI / 180);
     ctx.rotate(midAngle);
-    ctx.textAlign = "right";
-    ctx.fillStyle = "#fff";
-    ctx.font = `bold ${Math.max(10, size / 25)}px system-ui, sans-serif`;
-    ctx.fillText(prize.emoji + " " + prize.label, r - 8, 4);
+
+    const textR = r * 0.60; // position along radius
+    const emojiSize = Math.round(Math.max(11, size / 23));
+    const labelSize = Math.round(Math.max(9, size / 30));
+
+    // Emoji
+    ctx.textAlign = "center";
+    ctx.textBaseline = "middle";
+    ctx.font = `${emojiSize}px system-ui`;
+    ctx.fillText(prize.emoji, textR, -labelSize - 2);
+
+    // Label — stroke first for a crisp dark outline, then white fill
+    ctx.font = `bold ${labelSize}px system-ui, 'Segoe UI', sans-serif`;
+    ctx.textAlign = "center";
+    ctx.textBaseline = "middle";
+    ctx.lineJoin = "round";
+    ctx.lineWidth = 3.5;
+    ctx.strokeStyle = "rgba(0,0,0,0.75)";
+    ctx.strokeText(prize.label, textR, labelSize + 1);
+    ctx.fillStyle = "#FFFFFF";
+    ctx.fillText(prize.label, textR, labelSize + 1);
+
     ctx.restore();
   });
 
-  // Centre circle
+  // ── Centre glow ───────────────────────────────────────────────────────────
+  const centreGrad = ctx.createRadialGradient(cx, cy, 0, cx, cy, 26);
+  centreGrad.addColorStop(0, "#FFFFFF");
+  centreGrad.addColorStop(1, "#F3F4F6");
   ctx.beginPath();
-  ctx.arc(cx, cy, 22, 0, Math.PI * 2);
-  ctx.fillStyle = "#fff";
+  ctx.arc(cx, cy, 26, 0, Math.PI * 2);
+  ctx.fillStyle = centreGrad;
   ctx.fill();
-  ctx.strokeStyle = "#E5E7EB";
+  ctx.strokeStyle = "#C9A227";
   ctx.lineWidth = 2;
   ctx.stroke();
 
   // Centre star
-  ctx.fillStyle = "#F59E0B";
-  ctx.font = "bold 18px system-ui";
+  ctx.fillStyle = "#D4AC0D";
+  ctx.font = "bold 20px system-ui";
   ctx.textAlign = "center";
   ctx.textBaseline = "middle";
   ctx.fillText("★", cx, cy);
@@ -292,31 +354,34 @@ export const SaleWheelModal: React.FC<SaleWheelModalProps> = ({ onClose }) => {
 
   return (
     <div
-      className="fixed inset-0 z-[200] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm"
+      className="fixed inset-0 z-[200] flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm"
       onClick={handleOverlayClick}
     >
       <div
-        className="bg-white rounded-2xl shadow-2xl w-full max-w-md max-h-[95vh] overflow-y-auto relative"
+        className="bg-white rounded-3xl shadow-2xl w-full max-w-md max-h-[95vh] overflow-y-auto relative"
+        style={{ boxShadow: "0 25px 60px rgba(0,0,0,0.4)" }}
         onClick={(e) => e.stopPropagation()}
       >
-        {/* Close button — hidden while spinning */}
-        {step !== "spinning" && (
-          <button
-            onClick={onClose}
-            className="absolute top-3 right-3 w-8 h-8 flex items-center justify-center rounded-full text-gray-400 hover:bg-gray-100 hover:text-gray-600 transition-colors z-10"
-            aria-label="Փակել"
-          >
-            <X size={16} />
-          </button>
-        )}
-
-        <div className="px-6 pt-6 pb-2 text-center">
+        {/* ── Gradient header bar ── */}
+        <div
+          className="rounded-t-3xl px-6 pt-5 pb-4 text-center relative"
+          style={{ background: "linear-gradient(135deg, #b45309 0%, #d97706 50%, #f59e0b 100%)" }}
+        >
+          {step !== "spinning" && (
+            <button
+              onClick={onClose}
+              className="absolute top-3 right-3 w-8 h-8 flex items-center justify-center rounded-full text-white/70 hover:bg-white/20 hover:text-white transition-colors z-10"
+              aria-label="Փակել"
+            >
+              <X size={16} />
+            </button>
+          )}
           <div className="text-3xl mb-1">🎁</div>
-          <h2 className="text-xl font-bold text-gray-900 leading-snug">
+          <h2 className="text-lg font-extrabold text-white leading-snug drop-shadow">
             Պտտիր անիվը և ստացիր հատուկ առաջարկ
           </h2>
           {(step === "form" || step === "spinning") && (
-            <p className="text-sm text-gray-500 mt-1">
+            <p className="text-xs text-amber-100 mt-1">
               Մուտքագրեք Ձեր տվյալները՝ խաղարկությանը մասնակցելու համար։
             </p>
           )}
@@ -324,36 +389,44 @@ export const SaleWheelModal: React.FC<SaleWheelModalProps> = ({ onClose }) => {
 
         {/* ── Wheel canvas (shown during form + spinning) ── */}
         {(step === "form" || step === "spinning") && (
-          <div className="flex justify-center px-6 pt-4 pb-2 relative">
-            {/* Top pointer triangle */}
+          <div className="flex justify-center px-4 pt-5 pb-1 relative">
+            {/* Pointer — stylised pin above wheel */}
+            <div className="absolute z-10" style={{ top: 10, left: "50%", transform: "translateX(-50%)" }}>
+              <div style={{
+                width: 0, height: 0,
+                borderLeft: "12px solid transparent",
+                borderRight: "12px solid transparent",
+                borderTop: "24px solid #C0392B",
+                filter: "drop-shadow(0 2px 4px rgba(0,0,0,0.5))",
+              }} />
+            </div>
+            {/* Outer glow ring around canvas */}
             <div
-              className="absolute top-[16px] left-1/2 -translate-x-1/2 z-10 w-0 h-0"
-              style={{
-                borderLeft: "10px solid transparent",
-                borderRight: "10px solid transparent",
-                borderTop: "20px solid #EF4444",
-              }}
-            />
-            <canvas
-              ref={canvasRef}
-              width={280}
-              height={280}
-              className="rounded-full shadow-lg"
-            />
+              className="rounded-full p-1"
+              style={{ background: "linear-gradient(135deg, #C9A227, #8B6914, #C9A227)", padding: 3 }}
+            >
+              <canvas
+                ref={canvasRef}
+                width={300}
+                height={300}
+                className="rounded-full block"
+              />
+            </div>
           </div>
         )}
 
         {/* ─────────────────── STEP: FORM ─────────────────────────────────── */}
         {step === "form" && (
-          <form onSubmit={handleSubmit} className="px-6 pb-6 space-y-3 mt-2">
+          <form onSubmit={handleSubmit} className="px-6 pb-6 space-y-3 mt-4">
             {formError && (
-              <div className="bg-red-50 border border-red-200 text-red-700 text-sm px-3 py-2 rounded-lg">
-                {formError}
+              <div className="bg-red-50 border border-red-200 text-red-700 text-sm px-3 py-2 rounded-xl flex items-start gap-2">
+                <span className="mt-0.5">⚠️</span>
+                <span>{formError}</span>
               </div>
             )}
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
+              <label className="block text-xs font-semibold text-gray-600 uppercase tracking-wide mb-1">
                 Անուն <span className="text-red-500">*</span>
               </label>
               <input
@@ -361,14 +434,14 @@ export const SaleWheelModal: React.FC<SaleWheelModalProps> = ({ onClose }) => {
                 value={form.name}
                 onChange={handleChange}
                 placeholder="Ձեր անունը"
-                className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-amber-400"
+                className="w-full px-4 py-2.5 border-2 border-gray-200 rounded-xl text-sm focus:outline-none focus:border-amber-400 transition-colors"
                 autoComplete="given-name"
                 maxLength={100}
               />
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
+              <label className="block text-xs font-semibold text-gray-600 uppercase tracking-wide mb-1">
                 Հեռախոսահամար <span className="text-red-500">*</span>
               </label>
               <input
@@ -376,12 +449,12 @@ export const SaleWheelModal: React.FC<SaleWheelModalProps> = ({ onClose }) => {
                 value={form.phone}
                 onChange={handleChange}
                 placeholder="+374 91 234 567"
-                className={`w-full px-3 py-2 border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-amber-400 ${(() => {
-                  if (!form.phone) return "border-gray-200";
+                className={`w-full px-4 py-2.5 border-2 rounded-xl text-sm focus:outline-none transition-colors ${(() => {
+                  if (!form.phone) return "border-gray-200 focus:border-amber-400";
                   const n = form.phone.replace(/[\s\-().]/g, "");
                   return /^\+[1-9]\d{6,14}$/.test(n) || /^\d{7,15}$/.test(n)
-                    ? "border-green-400"
-                    : "border-red-300";
+                    ? "border-green-400 focus:border-green-500"
+                    : "border-red-300 focus:border-red-400";
                 })()}`}
                 type="tel"
                 autoComplete="tel"
@@ -397,16 +470,16 @@ export const SaleWheelModal: React.FC<SaleWheelModalProps> = ({ onClose }) => {
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
+              <label className="block text-xs font-semibold text-gray-600 uppercase tracking-wide mb-1">
                 Էլ․ հասցե{" "}
-                <span className="text-gray-400 font-normal">(կամընտիր)</span>
+                <span className="text-gray-400 font-normal normal-case">(կամընտիր)</span>
               </label>
               <input
                 name="email"
                 value={form.email}
                 onChange={handleChange}
                 placeholder="your@email.com"
-                className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-amber-400"
+                className="w-full px-4 py-2.5 border-2 border-gray-200 rounded-xl text-sm focus:outline-none focus:border-amber-400 transition-colors"
                 type="email"
                 autoComplete="email"
                 maxLength={200}
@@ -414,16 +487,16 @@ export const SaleWheelModal: React.FC<SaleWheelModalProps> = ({ onClose }) => {
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
+              <label className="block text-xs font-semibold text-gray-600 uppercase tracking-wide mb-1">
                 Հարսանիքի ամսաթիվ{" "}
-                <span className="text-gray-400 font-normal">(կամընտիր)</span>
+                <span className="text-gray-400 font-normal normal-case">(կամընտիր)</span>
               </label>
               <input
                 name="weddingDate"
                 value={form.weddingDate}
                 onChange={handleChange}
                 placeholder="2025-09-15"
-                className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-amber-400"
+                className="w-full px-4 py-2.5 border-2 border-gray-200 rounded-xl text-sm focus:outline-none focus:border-amber-400 transition-colors"
                 type="date"
                 maxLength={50}
               />
@@ -432,7 +505,8 @@ export const SaleWheelModal: React.FC<SaleWheelModalProps> = ({ onClose }) => {
             <button
               type="submit"
               disabled={submitting}
-              className="w-full py-3 bg-amber-500 hover:bg-amber-600 text-white font-semibold rounded-xl transition-colors disabled:opacity-60 flex items-center justify-center gap-2 mt-2"
+              className="w-full py-3 text-white font-bold rounded-xl transition-all disabled:opacity-60 flex items-center justify-center gap-2 mt-1 text-base shadow-md hover:shadow-lg active:scale-95"
+              style={{ background: "linear-gradient(135deg, #b45309, #d97706, #f59e0b)" }}
             >
               {submitting ? (
                 <>
@@ -440,7 +514,7 @@ export const SaleWheelModal: React.FC<SaleWheelModalProps> = ({ onClose }) => {
                   Բեռնում...
                 </>
               ) : (
-                "Պտտել անիվը 🎯"
+                <>Պտտել անիվը &nbsp;🎯</>
               )}
             </button>
           </form>
@@ -449,27 +523,35 @@ export const SaleWheelModal: React.FC<SaleWheelModalProps> = ({ onClose }) => {
         {/* ─────────────────── STEP: SPINNING ─────────────────────────────── */}
         {step === "spinning" && (
           <div className="px-6 pb-6 text-center mt-4">
-            <p className="text-gray-500 text-sm animate-pulse">Պտտվում է...</p>
+            <p className="text-amber-600 font-semibold text-sm animate-pulse tracking-wide">✨ Պտտվում է...</p>
           </div>
         )}
 
         {/* ─────────────────── STEP: RESULT ───────────────────────────────── */}
         {step === "result" && result && (
-          <div className="px-6 pb-8 text-center space-y-4 mt-2">
-            <div className="text-5xl">{prizeInfo?.emoji ?? "🎉"}</div>
-            <div>
-              <p className="text-lg font-bold text-gray-900">Շնորհավորում ենք 🎉</p>
-              <p className="text-gray-600 text-sm mt-1">Դուք շահեցիք</p>
-              <p className="text-2xl font-extrabold text-amber-500 mt-2">
+          <div className="px-6 pb-8 text-center space-y-4 mt-4">
+            {/* Confetti banner */}
+            <div
+              className="rounded-2xl py-5 px-4"
+              style={{ background: "linear-gradient(135deg, #fef3c7, #fde68a)" }}
+            >
+              <div className="text-5xl mb-2">{prizeInfo?.emoji ?? "🎉"}</div>
+              <p className="text-xl font-extrabold text-amber-900">Շնորհավորում ենք! 🎉</p>
+              <p className="text-sm text-amber-700 mt-1">Դուք շահեցիք</p>
+              <p
+                className="text-2xl font-black mt-2 leading-tight"
+                style={{ color: "#92400e" }}
+              >
                 {result.prizeLabel}
               </p>
             </div>
-            <div className="bg-amber-50 border border-amber-200 rounded-xl px-4 py-3 text-sm text-amber-800">
-              Մենք շուտով կկապվենք Ձեզ հետ։
+            <div className="bg-emerald-50 border border-emerald-200 rounded-xl px-4 py-3 text-sm text-emerald-800 flex items-center gap-2 justify-center">
+              <span>✅</span> Մենք շուտով կկապվենք Ձեզ հետ։
             </div>
             <button
               onClick={onClose}
-              className="mt-2 px-8 py-2.5 bg-amber-500 hover:bg-amber-600 text-white font-semibold rounded-xl transition-colors"
+              className="w-full py-3 text-white font-bold rounded-xl shadow-md hover:shadow-lg active:scale-95 transition-all"
+              style={{ background: "linear-gradient(135deg, #b45309, #d97706, #f59e0b)" }}
             >
               Փակել
             </button>
@@ -478,23 +560,26 @@ export const SaleWheelModal: React.FC<SaleWheelModalProps> = ({ onClose }) => {
 
         {/* ─────────────────── STEP: DUPLICATE ────────────────────────────── */}
         {step === "duplicate" && (
-          <div className="px-6 pb-8 text-center space-y-4 mt-4">
-            <div className="text-4xl">ℹ️</div>
-            <p className="text-gray-800 font-semibold">
+          <div className="px-6 pb-8 text-center space-y-4 mt-6">
+            <div className="text-5xl">ℹ️</div>
+            <p className="text-gray-800 font-bold text-lg">
               Դուք արդեն մասնակցել եք խաղարկությանը։
             </p>
             {result && (
-              <div className="bg-gray-50 border border-gray-200 rounded-xl px-4 py-3">
-                <p className="text-sm text-gray-500">Ձեր նախկին շահումը՝</p>
-                <p className="font-bold text-amber-500 text-lg mt-1">{result.prizeLabel}</p>
+              <div
+                className="rounded-2xl py-4 px-4"
+                style={{ background: "linear-gradient(135deg, #fef3c7, #fde68a)" }}
+              >
+                <p className="text-xs text-amber-700 uppercase tracking-wide font-semibold">Ձեր նախկին շահումը</p>
+                <p className="font-black text-amber-900 text-xl mt-1">{result.prizeLabel}</p>
               </div>
             )}
-            <div className="bg-blue-50 border border-blue-200 rounded-xl px-4 py-3 text-sm text-blue-700">
-              Մենք շուտով կկապվենք Ձեզ հետ։
+            <div className="bg-blue-50 border border-blue-200 rounded-xl px-4 py-3 text-sm text-blue-700 flex items-center gap-2 justify-center">
+              <span>💌</span> Մենք շուտով կկապվենք Ձեզ հետ։
             </div>
             <button
               onClick={onClose}
-              className="mt-2 px-8 py-2.5 bg-gray-700 hover:bg-gray-800 text-white font-semibold rounded-xl transition-colors"
+              className="w-full py-3 bg-gray-800 hover:bg-gray-900 text-white font-bold rounded-xl transition-colors active:scale-95"
             >
               Փակել
             </button>
