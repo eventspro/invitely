@@ -8,6 +8,7 @@ import {
   insertConfigurablePlanFeatureSchema,
 } from "../../shared/schema.js";
 import { eq, asc, sql } from "drizzle-orm";
+import { authenticateUser } from "../middleware/auth.js";
 
 const router = Router();
 
@@ -71,7 +72,7 @@ router.get("/configurable-pricing-plans/:id", async (req, res) => {
 });
 
 // POST /api/configurable-pricing-plans - Create new plan
-router.post("/configurable-pricing-plans", async (req, res) => {
+router.post("/configurable-pricing-plans", authenticateUser, async (req, res) => {
   try {
     const validatedData = insertConfigurablePricingPlanSchema.parse(req.body);
 
@@ -91,7 +92,7 @@ router.post("/configurable-pricing-plans", async (req, res) => {
 });
 
 // PATCH /api/configurable-pricing-plans/:id - Update plan
-router.patch("/configurable-pricing-plans/:id", async (req, res) => {
+router.patch("/configurable-pricing-plans/:id", authenticateUser, async (req, res) => {
   try {
     const validatedData = updateConfigurablePricingPlanSchema.parse(req.body);
 
@@ -119,7 +120,7 @@ router.patch("/configurable-pricing-plans/:id", async (req, res) => {
 });
 
 // DELETE /api/configurable-pricing-plans/:id - Delete plan
-router.delete("/configurable-pricing-plans/:id", async (req, res) => {
+router.delete("/configurable-pricing-plans/:id", authenticateUser, async (req, res) => {
   try {
     const [deletedPlan] = await db
       .delete(configurablePricingPlans)
@@ -141,7 +142,7 @@ router.delete("/configurable-pricing-plans/:id", async (req, res) => {
 });
 
 // POST /api/configurable-pricing-plans/:id/reorder - Swap order with another plan
-router.post("/configurable-pricing-plans/:id/reorder", async (req, res) => {
+router.post("/configurable-pricing-plans/:id/reorder", authenticateUser, async (req, res) => {
   try {
     const { direction } = req.body; // "up" or "down"
     const planId = req.params.id;
@@ -186,7 +187,7 @@ router.post("/configurable-pricing-plans/:id/reorder", async (req, res) => {
 });
 
 // PUT /api/configurable-pricing-plans/:id/features - Replace all features for a plan
-router.put("/configurable-pricing-plans/:id/features", async (req, res) => {
+router.put("/configurable-pricing-plans/:id/features", authenticateUser, async (req, res) => {
   try {
     const planId = req.params.id;
     const { features } = req.body;

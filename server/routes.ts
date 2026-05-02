@@ -28,7 +28,7 @@ import { registerTemplateRoutes } from './routes/templates.js';
 import { registerTranslationRoutes } from './routes/translations.js';
 import { registerConfigurablePricingRoutes } from './routes/configurable-pricing.js';
 import { adminLimiter, authLimiter } from './middleware/rateLimiter.js';
-import { authenticateUser } from './middleware/auth.js';
+import { authenticateUser, requireAdminPanelAccess } from './middleware/auth.js';
 
 // Configure multer for file uploads
 const uploadsDir = process.env.VERCEL ? '/tmp/uploads' : path.join(process.cwd(), 'uploads');
@@ -170,7 +170,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Get all RSVPs (admin endpoint)
-  app.get("/api/rsvps", async (req, res) => {
+  app.get("/api/rsvps", authenticateUser, async (req, res) => {
     try {
       const rsvps = await storage.getAllRsvps();
       res.json(rsvps);
@@ -180,8 +180,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Test email endpoint
-  app.get("/api/test-email", async (req, res) => {
+  // Test email endpoint — restricted to authenticated admins
+  app.get("/api/test-email", authenticateUser, async (req, res) => {
     try {
       console.log("🧪 Testing email service...");
       await testEmailService();
@@ -230,14 +230,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.post("/api/maintenance", async (req, res) => {
+  app.post("/api/maintenance", authenticateUser, async (req, res) => {
     try {
-      const { enabled, password } = req.body;
-      
-      // Simple password check for admin access
-      if (password !== "haruttev2025admin") {
-        return res.status(401).json({ message: "Unauthorized" });
-      }
+      const { enabled } = req.body;
       
       await storage.setMaintenanceStatus(enabled);
       res.json({ 
@@ -253,7 +248,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Image upload endpoints
 
   // Gallery/Love Story photo upload endpoint (R2-enabled)
-  app.post("/api/photos/upload", upload.single('image'), async (req, res) => {
+  app.post("/api/photos/upload", authenticateUser, upload.single('image'), async (req, res) => {
     try {
       if (!req.file) {
         return res.status(400).json({ error: 'No file uploaded' });
@@ -360,7 +355,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Upload image for a specific template (legacy endpoint)
-  app.post("/api/images/upload", upload.single('image'), async (req, res) => {
+  app.post("/api/images/upload", authenticateUser, upload.single('image'), async (req, res) => {
     try {
       if (!req.file) {
         return res.status(400).json({ error: 'No file uploaded' });
@@ -646,7 +641,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Delete an image
-  app.delete("/api/images", async (req, res) => {
+  app.delete("/api/images", authenticateUser, async (req, res) => {
     try {
       const { id, templateId } = req.body;
       
@@ -988,7 +983,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.put("/api/templates/:templateId/config", async (req, res) => {
+  app.put("/api/templates/:templateId/config", authenticateUser, async (req, res) => {
     try {
       const { templateId } = req.params;
       const config = req.body;
@@ -1019,35 +1014,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Save template config error:", error);
       res.status(500).json({ message: "Server error" });
-    }
-  });
-
-  // Template RSVPs endpoint
-  app.get("/api/templates/:templateId/rsvps", async (req, res) => {
-    try {
-      const { templateId } = req.params;
-      console.log(`📋 Getting RSVPs for template: ${templateId}`);
-      
-      // Try to find template by ID first, then by slug to get the actual ID
-      let template = await storage.getTemplate(templateId);
-      if (!template) {
-        console.log(`❌ Template not found by ID, trying slug: ${templateId}`);
-        template = await storage.getTemplateBySlug(templateId);
-      }
-      
-      if (!template) {
-        console.log(`❌ Template not found by ID or slug: ${templateId}`);
-        return res.status(404).json({ message: "Template not found" });
-      }
-      
-      // Use the actual template ID for the RSVPs query
-      const rsvps = await storage.getAllRsvps(template.id);
-      
-      console.log(`📊 Found ${rsvps.length} RSVPs for template`);
-      res.json(rsvps);
-    } catch (error) {
-      console.error("❌ Failed to get RSVPs:", error);
-      res.status(500).json({ error: "Failed to get RSVPs" });
     }
   });
 

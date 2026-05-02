@@ -4,6 +4,7 @@ import { db } from "../db.js";
 import { translations } from "../../shared/schema.js";
 import { eq, and, sql, like } from "drizzle-orm";
 import { z } from "zod";
+import { authenticateUser } from "../middleware/auth.js";
 
 // Import default translations for initialization
 import { en } from "../../client/src/config/languages/en.js";
@@ -242,7 +243,7 @@ export function registerTranslationRoutes(app: Express) {
   });
 
   // Update a translation key
-  app.put("/api/translations", async (req, res) => {
+  app.put("/api/translations", authenticateUser, async (req, res) => {
     try {
       const validated = updateTranslationSchema.parse(req.body);
       const { language, key, value } = validated;
@@ -305,7 +306,7 @@ export function registerTranslationRoutes(app: Express) {
   });
 
   // Bulk update translations
-  app.post("/api/translations/bulk", async (req, res) => {
+  app.post("/api/translations/bulk", authenticateUser, async (req, res) => {
     try {
       const { language, updates, prefixesToClear } = req.body;
       
