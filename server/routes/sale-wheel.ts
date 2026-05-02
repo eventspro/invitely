@@ -26,13 +26,14 @@ interface Prize {
 
 // ─── Prize table (weights sum to 1000 for easy integer arithmetic) ────────────
 const PRIZES: Prize[] = [
-  { key: "discount_10",       label: "10% զեղչ",                weight: 850 },
-  { key: "discount_20",       label: "20% զեղչ",                weight: 70  },
-  { key: "admin_panel_free",  label: "Admin Panel անվճար",       weight: 30  },
-  { key: "music_free",        label: "Երաժշտություն անվճար",     weight: 20  },
-  { key: "gallery_free",      label: "Ֆոտոպատկերասրահ անվճար",  weight: 15  },
-  { key: "all_features",      label: "Բոլոր հնարավ. ներառված",  weight: 10  },
-  { key: "free_template",     label: "Անվճար կաղապար",           weight: 5   },
+  { key: "discount_10",       label: "10% զեղչ",                              weight: 810 },
+  { key: "discount_20",       label: "20% զեղչ",                              weight: 70  },
+  { key: "admin_panel_free",  label: "Admin Panel անվճար",                    weight: 30  },
+  { key: "music_free",        label: "Երաժշտություն անվճար",                  weight: 20  },
+  { key: "gallery_free",      label: "Լուսանկարների բաժին",                   weight: 15  },
+  { key: "all_features",      label: "Բոլոր հնարավ. ներառված",               weight: 10  },
+  { key: "free_template",     label: "Անվճար ձևանմուշ",                       weight: 5   },
+  { key: "qr_cards",          label: "QR կոդերի քարտեր",                      weight: 40  },
 ];
 const PRIZE_WEIGHT_TOTAL = PRIZES.reduce((sum, p) => sum + p.weight, 0); // 1000
 
