@@ -20,16 +20,30 @@ interface PricingPlanEditorProps {
   isOpen: boolean;
   onClose: () => void;
   onSave?: (updatedPlan: any) => void;
+  language?: string; // Active editing language (e.g. 'hy', 'en', 'ru')
+  featureTranslations?: Record<string, string>; // Current translated labels from templatePlansSection.features
 }
 
 export default function PricingPlanEditor({
   plan,
   isOpen,
   onClose,
-  onSave
+  onSave,
+  language,
+  featureTranslations
 }: PricingPlanEditorProps) {
+  const lang = language || 'hy';
   const { toast } = useToast();
   const queryClient = useQueryClient();
+
+  // Helper: get auth headers for protected API calls
+  const authHeaders = () => {
+    const token = localStorage.getItem('admin-token');
+    return {
+      'Content-Type': 'application/json',
+      ...(token ? { Authorization: `Bearer ${token}` } : {}),
+    };
+  };
   
   // Phase 2.2: Editable metadata state
   const planId = plan?.planKey || plan?.id || 'unknown';
@@ -47,6 +61,17 @@ export default function PricingPlanEditor({
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
   
+  // Feature label editing state - keyed by raw feature name
+  const [featureLabels, setFeatureLabels] = useState<Record<string, string>>(() => {
+    const labels: Record<string, string> = {};
+    planFeatures.forEach((f: any) => {
+      const key = f.featureKey || f.translationKey || '';
+      const rawKey = key.includes('.') ? key.split('.').pop()! : key;
+      labels[rawKey] = (featureTranslations || {})[rawKey] || rawKey;
+    });
+    return labels;
+  });
+
   // Phase 2.3: Feature toggles state (staged locally until save)
   const [features, setFeatures] = useState<any[]>(planFeatures.map((f: any) => ({
     ...f,
@@ -65,8 +90,10 @@ export default function PricingPlanEditor({
     setIsDeleting(true);
 
     try {
+      const token = localStorage.getItem('admin-token');
       const response = await fetch(`/api/configurable-pricing-plans/${plan.id}`, {
         method: 'DELETE',
+        headers: token ? { Authorization: `Bearer ${token}` } : undefined,
       });
 
       if (!response.ok) {
@@ -113,9 +140,7 @@ export default function PricingPlanEditor({
       // 1. Update plan metadata
       const metadataResponse = await fetch(`/api/configurable-pricing-plans/${plan.id}`, {
         method: 'PATCH',
-        headers: {
-          'Content-Type': 'application/json',
-        },
+        headers: authHeaders(),
         body: JSON.stringify({
           price: price.trim(),
           badge: badge.trim() || null,
@@ -128,7 +153,20 @@ export default function PricingPlanEditor({
         throw new Error(error.message || 'Failed to update plan metadata');
       }
 
-      // 2. Update plan features
+      // 2. Save changed feature labels to translations
+      const labelUpdates: Record<string, string> = {};
+      Object.entries(featureLabels).forEach(([rawKey, label]) => {
+        labelUpdates[`templatePlansSection.features.${rawKey}`] = label;
+      });
+      if (Object.keys(labelUpdates).length > 0) {
+        await fetch('/api/translations/bulk', {
+          method: 'POST',
+          headers: authHeaders(),
+          body: JSON.stringify({ language: lang, updates: labelUpdates }),
+        });
+      }
+
+      // 3. Update plan features
       const featuresPayload = features.map(f => ({
         featureKey: f.featureKey || f.translationKey,
         icon: f.icon || 'Check',
@@ -138,9 +176,7 @@ export default function PricingPlanEditor({
 
       const featuresResponse = await fetch(`/api/configurable-pricing-plans/${plan.id}/features`, {
         method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-        },
+        headers: authHeaders(),
         body: JSON.stringify({
           features: featuresPayload
         }),
@@ -150,6 +186,9 @@ export default function PricingPlanEditor({
         const error = await featuresResponse.json();
         throw new Error(error.message || 'Failed to update plan features');
       }
+
+      // Invalidate translations cache so homepage re-fetches
+      await queryClient.invalidateQueries({ queryKey: ['/api/translations'] });
 
       // Success - refresh data and close
       await queryClient.invalidateQueries({ queryKey: ['/api/configurable-pricing-plans'] });
@@ -287,22 +326,25 @@ export default function PricingPlanEditor({
                   return (
                     <div
                       key={index}
-                      className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors"
+                      className="flex items-center gap-2 p-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors"
                     >
                       <input
                         type="checkbox"
                         id={`feature-${index}`}
                         checked={feature.isEnabled}
                         onChange={() => handleFeatureToggle(index)}
-                        className="w-4 h-4 text-blue-600 rounded focus:ring-2 focus:ring-blue-500"
+                        className="w-4 h-4 text-blue-600 rounded focus:ring-2 focus:ring-blue-500 flex-shrink-0"
                       />
-                      <Label 
-                        htmlFor={`feature-${index}`}
-                        className="flex-1 text-sm cursor-pointer select-none"
-                      >
-                        {featureLabel}
-                      </Label>
-                      <span className={`text-xs font-medium px-2 py-1 rounded ${
+                      <Input
+                        value={featureLabels[featureLabel] ?? featureLabel}
+                        onChange={(e) =>
+                          setFeatureLabels(prev => ({ ...prev, [featureLabel]: e.target.value }))
+                        }
+                        className="flex-1 h-7 text-sm px-2 bg-white border-gray-200"
+                        placeholder={featureLabel}
+                        title="Edit display label for this feature"
+                      />
+                      <span className={`text-xs font-medium px-2 py-1 rounded flex-shrink-0 ${
                         feature.isEnabled 
                           ? 'bg-green-100 text-green-700' 
                           : 'bg-gray-200 text-gray-600'
@@ -315,7 +357,7 @@ export default function PricingPlanEditor({
               )}
             </div>
             <p className="text-xs text-gray-500 mt-3">
-              Feature labels are resolved from the translation system using stable feature keys.
+              Edit feature labels directly. Toggle checkbox to include/exclude. Changes saved with "Save Changes".
             </p>
           </Card>
         </div>

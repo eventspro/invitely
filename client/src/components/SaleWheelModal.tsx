@@ -342,36 +342,40 @@ export const SaleWheelModal: React.FC<SaleWheelModalProps> = ({ onClose }) => {
       style={{ background: "rgba(40,25,10,0.65)", backdropFilter: "blur(4px)" }}
       onClick={handleOverlayClick}
     >
-      {/* Modal card */}
+      {/* Outer wrapper: relative so close button is positioned against it, not inside the scroll */}
       <div
-        className="relative w-full overflow-hidden"
-        style={{
-          maxWidth: isWheelVisible ? 820 : 440,
-          maxHeight: "95vh",
-          overflowY: "auto",
-          background: "linear-gradient(145deg, #FDFAF4 0%, #F8F0E0 50%, #F5EBD5 100%)",
-          borderRadius: 24,
-          boxShadow: "0 32px 80px rgba(100,60,0,0.25), 0 0 0 1px rgba(201,169,110,0.3)",
-        }}
+        className="relative w-full"
+        style={{ maxWidth: isWheelVisible ? 820 : 440 }}
         onClick={(e) => e.stopPropagation()}
       >
-        {/* Floral corners */}
-        <div className="absolute top-0 left-0 pointer-events-none select-none opacity-25" style={{ fontSize: 72, lineHeight: 1, transform: "translate(-16px,-16px) rotate(-15deg)" }}>🌸</div>
-        <div className="absolute top-0 right-0 pointer-events-none select-none opacity-25" style={{ fontSize: 72, lineHeight: 1, transform: "translate(16px,-16px) rotate(15deg)" }}>🌿</div>
-        <div className="absolute bottom-0 left-0 pointer-events-none select-none opacity-15" style={{ fontSize: 60, lineHeight: 1, transform: "translate(-12px,12px) rotate(10deg)" }}>🌿</div>
-        <div className="absolute bottom-0 right-0 pointer-events-none select-none opacity-15" style={{ fontSize: 60, lineHeight: 1, transform: "translate(12px,12px) rotate(-10deg)" }}>🌸</div>
-
-        {/* Close button */}
+        {/* Close button — outside the scrolling card, always visible */}
         {step !== "spinning" && (
           <button
             onClick={onClose}
-            className="absolute top-3 right-3 z-20 w-8 h-8 flex items-center justify-center rounded-full transition-colors"
+            className="absolute top-3 right-3 z-30 w-8 h-8 flex items-center justify-center rounded-full transition-colors"
             style={{ background: "rgba(201,169,110,0.18)", color: "#7C5210" }}
             aria-label="Փակել"
           >
             <X size={16} />
           </button>
         )}
+
+        {/* Modal card */}
+        <div
+          className="relative w-full overflow-hidden"
+          style={{
+            maxHeight: "95vh",
+            overflowY: "auto",
+            background: "linear-gradient(145deg, #FDFAF4 0%, #F8F0E0 50%, #F5EBD5 100%)",
+            borderRadius: 24,
+            boxShadow: "0 32px 80px rgba(100,60,0,0.25), 0 0 0 1px rgba(201,169,110,0.3)",
+          }}
+        >
+        {/* Floral corners */}
+        <div className="absolute top-0 left-0 pointer-events-none select-none opacity-25" style={{ fontSize: 72, lineHeight: 1, transform: "translate(-16px,-16px) rotate(-15deg)" }}>🌸</div>
+        <div className="absolute top-0 right-0 pointer-events-none select-none opacity-25" style={{ fontSize: 72, lineHeight: 1, transform: "translate(16px,-16px) rotate(15deg)" }}>🌿</div>
+        <div className="absolute bottom-0 left-0 pointer-events-none select-none opacity-15" style={{ fontSize: 60, lineHeight: 1, transform: "translate(-12px,12px) rotate(10deg)" }}>🌿</div>
+        <div className="absolute bottom-0 right-0 pointer-events-none select-none opacity-15" style={{ fontSize: 60, lineHeight: 1, transform: "translate(12px,12px) rotate(-10deg)" }}>🌸</div>
 
         {/* ── FORM + WHEEL two-column layout ── */}
         {isWheelVisible && (
@@ -643,7 +647,8 @@ export const SaleWheelModal: React.FC<SaleWheelModalProps> = ({ onClose }) => {
             </button>
           </div>
         )}
-      </div>
+        </div> {/* end modal card */}
+      </div> {/* end outer wrapper */}
     </div>
   );
 };

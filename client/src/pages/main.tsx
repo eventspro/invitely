@@ -116,6 +116,15 @@ export default function MainPage() {
   const bootstrap = useBootstrap();
   const [selectedPlan, setSelectedPlan] = useState<string>("standard");
   const [showSaleWheel, setShowSaleWheel] = useState(false);
+  const [dbPricingPlans, setDbPricingPlans] = useState<any[]>([]);
+
+  // Fetch pricing plans from DB so platform-admin changes appear on homepage
+  useEffect(() => {
+    fetch('/api/configurable-pricing-plans')
+      .then((r) => r.ok ? r.json() : [])
+      .then((data: any[]) => { if (data && data.length > 0) setDbPricingPlans(data); })
+      .catch(() => {/* fall back to static config */});
+  }, []);
 
   // ── Social links: fetched from platform settings ─────────────────────────────
   const [socialLinks, setSocialLinks] = useState({
@@ -309,32 +318,57 @@ export default function MainPage() {
     }
   });
 
-  // Build template plans from centralized config + translations
-  const templatePlans: TemplatePlan[] = getEnabledItems(defaultContentConfig.pricingPlans).map(plan => {
-    // Extract the feature name from translation key (e.g., "templatePlans.features.Wedding Timeline" -> "Wedding Timeline")
-    const getFeatureName = (translationKey: string) => {
-      const parts = translationKey.split('.');
-      return parts[parts.length - 1]; // Get last part
-    };
+  // Build template plans — prefer DB (platform-admin edits), fall back to static config
+  const getFeatureName = (translationKey: string) => {
+    const parts = translationKey.split('.');
+    return parts[parts.length - 1];
+  };
 
-    // plan.templateRoute = "/classic" — the part after "/" is the templateKey
+  const sourcePlans = dbPricingPlans.length > 0
+    ? dbPricingPlans
+        .filter((p: any) => p.enabled !== false)
+        .sort((a: any, b: any) => a.orderIndex - b.orderIndex)
+        .map((p: any) => ({
+          id:            p.planKey,
+          order:         p.orderIndex,
+          price:         p.price,
+          badgeKey:      p.badgeKey,
+          badgeColor:    p.badgeColor,
+          popular:       p.popular,
+          templateRoute: p.templateRoute,
+          features:      (p.features || []).map((f: any) => ({
+            translationKey: f.featureKey,
+            icon:           f.icon,
+            included:       f.included,
+          })),
+        }))
+    : getEnabledItems(defaultContentConfig.pricingPlans);
+
+  const templatePlans: TemplatePlan[] = sourcePlans.map(plan => {
     const templateKey = plan.templateRoute.replace(/^\//, '');
     const realSlug = templateKeyToSlug[templateKey];
     const resolvedRoute = realSlug ? `/${realSlug}` : plan.templateRoute;
 
     return {
       id: plan.id,
-      name: t.templatePlans?.plans?.[plan.order]?.name || plan.id,
+      // Read name from the editable `pricing.plans` namespace (saved by platform editor)
+      // Capitalize the planKey fallback so "standard" → "Standard"
+      name: (t as any).pricing?.plans?.[plan.order]?.name
+        || (plan.id.charAt(0).toUpperCase() + plan.id.slice(1)),
       price: plan.price,
       badge: plan.badgeKey ? (t.templatePlansSection?.planBadges as any)?.[plan.id] : undefined,
       badgeColor: plan.badgeColor,
-      description: t.templatePlans?.plans?.[plan.order]?.description || "",
+      // Read description from `pricing.plans` (editor saves here); ?? "" so empty string clears it
+      description: (t as any).pricing?.plans?.[plan.order]?.description ?? "",
       templateRoute: resolvedRoute,
       popular: plan.popular,
-      features: plan.features.map(f => {
+      features: plan.features.map((f: any) => {
         const featureName = getFeatureName(f.translationKey);
         return {
-          name: (t.templatePlans?.features as any)?.[featureName] || featureName,
+          // Use templatePlansSection.features (editable via admin) with fallback to static
+          name: (t.templatePlansSection?.features as any)?.[featureName]
+            || (t.templatePlans?.features as any)?.[featureName]
+            || featureName,
           icon: getIcon(f.icon),
           included: f.included
         };

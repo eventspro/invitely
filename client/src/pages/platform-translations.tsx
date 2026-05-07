@@ -200,7 +200,7 @@ const defaultTranslations: TranslationSections = {
       {
         name: "Հիմնական",
         price: "10,000 դրամ",
-        description: "Կատարյալ է ինտիմ հարսանիքների համար հիմնական գործառույթներով",
+        description: "",
         badge: "",
         features: [
           { name: "Հարսանեկան Ժամանակացույց", included: true },
@@ -214,7 +214,7 @@ const defaultTranslations: TranslationSections = {
       {
         name: "Հիմնարար",
         price: "17,000 դրամ",
-        description: "Ընդլայնված գործառույթներ ժամանակակից զույգերի համար",
+        description: "",
         badge: "Լավագույն Արժեք",
         features: [
           { name: "Հարսանեկան Ժամանակացույց", included: true },
@@ -228,7 +228,7 @@ const defaultTranslations: TranslationSections = {
       {
         name: "Մասնագիտական",
         price: "23,000 դրամ",
-        description: "Ամբողջական հարսանեկան կայքի լուծում",
+        description: "",
         badge: "Ամենաշատ Ընտրված",
         features: [
           { name: "Հարսանեկան Ժամանակացույց", included: true },
@@ -242,7 +242,7 @@ const defaultTranslations: TranslationSections = {
       {
         name: "Պրեմիում",
         price: "31,000 դրամ",
-        description: "Պրեմիում գործառույթներ շքեղ հարսանիքների համար",
+        description: "",
         badge: "Առաջադեմ",
         features: [
           { name: "Հարսանեկան Ժամանակացույց", included: true },
@@ -256,7 +256,7 @@ const defaultTranslations: TranslationSections = {
       {
         name: "Վերջնական",
         price: "37,000 դրամ",
-        description: "Ամբողջական շքեղ հարսանեկան փորձառություն",
+        description: "",
         badge: "Շքեղություն",
         features: [
           { name: "Հարսանեկան Ժամանակացույց", included: true },
@@ -698,9 +698,13 @@ export default function PlatformTranslations() {
         'updates["common.viewMore"]': updates['common.viewMore']
       });
 
+      const adminToken = localStorage.getItem('admin-token');
       const response = await fetch(`/api/translations/bulk`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type': 'application/json',
+          ...(adminToken ? { Authorization: `Bearer ${adminToken}` } : {}),
+        },
         body: JSON.stringify({ 
           language: currentLanguage, 
           updates,
@@ -2164,6 +2168,8 @@ export default function PlatformTranslations() {
               setIsEditorOpen(false);
               setEditingPlan(null);
             }}
+            language={currentLanguage}
+            featureTranslations={(translations.templatePlansSection as any)?.features || {}}
           />
         )}
 
