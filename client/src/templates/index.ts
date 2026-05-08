@@ -102,6 +102,24 @@ export const templates: Record<string, TemplateDefinition> = {
       "Fully Customizable"
     ]
   },
+  aurelia: {
+    key: "aurelia",
+    name: "Aurelia",
+    description: "Romantic floral wedding template with soft blush and gold palette",
+    defaultConfig: {} as WeddingConfig,
+    component: lazy(() => import("./aurelia/AureliaTemplate")),
+    previewImage: "/templates/aurelia-preview.jpg",
+    features: [
+      "Soft Blush & Gold Theme",
+      "Cinematic Full-Screen Hero",
+      "Live Countdown Timer",
+      "Wedding Details Cards",
+      "Venue Section",
+      "Gallery",
+      "RSVP Form with Email Notifications",
+      "Responsive Mobile Design",
+    ]
+  },
   florence: {
     key: "florence",
     name: "Florence Eternal",
@@ -158,6 +176,9 @@ export const loadTemplateConfig = async (templateKey: string): Promise<WeddingCo
       case "nature":
         const natureConfig = await import("./nature/config");
         return natureConfig.defaultConfig;
+      case "aurelia":
+        const aureliaConfig = await import("./aurelia/config");
+        return aureliaConfig.defaultConfig;
       case "florence":
         const florenceConfig = await import("./florence/config");
         return florenceConfig.defaultConfig;
