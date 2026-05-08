@@ -122,6 +122,34 @@ function useRoadmapProgress(builderMode: boolean) {
   return { sectionRef, progress };
 }
 
+// ─── Parallax scroll hook ─────────────────────────────────────────────────────
+function useParallax(factor: number = 0.3, builderMode: boolean = false) {
+  const [offset, setOffset] = useState(0);
+  const ref = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (builderMode) return;
+    const prefersReduced =
+      typeof window !== "undefined" &&
+      window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    if (prefersReduced) return;
+
+    const update = () => {
+      if (!ref.current) return;
+      const rect = ref.current.getBoundingClientRect();
+      const winH = window.innerHeight;
+      const center = rect.top + rect.height / 2 - winH / 2;
+      setOffset(center * factor);
+    };
+
+    window.addEventListener("scroll", update, { passive: true });
+    update();
+    return () => window.removeEventListener("scroll", update);
+  }, [factor, builderMode]);
+
+  return { ref, offset };
+}
+
 // ─── Milestone sequential reveal hook ────────────────────────────────────────
 function useMilestoneReveal(count: number, builderMode: boolean) {
   const [visible, setVisible] = useState<boolean[]>(() => Array(count).fill(false));
@@ -240,7 +268,9 @@ export default function AureliaTemplate({
   const displayDate   = cfg.wedding.displayDate || "20 • 09 • 2026";
   const heroTagline   = ext.heroTagline   ?? "";
   const heroLocation  = ext.heroLocation  ?? "Amalfi Coast, Italy";
-  const heroImage     = (cfg.hero.images && cfg.hero.images[0]) || "";
+  // Cinematic default hero image (Unsplash scenic wedding backdrop)
+  const HERO_DEFAULT = "https://images.unsplash.com/photo-1519741497674-611481863552?w=1920&q=80&auto=format&fit=crop";
+  const heroImage     = (cfg.hero.images && cfg.hero.images[0]) || HERO_DEFAULT;
 
   const storyHeading          = ext.storyHeading          ?? "How It All Began";
   const storyHeadingEmphasis  = ext.storyHeadingEmphasis  ?? "Began";
@@ -364,6 +394,12 @@ export default function AureliaTemplate({
   const rsvpAnim    = useSectionAnim("fade-in",  builderMode);
   const footerAnim  = useSectionAnim("fade-in",  builderMode);
 
+  // ── Parallax layers ──────────────────────────────────────────────────────────
+  const heroParallax    = useParallax(0.25, builderMode);
+  const storyParallax   = useParallax(0.18, builderMode);
+  const venueParallax   = useParallax(0.20, builderMode);
+  const rsvpParallax    = useParallax(0.15, builderMode);
+
   // ── Roadmap animation ────────────────────────────────────────────────────────
   const { sectionRef: roadmapRef, progress } = useRoadmapProgress(builderMode);
   const { containerRef: milestonesRef, visible: milestoneVisible } =
@@ -431,6 +467,18 @@ export default function AureliaTemplate({
           from { background-position: -200% center; }
           to   { background-position:  200% center; }
         }
+        @keyframes aur-float {
+          0%, 100% { transform: translateY(0px); }
+          50%       { transform: translateY(-8px); }
+        }
+        @keyframes aur-glow-pulse {
+          0%, 100% { box-shadow: 0 0 20px rgba(196,169,125,0.15); }
+          50%       { box-shadow: 0 0 40px rgba(196,169,125,0.30); }
+        }
+        @keyframes aur-hero-reveal {
+          from { opacity: 0; transform: translateY(24px); }
+          to   { opacity: 1; transform: translateY(0); }
+        }
 
         /* Scroll-to-section smooth behavior */
         html { scroll-behavior: smooth; }
@@ -454,10 +502,32 @@ export default function AureliaTemplate({
           width: 100%;
           height: 100%;
           object-fit: cover;
-          transition: transform 0.5s cubic-bezier(0.25,0.46,0.45,0.94);
+          transition: transform 0.7s cubic-bezier(0.25,0.46,0.45,0.94);
           display: block;
         }
-        .aur-gallery-tile:hover .aur-gallery-img { transform: scale(1.04); }
+        .aur-gallery-tile:hover .aur-gallery-img { transform: scale(1.06); }
+        .aur-gallery-tile {
+          overflow: hidden;
+          position: relative;
+        }
+        .aur-gallery-tile::after {
+          content: '';
+          position: absolute;
+          inset: 0;
+          background: linear-gradient(to top, rgba(10,8,6,0.55) 0%, transparent 60%);
+          opacity: 0;
+          transition: opacity 0.4s ease;
+        }
+        .aur-gallery-tile:hover::after { opacity: 1; }
+
+        /* Detail card hover */
+        .aur-detail-card {
+          transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+        .aur-detail-card:hover {
+          transform: translateY(-4px);
+          box-shadow: 0 16px 48px rgba(0,0,0,0.12) !important;
+        }
 
         /* Form input focus glow */
         .aur-input:focus {
@@ -486,16 +556,41 @@ export default function AureliaTemplate({
         .aur-details-grid {
           display: grid;
           grid-template-columns: repeat(2, 1fr);
-          gap: 20px;
-          max-width: 720px;
+          gap: 24px;
+          max-width: 760px;
           margin: 0 auto;
         }
 
-        /* Gallery grid */
+        /* Gallery staggered grid */
         .aur-gallery-grid {
           display: grid;
           grid-template-columns: repeat(3, 1fr);
-          gap: 4px;
+          gap: 6px;
+        }
+        .aur-gallery-grid > *:first-child {
+          grid-row: span 2;
+        }
+
+        /* Story image frame */
+        .aur-story-image-frame {
+          position: relative;
+          overflow: hidden;
+        }
+        .aur-story-image-frame::before {
+          content: '';
+          position: absolute;
+          top: 16px; left: 16px; right: -16px; bottom: -16px;
+          border: 1px solid ${C.champagne}45;
+          z-index: 0;
+          pointer-events: none;
+        }
+
+        /* Glass card */
+        .aur-glass {
+          background: rgba(20,17,14,0.65);
+          backdrop-filter: blur(16px);
+          -webkit-backdrop-filter: blur(16px);
+          border: 1px solid rgba(196,169,125,0.20);
         }
 
         /* ── Responsive ── */
@@ -509,6 +604,7 @@ export default function AureliaTemplate({
           .aur-gallery-grid {
             grid-template-columns: repeat(2, 1fr) !important;
           }
+          .aur-gallery-grid > *:first-child { grid-row: span 1; }
         }
         @media (max-width: 640px) {
           .aur-details-grid {
@@ -649,179 +745,90 @@ export default function AureliaTemplate({
         <section
           id="aur-hero"
           data-v2-section="aur-hero"
-          style={{
-            position:      "relative",
-            minHeight:     "100vh",
-            display:       "flex",
-            flexDirection: "column",
-            alignItems:    "center",
-            justifyContent:"center",
-            overflow:      "hidden",
-            background:    heroImage ? `url(${heroImage}) center/cover no-repeat` : `linear-gradient(160deg, ${C.charcoalMid} 0%, ${C.charcoal} 60%, #0F0E0C 100%)`,
-          }}
+          style={{ position: "relative", minHeight: "100vh", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", overflow: "hidden" }}
         >
-          {/* Dark overlay */}
+          {/* Parallax bg layer */}
           <div
+            ref={heroParallax.ref}
             style={{
               position:   "absolute",
-              inset:      0,
-              background: heroImage
-                ? `linear-gradient(to bottom, rgba(20,18,16,0.35) 0%, rgba(20,18,16,0.55) 50%, rgba(20,18,16,0.85) 100%)`
-                : "none",
-              zIndex:     1,
+              inset:      "-18% 0",
+              background: heroImage ? `url(${heroImage}) center/cover no-repeat` : `linear-gradient(160deg, #2C2420 0%, #1C1917 60%, #0F0E0C 100%)`,
+              transform:  `translateY(${heroParallax.offset}px)`,
+              zIndex:     0,
+              willChange: "transform",
             }}
           />
+          <div style={{ position: "absolute", inset: 0, background: "linear-gradient(to bottom, rgba(6,4,2,0.55) 0%, rgba(6,4,2,0.20) 38%, rgba(6,4,2,0.62) 72%, rgba(6,4,2,0.92) 100%)", zIndex: 1 }} />
+          <div style={{ position: "absolute", inset: 0, background: "linear-gradient(100deg, rgba(6,4,2,0.42) 0%, transparent 55%)", zIndex: 1 }} />
 
-          {/* Hero content */}
           <div
             style={{
-              position:      "relative",
-              zIndex:        2,
-              textAlign:     "center",
-              padding:       "80px 24px 120px",
-              maxWidth:      "900px",
-              width:         "100%",
+              position:  "relative",
+              zIndex:    2,
+              textAlign: "center",
+              padding:   "110px 24px 70px",
+              maxWidth:  "1000px",
+              width:     "100%",
+              animation: "aur-hero-reveal 1.5s cubic-bezier(0.25,0.46,0.45,0.94) both",
             }}
           >
-            {/* Tagline */}
-            {heroTagline && (
+            {(heroTagline || cfg.hero.invitation) && (
               <p
                 data-v2-element="aur-hero-tagline"
                 data-v2-type="text"
-                style={{
-                  fontFamily:    SANS,
-                  fontSize:      "0.7rem",
-                  fontWeight:    400,
-                  letterSpacing: "0.22em",
-                  textTransform: "uppercase",
-                  color:         C.champagne,
-                  marginBottom:  "32px",
-                  opacity:       0.9,
-                }}
+                style={{ fontFamily: SANS, fontSize: "0.60rem", fontWeight: 500, letterSpacing: "0.30em", textTransform: "uppercase", color: C.champagne, marginBottom: "28px", opacity: 0.90 }}
               >
-                {heroTagline}
+                {heroTagline || cfg.hero.invitation}
               </p>
             )}
-
-            {/* Couple names */}
             <h1
               className="aur-hero-names"
               data-v2-element="aur-hero-names"
               data-v2-type="text"
-              style={{
-                fontFamily:    SERIF,
-                fontSize:      "clamp(3.5rem, 8vw, 8rem)",
-                fontWeight:    300,
-                letterSpacing: "0.02em",
-                color:         C.warmWhite,
-                lineHeight:    1.05,
-                margin:        0,
-              }}
+              style={{ fontFamily: SERIF, fontSize: "clamp(3.6rem, 9vw, 9rem)", fontWeight: 300, letterSpacing: "0.015em", color: C.warmWhite, lineHeight: 1.0, margin: 0, textShadow: "0 4px 60px rgba(0,0,0,0.55)" }}
             >
               {groomName}
-              <span style={{ fontStyle: "italic", color: C.champagne, margin: "0 0.2em" }}>
-                {separator}
-              </span>
+              <span style={{ fontStyle: "italic", color: C.champagne, margin: "0 0.22em", fontWeight: 300 }}>{separator}</span>
               {brideName}
             </h1>
-
-            {/* Thin divider */}
-            <div
-              style={{
-                width:      "60px",
-                height:     "1px",
-                background: C.champagne,
-                margin:     "28px auto",
-                opacity:    0.7,
-              }}
-            />
-
-            {/* Wedding date */}
+            <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: "14px", margin: "30px auto 26px" }}>
+              <div style={{ width: "52px", height: "1px", background: `${C.champagne}60` }} />
+              <svg width="9" height="9" viewBox="0 0 9 9"><path d="M4.5 0L9 4.5L4.5 9L0 4.5Z" fill={C.champagne} fillOpacity="0.80"/></svg>
+              <div style={{ width: "52px", height: "1px", background: `${C.champagne}60` }} />
+            </div>
             <p
               data-v2-element="aur-hero-date"
               data-v2-type="text"
-              style={{
-                fontFamily:    SERIF,
-                fontSize:      "1.5rem",
-                fontWeight:    300,
-                fontStyle:     "italic",
-                color:         C.champagneLight,
-                letterSpacing: "0.06em",
-                marginBottom:  "10px",
-              }}
+              style={{ fontFamily: SERIF, fontSize: "clamp(1.1rem, 2.5vw, 1.65rem)", fontWeight: 300, fontStyle: "italic", color: C.champagneLight, letterSpacing: "0.07em", marginBottom: "8px" }}
             >
               {displayDate}
             </p>
-
-            {/* Location */}
             {heroLocation && (
               <p
                 data-v2-element="aur-hero-location"
                 data-v2-type="text"
-                style={{
-                  fontFamily:    SANS,
-                  fontSize:      "0.68rem",
-                  fontWeight:    400,
-                  letterSpacing: "0.18em",
-                  textTransform: "uppercase",
-                  color:         C.softWhite,
-                  opacity:       0.75,
-                  marginBottom:  "48px",
-                }}
+                style={{ fontFamily: SANS, fontSize: "0.60rem", fontWeight: 400, letterSpacing: "0.20em", textTransform: "uppercase", color: C.warmWhite, opacity: 0.58, marginBottom: "54px" }}
               >
                 {heroLocation}
               </p>
             )}
-
-            {/* Countdown boxes */}
             {cfg.sections?.countdown?.enabled !== false && (
               <div
-                style={{
-                  display:        "flex",
-                  gap:            "clamp(12px, 3vw, 32px)",
-                  justifyContent: "center",
-                  flexWrap:       "wrap",
-                }}
+                className="aur-glass"
+                style={{ display: "inline-flex", gap: 0, justifyContent: "center", flexWrap: "wrap", padding: "18px 0", animation: "aur-glow-pulse 4.5s ease-in-out infinite" }}
               >
                 {[
                   { value: countdown.days,    label: cfg.countdown.labels.days    },
                   { value: countdown.hours,   label: cfg.countdown.labels.hours   },
                   { value: countdown.minutes, label: cfg.countdown.labels.minutes },
                   { value: countdown.seconds, label: cfg.countdown.labels.seconds },
-                ].map(({ value, label }) => (
-                  <div
-                    key={label}
-                    style={{
-                      textAlign:  "center",
-                      minWidth:   "64px",
-                      padding:    "14px 20px",
-                      border:     `1px solid ${C.champagne}35`,
-                      background: "rgba(28,25,23,0.5)",
-                      backdropFilter: "blur(8px)",
-                      WebkitBackdropFilter: "blur(8px)",
-                    }}
-                  >
-                    <div
-                      style={{
-                        fontFamily:  SERIF,
-                        fontSize:    "clamp(1.8rem, 4vw, 2.8rem)",
-                        fontWeight:  300,
-                        color:       C.champagne,
-                        lineHeight:  1,
-                      }}
-                    >
+                ].map(({ value, label }, idx) => (
+                  <div key={label} style={{ textAlign: "center", minWidth: "74px", padding: "4px 18px", borderRight: idx < 3 ? `1px solid ${C.champagne}25` : "none" }}>
+                    <div style={{ fontFamily: SERIF, fontSize: "clamp(1.8rem, 4vw, 2.8rem)", fontWeight: 300, color: C.champagne, lineHeight: 1 }}>
                       {String(value).padStart(2, "0")}
                     </div>
-                    <div
-                      style={{
-                        fontFamily:    SANS,
-                        fontSize:      "0.52rem",
-                        letterSpacing: "0.16em",
-                        color:         C.champagne,
-                        marginTop:     "8px",
-                        opacity:       0.7,
-                      }}
-                    >
+                    <div style={{ fontFamily: SANS, fontSize: "0.46rem", letterSpacing: "0.18em", color: C.warmWhite, marginTop: "6px", opacity: 0.48, textTransform: "uppercase" }}>
                       {label}
                     </div>
                   </div>
@@ -830,42 +837,11 @@ export default function AureliaTemplate({
             )}
           </div>
 
-          {/* Scroll indicator */}
-          <div
-            style={{
-              position:       "absolute",
-              bottom:         "36px",
-              left:           "50%",
-              transform:      "translateX(-50%)",
-              zIndex:         2,
-              display:        "flex",
-              flexDirection:  "column",
-              alignItems:     "center",
-              gap:            "8px",
-              opacity:        0.6,
-              cursor:         "default",
-            }}
-          >
-            <span
-              style={{
-                fontFamily:    SANS,
-                fontSize:      "0.55rem",
-                letterSpacing: "0.24em",
-                color:         C.warmWhite,
-                textTransform: "uppercase",
-              }}
-            >
-              Scroll
-            </span>
-            <svg
-              style={{ animation: "aur-scroll-bob 2.2s ease-in-out infinite" }}
-              width="16"
-              height="28"
-              viewBox="0 0 16 28"
-              fill="none"
-            >
-              <line x1="8" y1="0" x2="8" y2="22" stroke={C.champagne} strokeWidth="1.2"/>
-              <path d="M3 16 L8 22 L13 16" stroke={C.champagne} strokeWidth="1.2" fill="none"/>
+          <div style={{ position: "absolute", bottom: "30px", left: "50%", transform: "translateX(-50%)", zIndex: 2, display: "flex", flexDirection: "column", alignItems: "center", gap: "8px", opacity: 0.45 }}>
+            <span style={{ fontFamily: SANS, fontSize: "0.48rem", letterSpacing: "0.26em", color: C.warmWhite, textTransform: "uppercase" }}>Scroll</span>
+            <svg style={{ animation: "aur-scroll-bob 2.4s ease-in-out infinite" }} width="14" height="26" viewBox="0 0 14 26" fill="none">
+              <line x1="7" y1="0" x2="7" y2="20" stroke={C.champagne} strokeWidth="1"/>
+              <path d="M2 15 L7 21 L12 15" stroke={C.champagne} strokeWidth="1" fill="none"/>
             </svg>
           </div>
         </section>
@@ -877,184 +853,66 @@ export default function AureliaTemplate({
           id="aur-story"
           data-v2-section="aur-story"
           ref={storyAnim.ref as React.RefObject<HTMLElement>}
-          style={{
-            background: C.creamWarm,
-            padding:    "100px 40px",
-            ...storyAnim.style,
-          }}
+          style={{ position: "relative", background: C.charcoal, padding: "120px 40px 110px", overflow: "hidden", ...storyAnim.style }}
         >
+          {storyImage && (
+            <div style={{ position: "absolute", inset: 0, backgroundImage: `url(${storyImage})`, backgroundSize: "cover", backgroundPosition: "center", opacity: 0.07, filter: "blur(6px)", zIndex: 0 }} />
+          )}
+          <div style={{ position: "absolute", inset: 0, background: `linear-gradient(135deg, ${C.charcoal}F8 0%, ${C.charcoalMid}EC 100%)`, zIndex: 0 }} />
+
           <div
             className="aur-story-split"
-            style={{
-              display:       "grid",
-              gridTemplateColumns: "1fr 1fr",
-              gap:           "64px",
-              maxWidth:      "1100px",
-              margin:        "0 auto",
-              alignItems:    "center",
-            }}
+            style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "72px", maxWidth: "1120px", margin: "0 auto", alignItems: "center", position: "relative", zIndex: 1 }}
           >
-            {/* Left: editorial image */}
-            <div
-              style={{
-                position:  "relative",
-              }}
-            >
-              {storyImage ? (
-                <div
-                  style={{
-                    position:     "relative",
-                    paddingBottom: "130%",
-                    overflow:      "hidden",
-                    border:        `1px solid ${C.border}`,
-                    boxShadow:     "12px 16px 40px rgba(0,0,0,0.10)",
-                  }}
-                >
-                  <img
-                    src={storyImage}
-                    alt="Our Story"
-                    style={{ position: "absolute", inset: 0, width: "100%", height: "100%", objectFit: "cover" }}
-                  />
-                </div>
-              ) : (
-                /* Placeholder when no image */
-                <div
-                  style={{
-                    paddingBottom: "130%",
-                    background:    `linear-gradient(135deg, ${C.cardBg} 0%, ${C.border} 100%)`,
-                    border:        `1px solid ${C.border}`,
-                    display:       "flex",
-                    alignItems:    "center",
-                    justifyContent:"center",
-                    position:      "relative",
-                  }}
-                >
-                  <span
-                    style={{
-                      position:      "absolute",
-                      top:           "50%",
-                      left:          "50%",
-                      transform:     "translate(-50%,-50%)",
-                      fontFamily:    SERIF,
-                      fontSize:      "5rem",
-                      fontWeight:    300,
-                      color:         C.champagne,
-                      opacity:       0.25,
-                      letterSpacing: "0.1em",
-                    }}
-                  >
-                    {groomName[0]}{brideName[0]}
-                  </span>
-                </div>
-              )}
-
-              {/* Decorative frame accent */}
-              <div
-                style={{
-                  position:  "absolute",
-                  top:       "16px",
-                  left:      "16px",
-                  right:     "-16px",
-                  bottom:    "-16px",
-                  border:    `1px solid ${C.champagne}45`,
-                  zIndex:    0,
-                  pointerEvents: "none",
-                }}
-              />
+            <div style={{ position: "relative" }}>
+              <div style={{ position: "absolute", top: "22px", left: "22px", right: "-22px", bottom: "-22px", border: `1px solid ${C.champagne}38`, zIndex: 0, pointerEvents: "none" }} />
+              <div style={{ position: "absolute", top: "11px", left: "11px", right: "-11px", bottom: "-11px", border: `1px solid ${C.champagne}18`, zIndex: 0, pointerEvents: "none" }} />
+              <div style={{ position: "relative", paddingBottom: "125%", overflow: "hidden", zIndex: 1, boxShadow: "18px 22px 64px rgba(0,0,0,0.50)" }}>
+                <img
+                  ref={storyParallax.ref as React.RefObject<HTMLImageElement>}
+                  src={storyImage || "https://images.unsplash.com/photo-1511285560929-80b456fea0bc?w=800&q=80&auto=format&fit=crop"}
+                  alt="Our Story"
+                  style={{ position: "absolute", inset: 0, width: "100%", height: "115%", top: "-7.5%", objectFit: "cover", transform: `translateY(${storyParallax.offset * 0.45}px)`, willChange: "transform", display: "block" }}
+                />
+                <div style={{ position: "absolute", inset: 0, background: `linear-gradient(to top, ${C.charcoal}80 0%, transparent 50%)` }} />
+              </div>
+              <div className="aur-glass" style={{ position: "absolute", bottom: "26px", left: "26px", zIndex: 2, padding: "10px 20px" }}>
+                <span style={{ fontFamily: SERIF, fontSize: "1.35rem", fontWeight: 300, color: C.champagne, letterSpacing: "0.10em" }}>
+                  {groomName[0]}{brideName[0]}
+                </span>
+              </div>
             </div>
 
-            {/* Right: text content */}
             <div style={{ paddingLeft: "8px" }}>
-              {/* Section label */}
-              <p
-                style={{
-                  fontFamily:    SANS,
-                  fontSize:      "0.62rem",
-                  fontWeight:    500,
-                  letterSpacing: "0.22em",
-                  textTransform: "uppercase",
-                  color:         C.champagne,
-                  marginBottom:  "20px",
-                }}
-              >
+              <p style={{ fontFamily: SANS, fontSize: "0.60rem", fontWeight: 500, letterSpacing: "0.24em", textTransform: "uppercase", color: C.champagne, marginBottom: "18px", opacity: 0.88 }}>
                 Our Story
               </p>
-
-              {/* Thin rule */}
-              <div style={{ width: "40px", height: "1px", background: C.champagne, marginBottom: "24px", opacity: 0.6 }} />
-
-              {/* Heading */}
+              <div style={{ width: "34px", height: "1px", background: C.champagne, marginBottom: "28px", opacity: 0.50 }} />
               <h2
                 data-v2-element="aur-story-heading"
                 data-v2-type="text"
-                style={{
-                  fontFamily:   SERIF,
-                  fontSize:     "clamp(2.2rem, 4vw, 3.5rem)",
-                  fontWeight:   400,
-                  lineHeight:   1.15,
-                  color:        C.charcoal,
-                  marginBottom: "28px",
-                }}
+                style={{ fontFamily: SERIF, fontSize: "clamp(2.2rem, 3.8vw, 3.5rem)", fontWeight: 300, lineHeight: 1.12, color: C.warmWhite, marginBottom: "26px" }}
               >
-                {storyHeadingEmphasis && storyHeading.includes(storyHeadingEmphasis)
-                  ? storyHeading.split(storyHeadingEmphasis).map((part, i, arr) => (
-                      <React.Fragment key={i}>
-                        {part}
-                        {i < arr.length - 1 && (
-                          <em style={{ color: C.champagne, fontStyle: "italic" }}>{storyHeadingEmphasis}</em>
-                        )}
-                      </React.Fragment>
-                    ))
-                  : (
-                    <>
-                      {storyHeading}{storyHeadingEmphasis && (
-                        <>{" "}<em style={{ color: C.champagne, fontStyle: "italic" }}>{storyHeadingEmphasis}</em></>
-                      )}
-                    </>
-                  )
+                {storyHeadingEmphasis
+                  ? <>{storyHeading.replace(storyHeadingEmphasis, "").trimStart()}<em style={{ color: C.champagne, fontStyle: "italic" }}> {storyHeadingEmphasis}</em></>
+                  : storyHeading
                 }
               </h2>
-
-              {/* Body */}
               <p
                 data-v2-element="aur-story-body"
                 data-v2-type="textarea"
-                style={{
-                  fontFamily:  SANS,
-                  fontSize:    "1rem",
-                  fontWeight:  300,
-                  lineHeight:  1.85,
-                  color:       C.warmGray,
-                  marginBottom:"32px",
-                }}
+                style={{ fontFamily: SANS, fontSize: "0.97rem", fontWeight: 300, lineHeight: 1.88, color: C.warmGray, marginBottom: "36px" }}
               >
                 {storyBody}
               </p>
-
-              {/* CTA */}
               {storyCtaLabel && (
                 <div
                   data-v2-element="aur-story-cta"
                   data-v2-type="text"
-                  style={{
-                    display:       "inline-flex",
-                    alignItems:    "center",
-                    gap:           "8px",
-                    fontFamily:    SANS,
-                    fontSize:      "0.68rem",
-                    fontWeight:    500,
-                    letterSpacing: "0.18em",
-                    textTransform: "uppercase",
-                    color:         C.champagne,
-                    cursor:        "default",
-                    paddingBottom: "2px",
-                    borderBottom:  `1px solid ${C.champagne}60`,
-                  }}
+                  style={{ display: "inline-flex", alignItems: "center", gap: "10px", fontFamily: SANS, fontSize: "0.63rem", fontWeight: 500, letterSpacing: "0.20em", textTransform: "uppercase", color: C.champagne, paddingBottom: "3px", borderBottom: `1px solid ${C.champagne}50`, cursor: "default" }}
                 >
                   {storyCtaLabel}
-                  <svg width="14" height="10" viewBox="0 0 14 10" fill="none">
-                    <path d="M0 5H12M9 1L13 5L9 9" stroke="currentColor" strokeWidth="1.2"/>
-                  </svg>
+                  <svg width="14" height="10" viewBox="0 0 14 10" fill="none"><path d="M0 5H12M9 1L13 5L9 9" stroke="currentColor" strokeWidth="1.2"/></svg>
                 </div>
               )}
             </div>
@@ -1068,215 +926,89 @@ export default function AureliaTemplate({
           id="aur-roadmap"
           data-v2-section="aur-roadmap"
           ref={roadmapAnim.ref as React.RefObject<HTMLElement>}
-          style={{
-            background: C.charcoal,
-            padding:    "100px 24px 80px",
-            ...roadmapAnim.style,
-          }}
+          style={{ background: `linear-gradient(180deg, ${C.charcoalMid} 0%, ${C.charcoal} 100%)`, padding: "110px 24px 100px", ...roadmapAnim.style }}
         >
-          {/* Section header */}
-          <div style={{ textAlign: "center", marginBottom: "72px" }}>
-            <p
-              style={{
-                fontFamily:    SANS,
-                fontSize:      "0.62rem",
-                letterSpacing: "0.24em",
-                textTransform: "uppercase",
-                color:         C.champagne,
-                marginBottom:  "16px",
-                opacity:       0.8,
-              }}
-            >
+          <div style={{ textAlign: "center", marginBottom: "80px" }}>
+            <p style={{ fontFamily: SANS, fontSize: "0.60rem", letterSpacing: "0.26em", textTransform: "uppercase", color: C.champagne, marginBottom: "16px", opacity: 0.85 }}>
               The Journey
             </p>
             <h2
               data-v2-element="aur-roadmap-heading"
               data-v2-type="text"
-              style={{
-                fontFamily:   SERIF,
-                fontSize:     "clamp(2rem, 4vw, 3.2rem)",
-                fontWeight:   300,
-                color:        C.warmWhite,
-                letterSpacing:"0.02em",
-                margin:       0,
-              }}
+              style={{ fontFamily: SERIF, fontSize: "clamp(2rem, 4vw, 3.4rem)", fontWeight: 300, color: C.warmWhite, letterSpacing: "0.02em", margin: 0 }}
             >
               {roadmapHeading}
             </h2>
           </div>
 
-          {/* Roadmap container */}
-          <div
-            ref={roadmapRef as React.RefObject<HTMLDivElement>}
-            style={{
-              position:  "relative",
-              maxWidth:  "800px",
-              margin:    "0 auto",
-              padding:   "0 24px",
-            }}
-          >
-            {/* Center vertical line track */}
+          <div ref={roadmapRef as React.RefObject<HTMLDivElement>} style={{ position: "relative", maxWidth: "820px", margin: "0 auto", padding: "0 24px" }}>
             <div
               className="aur-roadmap-center-line"
-              style={{
-                position:  "absolute",
-                left:      "50%",
-                top:       0,
-                bottom:    0,
-                transform: "translateX(-50%)",
-                width:     "2px",
-                background:`${C.champagne}22`,
-                zIndex:    1,
-              }}
+              style={{ position: "absolute", left: "50%", top: 0, bottom: 0, transform: "translateX(-50%)", width: "2px", background: `${C.champagne}15`, zIndex: 1 }}
             >
-              {/* Animated fill */}
-              <div
-                style={{
-                  position:   "absolute",
-                  top:        0,
-                  left:       0,
-                  width:      "100%",
-                  height:     `${progress * 100}%`,
-                  background: `linear-gradient(to bottom, ${C.champagne}, ${C.champagneDim})`,
-                  transition: "height 0.12s linear",
-                }}
-              />
-
-              {/* Traveling diamond marker */}
-              <div
-                style={{
-                  position:  "absolute",
-                  top:       `${progress * 100}%`,
-                  left:      "50%",
-                  transform: "translate(-50%, -50%)",
-                  zIndex:    3,
-                  transition:"top 0.12s linear",
-                  filter:    `drop-shadow(0 0 6px ${C.champagne}80)`,
-                }}
-              >
-                <svg width="20" height="20" viewBox="0 0 20 20">
-                  <path d="M10 0 L20 10 L10 20 L0 10 Z" fill={C.champagne} />
+              <div style={{ position: "absolute", top: 0, left: 0, width: "100%", height: `${progress * 100}%`, background: `linear-gradient(to bottom, ${C.champagne}BB, ${C.champagneDim}70)`, transition: "height 0.12s linear" }} />
+              <div style={{ position: "absolute", top: `${progress * 100}%`, left: "50%", transform: "translate(-50%, -50%)", zIndex: 5, transition: "top 0.12s linear", filter: `drop-shadow(0 0 10px ${C.champagne}88)` }}>
+                <svg width="26" height="26" viewBox="0 0 26 26" fill="none">
+                  <rect x="3" y="9" width="20" height="10" rx="2" fill={C.champagne} fillOpacity="0.92"/>
+                  <path d="M7 9L9.5 4.5H16.5L19 9" fill={C.champagne} fillOpacity="0.70"/>
+                  <circle cx="8.5"  cy="20" r="2.5" fill={C.charcoal} stroke={C.champagne} strokeWidth="1.2"/>
+                  <circle cx="17.5" cy="20" r="2.5" fill={C.charcoal} stroke={C.champagne} strokeWidth="1.2"/>
+                  <rect x="10" y="5.5" width="6" height="2.8" rx="0.4" fill={C.charcoal} fillOpacity="0.28"/>
                 </svg>
               </div>
             </div>
 
-            {/* Milestone cards */}
             <div ref={milestonesRef as React.RefObject<HTMLDivElement>}>
               {milestones.map((m, i) => (
                 <div
-                  key={m.id || i}
+                  key={(m as any).id || i}
                   data-aur-ms={i}
-                  className={i % 2 === 0
-                    ? "aur-roadmap-milestone-left"
-                    : "aur-roadmap-milestone-right"
-                  }
+                  className={i % 2 === 0 ? "aur-roadmap-milestone-left" : "aur-roadmap-milestone-right"}
                   style={{
-                    position:   "relative",
-                    marginBottom:"60px",
-                    opacity:    milestoneVisible[i] ? 1 : 0,
-                    transform:  milestoneVisible[i]
-                      ? "none"
-                      : `translateX(${i % 2 === 0 ? "-28px" : "28px"})`,
+                    position: "relative", marginBottom: "60px",
+                    opacity:  milestoneVisible[i] ? 1 : 0,
+                    transform: milestoneVisible[i] ? "none" : `translateX(${i % 2 === 0 ? "-28px" : "28px"})`,
                     transition: "opacity 0.65s ease, transform 0.65s ease",
-                    zIndex:     2,
+                    zIndex: 2,
                   }}
                 >
-                  {/* Card */}
-                  <div
-                    style={{
-                      background:   `${C.charcoalMid}CC`,
-                      border:       `1px solid ${C.champagne}30`,
-                      padding:      "24px 28px",
-                      backdropFilter: "blur(4px)",
-                    }}
-                  >
-                    {/* Year */}
-                    <div
-                      style={{
-                        fontFamily:    SERIF,
-                        fontSize:      "0.75rem",
-                        fontWeight:    400,
-                        letterSpacing: "0.14em",
-                        color:         C.champagne,
-                        marginBottom:  "8px",
-                        opacity:       0.85,
-                      }}
-                    >
-                      {m.time}
-                    </div>
-
-                    {/* Title */}
-                    <h3
-                      style={{
-                        fontFamily:   SERIF,
-                        fontSize:     "1.45rem",
-                        fontWeight:   400,
-                        color:        C.warmWhite,
-                        margin:       "0 0 10px",
-                        lineHeight:   1.25,
-                      }}
-                    >
-                      {m.title}
-                    </h3>
-
-                    {/* Description */}
-                    {m.description && (
-                      <p
-                        style={{
-                          fontFamily: SANS,
-                          fontSize:   "0.85rem",
-                          fontWeight: 300,
-                          color:      C.warmGray,
-                          lineHeight: 1.65,
-                          margin:     0,
-                        }}
-                      >
-                        {m.description}
-                      </p>
+                  <div style={{ background: `${C.charcoalMid}DD`, border: `1px solid ${C.champagne}28`, overflow: "hidden", boxShadow: "0 8px 40px rgba(0,0,0,0.32)" }}>
+                    {(m as any).image && (
+                      <div style={{ height: "130px", overflow: "hidden", position: "relative" }}>
+                        <img src={(m as any).image} alt={m.title} style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+                        <div style={{ position: "absolute", inset: 0, background: `linear-gradient(to bottom, transparent 40%, ${C.charcoalMid}CC)` }} />
+                      </div>
                     )}
+                    <div style={{ padding: "22px 24px 24px" }}>
+                      <div style={{ fontFamily: SERIF, fontSize: "0.72rem", fontWeight: 400, letterSpacing: "0.16em", color: C.champagne, marginBottom: "8px", opacity: 0.85 }}>
+                        {m.time}
+                      </div>
+                      <h3 style={{ fontFamily: SERIF, fontSize: "1.4rem", fontWeight: 400, color: C.warmWhite, margin: "0 0 10px", lineHeight: 1.2 }}>
+                        {m.title}
+                      </h3>
+                      {m.description && (
+                        <p style={{ fontFamily: SANS, fontSize: "0.83rem", fontWeight: 300, color: C.warmGray, lineHeight: 1.65, margin: 0 }}>
+                          {m.description}
+                        </p>
+                      )}
+                    </div>
                   </div>
-
-                  {/* Connector dot (centered on the line) */}
                   <div
                     style={{
-                      position:     "absolute",
-                      top:          "28px",
-                      ...(i % 2 === 0
-                        ? { right: "-42px" }
-                        : { left: "-42px" }),
-                      width:        "10px",
-                      height:       "10px",
-                      borderRadius: "50%",
-                      background:   C.champagne,
-                      border:       `2px solid ${C.charcoal}`,
-                      zIndex:       4,
-                      transform:    "translateX(50%)",
+                      position: "absolute", top: "26px",
+                      ...(i % 2 === 0 ? { right: "-37px" } : { left: "-37px" }),
+                      width: "11px", height: "11px", borderRadius: "50%",
+                      background: C.champagne, border: `2.5px solid ${C.charcoal}`,
+                      zIndex: 4, boxShadow: `0 0 12px ${C.champagne}55`,
                     }}
                   />
                 </div>
               ))}
             </div>
 
-            {/* After message */}
             {cfg.timeline.afterMessage?.thankYou && (
-              <div
-                style={{
-                  textAlign:  "center",
-                  paddingTop: "40px",
-                  borderTop:  `1px solid ${C.champagne}20`,
-                  marginTop:  "20px",
-                }}
-              >
-                <p
-                  style={{
-                    fontFamily:   SERIF,
-                    fontSize:     "1.2rem",
-                    fontWeight:   300,
-                    fontStyle:    "italic",
-                    color:        C.champagne,
-                    opacity:      0.85,
-                  }}
-                >
+              <div style={{ textAlign: "center", paddingTop: "48px", borderTop: `1px solid ${C.champagne}18`, marginTop: "12px" }}>
+                <p style={{ fontFamily: SERIF, fontSize: "1.15rem", fontWeight: 300, fontStyle: "italic", color: C.champagne, opacity: 0.75 }}>
                   {cfg.timeline.afterMessage.thankYou}
                 </p>
               </div>
@@ -1291,108 +1023,66 @@ export default function AureliaTemplate({
           id="aur-details"
           data-v2-section="aur-details"
           ref={detailsAnim.ref as React.RefObject<HTMLElement>}
-          style={{
-            background: C.cream,
-            padding:    "100px 40px",
-            ...detailsAnim.style,
-          }}
+          style={{ background: C.creamWarm, padding: "100px 40px", ...detailsAnim.style }}
         >
-          <div style={{ maxWidth: "800px", margin: "0 auto" }}>
-            {/* Section label */}
+          <div style={{ maxWidth: "820px", margin: "0 auto" }}>
             <div style={{ textAlign: "center", marginBottom: "56px" }}>
-              <p
-                style={{
-                  fontFamily:    SANS,
-                  fontSize:      "0.62rem",
-                  letterSpacing: "0.24em",
-                  textTransform: "uppercase",
-                  color:         C.champagne,
-                  marginBottom:  "12px",
-                  opacity:       0.85,
-                }}
-              >
+              <p style={{ fontFamily: SANS, fontSize: "0.60rem", letterSpacing: "0.26em", textTransform: "uppercase", color: C.champagne, marginBottom: "16px", opacity: 0.85 }}>
                 {detailsLabel}
               </p>
-              <div style={{ width: "32px", height: "1px", background: C.champagne, margin: "0 auto", opacity: 0.5 }} />
+              <div style={{ width: "28px", height: "1px", background: C.champagne, margin: "0 auto", opacity: 0.45 }} />
             </div>
 
-            {/* 4 detail cards */}
             <div className="aur-details-grid">
               {venues.slice(0, 4).map((venue, i) => (
                 <div
-                  key={venue.id || i}
-                  style={{
-                    background:   C.cardBg,
-                    border:       `1px solid ${C.border}`,
-                    padding:      "32px 28px",
-                    textAlign:    "center",
-                  }}
+                  key={(venue as any).id || i}
+                  className="aur-detail-card"
+                  style={{ background: C.cardBg, border: `1px solid ${C.border}`, padding: "38px 28px 34px", textAlign: "center" }}
                 >
-                  {/* Icon */}
-                  <div style={{ fontSize: "1.6rem", marginBottom: "16px" }}>
-                    {venue.mapIcon || "◆"}
+                  <div style={{ marginBottom: "20px", display: "flex", justifyContent: "center" }}>
+                    {i === 0 && (
+                      <svg width="36" height="36" viewBox="0 0 36 36" fill="none" stroke={C.champagne} strokeWidth="1.1" strokeLinecap="round" strokeLinejoin="round">
+                        <path d="M9 33V20H27V33"/><path d="M5 20h26"/><path d="M18 3v8M15 7h6"/>
+                        <path d="M14 20V14h8v6"/>
+                      </svg>
+                    )}
+                    {i === 1 && (
+                      <svg width="36" height="36" viewBox="0 0 36 36" fill="none" stroke={C.champagne} strokeWidth="1.1" strokeLinecap="round" strokeLinejoin="round">
+                        <path d="M11 4l4 14H7L11 4z"/><path d="M11 18v14M7 32h8"/>
+                        <path d="M25 4l4 14H21L25 4z"/><path d="M25 18v14M21 32h8"/>
+                        <path d="M15 10l6 2"/>
+                      </svg>
+                    )}
+                    {i === 2 && (
+                      <svg width="36" height="36" viewBox="0 0 36 36" fill="none" stroke={C.champagne} strokeWidth="1.1" strokeLinecap="round" strokeLinejoin="round">
+                        <circle cx="18" cy="14" r="5"/>
+                        <path d="M18 2a12 12 0 010 24C10 26 4 20 4 14A14 14 0 0118 2z"/>
+                        <path d="M18 26v8M14 31h8"/>
+                      </svg>
+                    )}
+                    {i >= 3 && (
+                      <svg width="36" height="36" viewBox="0 0 36 36" fill="none" stroke={C.champagne} strokeWidth="1.1" strokeLinecap="round" strokeLinejoin="round">
+                        <rect x="6" y="10" width="24" height="20" rx="1"/>
+                        <path d="M6 16h24M13 10V6M23 10V6"/>
+                      </svg>
+                    )}
                   </div>
-
-                  {/* Card label */}
-                  <p
-                    style={{
-                      fontFamily:    SANS,
-                      fontSize:      "0.58rem",
-                      letterSpacing: "0.22em",
-                      textTransform: "uppercase",
-                      color:         C.champagne,
-                      marginBottom:  "10px",
-                    }}
-                  >
+                  <p style={{ fontFamily: SANS, fontSize: "0.56rem", letterSpacing: "0.22em", textTransform: "uppercase", color: C.champagne, marginBottom: "12px" }}>
                     {venue.title}
                   </p>
-
-                  {/* Time/Name */}
-                  <p
-                    style={{
-                      fontFamily:   SERIF,
-                      fontSize:     "1.6rem",
-                      fontWeight:   400,
-                      color:        C.charcoal,
-                      marginBottom: "10px",
-                      lineHeight:   1.2,
-                    }}
-                  >
+                  <p style={{ fontFamily: SERIF, fontSize: "1.7rem", fontWeight: 400, color: C.charcoal, marginBottom: "12px", lineHeight: 1.15 }}>
                     {venue.name}
                   </p>
-
-                  {/* Description */}
-                  <p
-                    style={{
-                      fontFamily: SANS,
-                      fontSize:   "0.82rem",
-                      fontWeight: 300,
-                      color:      C.warmGray,
-                      lineHeight: 1.6,
-                      whiteSpace: "pre-line",
-                      marginBottom: venue.mapButton ? "18px" : 0,
-                    }}
-                  >
+                  <p style={{ fontFamily: SANS, fontSize: "0.84rem", fontWeight: 300, color: C.warmGray, lineHeight: 1.68, whiteSpace: "pre-line", marginBottom: venue.mapButton ? "20px" : 0 }}>
                     {venue.description}
                   </p>
-
-                  {/* Map button */}
                   {venue.mapButton && venue.address && (
                     <a
                       href={`https://www.google.com/maps/search/${encodeURIComponent(venue.address)}`}
                       target="_blank"
                       rel="noopener noreferrer"
-                      style={{
-                        display:       "inline-block",
-                        fontFamily:    SANS,
-                        fontSize:      "0.6rem",
-                        letterSpacing: "0.16em",
-                        textTransform: "uppercase",
-                        color:         C.champagne,
-                        textDecoration:"none",
-                        borderBottom:  `1px solid ${C.champagne}60`,
-                        paddingBottom: "1px",
-                      }}
+                      style={{ display: "inline-block", fontFamily: SANS, fontSize: "0.58rem", letterSpacing: "0.18em", textTransform: "uppercase", color: C.champagne, textDecoration: "none", borderBottom: `1px solid ${C.champagne}50`, paddingBottom: "2px" }}
                     >
                       {venue.mapButton}
                     </a>
@@ -1410,144 +1100,65 @@ export default function AureliaTemplate({
           id="aur-venue"
           data-v2-section="aur-venue"
           ref={venueAnim.ref as React.RefObject<HTMLElement>}
-          style={venueAnim.style}
+          style={{ position: "relative", minHeight: "640px", overflow: "hidden", ...venueAnim.style }}
         >
-          <div className="aur-venue-split">
-            {/* Left: text panel */}
-            <div
-              style={{
-                background:    C.creamWarm,
-                padding:       "80px 60px",
-                display:       "flex",
-                flexDirection: "column",
-                justifyContent:"center",
-              }}
-            >
-              {/* Section label */}
+          <div
+            ref={venueParallax.ref}
+            style={{
+              position:   "absolute",
+              inset:      "-18% 0",
+              background: `url(${venueImage || "https://images.unsplash.com/photo-1578774295889-02bc12c28e3a?w=1400&q=80&auto=format&fit=crop"}) center/cover no-repeat`,
+              transform:  `translateY(${venueParallax.offset}px)`,
+              zIndex:     0,
+              willChange: "transform",
+            }}
+          />
+          <div style={{ position: "absolute", inset: 0, background: "linear-gradient(to right, rgba(6,4,2,0.88) 0%, rgba(6,4,2,0.65) 45%, rgba(6,4,2,0.15) 100%)", zIndex: 1 }} />
+
+          <div style={{ position: "relative", zIndex: 2, display: "flex", alignItems: "center", minHeight: "640px", padding: "80px 64px" }}>
+            <div style={{ maxWidth: "490px" }}>
               <p
                 data-v2-element="aur-venue-subtitle"
                 data-v2-type="text"
-                style={{
-                  fontFamily:    SANS,
-                  fontSize:      "0.62rem",
-                  letterSpacing: "0.22em",
-                  textTransform: "uppercase",
-                  color:         C.champagne,
-                  marginBottom:  "20px",
-                  opacity:       0.85,
-                }}
+                style={{ fontFamily: SANS, fontSize: "0.60rem", letterSpacing: "0.24em", textTransform: "uppercase", color: C.champagne, marginBottom: "20px", opacity: 0.90 }}
               >
                 {venueSubtitle}
               </p>
-
-              {/* Venue name */}
               <h2
                 data-v2-element="aur-venue-title"
                 data-v2-type="text"
-                style={{
-                  fontFamily:   SERIF,
-                  fontSize:     "clamp(2.4rem, 4vw, 4rem)",
-                  fontWeight:   400,
-                  color:        C.charcoal,
-                  lineHeight:   1.1,
-                  marginBottom: "24px",
-                }}
+                style={{ fontFamily: SERIF, fontSize: "clamp(2.6rem, 4.5vw, 4.5rem)", fontWeight: 300, color: C.warmWhite, lineHeight: 1.05, marginBottom: "24px", textShadow: "0 2px 30px rgba(0,0,0,0.45)" }}
               >
                 {venueTitle}
               </h2>
-
-              {/* Thin rule */}
-              <div style={{ width: "40px", height: "1px", background: C.champagne, marginBottom: "28px", opacity: 0.6 }} />
-
-              {/* Description */}
+              <div style={{ width: "40px", height: "1px", background: C.champagne, marginBottom: "26px", opacity: 0.55 }} />
               <p
                 data-v2-element="aur-venue-desc"
                 data-v2-type="textarea"
-                style={{
-                  fontFamily:   SANS,
-                  fontSize:     "0.95rem",
-                  fontWeight:   300,
-                  lineHeight:   1.8,
-                  color:        C.warmGray,
-                  marginBottom: "28px",
-                }}
+                style={{ fontFamily: SANS, fontSize: "0.95rem", fontWeight: 300, lineHeight: 1.88, color: `${C.warmWhite}C8`, marginBottom: "28px" }}
               >
                 {venueDescription}
               </p>
-
-              {/* Address */}
               {venueAddress && (
-                <div style={{ display: "flex", gap: "10px", alignItems: "flex-start", marginBottom: "28px" }}>
-                  <span style={{ color: C.champagne, fontSize: "0.9rem", marginTop: "1px" }}>📍</span>
-                  <p
-                    style={{
-                      fontFamily: SANS,
-                      fontSize:   "0.82rem",
-                      fontWeight: 300,
-                      color:      C.warmGray,
-                      lineHeight: 1.65,
-                      whiteSpace: "pre-line",
-                      margin:     0,
-                    }}
-                  >
+                <div style={{ display: "flex", gap: "10px", alignItems: "flex-start", marginBottom: "32px" }}>
+                  <svg width="13" height="17" viewBox="0 0 13 17" fill="none" style={{ flexShrink: 0, marginTop: "3px" }}>
+                    <path d="M6.5 0C3.46 0 1 2.46 1 5.5c0 4.88 5.5 10.5 5.5 10.5S12 10.38 12 5.5C12 2.46 9.54 0 6.5 0zm0 7.5A2 2 0 114.5 5.5 2 2 0 016.5 7.5z" fill={C.champagne} fillOpacity="0.80"/>
+                  </svg>
+                  <p style={{ fontFamily: SANS, fontSize: "0.84rem", fontWeight: 300, color: `${C.warmWhite}A8`, lineHeight: 1.68, whiteSpace: "pre-line", margin: 0 }}>
                     {venueAddress}
                   </p>
                 </div>
               )}
-
-              {/* CTA */}
               {venueCtaLabel && (
                 <a
                   href={venueMapUrl}
                   target="_blank"
                   rel="noopener noreferrer"
-                  style={{
-                    display:       "inline-flex",
-                    alignItems:    "center",
-                    gap:           "8px",
-                    fontFamily:    SANS,
-                    fontSize:      "0.65rem",
-                    letterSpacing: "0.18em",
-                    textTransform: "uppercase",
-                    color:         C.champagne,
-                    textDecoration:"none",
-                    borderBottom:  `1px solid ${C.champagne}60`,
-                    paddingBottom: "2px",
-                    alignSelf:     "flex-start",
-                  }}
+                  style={{ display: "inline-flex", alignItems: "center", gap: "10px", fontFamily: SANS, fontSize: "0.63rem", letterSpacing: "0.20em", textTransform: "uppercase", color: C.champagne, textDecoration: "none", borderBottom: `1px solid ${C.champagne}50`, paddingBottom: "2px" }}
                 >
                   {venueCtaLabel}
-                  <svg width="14" height="10" viewBox="0 0 14 10" fill="none">
-                    <path d="M0 5H12M9 1L13 5L9 9" stroke="currentColor" strokeWidth="1.2"/>
-                  </svg>
+                  <svg width="14" height="10" viewBox="0 0 14 10" fill="none"><path d="M0 5H12M9 1L13 5L9 9" stroke="currentColor" strokeWidth="1.2"/></svg>
                 </a>
-              )}
-            </div>
-
-            {/* Right: venue image */}
-            <div
-              style={{
-                background:  venueImage
-                  ? `url(${venueImage}) center/cover no-repeat`
-                  : `linear-gradient(135deg, ${C.cardBg} 0%, ${C.border} 100%)`,
-                minHeight:   "400px",
-                position:    "relative",
-              }}
-            >
-              {!venueImage && (
-                <div
-                  style={{
-                    position:       "absolute",
-                    inset:          0,
-                    display:        "flex",
-                    alignItems:     "center",
-                    justifyContent: "center",
-                  }}
-                >
-                  <span style={{ fontFamily: SERIF, fontSize: "3rem", color: C.champagne, opacity: 0.2 }}>
-                    ✦
-                  </span>
-                </div>
               )}
             </div>
           </div>
@@ -1560,80 +1171,54 @@ export default function AureliaTemplate({
           id="aur-gallery"
           data-v2-section="aur-gallery"
           ref={galleryAnim.ref as React.RefObject<HTMLElement>}
-          style={{
-            background: C.charcoalMid,
-            padding:    "100px 40px",
-            ...galleryAnim.style,
-          }}
+          style={{ background: C.charcoal, padding: "100px 40px 110px", ...galleryAnim.style }}
         >
-          {/* Section header */}
-          <div style={{ textAlign: "center", marginBottom: "56px" }}>
-            <p
-              style={{
-                fontFamily:    SANS,
-                fontSize:      "0.62rem",
-                letterSpacing: "0.24em",
-                textTransform: "uppercase",
-                color:         C.champagne,
-                marginBottom:  "16px",
-                opacity:       0.8,
-              }}
-            >
+          <div style={{ textAlign: "center", marginBottom: "60px" }}>
+            <p style={{ fontFamily: SANS, fontSize: "0.60rem", letterSpacing: "0.26em", textTransform: "uppercase", color: C.champagne, marginBottom: "18px", opacity: 0.80 }}>
               {gallerySubtitle}
             </p>
             <h2
               data-v2-element="aur-gallery-title"
               data-v2-type="text"
-              style={{
-                fontFamily:   SERIF,
-                fontSize:     "clamp(2rem, 4vw, 3rem)",
-                fontWeight:   300,
-                color:        C.warmWhite,
-                margin:       0,
-                letterSpacing:"0.02em",
-              }}
+              style={{ fontFamily: SERIF, fontSize: "clamp(2rem, 4vw, 3.2rem)", fontWeight: 300, color: C.warmWhite, margin: 0, letterSpacing: "0.02em" }}
             >
               {galleryTitle}
             </h2>
           </div>
 
-          {/* Image grid */}
-          {galleryImages.length > 0 ? (
-            <div className="aur-gallery-grid" style={{ maxWidth: "1100px", margin: "0 auto" }}>
-              {galleryImages.map((url, i) => (
-                <div
-                  key={i}
-                  className="aur-gallery-tile"
-                  style={{
-                    aspectRatio: "1 / 1",
-                    overflow:    "hidden",
-                    background:  C.charcoalLight,
-                  }}
-                >
-                  <img
-                    src={url}
-                    alt={`Gallery ${i + 1}`}
-                    className="aur-gallery-img"
-                    loading="lazy"
-                  />
+          {(() => {
+            const PLACEHOLDERS = [
+              "https://images.unsplash.com/photo-1465495976277-a3741a19326e?w=600&q=80&auto=format&fit=crop",
+              "https://images.unsplash.com/photo-1519741497674-611481863552?w=600&q=80&auto=format&fit=crop",
+              "https://images.unsplash.com/photo-1511285560929-80b456fea0bc?w=600&q=80&auto=format&fit=crop",
+              "https://images.unsplash.com/photo-1507504031003-b417219a0fde?w=600&q=80&auto=format&fit=crop",
+              "https://images.unsplash.com/photo-1606216794074-735e91aa2c92?w=600&q=80&auto=format&fit=crop",
+              "https://images.unsplash.com/photo-1583939003579-730e3918a45a?w=600&q=80&auto=format&fit=crop",
+            ];
+            const displayImages = galleryImages.length > 0 ? galleryImages : PLACEHOLDERS;
+            const isPlaceholder = galleryImages.length === 0;
+            return (
+              <div style={{ maxWidth: "1160px", margin: "0 auto" }}>
+                <div className="aur-gallery-grid">
+                  {displayImages.map((url: string, i: number) => (
+                    <div
+                      key={i}
+                      className="aur-gallery-tile"
+                      style={{ ...(i === 0 ? { gridRow: "span 2" } : {}), aspectRatio: i === 0 ? "auto" : "1 / 1" }}
+                    >
+                      <img src={url} alt={`Gallery ${i + 1}`} className="aur-gallery-img" loading="lazy" />
+                      {isPlaceholder && <div style={{ position: "absolute", inset: 0, background: "rgba(6,4,2,0.18)", pointerEvents: "none" }} />}
+                    </div>
+                  ))}
                 </div>
-              ))}
-            </div>
-          ) : (
-            <div
-              style={{
-                textAlign:  "center",
-                padding:    "80px 0",
-                color:      C.warmGray,
-                fontFamily: SERIF,
-                fontSize:   "1.2rem",
-                fontStyle:  "italic",
-                opacity:    0.6,
-              }}
-            >
-              {cfg.photos.comingSoonMessage}
-            </div>
-          )}
+                {isPlaceholder && (
+                  <p style={{ textAlign: "center", marginTop: "36px", fontFamily: SERIF, fontSize: "1.05rem", fontStyle: "italic", color: C.warmGray, opacity: 0.45, letterSpacing: "0.04em" }}>
+                    Your favourite moments will live here
+                  </p>
+                )}
+              </div>
+            );
+          })()}
         </section>
       )}
 
@@ -1643,165 +1228,79 @@ export default function AureliaTemplate({
           id="aur-rsvp"
           data-v2-section="aur-rsvp"
           ref={rsvpAnim.ref as React.RefObject<HTMLElement>}
-          style={{
-            position:    "relative",
-            minHeight:   "700px",
-            display:     "flex",
-            alignItems:  "center",
-            justifyContent:"center",
-            padding:     "80px 24px",
-            background:  rsvpBgImage
-              ? `url(${rsvpBgImage}) center/cover no-repeat`
-              : `linear-gradient(160deg, ${C.charcoal} 0%, ${C.charcoalMid} 100%)`,
-            ...rsvpAnim.style,
-          }}
+          style={{ position: "relative", minHeight: "820px", display: "flex", alignItems: "center", justifyContent: "center", padding: "80px 24px", overflow: "hidden", ...rsvpAnim.style }}
         >
-          {/* Overlay */}
-          {rsvpBgImage && (
-            <div style={{ position: "absolute", inset: 0, background: "rgba(20,18,16,0.70)", zIndex: 1 }} />
-          )}
-
-          {/* Glass panel */}
           <div
+            ref={rsvpParallax.ref}
             style={{
-              position:     "relative",
-              zIndex:       2,
-              width:        "100%",
-              maxWidth:     "560px",
-              background:   "rgba(28,25,23,0.78)",
-              backdropFilter:"blur(16px)",
-              WebkitBackdropFilter:"blur(16px)",
-              border:       `1px solid ${C.champagne}28`,
-              padding:      "56px 48px",
+              position:   "absolute",
+              inset:      "-18% 0",
+              background: `url(${rsvpBgImage || "https://images.unsplash.com/photo-1519741497674-611481863552?w=1400&q=80&auto=format&fit=crop"}) center/cover no-repeat`,
+              transform:  `translateY(${rsvpParallax.offset}px)`,
+              zIndex:     0,
+              willChange: "transform",
             }}
+          />
+          <div style={{ position: "absolute", inset: 0, background: "rgba(6,4,2,0.74)", zIndex: 1 }} />
+
+          <div
+            className="aur-glass"
+            style={{ position: "relative", zIndex: 2, width: "100%", maxWidth: "540px", padding: "52px 48px", boxShadow: "0 32px 80px rgba(0,0,0,0.55)" }}
           >
-            {/* Title */}
             <h2
               data-v2-element="aur-rsvp-title"
               data-v2-type="text"
-              style={{
-                fontFamily:   SERIF,
-                fontSize:     "2.8rem",
-                fontWeight:   300,
-                color:        C.warmWhite,
-                textAlign:    "center",
-                marginBottom: "12px",
-                letterSpacing:"0.04em",
-              }}
+              style={{ fontFamily: SERIF, fontSize: "2.8rem", fontWeight: 300, color: C.warmWhite, textAlign: "center", marginBottom: "10px", letterSpacing: "0.04em" }}
             >
               {cfg.rsvp.title}
             </h2>
-
-            {/* Description */}
             {cfg.rsvp.description && (
               <p
                 data-v2-element="aur-rsvp-desc"
                 data-v2-type="textarea"
-                style={{
-                  fontFamily:  SANS,
-                  fontSize:    "0.85rem",
-                  fontWeight:  300,
-                  color:       C.warmGray,
-                  textAlign:   "center",
-                  whiteSpace:  "pre-line",
-                  lineHeight:  1.75,
-                  marginBottom:"36px",
-                }}
+                style={{ fontFamily: SANS, fontSize: "0.85rem", fontWeight: 300, color: C.warmGray, textAlign: "center", whiteSpace: "pre-line", lineHeight: 1.78, marginBottom: "36px" }}
               >
                 {cfg.rsvp.description}
               </p>
             )}
 
             {rsvpSuccess ? (
-              <div
-                style={{
-                  textAlign:  "center",
-                  padding:    "32px 0",
-                  fontFamily: SERIF,
-                  fontSize:   "1.4rem",
-                  fontStyle:  "italic",
-                  color:      C.champagne,
-                  lineHeight: 1.6,
-                }}
-              >
+              <div style={{ textAlign: "center", padding: "32px 0", fontFamily: SERIF, fontSize: "1.4rem", fontStyle: "italic", color: C.champagne, lineHeight: 1.6 }}>
                 {cfg.rsvp.messages.success}
               </div>
             ) : (
               <form onSubmit={form.handleSubmit(onSubmit)} noValidate>
-                {/* First + Last name row */}
                 <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "14px", marginBottom: "14px" }}>
                   <div>
                     <label style={RSVP_LABEL}>{cfg.rsvp.form.firstName}</label>
-                    <input
-                      {...form.register("firstName")}
-                      placeholder={cfg.rsvp.form.firstNamePlaceholder}
-                      className="aur-input"
-                      style={RSVP_INPUT(C)}
-                    />
-                    {form.formState.errors.firstName && (
-                      <p style={RSVP_ERR}>{form.formState.errors.firstName.message}</p>
-                    )}
+                    <input {...form.register("firstName")} placeholder={cfg.rsvp.form.firstNamePlaceholder} className="aur-input" style={RSVP_INPUT(C)} />
+                    {form.formState.errors.firstName && <p style={RSVP_ERR}>{form.formState.errors.firstName.message}</p>}
                   </div>
                   <div>
                     <label style={RSVP_LABEL}>{cfg.rsvp.form.lastName}</label>
-                    <input
-                      {...form.register("lastName")}
-                      placeholder={cfg.rsvp.form.lastNamePlaceholder}
-                      className="aur-input"
-                      style={RSVP_INPUT(C)}
-                    />
-                    {form.formState.errors.lastName && (
-                      <p style={RSVP_ERR}>{form.formState.errors.lastName.message}</p>
-                    )}
+                    <input {...form.register("lastName")} placeholder={cfg.rsvp.form.lastNamePlaceholder} className="aur-input" style={RSVP_INPUT(C)} />
+                    {form.formState.errors.lastName && <p style={RSVP_ERR}>{form.formState.errors.lastName.message}</p>}
                   </div>
                 </div>
-
-                {/* Email */}
                 <div style={{ marginBottom: "14px" }}>
                   <label style={RSVP_LABEL}>{cfg.rsvp.form.email}</label>
-                  <input
-                    {...form.register("email")}
-                    type="email"
-                    placeholder={cfg.rsvp.form.emailPlaceholder}
-                    className="aur-input"
-                    style={RSVP_INPUT(C)}
-                  />
-                  {form.formState.errors.email && (
-                    <p style={RSVP_ERR}>{form.formState.errors.email.message}</p>
-                  )}
+                  <input {...form.register("email")} type="email" placeholder={cfg.rsvp.form.emailPlaceholder} className="aur-input" style={RSVP_INPUT(C)} />
+                  {form.formState.errors.email && <p style={RSVP_ERR}>{form.formState.errors.email.message}</p>}
                 </div>
-
-                {/* Guest count */}
                 <div style={{ marginBottom: "14px" }}>
                   <label style={RSVP_LABEL}>{cfg.rsvp.form.guestCount}</label>
-                  <select
-                    {...form.register("guestCount")}
-                    className="aur-input"
-                    style={{ ...RSVP_INPUT(C), cursor: "pointer" }}
-                  >
+                  <select {...form.register("guestCount")} className="aur-input" style={{ ...RSVP_INPUT(C), cursor: "pointer" }}>
                     {cfg.rsvp.guestOptions.map((opt) => (
                       <option key={opt.value} value={opt.value}>{opt.label}</option>
                     ))}
                   </select>
                 </div>
-
-                {/* Dietary requirements */}
                 <div style={{ marginBottom: "20px" }}>
                   <label style={RSVP_LABEL}>{cfg.rsvp.form.guestNames}</label>
-                  <textarea
-                    {...form.register("guestNames")}
-                    placeholder={cfg.rsvp.form.guestNamesPlaceholder}
-                    rows={2}
-                    className="aur-input"
-                    style={{ ...RSVP_INPUT(C), resize: "vertical", lineHeight: 1.5 }}
-                  />
+                  <textarea {...form.register("guestNames")} placeholder={cfg.rsvp.form.guestNamesPlaceholder} rows={2} className="aur-input" style={{ ...RSVP_INPUT(C), resize: "vertical", lineHeight: 1.5 }} />
                 </div>
-
-                {/* Attendance */}
                 <div style={{ marginBottom: "28px" }}>
-                  <label style={{ ...RSVP_LABEL, marginBottom: "12px", display: "block" }}>
-                    {cfg.rsvp.form.attendance}
-                  </label>
+                  <label style={{ ...RSVP_LABEL, marginBottom: "12px", display: "block" }}>{cfg.rsvp.form.attendance}</label>
                   <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "10px" }}>
                     {[
                       { value: "attending",     label: cfg.rsvp.form.attendingYes },
@@ -1811,71 +1310,25 @@ export default function AureliaTemplate({
                       return (
                         <label
                           key={opt.value}
-                          style={{
-                            display:      "block",
-                            padding:      "14px",
-                            border:       `1px solid ${selected ? C.champagne : `${C.champagne}30`}`,
-                            background:   selected ? `${C.champagne}15` : "transparent",
-                            cursor:       "pointer",
-                            textAlign:    "center",
-                            fontFamily:   SANS,
-                            fontSize:     "0.78rem",
-                            color:        selected ? C.champagne : C.warmGray,
-                            letterSpacing:"0.06em",
-                            transition:   "all 0.2s",
-                          }}
+                          style={{ display: "block", padding: "14px", border: `1px solid ${selected ? C.champagne : `${C.champagne}28`}`, background: selected ? `${C.champagne}18` : "transparent", cursor: "pointer", textAlign: "center", fontFamily: SANS, fontSize: "0.78rem", color: selected ? C.champagne : C.warmGray, letterSpacing: "0.06em", transition: "all 0.2s" }}
                         >
-                          <input
-                            type="radio"
-                            {...form.register("attendance")}
-                            value={opt.value}
-                            style={{ display: "none" }}
-                          />
+                          <input type="radio" {...form.register("attendance")} value={opt.value} style={{ display: "none" }} />
                           {opt.label}
                         </label>
                       );
                     })}
                   </div>
-                  {form.formState.errors.attendance && (
-                    <p style={RSVP_ERR}>{form.formState.errors.attendance.message}</p>
-                  )}
+                  {form.formState.errors.attendance && <p style={RSVP_ERR}>{form.formState.errors.attendance.message}</p>}
                 </div>
-
-                {/* Submit */}
                 <button
                   type="submit"
                   disabled={rsvpMutation.isPending}
-                  style={{
-                    width:         "100%",
-                    padding:       "16px",
-                    background:    rsvpMutation.isPending ? C.charcoalLight : C.champagne,
-                    border:        "none",
-                    color:         C.charcoal,
-                    fontFamily:    SANS,
-                    fontSize:      "0.68rem",
-                    fontWeight:    600,
-                    letterSpacing: "0.18em",
-                    textTransform: "uppercase",
-                    cursor:        rsvpMutation.isPending ? "not-allowed" : "pointer",
-                    transition:    "background 0.2s",
-                  }}
+                  style={{ width: "100%", padding: "16px", background: rsvpMutation.isPending ? C.charcoalLight : C.champagne, border: "none", color: C.charcoal, fontFamily: SANS, fontSize: "0.68rem", fontWeight: 600, letterSpacing: "0.18em", textTransform: "uppercase", cursor: rsvpMutation.isPending ? "not-allowed" : "pointer", transition: "background 0.2s" }}
                 >
-                  {rsvpMutation.isPending
-                    ? cfg.rsvp.form.submittingButton
-                    : cfg.rsvp.form.submitButton}
+                  {rsvpMutation.isPending ? cfg.rsvp.form.submittingButton : cfg.rsvp.form.submitButton}
                 </button>
-
-                {/* Error message */}
                 {rsvpMutation.isError && (
-                  <p
-                    style={{
-                      marginTop:  "12px",
-                      fontFamily: SANS,
-                      fontSize:   "0.78rem",
-                      color:      "#EF4444",
-                      textAlign:  "center",
-                    }}
-                  >
+                  <p style={{ marginTop: "12px", fontFamily: SANS, fontSize: "0.78rem", color: "#EF4444", textAlign: "center" }}>
                     {cfg.rsvp.messages.error}
                   </p>
                 )}
