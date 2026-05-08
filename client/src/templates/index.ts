@@ -101,6 +101,26 @@ export const templates: Record<string, TemplateDefinition> = {
       "Nature-Inspired Design",
       "Fully Customizable"
     ]
+  },
+  florence: {
+    key: "florence",
+    name: "Florence Eternal",
+    description: "Luxury editorial wedding template with dark olive and gold palette — cinematic hero, countdown, journey timeline, gallery, RSVP",
+    defaultConfig: {} as WeddingConfig, // Loaded from florence/config.ts
+    component: lazy(() => import("./florence/FlorenceTemplate")),
+    previewImage: "/templates/florence-preview.jpg",
+    features: [
+      "Luxury Dark Olive & Gold Theme",
+      "Cinematic Full-Screen Hero",
+      "Live Countdown Timer",
+      "Journey / Milestone Timeline",
+      "Wedding Details Cards",
+      "Venue Section with Map",
+      "Gallery Strip with Navigation",
+      "RSVP Form with Email Notifications",
+      "Responsive Mobile Design",
+      "Fixed Transparent Navigation",
+    ]
   }
   // Future templates can be added here:
   // minimal: { ... },
@@ -138,6 +158,9 @@ export const loadTemplateConfig = async (templateKey: string): Promise<WeddingCo
       case "nature":
         const natureConfig = await import("./nature/config");
         return natureConfig.defaultConfig;
+      case "florence":
+        const florenceConfig = await import("./florence/config");
+        return florenceConfig.defaultConfig;
       default:
         return null;
     }

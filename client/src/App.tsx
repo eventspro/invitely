@@ -24,6 +24,7 @@ import TemplateRenderer from "@/components/template-renderer";
 import TemplateAdminPanel from "@/components/template-admin-panel";
 import TemplateIdentifierGuard from "@/components/TemplateIdentifierGuard";
 import ComingSoon from "@/pages/coming-soon";
+import BuilderV2Page from "@/pages/builder-v2/BuilderV2Page";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
 import { BootstrapProvider } from "@/contexts/BootstrapContext";
 
@@ -79,6 +80,7 @@ function Router() {
       {/* Platform admin routes */}
       <Route path="/platform" component={PlatformDashboard} />
       <Route path="/platform/translations" component={TranslationsPage} />
+      <Route path="/platform/builder-v2/:templateId" component={BuilderV2Page} />
       <Route path="/platform/templates/:templateId" component={TemplateAdminPanel} />
       
       {/* Legacy routes for backward compatibility */}

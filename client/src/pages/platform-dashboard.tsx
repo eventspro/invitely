@@ -25,7 +25,8 @@ import {
   Mail,
   Globe,
   DollarSign,
-  Wrench
+  Wrench,
+  Wand2
 } from "lucide-react";
 import { getTemplateList } from "@/templates";
 
@@ -538,6 +539,18 @@ export default function PlatformDashboard() {
             </Button>
           </Link>
         </div>
+
+        {/* Builder V2 button — only for v2 templates */}
+        {template.templateVersion === 2 && (
+          <div className="flex gap-2">
+            <Link href={`/platform/builder-v2/${template.id}`}>
+              <Button variant="default" size="sm" className="w-full bg-indigo-600 hover:bg-indigo-700 text-white">
+                <Wand2 className="w-4 h-4 mr-1" />
+                Builder V2
+              </Button>
+            </Link>
+          </div>
+        )}
 
         {!superAdminMode && (
           <div className="flex gap-2">

@@ -82,27 +82,27 @@ export const hy = {
     featuresHeader: "Հնարավորություններ",
     plans: [
       {
-        name: "Հիմնական",
+        name: "Standard",
         description: "Կատարյալ է հարսանիքների համար հիմնական հնարավորություններով",
         badge: ""
       },
       {
-        name: "Կարևոր",
+        name: "Basic",
         description: "Ընդլայնված հնարավորություններ ժամանակակից զույգերի համար",
         badge: "Լավ Արժեք"
       },
       {
-        name: "Մասնագիտական",
+        name: "Premium",
         description: "Ամբողջական հարսանեկան կայքի լուծում",
         badge: "Ամենաշատ Նախընտրելի"
       },
       {
-        name: "Պրեմիում",
+        name: "Deluxe",
         description: "Պրեմիում հնարավորություններ շքեղ հարսանիքների համար",
         badge: "Առաջադեմ"
       },
       {
-        name: "Վերջնական",
+        name: "Ultimate",
         description: "Ամբողջական շքեղ հարսանեկան փորձառություն",
         badge: "Շքեղություն"
       }
@@ -112,10 +112,10 @@ export const hy = {
       "Couple Introduction": "Զույգի Ներկայացում", 
       "Wedding Locations": "Հարսանեկան Վայրեր",
       "RSVP Functionality": "RSVP Ֆունկցիոնալություն",
-      "Guest List Export": "Հյուրերի Ցանկի Արտահանում",
+      "Guest List Export": "Հյուրերի Ցանկի Կառավարում",
       "Photo Gallery": "Լուսանկարների Պատկերասրահ",
-      "Audio Player": "Աուդիո Նվագարկիչ",
-      "Admin Panel": "Ադմին Վահանակ",
+      "Audio Player": "Երաժշտություն",
+      "Admin Panel": "Admin Panel",
       "QR Code Cards": "QR Կոդի Քարտեր"
     },
     viewTemplate: "Տեսնել Ձևանմուշը",
@@ -297,31 +297,31 @@ export const hy = {
       basic: {
         name: "Հիմնական",
         price: "10,000 դրամ",
-        description: "Կատարյալ է  հարսանիքների համար հիմնական գործառույթներով",
+        description: "",
         badge: ""
       },
       essential: {
         name: "Հիմնարար",
         price: "17,000 դրամ", 
-        description: "Ընդլայնված գործառույթներ ժամանակակից զույգերի համար",
+        description: "",
         badge: "Լավագույն Արժեք"
       },
       professional: {
         name: "Մասնագիտական",
         price: "23,000 դրամ",
-        description: "Ամբողջական հարսանեկան կայքի լուծում",
+        description: "",
         badge: "Ամենաշատ Ընտրված"
       },
       premium: {
         name: "Պրեմիում",
         price: "31,000 դրամ",
-        description: "Պրեմիում գործառույթներ շքեղ հարսանիքների համար",
+        description: "",
         badge: "Առաջադեմ"
       },
       ultimate: {
         name: "Վերջնական",
         price: "37,000 դրամ",
-        description: "Ամբողջական շքեղ հարսանեկան փորձառություն",
+        description: "",
         badge: "Շքեղություն"
       }
     },
