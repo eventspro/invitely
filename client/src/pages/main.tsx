@@ -661,11 +661,11 @@ export default function MainPage() {
           </div>
 
           {/* Pricing Cards Grid */}
-          <div className="grid lg:grid-cols-3 xl:grid-cols-5 gap-6 mb-16">
+          <div className="flex flex-wrap justify-center gap-6 mb-16">
             {templatePlans.map((plan, index) => (
               <div 
                 key={plan.id}
-                className={`relative rounded-2xl p-6 transition-all duration-300 hover:scale-105 ${
+                className={`relative rounded-2xl p-6 transition-all duration-300 hover:scale-105 min-w-[200px] max-w-[260px] flex-1 ${
                   plan.popular 
                     ? 'bg-gradient-to-br from-emerald-500 to-teal-600 text-white shadow-2xl ring-4 ring-emerald-200 scale-105' 
                     : 'backdrop-blur-sm border-2 border-gray-200 shadow-lg hover:shadow-xl'
