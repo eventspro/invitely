@@ -247,15 +247,15 @@ export const defaultConfig: WeddingConfig = {
 
   theme: {
     colors: {
-      primary: "#C4A97D",
-      secondary: "#1C1917",
-      accent: "#C4A97D",
-      background: "#FAF8F4",
-      textColor: "#44403C",
+      primary: "#D7B777",
+      secondary: "#0C1412",
+      accent: "#D7B777",
+      background: "#081212",
+      textColor: "#FFF7EA",
     },
     fonts: {
       heading: "Cormorant Garamond, Georgia, serif",
-      body: "Raleway, Inter, sans-serif",
+      body: "Montserrat, Inter, sans-serif",
     },
   },
 } as WeddingConfig;
@@ -281,7 +281,10 @@ export interface AureliaExtendedConfig {
   gallerySubtitle?: string;
   footerTagline?: string;
   nameSeparator?: string;
+  rsvpBgImage?: string;
+  rsvpNote?: string;
   socialInstagram?: string;
   socialFacebook?: string;
   socialEmail?: string;
+  venueLocation?: string;
 }

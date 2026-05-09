@@ -1,11 +1,15 @@
 /**
- * Aurelia — Cinematic V2 wedding template
+ * Aurelia — Pixel-Perfect Cinematic V2 Wedding Template
  *
- * Visual identity: warm luxury editorial, cream / champagne / deep charcoal
- * Key differentiator: animated roadmap with traveling diamond marker
+ * Visual identity: deep dark teal / forest green + gold
+ * Key differentiators:
+ *   - Full-screen image-led sections with layered glass panels
+ *   - SVG curved route animation with getPointAtLength car marker
+ *   - Editorial layered gallery carousel with tilted side images
+ *   - Countdown glass card anchored bottom-right of hero
  *
- * All styles are scoped via inline styles + .aur-* class names in the
- * <style> block. Zero global style pollution.
+ * All styles scoped via inline + .aur-* class names in <style> block.
+ * Zero global style pollution.
  */
 
 import React, {
@@ -21,39 +25,35 @@ import { insertRsvpSchema, type InsertRsvp } from "@shared/schema";
 import { apiRequest } from "@/lib/queryClient";
 import type { WeddingConfig } from "../types";
 import { defaultConfig, type AureliaExtendedConfig } from "./config";
+import { WeddingCarMapMarker } from "./components/WeddingCarRoadmapIcon";
 
-// ─── Color palette constants ──────────────────────────────────────────────────
+// ─── Spec colour palette — dark teal + gold ───────────────────────────────────
 const C_DEFAULT = {
-  champagne:      "#C4A97D",
-  champagneLight: "#D4BF9A",
-  champagneDim:   "#A8906A",
-  charcoal:       "#1C1917",
-  charcoalMid:    "#292524",
-  charcoalLight:  "#3C3730",
-  cream:          "#FAF8F4",
-  creamWarm:      "#F5F0E8",
-  cardBg:         "#EDE8DF",
-  border:         "#D4C5A9",
-  stoneText:      "#44403C",
-  warmGray:       "#78716C",
-  warmWhite:      "#FAFAF9",
-  softWhite:      "#F0EDE8",
+  bgDark:      "#081212",
+  bgDeep:      "#0C1412",
+  panelDark:   "rgba(8,14,12,0.72)",
+  panelGlass:  "rgba(12,18,15,0.62)",
+  gold:        "#D7B777",
+  goldSoft:    "#F1D8A1",
+  ivory:       "#F7F0E3",
+  ivoryMuted:  "#D6C8B0",
+  textLight:   "#FFF7EA",
+  textMuted:   "#CBBEA8",
+  borderGold:  "rgba(215,183,119,0.55)",
+  shadowDark:  "rgba(0,0,0,0.45)",
+  overlayDark: "rgba(0,0,0,0.46)",
 } as const;
 
 // ─── Font shortcuts ───────────────────────────────────────────────────────────
-const SERIF_DEFAULT = "'Cormorant Garamond', Georgia, serif";
-const SANS_DEFAULT  = "Raleway, 'Inter', sans-serif";
+const SERIF_DEFAULT = "'Cormorant Garamond', 'Playfair Display', Georgia, serif";
+const SANS_DEFAULT  = "'Montserrat', 'Inter', 'system-ui', sans-serif";
 
-// ─── Scroll reveal hook (per section) ────────────────────────────────────────
+// ─── Scroll reveal hook ───────────────────────────────────────────────────────
 function useSectionAnim(animType: string, builderMode: boolean) {
-  const ref  = useRef<HTMLElement>(null);
+  const ref = useRef<HTMLElement>(null);
   const [active, setActive] = useState(false);
-
   useEffect(() => {
-    if (builderMode || !animType || animType === "none") {
-      setActive(true);
-      return;
-    }
+    if (builderMode || !animType || animType === "none") { setActive(true); return; }
     const el = ref.current;
     if (!el) return;
     const obs = new IntersectionObserver(
@@ -63,19 +63,12 @@ function useSectionAnim(animType: string, builderMode: boolean) {
     obs.observe(el);
     return () => obs.disconnect();
   }, [animType, builderMode]);
-
   const hasAnim = !builderMode && !!animType && animType !== "none";
   const style: React.CSSProperties = !hasAnim
     ? {}
     : active
-    ? { animation: `aur-${animType} 0.8s cubic-bezier(0.25, 0.46, 0.45, 0.94) both` }
-    : {
-        opacity: 0,
-        ...(animType === "fade-up"   ? { transform: "translateY(36px)"  } : {}),
-        ...(animType === "slide-in"  ? { transform: "translateX(-52px)" } : {}),
-        ...(animType === "zoom-in"   ? { transform: "scale(0.94)"       } : {}),
-      };
-
+    ? { animation: `aur-${animType} 0.9s cubic-bezier(0.25,0.46,0.45,0.94) both` }
+    : { opacity: 0, ...(animType === "fade-up" ? { transform: "translateY(36px)" } : {}) };
   return { ref, style };
 }
 
@@ -83,70 +76,55 @@ function useSectionAnim(animType: string, builderMode: boolean) {
 function useRoadmapProgress(builderMode: boolean) {
   const [progress, setProgress] = useState(0);
   const sectionRef = useRef<HTMLDivElement>(null);
-  const rafRef     = useRef<number | null>(null);
-
+  const rafRef = useRef<number | null>(null);
   useEffect(() => {
     const prefersReduced =
       typeof window !== "undefined" &&
       window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-
-    if (builderMode || prefersReduced) {
-      setProgress(1);
-      return;
-    }
-
+    if (builderMode || prefersReduced) { setProgress(1); return; }
     const update = () => {
       const el = sectionRef.current;
       if (!el) return;
       const rect = el.getBoundingClientRect();
-      const winH  = window.innerHeight;
+      const winH = window.innerHeight;
       const start = winH * 0.8 - rect.top;
       const total = el.offsetHeight * 0.85;
       setProgress(Math.max(0, Math.min(1, start / total)));
     };
-
     const onScroll = () => {
       if (rafRef.current !== null) cancelAnimationFrame(rafRef.current);
       rafRef.current = requestAnimationFrame(update);
     };
-
     window.addEventListener("scroll", onScroll, { passive: true });
     update();
-
     return () => {
       window.removeEventListener("scroll", onScroll);
       if (rafRef.current !== null) cancelAnimationFrame(rafRef.current);
     };
   }, [builderMode]);
-
   return { sectionRef, progress };
 }
 
-// ─── Parallax scroll hook ─────────────────────────────────────────────────────
-function useParallax(factor: number = 0.3, builderMode: boolean = false) {
+// ─── Parallax hook ────────────────────────────────────────────────────────────
+function useParallax(factor = 0.3, builderMode = false) {
   const [offset, setOffset] = useState(0);
   const ref = useRef<HTMLDivElement>(null);
-
   useEffect(() => {
     if (builderMode) return;
     const prefersReduced =
       typeof window !== "undefined" &&
       window.matchMedia("(prefers-reduced-motion: reduce)").matches;
     if (prefersReduced) return;
-
     const update = () => {
       if (!ref.current) return;
       const rect = ref.current.getBoundingClientRect();
       const winH = window.innerHeight;
-      const center = rect.top + rect.height / 2 - winH / 2;
-      setOffset(center * factor);
+      setOffset((rect.top + rect.height / 2 - winH / 2) * factor);
     };
-
     window.addEventListener("scroll", update, { passive: true });
     update();
     return () => window.removeEventListener("scroll", update);
   }, [factor, builderMode]);
-
   return { ref, offset };
 }
 
@@ -154,36 +132,21 @@ function useParallax(factor: number = 0.3, builderMode: boolean = false) {
 function useMilestoneReveal(count: number, builderMode: boolean) {
   const [visible, setVisible] = useState<boolean[]>(() => Array(count).fill(false));
   const containerRef = useRef<HTMLDivElement>(null);
-
   useEffect(() => {
     const prefersReduced =
       typeof window !== "undefined" &&
       window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-    const isMobile =
-      typeof window !== "undefined" && window.innerWidth < 768;
-
-    if (builderMode || prefersReduced || isMobile) {
-      setVisible(Array(count).fill(true));
-      return;
-    }
-
+    if (builderMode || prefersReduced) { setVisible(Array(count).fill(true)); return; }
     const container = containerRef.current;
     if (!container) return;
-
     const items = Array.from(container.querySelectorAll("[data-aur-ms]"));
     const observers: IntersectionObserver[] = [];
-
     items.forEach((el, i) => {
       const obs = new IntersectionObserver(
         ([entry]) => {
           if (entry.isIntersecting) {
             setTimeout(
-              () =>
-                setVisible((prev) => {
-                  const next = [...prev];
-                  next[i] = true;
-                  return next;
-                }),
+              () => setVisible(prev => { const n = [...prev]; n[i] = true; return n; }),
               i * 120
             );
             obs.disconnect();
@@ -194,18 +157,71 @@ function useMilestoneReveal(count: number, builderMode: boolean) {
       obs.observe(el);
       observers.push(obs);
     });
-
-    return () => observers.forEach((o) => o.disconnect());
+    return () => observers.forEach(o => o.disconnect());
   }, [count, builderMode]);
-
   return { containerRef, visible };
+}
+
+// ─── Mobile roadmap progress (mirrors desktop but for the vertical mobile path) ─
+function useMobileRoadmapProgress(builderMode: boolean) {
+  const [progress, setProgress] = useState(0);
+  const sectionRef = useRef<HTMLDivElement>(null);
+  const rafRef = useRef<number | null>(null);
+  useEffect(() => {
+    const prefersReduced =
+      typeof window !== "undefined" &&
+      window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    if (builderMode || prefersReduced) { setProgress(1); return; }
+    const update = () => {
+      const el = sectionRef.current;
+      if (!el) return;
+      const rect = el.getBoundingClientRect();
+      const winH = window.innerHeight;
+      const start = winH * 0.75 - rect.top;
+      const total = el.offsetHeight * 0.88;
+      setProgress(Math.max(0, Math.min(1, start / total)));
+    };
+    const onScroll = () => {
+      if (rafRef.current !== null) cancelAnimationFrame(rafRef.current);
+      rafRef.current = requestAnimationFrame(update);
+    };
+    window.addEventListener("scroll", onScroll, { passive: true });
+    update();
+    return () => {
+      window.removeEventListener("scroll", onScroll);
+      if (rafRef.current !== null) cancelAnimationFrame(rafRef.current);
+    };
+  }, [builderMode]);
+  return { sectionRef, progress };
+}
+
+// ─── Mobile gallery touch hook ─────────────────────────────────────────────────
+function useTouchGallery(total: number) {
+  const [index, setIndex] = useState(0);
+  const startX = useRef<number | null>(null);
+  const onTouchStart = useCallback((e: React.TouchEvent) => {
+    startX.current = e.touches[0].clientX;
+  }, []);
+  const onTouchEnd = useCallback((e: React.TouchEvent) => {
+    if (startX.current === null) return;
+    const dx = e.changedTouches[0].clientX - startX.current;
+    if (Math.abs(dx) > 42) {
+      if (dx < 0) setIndex(i => (i + 1) % total);
+      else        setIndex(i => (i - 1 + total) % total);
+    }
+    startX.current = null;
+  }, [total]);
+  const goTo = useCallback((i: number) => setIndex(i), []);
+  const prev = useCallback(() => setIndex(i => (i - 1 + total) % total), [total]);
+  const next = useCallback(() => setIndex(i => (i + 1) % total), [total]);
+  return { index, onTouchStart, onTouchEnd, goTo, prev, next };
 }
 
 // ─── Props ────────────────────────────────────────────────────────────────────
 interface AureliaTemplateProps {
-  config:       WeddingConfig;
-  templateId?:  string;
-  /** When true: sticky nav, data-v2-* attrs active, no scroll-based effects */
+  config: WeddingConfig;
+  templateId?: string;
+  /** When true: sticky nav, all animations at final state, data-v2-* active */
   builderMode?: boolean;
 }
 
@@ -216,7 +232,7 @@ export default function AureliaTemplate({
   builderMode = false,
 }: AureliaTemplateProps) {
 
-  // ── Config merge ────────────────────────────────────────────────────────────
+  // ── Config merge ──────────────────────────────────────────────────────────────
   const cfg: WeddingConfig = {
     ...defaultConfig,
     ...config,
@@ -225,96 +241,84 @@ export default function AureliaTemplate({
     hero:      { ...defaultConfig.hero,      ...(config.hero      || {}) },
     timeline:  { ...defaultConfig.timeline,  ...(config.timeline  || {}) },
     locations: { ...defaultConfig.locations, ...(config.locations || {}) },
-    rsvp:      {
+    rsvp: {
       ...defaultConfig.rsvp,
       ...(config.rsvp || {}),
       form: { ...defaultConfig.rsvp.form, ...(config.rsvp?.form || {}) },
     },
-    photos:    { ...defaultConfig.photos, ...(config.photos || {}) },
-    footer:    { ...defaultConfig.footer,    ...(config.footer    || {}) },
+    photos: { ...defaultConfig.photos, ...(config.photos || {}) },
+    footer: { ...defaultConfig.footer, ...(config.footer || {}) },
   };
 
-  const ext = cfg as unknown as AureliaExtendedConfig & WeddingConfig & {
-    rsvpBgImage?: string;
-    nameSeparator?: string;
-  };
+  // Cast for Aurelia-extended fields
+  const ext = cfg as unknown as AureliaExtendedConfig & WeddingConfig & Record<string, unknown>;
 
-  // ── Dynamic theme ────────────────────────────────────────────────────────────
+  // ── Dynamic theme ─────────────────────────────────────────────────────────────
   const colors = (cfg.theme?.colors ?? {}) as Record<string, string | undefined>;
-  const C = {
+  const C: Record<keyof typeof C_DEFAULT, string> = {
     ...C_DEFAULT,
-    champagne:      colors.primary        ?? C_DEFAULT.champagne,
-    champagneLight: colors.primary        ?? C_DEFAULT.champagneLight,
-    champagneDim:   colors.primary        ?? C_DEFAULT.champagneDim,
-    charcoal:       colors.secondary      ?? C_DEFAULT.charcoal,
-    charcoalMid:    colors.secondary      ?? C_DEFAULT.charcoalMid,
-    charcoalLight:  colors.secondary      ?? C_DEFAULT.charcoalLight,
-    cream:          colors.background     ?? C_DEFAULT.cream,
-    creamWarm:      colors.background     ?? C_DEFAULT.creamWarm,
-    cardBg:         colors.cardBackground ?? C_DEFAULT.cardBg,
-    border:         colors.cardBorder     ?? C_DEFAULT.border,
-    stoneText:      colors.textColor      ?? C_DEFAULT.stoneText,
-    warmGray:       colors.mutedText      ?? colors.textColor ?? C_DEFAULT.warmGray,
-    warmWhite:      colors.lightText      ?? C_DEFAULT.warmWhite,
-  } as typeof C_DEFAULT;
+    gold:       colors.primary          ?? C_DEFAULT.gold,
+    goldSoft:   colors.primary          ?? C_DEFAULT.goldSoft,
+    bgDark:     colors.background       ?? C_DEFAULT.bgDark,
+    bgDeep:     colors.sectionDarkBg    ?? C_DEFAULT.bgDeep,
+    textLight:  colors.lightText        ?? C_DEFAULT.textLight,
+    textMuted:  colors.mutedText        ?? C_DEFAULT.textMuted,
+    ivory:      colors.sectionLightBg   ?? C_DEFAULT.ivory,
+    ivoryMuted: colors.sectionLightText ?? C_DEFAULT.ivoryMuted,
+  };
 
   const SERIF = cfg.theme?.fonts?.heading || SERIF_DEFAULT;
   const SANS  = cfg.theme?.fonts?.body    || SANS_DEFAULT;
 
-  // ── Derived content ──────────────────────────────────────────────────────────
-  const groomName     = cfg.couple.groomName  ?? "Matteo";
-  const brideName     = cfg.couple.brideName  ?? "Sophia";
-  const separator     = ext.nameSeparator ?? cfg.footer.separator ?? "&";
-  const displayDate   = cfg.wedding.displayDate || "20 • 09 • 2026";
-  const heroTagline   = ext.heroTagline   ?? "";
-  const heroLocation  = ext.heroLocation  ?? "Amalfi Coast, Italy";
-  // Cinematic default hero image (Unsplash scenic wedding backdrop)
+  // ── Derived content ───────────────────────────────────────────────────────────
+  const groomName   = cfg.couple.groomName  ?? "Matteo";
+  const brideName   = cfg.couple.brideName  ?? "Sophia";
+  const separator   = (ext.nameSeparator as string | undefined) ?? cfg.footer.separator ?? "&";
+  const displayDate = cfg.wedding.displayDate || "20 \u2022 09 \u2022 2026";
   const HERO_DEFAULT = "https://images.unsplash.com/photo-1519741497674-611481863552?w=1920&q=80&auto=format&fit=crop";
-  const heroImage     = (cfg.hero.images && cfg.hero.images[0]) || HERO_DEFAULT;
+  const heroImage   = (cfg.hero.images && cfg.hero.images[0]) || HERO_DEFAULT;
+  const heroLocation = (ext.heroLocation as string | undefined) ?? "Amalfi Coast, Italy";
 
-  const storyHeading          = ext.storyHeading          ?? "How It All Began";
-  const storyHeadingEmphasis  = ext.storyHeadingEmphasis  ?? "Began";
-  const storyBody             = ext.storyBody             ?? "We crossed paths on a warm summer evening in Rome — a chance encounter that neither of us expected. What started as a brief conversation turned into hours, then days, then years of shared adventure and quiet joy.";
-  const storyCtaLabel         = ext.storyCtaLabel         ?? "OUR FULL STORY";
-  const storyImage            = ext.storyImage            ?? "";
+  const storyHeading  = (ext.storyHeading as string | undefined)  ?? "Our Love Story";
+  const storyBody     = (ext.storyBody as string | undefined)      ?? "We crossed paths on a warm summer evening in Rome \u2014 a chance encounter that neither of us expected. What started as a brief conversation turned into hours, then days, then years of shared adventure and quiet joy.";
+  const storyCtaLabel = (ext.storyCtaLabel as string | undefined)  ?? "READ OUR STORY";
+  const storyImage    = (ext.storyImage as string | undefined)     ?? "";
 
-  const roadmapHeading = ext.roadmapHeading ?? "The Road That Led Us Here";
-  const milestones     = cfg.timeline.events.length > 0
-    ? cfg.timeline.events
-    : defaultConfig.timeline.events;
+  const roadmapHeading = (ext.roadmapHeading as string | undefined) ?? "The Road That Led Us Here";
+  const milestones = cfg.timeline.events.length > 0 ? cfg.timeline.events : defaultConfig.timeline.events;
 
-  const detailsLabel = cfg.locations.sectionTitle || "WEDDING DETAILS";
+  const detailsLabel = cfg.locations.sectionTitle || "THE CELEBRATION";
   const venues       = cfg.locations.venues;
 
-  const venueSubtitle    = ext.venueSubtitle    ?? "THE VENUE";
-  const venueTitle       = ext.venueTitle       ?? "Villa Cimbrone";
-  const venueDescription = ext.venueDescription ?? "A timeless Italian villa perched on the clifftops above the Amalfi Coast, surrounded by ancient gardens and breathtaking sea views.";
-  const venueCtaLabel    = ext.venueCtaLabel    ?? "EXPLORE THE VENUE";
-  const venueAddress     = ext.venueAddress     ?? "Via Santa Chiara, 26\nRavello, SA 84010, Italy";
-  const venueMapUrl      = ext.venueMapUrl      || (venues[0]?.address ? `https://www.google.com/maps/search/${encodeURIComponent(venues[0].address)}` : "#");
-  const venueImage       = ext.venueImage       ?? "";
+  const venueTitle       = (ext.venueTitle as string | undefined)       ?? "Villa Cimbrone";
+  const venueLocation    = (ext.venueLocation as string | undefined)    ?? "Ravello, Amalfi Coast";
+  const venueDescription = (ext.venueDescription as string | undefined) ?? "A timeless Italian villa perched on the clifftops above the Amalfi Coast, surrounded by ancient gardens and breathtaking sea views.";
+  const venueCtaLabel    = (ext.venueCtaLabel as string | undefined)    ?? "EXPLORE THE VENUE";
+  const venueMapUrl      = (ext.venueMapUrl as string | undefined)      || (venues[0]?.address ? `https://www.google.com/maps/search/${encodeURIComponent(venues[0].address)}` : "#");
+  const venueImage       = (ext.venueImage as string | undefined)       ?? "";
 
-  const galleryTitle    = ext.galleryTitle    ?? cfg.photos.title;
-  const gallerySubtitle = ext.gallerySubtitle ?? cfg.photos.description;
-  const galleryImages   = cfg.photos.galleryImages || [];
+  const galleryTitle  = (ext.galleryTitle as string | undefined)  ?? cfg.photos.title;
+  const galleryImages = cfg.photos.galleryImages || [];
 
-  const rsvpBgImage = (ext as any).rsvpBgImage ?? "";
-  const footerTagline = ext.footerTagline ?? cfg.footer.thankYouMessage;
+  const rsvpBgImage  = (ext.rsvpBgImage as string | undefined)  ?? "";
+  const rsvpNote     = (ext.rsvpNote as string | undefined)     ?? "We can\u2019t wait to celebrate with you in the beautiful surroundings of the Amalfi Coast.";
+  const rsvpDeadline = cfg.rsvp.description?.split("\n")[0]     ?? "Please respond by June 1st, 2026.";
 
-  const socialInstagram = ext.socialInstagram || "";
-  const socialFacebook  = ext.socialFacebook  || "";
-  const socialEmail     = ext.socialEmail     || "";
+  const footerTagline   = (ext.footerTagline as string | undefined)   ?? cfg.footer.thankYouMessage;
+  const socialInstagram = (ext.socialInstagram as string | undefined) || "";
+  const socialFacebook  = (ext.socialFacebook as string | undefined)  || "";
+  const socialEmail     = (ext.socialEmail as string | undefined)     || "";
 
-  // ── Section visibility ───────────────────────────────────────────────────────
+  // ── Section visibility ────────────────────────────────────────────────────────
   const showHero    = cfg.sections?.hero?.enabled     !== false;
+  const showStory   = (cfg.sections as Record<string, { enabled?: boolean } | undefined>)?.story?.enabled   !== false;
   const showRoadmap = cfg.sections?.timeline?.enabled !== false;
   const showDetails = cfg.sections?.locations?.enabled !== false;
+  const showVenue   = (cfg.sections as Record<string, { enabled?: boolean } | undefined>)?.venue?.enabled   !== false;
   const showGallery = cfg.sections?.photos?.enabled   !== false;
   const showRsvp    = cfg.sections?.rsvp?.enabled     !== false;
-  const showStory   = (cfg as any).sections?.story?.enabled   !== false;
-  const showVenue   = (cfg as any).sections?.venue?.enabled   !== false;
 
-  // ── Countdown ────────────────────────────────────────────────────────────────
+  // ── Countdown ─────────────────────────────────────────────────────────────────
   const [countdown, setCountdown] = useState({ days: 0, hours: 0, minutes: 0, seconds: 0 });
   useEffect(() => {
     const target = new Date(cfg.wedding.date || defaultConfig.wedding.date).getTime();
@@ -333,8 +337,8 @@ export default function AureliaTemplate({
     return () => clearInterval(id);
   }, [cfg.wedding.date]);
 
-  // ── Navbar scroll state ──────────────────────────────────────────────────────
-  const [scrolled,     setScrolled]     = useState(builderMode);
+  // ── Navbar ────────────────────────────────────────────────────────────────────
+  const [scrolled, setScrolled]           = useState(builderMode);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   useEffect(() => {
     if (builderMode) return;
@@ -343,38 +347,25 @@ export default function AureliaTemplate({
     return () => window.removeEventListener("scroll", onScroll);
   }, [builderMode]);
 
-  // ── RSVP form ────────────────────────────────────────────────────────────────
+  // ── RSVP form ─────────────────────────────────────────────────────────────────
   const [rsvpSuccess, setRsvpSuccess] = useState(false);
   const form = useForm<InsertRsvp>({
     resolver: zodResolver(insertRsvpSchema),
     defaultValues: {
       templateId: templateId || "",
-      firstName:  "",
-      lastName:   "",
-      email:      "",
-      guestEmail: "",
-      guestCount: "1",
-      guestNames: "",
-      attendance: "attending",
-      attending:  true,
-      guests:     1,
+      firstName: "", lastName: "", email: "",
+      guestEmail: "", guestCount: "1", guestNames: "",
+      attendance: "attending", attending: true, guests: 1,
     },
   });
-
   const rsvpMutation = useMutation({
     mutationFn: async (data: InsertRsvp) => {
-      const endpoint = templateId
-        ? `/api/templates/${templateId}/rsvp`
-        : "/api/rsvp";
+      const endpoint = templateId ? `/api/templates/${templateId}/rsvp` : "/api/rsvp";
       const res = await apiRequest("POST", endpoint, data);
       return res.json();
     },
-    onSuccess: () => {
-      setRsvpSuccess(true);
-      form.reset();
-    },
+    onSuccess: () => { setRsvpSuccess(true); form.reset(); },
   });
-
   const onSubmit = (data: InsertRsvp) => {
     rsvpMutation.mutate({
       ...data,
@@ -385,59 +376,177 @@ export default function AureliaTemplate({
     });
   };
 
-  // ── Section entrance animations ──────────────────────────────────────────────
-  const storyAnim   = useSectionAnim("fade-up",  builderMode);
-  const roadmapAnim = useSectionAnim("fade-up",  builderMode);
-  const detailsAnim = useSectionAnim("fade-up",  builderMode);
-  const venueAnim   = useSectionAnim("fade-up",  builderMode);
-  const galleryAnim = useSectionAnim("fade-up",  builderMode);
-  const rsvpAnim    = useSectionAnim("fade-in",  builderMode);
-  const footerAnim  = useSectionAnim("fade-in",  builderMode);
+  // ── Gallery state ─────────────────────────────────────────────────────────────
+  const GALLERY_PLACEHOLDERS = [
+    "https://images.unsplash.com/photo-1465495976277-a3741a19326e?w=800&q=80&auto=format&fit=crop",
+    "https://images.unsplash.com/photo-1519741497674-611481863552?w=800&q=80&auto=format&fit=crop",
+    "https://images.unsplash.com/photo-1511285560929-80b456fea0bc?w=800&q=80&auto=format&fit=crop",
+    "https://images.unsplash.com/photo-1507504031003-b417219a0fde?w=800&q=80&auto=format&fit=crop",
+    "https://images.unsplash.com/photo-1606216794074-735e91aa2c92?w=800&q=80&auto=format&fit=crop",
+  ];
+  const GALLERY_FALLBACK = "https://images.unsplash.com/photo-1519741497674-611481863552?w=800&q=80&auto=format&fit=crop";
+  const MILESTONE_FALLBACKS = [
+    "https://images.unsplash.com/photo-1515934751635-c81c6bc9a2d8?w=600&q=80&auto=format&fit=crop",
+    "https://images.unsplash.com/photo-1507504031003-b417219a0fde?w=600&q=80&auto=format&fit=crop",
+    "https://images.unsplash.com/photo-1519741497674-611481863552?w=600&q=80&auto=format&fit=crop",
+    "https://images.unsplash.com/photo-1465495976277-a3741a19326e?w=600&q=80&auto=format&fit=crop",
+  ];
+  const filteredGalleryImages = galleryImages.filter(Boolean);
+  const allGalleryImages = filteredGalleryImages.length > 0 ? filteredGalleryImages : GALLERY_PLACEHOLDERS;
+  const [galleryIndex, setGalleryIndex] = useState(0);
+  const galleryPrev = useCallback(() => setGalleryIndex(i => (i - 1 + allGalleryImages.length) % allGalleryImages.length), [allGalleryImages.length]);
+  const galleryNext = useCallback(() => setGalleryIndex(i => (i + 1) % allGalleryImages.length), [allGalleryImages.length]);
 
-  // ── Parallax layers ──────────────────────────────────────────────────────────
-  const heroParallax    = useParallax(0.25, builderMode);
-  const storyParallax   = useParallax(0.18, builderMode);
-  const venueParallax   = useParallax(0.20, builderMode);
-  const rsvpParallax    = useParallax(0.15, builderMode);
+  // ── SVG route path (desktop) ──────────────────────────────────────────────────
+  const routePathRef = useRef<SVGPathElement>(null);
+  const [pathLength, setPathLength] = useState(0);
+  useEffect(() => {
+    if (routePathRef.current) {
+      setPathLength(routePathRef.current.getTotalLength());
+    }
+  }, []);
 
-  // ── Roadmap animation ────────────────────────────────────────────────────────
+  // ── SVG route path (mobile vertical) ─────────────────────────────────────────
+  const mobileRoutePathRef = useRef<SVGPathElement>(null);
+  const [mobilePathLength, setMobilePathLength] = useState(0);
+  useEffect(() => {
+    if (mobileRoutePathRef.current) {
+      setMobilePathLength(mobileRoutePathRef.current.getTotalLength());
+    }
+  }, []);
+
+  // ── Section entrance animations ───────────────────────────────────────────────
+  const storyAnim   = useSectionAnim("fade-up", builderMode);
+  const roadmapAnim = useSectionAnim("fade-up", builderMode);
+  const detailsAnim = useSectionAnim("fade-up", builderMode);
+  const venueAnim   = useSectionAnim("fade-up", builderMode);
+  const galleryAnim = useSectionAnim("fade-up", builderMode);
+  const rsvpAnim    = useSectionAnim("fade-in", builderMode);
+  const footerAnim  = useSectionAnim("fade-in", builderMode);
+
+  // ── Parallax ──────────────────────────────────────────────────────────────────
+  const heroParallax  = useParallax(0.25, builderMode);
+  const storyParallax = useParallax(0.18, builderMode);
+  const venueParallax = useParallax(0.20, builderMode);
+  const rsvpParallax  = useParallax(0.15, builderMode);
+
+  // ── Roadmap animation ─────────────────────────────────────────────────────────
   const { sectionRef: roadmapRef, progress } = useRoadmapProgress(builderMode);
+  const { sectionRef: mobileRoadmapRef, progress: mobileProgress } = useMobileRoadmapProgress(builderMode);
   const { containerRef: milestonesRef, visible: milestoneVisible } =
     useMilestoneReveal(milestones.length, builderMode);
 
-  // ── Helpers ──────────────────────────────────────────────────────────────────
+  // ── Mobile detection (SSR-safe) ───────────────────────────────────────────────
+  const [isMobile, setIsMobile] = useState(false);
+  useEffect(() => {
+    const check = () => setIsMobile(window.innerWidth < 768);
+    check();
+    window.addEventListener("resize", check, { passive: true });
+    return () => window.removeEventListener("resize", check);
+  }, []);
+
+  // ── Mobile gallery touch ──────────────────────────────────────────────────────
+  const mobileGal = useTouchGallery(allGalleryImages.length);
+
+  // ── Nav click ─────────────────────────────────────────────────────────────────
   const handleNavLink = useCallback((href: string) => {
     setMobileMenuOpen(false);
     if (!builderMode && typeof document !== "undefined") {
-      const el = document.querySelector(href);
-      el?.scrollIntoView({ behavior: "smooth" });
+      document.querySelector(href)?.scrollIntoView({ behavior: "smooth" });
     }
   }, [builderMode]);
 
   const NAV_LINKS = [
-    { label: "Our Story",  href: "#aur-story"   },
-    { label: "The Journey",href: "#aur-roadmap" },
-    { label: "Details",    href: "#aur-details" },
-    { label: "Venue",      href: "#aur-venue"   },
-    { label: "Gallery",    href: "#aur-gallery" },
-    { label: "RSVP",       href: "#aur-rsvp"    },
+    { label: "Our Story",   href: "#aur-story"   },
+    { label: "The Journey", href: "#aur-roadmap" },
+    { label: "Details",     href: "#aur-details" },
+    { label: "Venue",       href: "#aur-venue"   },
+    { label: "Gallery",     href: "#aur-gallery" },
+    { label: "RSVP",        href: "#aur-rsvp"    },
   ];
+
+  // ── Car marker position from SVG path ─────────────────────────────────────────
+  const carPt = (pathLength > 0 && routePathRef.current)
+    ? routePathRef.current.getPointAtLength(progress * pathLength)
+    : null;
+
+  // ── Venue feature items with inline SVG icons ─────────────────────────────────
+  const venueFeatures = [
+    {
+      label: "Ceremony",
+      text: venues[0]?.name || "5:00 PM",
+      icon: (
+        <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke={C.gold} strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round">
+          <path d="M3 14V8H13V14"/><path d="M1 8h14"/><path d="M8 2v4M6 4h4"/><path d="M5 8V6h6v2"/>
+        </svg>
+      ),
+    },
+    {
+      label: "Cocktail Hour",
+      text: venues[1]?.name || "6:30 PM",
+      icon: (
+        <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke={C.gold} strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round">
+          <path d="M4 2l8 0L9 9H7L4 2z"/><line x1="8" y1="9" x2="8" y2="14"/><line x1="5" y1="14" x2="11" y2="14"/>
+        </svg>
+      ),
+    },
+    {
+      label: "Reception",
+      text: venues[2]?.name || "8:00 PM",
+      icon: (
+        <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke={C.gold} strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round">
+          <circle cx="5" cy="12" r="2"/><circle cx="11" cy="10" r="2"/><path d="M7 12V6l6-2v4"/>
+        </svg>
+      ),
+    },
+    {
+      label: "Dress Code",
+      text: venues[3]?.name || "Black Tie",
+      icon: (
+        <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke={C.gold} strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round">
+          <path d="M4 4L8 8L12 4L12 13L4 13Z"/>
+        </svg>
+      ),
+    },
+  ];
+
+  // ── Detail card icons ─────────────────────────────────────────────────────────
+  function detailIcon(i: number) {
+    const s: React.SVGProps<SVGSVGElement> = {
+      width: 38, height: 38, viewBox: "0 0 38 38", fill: "none",
+      stroke: C.gold, strokeWidth: "1.1",
+      strokeLinecap: "round" as const,
+      strokeLinejoin: "round" as const,
+    };
+    if (i === 0) return (
+      <svg {...s}><path d="M9 34V21H29V34"/><path d="M5 21h28"/><path d="M19 4v8M16 8h6"/><path d="M15 21V14h8v7"/></svg>
+    );
+    if (i === 1) return (
+      <svg {...s}><path d="M12 4l4 14H8L12 4z"/><path d="M12 18v14M8 32h8"/><path d="M26 4l4 14H22L26 4z"/><path d="M26 18v14M22 32h8"/><path d="M16 10l6 2"/></svg>
+    );
+    if (i === 2) return (
+      <svg {...s}><circle cx="19" cy="14" r="5"/><path d="M19 3a11 11 0 010 22C11 25 5 19 5 14A14 14 0 0119 3z"/><path d="M19 25v8M15 31h8"/></svg>
+    );
+    return (
+      <svg {...s}><rect x="6" y="10" width="26" height="21" rx="1"/><path d="M6 17h26M13 10V6M25 10V6"/></svg>
+    );
+  }
 
   // ─────────────────────────────────────────────────────────────────────────────
   return (
     <div
       style={{
         fontFamily: SANS,
-        color:      C.stoneText,
-        background: C.cream,
-        overflowX:  "hidden",
+        color: C.textLight,
+        background: C.bgDark,
+        overflowX: "hidden",
         scrollBehavior: builderMode ? undefined : "smooth",
       }}
     >
       {/* Google Fonts */}
       <AureliaFonts />
 
-      {/* Scoped CSS keyframes + responsive styles */}
+      {/* Scoped CSS */}
       <style>{`
         @keyframes aur-fade-in {
           from { opacity: 0; }
@@ -447,229 +556,395 @@ export default function AureliaTemplate({
           from { opacity: 0; transform: translateY(36px); }
           to   { opacity: 1; transform: translateY(0); }
         }
-        @keyframes aur-slide-in {
-          from { opacity: 0; transform: translateX(-52px); }
-          to   { opacity: 1; transform: translateX(0); }
+        @keyframes aur-hero-scale {
+          from { transform: scale(1.04); }
+          to   { transform: scale(1); }
         }
-        @keyframes aur-zoom-in {
-          from { opacity: 0; transform: scale(0.94); }
-          to   { opacity: 1; transform: scale(1); }
-        }
-        @keyframes aur-scroll-bob {
-          0%, 100% { transform: translateY(0); }
-          50%       { transform: translateY(8px); }
-        }
-        @keyframes aur-dot-pulse {
-          0%, 100% { opacity: 0.4; transform: scale(0.9); }
-          50%       { opacity: 1;   transform: scale(1.1); }
-        }
-        @keyframes aur-shimmer {
-          from { background-position: -200% center; }
-          to   { background-position:  200% center; }
-        }
-        @keyframes aur-float {
-          0%, 100% { transform: translateY(0px); }
-          50%       { transform: translateY(-8px); }
-        }
-        @keyframes aur-glow-pulse {
-          0%, 100% { box-shadow: 0 0 20px rgba(196,169,125,0.15); }
-          50%       { box-shadow: 0 0 40px rgba(196,169,125,0.30); }
-        }
-        @keyframes aur-hero-reveal {
-          from { opacity: 0; transform: translateY(24px); }
+        @keyframes aur-hero-content {
+          from { opacity: 0; transform: translateY(28px); }
           to   { opacity: 1; transform: translateY(0); }
         }
+        @keyframes aur-countdown-slide {
+          from { opacity: 0; transform: translateX(44px); }
+          to   { opacity: 1; transform: translateX(0); }
+        }
+        @keyframes aur-scroll-bob {
+          0%, 100% { transform: translateX(-50%) translateY(0); }
+          50%       { transform: translateX(-50%) translateY(9px); }
+        }
+        @keyframes aur-panel-reveal {
+          from { opacity: 0; transform: translateY(36px); filter: blur(10px); }
+          to   { opacity: 1; transform: translateY(0);    filter: blur(0);    }
+        }
+        @keyframes aur-ms-card-in {
+          from { opacity: 0; transform: translateX(-18px); }
+          to   { opacity: 1; transform: translateX(0); }
+        }
+        @keyframes aur-mob-gal-float {
+          0%, 100% { transform: translateY(0px) rotate(var(--rot, 0deg)); }
+          50%       { transform: translateY(-5px) rotate(var(--rot, 0deg)); }
+        }
 
-        /* Scroll-to-section smooth behavior */
         html { scroll-behavior: smooth; }
 
-        /* Nav link hover */
         .aur-nav-link {
           font-family: ${SANS};
-          font-size: 0.68rem;
+          font-size: 0.62rem;
           font-weight: 500;
           letter-spacing: 0.14em;
           text-transform: uppercase;
-          color: inherit;
+          color: rgba(255,247,234,0.72);
           text-decoration: none;
-          opacity: 0.75;
-          transition: opacity 0.2s;
+          transition: color 0.22s;
         }
-        .aur-nav-link:hover { opacity: 1; }
+        .aur-nav-link:hover { color: ${C.goldSoft}; }
 
-        /* Gallery image hover */
-        .aur-gallery-img {
-          width: 100%;
-          height: 100%;
-          object-fit: cover;
-          transition: transform 0.7s cubic-bezier(0.25,0.46,0.45,0.94);
-          display: block;
+        .aur-story-panel {
+          animation: aur-panel-reveal 1.1s 0.35s cubic-bezier(0.25,0.46,0.45,0.94) both;
         }
-        .aur-gallery-tile:hover .aur-gallery-img { transform: scale(1.06); }
-        .aur-gallery-tile {
-          overflow: hidden;
-          position: relative;
-        }
-        .aur-gallery-tile::after {
-          content: '';
-          position: absolute;
-          inset: 0;
-          background: linear-gradient(to top, rgba(10,8,6,0.55) 0%, transparent 60%);
-          opacity: 0;
-          transition: opacity 0.4s ease;
-        }
-        .aur-gallery-tile:hover::after { opacity: 1; }
 
-        /* Detail card hover */
         .aur-detail-card {
-          transition: transform 0.3s ease, box-shadow 0.3s ease;
+          transition: transform 0.3s ease, box-shadow 0.3s ease, border-color 0.3s ease;
         }
         .aur-detail-card:hover {
-          transform: translateY(-4px);
-          box-shadow: 0 16px 48px rgba(0,0,0,0.12) !important;
+          transform: translateY(-6px);
+          border-color: rgba(180,145,80,0.70) !important;
+          box-shadow: 0 20px 56px rgba(0,0,0,0.13) !important;
         }
 
-        /* Form input focus glow */
+        .aur-gal-center {
+          transform: scale(1) rotate(0deg);
+          z-index: 10;
+          filter: brightness(1);
+          transition: all 0.55s cubic-bezier(0.25,0.46,0.45,0.94);
+          box-shadow: 0 40px 80px rgba(0,0,0,0.62);
+        }
+        .aur-gal-left {
+          transform: translateX(-58%) scale(0.80) rotate(-5deg);
+          z-index: 5;
+          filter: brightness(0.60);
+          transition: all 0.55s cubic-bezier(0.25,0.46,0.45,0.94);
+          box-shadow: 0 20px 48px rgba(0,0,0,0.42);
+        }
+        .aur-gal-right {
+          transform: translateX(58%) scale(0.80) rotate(5deg);
+          z-index: 5;
+          filter: brightness(0.60);
+          transition: all 0.55s cubic-bezier(0.25,0.46,0.45,0.94);
+          box-shadow: 0 20px 48px rgba(0,0,0,0.42);
+        }
+        .aur-gal-hidden {
+          opacity: 0;
+          transform: scale(0.65);
+          pointer-events: none;
+          transition: all 0.55s cubic-bezier(0.25,0.46,0.45,0.94);
+        }
+
+        .aur-gal-arrow {
+          width: 52px; height: 52px;
+          border-radius: 50%;
+          display: flex; align-items: center; justify-content: center;
+          cursor: pointer;
+          border: 1px solid rgba(215,183,119,0.38);
+          background: rgba(8,18,14,0.55);
+          color: ${C.gold};
+          backdrop-filter: blur(8px);
+          transition: border-color 0.22s, background 0.22s, box-shadow 0.22s;
+        }
+        .aur-gal-arrow:hover {
+          border-color: ${C.gold};
+          background: rgba(8,18,14,0.88);
+          box-shadow: 0 0 28px rgba(215,183,119,0.38);
+        }
+
+        .aur-venue-feat {
+          display: flex; gap: 14px; align-items: flex-start;
+          padding: 14px 0;
+          border-bottom: 1px solid rgba(215,183,119,0.12);
+        }
+        .aur-venue-feat:last-child { border-bottom: none; }
+
         .aur-input:focus {
           outline: none;
-          border-color: ${C.champagne} !important;
-          box-shadow: 0 0 0 2px ${C.champagne}22;
+          border-color: ${C.gold} !important;
+          box-shadow: 0 0 0 2px rgba(215,183,119,0.16);
         }
 
-        /* Milestone layout */
-        .aur-roadmap-milestone-left {
-          margin-right: calc(50% + 36px);
-          text-align: right;
-        }
-        .aur-roadmap-milestone-right {
-          margin-left: calc(50% + 36px);
-        }
+        .aur-ms-left  { margin-right: calc(50% + 44px); text-align: right; }
+        .aur-ms-right { margin-left:  calc(50% + 44px); }
 
-        /* Venue split */
-        .aur-venue-split {
-          display: grid;
-          grid-template-columns: 1fr 1fr;
-          min-height: 600px;
-        }
+        /* Desktop shows desktop variants, mobile hides them by default */
+        .aur-ms-desktop { display: block; }
+        .aur-ms-mobile  { display: none; }
+        .aur-gal-desktop { display: block; }
+        .aur-gal-mobile  { display: none; }
 
-        /* Details grid */
-        .aur-details-grid {
-          display: grid;
-          grid-template-columns: repeat(2, 1fr);
-          gap: 24px;
-          max-width: 760px;
-          margin: 0 auto;
-        }
-
-        /* Gallery staggered grid */
-        .aur-gallery-grid {
-          display: grid;
-          grid-template-columns: repeat(3, 1fr);
-          gap: 6px;
-        }
-        .aur-gallery-grid > *:first-child {
-          grid-row: span 2;
-        }
-
-        /* Story image frame */
-        .aur-story-image-frame {
+        /* ─── Mobile gallery coverflow ───────────────────────────────── */
+        .aur-mob-gal-track {
+          display: flex;
+          align-items: center;
+          justify-content: center;
           position: relative;
-          overflow: hidden;
+          overflow: visible;
+          touch-action: pan-y;
+          user-select: none;
+          -webkit-user-select: none;
         }
-        .aur-story-image-frame::before {
-          content: '';
+        .aur-mob-gal-card {
           position: absolute;
-          top: 16px; left: 16px; right: -16px; bottom: -16px;
-          border: 1px solid ${C.champagne}45;
+          border-radius: 10px;
+          overflow: hidden;
+          transition: all 0.5s cubic-bezier(0.25,0.46,0.45,0.94);
+          cursor: pointer;
+          backface-visibility: hidden;
+          -webkit-backface-visibility: hidden;
+        }
+        .aur-mob-gal-card img {
+          width: 100%; height: 100%;
+          object-fit: cover; display: block;
+        }
+        .aur-mob-gal-card.state-center {
+          transform: scale(1) rotate(0deg) translateX(0);
+          z-index: 10;
+          filter: brightness(1);
+          box-shadow: 0 32px 64px rgba(0,0,0,0.65), 0 0 0 1px rgba(215,183,119,0.22);
+        }
+        .aur-mob-gal-card.state-left1 {
+          transform: scale(0.84) rotate(-5deg) translateX(-68%);
+          z-index: 6;
+          filter: brightness(0.55);
+          box-shadow: 0 16px 40px rgba(0,0,0,0.45);
+        }
+        .aur-mob-gal-card.state-right1 {
+          transform: scale(0.84) rotate(5deg) translateX(68%);
+          z-index: 6;
+          filter: brightness(0.55);
+          box-shadow: 0 16px 40px rgba(0,0,0,0.45);
+        }
+        .aur-mob-gal-card.state-left2 {
+          transform: scale(0.68) rotate(-9deg) translateX(-115%);
+          z-index: 3;
+          filter: brightness(0.32);
+          box-shadow: 0 8px 24px rgba(0,0,0,0.38);
+        }
+        .aur-mob-gal-card.state-right2 {
+          transform: scale(0.68) rotate(9deg) translateX(115%);
+          z-index: 3;
+          filter: brightness(0.32);
+          box-shadow: 0 8px 24px rgba(0,0,0,0.38);
+        }
+        .aur-mob-gal-card.state-hidden {
+          transform: scale(0.5);
           z-index: 0;
+          opacity: 0;
           pointer-events: none;
         }
 
-        /* Glass card */
-        .aur-glass {
-          background: rgba(20,17,14,0.65);
-          backdrop-filter: blur(16px);
-          -webkit-backdrop-filter: blur(16px);
-          border: 1px solid rgba(196,169,125,0.20);
+        /* ─── Mobile-first foundation ─────────────────────────────────── */
+        *, *::before, *::after { box-sizing: border-box; }
+        img, video, svg { max-width: 100%; }
+
+        /* Safe viewport units — modern browsers understand 100svh */
+        .aur-hero-sect  { min-height: 100vh; min-height: 100svh; }
+        .aur-story-sect { min-height: 100vh; min-height: 100svh; }
+        .aur-rsvp-sect  { min-height: 100vh; min-height: 100svh; }
+
+        /* Text overflow guard */
+        .aur-hero-names  { word-break: break-word; overflow-wrap: break-word; }
+        .aur-footer-names { word-break: break-word; overflow-wrap: break-word; }
+
+        /* ─── 860px: swap navbar ────────────────────────────────────── */
+        @media (max-width: 860px) {
+          .aur-nav { padding: 0 20px !important; }
+          .aur-hamburger {
+            display: flex !important;
+            align-items: center;
+            justify-content: center;
+            min-width: 44px;
+            min-height: 44px;
+            padding: 0 !important;
+          }
+          .aur-nav-desktop { display: none !important; }
         }
 
-        /* ── Responsive ── */
+        /* ─── 900px: RSVP single-col ────────────────────────────────── */
         @media (max-width: 900px) {
-          .aur-story-split {
+          .aur-rsvp-cols {
             grid-template-columns: 1fr !important;
+            gap: 0 !important;
+            padding: 72px 24px !important;
           }
-          .aur-venue-split {
-            grid-template-columns: 1fr !important;
-          }
-          .aur-gallery-grid {
-            grid-template-columns: repeat(2, 1fr) !important;
-          }
-          .aur-gallery-grid > *:first-child { grid-row: span 1; }
+          .aur-rsvp-left { display: none !important; }
         }
-        @media (max-width: 640px) {
+
+        /* ─── 768px: tablet ─────────────────────────────────────────── */
+        @media (max-width: 768px) {
+          /* Hero */
+          .aur-hero-content-panel {
+            padding-left: 24px !important;
+            padding-right: 24px !important;
+            padding-bottom: 80px !important;
+          }
+          .aur-countdown-card {
+            bottom: 16px !important;
+            right: 12px !important;
+            padding: 14px 16px !important;
+            border-radius: 14px !important;
+          }
+          .aur-countdown-unit { min-width: 48px !important; padding: 0 8px !important; }
+
+          /* Story */
+          .aur-story-panel {
+            margin-left: 20px !important;
+            margin-right: 20px !important;
+            margin-top: 64px !important;
+            margin-bottom: 64px !important;
+            max-width: calc(100% - 40px) !important;
+            padding: 38px 30px 34px !important;
+          }
+
+          /* Details: 2-col on tablet */
           .aur-details-grid {
-            grid-template-columns: 1fr !important;
+            grid-template-columns: repeat(2, 1fr) !important;
+            gap: 16px !important;
           }
-          .aur-gallery-grid {
-            grid-template-columns: 1fr !important;
+          .aur-details-sect { padding: 80px 24px 72px !important; }
+
+          /* Venue */
+          .aur-venue-feats { grid-template-columns: 1fr !important; }
+          .aur-venue-panel-inner {
+            padding: 36px 28px !important;
+            border-radius: 16px !important;
+            width: calc(100% - 40px) !important;
+            margin: 40px 20px !important;
           }
-          .aur-roadmap-milestone-left,
-          .aur-roadmap-milestone-right {
-            margin-left: 48px !important;
-            margin-right: 0 !important;
-            text-align: left !important;
-          }
-          .aur-roadmap-center-line {
-            left: 24px !important;
-            transform: none !important;
-          }
-          .aur-hero-names { font-size: clamp(2.8rem, 9vw, 5rem) !important; }
+
+          /* Roadmap: on mobile we show the dedicated mobile roadmap block */
+          .aur-ms-desktop { display: none !important; }
+          .aur-ms-mobile  { display: block !important; }
+
+          /* RSVP form */
+          .aur-rsvp-name-row   { grid-template-columns: 1fr !important; gap: 12px !important; }
+          .aur-rsvp-attend-row { grid-template-columns: 1fr !important; gap: 10px !important; }
+
+          /* Footer */
+          .aur-footer { padding: 64px 24px 40px !important; }
+
+          /* Mobile gallery — coverflow */
+          .aur-gal-desktop { display: none !important; }
+          .aur-gal-mobile  { display: block !important; }
         }
-        @media (prefers-reduced-motion: reduce) {
-          *, *::before, *::after {
-            animation: none !important;
-            transition: none !important;
+
+        /* ─── 520px: small phones ───────────────────────────────────── */
+        @media (max-width: 520px) {
+          .aur-hero-names { font-size: clamp(2.8rem, 10.5vw, 4.2rem) !important; }
+          .aur-hero-content-panel {
+            padding-left: 20px !important;
+            padding-right: 20px !important;
+            padding-bottom: 72px !important;
           }
+          .aur-countdown-card {
+            bottom: 12px !important;
+            right: 8px !important;
+            padding: 12px 14px !important;
+          }
+          .aur-countdown-unit { min-width: 40px !important; padding: 0 6px !important; }
+
+          /* Story */
+          .aur-story-panel { padding: 28px 22px 26px !important; }
+
+          /* Details: 1-col */
+          .aur-details-grid { grid-template-columns: 1fr !important; }
+          .aur-details-sect { padding: 64px 20px 56px !important; }
+
+          /* Venue */
+          .aur-venue-panel-inner {
+            padding: 28px 20px !important;
+            width: calc(100% - 32px) !important;
+            margin: 28px 16px !important;
+          }
+          .aur-venue-cta {
+            width: 100% !important;
+            justify-content: center !important;
+            display: flex !important;
+            padding: 15px 20px !important;
+          }
+
+          /* RSVP form */
+          .aur-rsvp-form-panel { padding: 30px 24px !important; }
+
+          /* Footer */
+          .aur-footer { padding: 52px 20px 36px !important; }
+        }
+
+        /* ─── 390px: modern iPhones ─────────────────────────────────── */
+        @media (max-width: 390px) {
+          .aur-hero-names { font-size: clamp(2.4rem, 9.5vw, 3.4rem) !important; }
+          .aur-countdown-unit { min-width: 36px !important; padding: 0 5px !important; }
+          .aur-details-grid { grid-template-columns: 1fr !important; }
+          .aur-gallery-stage { height: 340px !important; }
+          .aur-gal-item.aur-gal-center {
+            width: calc(100vw - 40px) !important;
+            height: 320px !important;
+          }
+          .aur-rsvp-form-panel { padding: 24px 20px !important; }
+          .aur-footer-names { font-size: clamp(1.7rem, 8.5vw, 2.4rem) !important; }
+        }
+
+        /* ─── 340px: very small phones ──────────────────────────────── */
+        @media (max-width: 340px) {
+          .aur-hero-names { font-size: clamp(2rem, 9vw, 2.8rem) !important; }
+          .aur-countdown-card { display: none !important; }
+          .aur-gallery-stage { height: 280px !important; }
+          .aur-footer-names { font-size: clamp(1.5rem, 8vw, 2rem) !important; }
+        }
+
+        /* ─── Reduced motion ────────────────────────────────────────── */
+        @media (prefers-reduced-motion: reduce) {
+          *, *::before, *::after { animation: none !important; transition: none !important; }
         }
       `}</style>
 
       {/* ══════════════════ NAVBAR ══════════════════ */}
       <nav
-        style={{
-          position:         builderMode ? "sticky" : "fixed",
-          top:              0,
-          left:             0,
-          right:            0,
-          zIndex:           1000,
-          display:          "flex",
-          alignItems:       "center",
-          justifyContent:   "space-between",
-          padding:          "0 40px",
-          height:           "64px",
-          background:       scrolled
-            ? `${C.charcoal}F0`
-            : "transparent",
-          backdropFilter:   scrolled ? "blur(12px)" : "none",
-          WebkitBackdropFilter: scrolled ? "blur(12px)" : "none",
-          borderBottom:     scrolled ? `1px solid ${C.champagne}20` : "none",
-          transition:       "background 0.35s ease, backdrop-filter 0.35s ease, border-bottom 0.35s ease",
-        }}
         data-v2-section="aur-nav"
+        className="aur-nav"
+        style={{
+          position: builderMode ? "sticky" : "fixed",
+          top: 0, left: 0, right: 0,
+          zIndex: 1000,
+          display: "flex", alignItems: "center", justifyContent: "space-between",
+          padding: "0 44px", height: "64px",
+          background: scrolled ? "rgba(6,14,10,0.94)" : "transparent",
+          backdropFilter: scrolled ? "blur(18px)" : "none",
+          WebkitBackdropFilter: scrolled ? "blur(18px)" : "none",
+          borderBottom: scrolled ? "1px solid rgba(215,183,119,0.16)" : "none",
+          transition: "background 0.35s ease, border-bottom 0.35s ease",
+        }}
       >
-        {/* Logo / Couple Names */}
-        <div style={{ fontFamily: SERIF, fontSize: "1.1rem", fontWeight: 400, letterSpacing: "0.06em", color: C.warmWhite }}>
-          {groomName} {separator} {brideName}
+        {/* Brand AURELIA with leaf mark */}
+        <div
+          data-v2-element="aur-nav-brand"
+          data-v2-type="text"
+          style={{ display: "flex", alignItems: "center", gap: "7px" }}
+        >
+          <svg width="13" height="15" viewBox="0 0 13 15" fill="none">
+            <path d="M6.5 1 C4.5 3.5 2.5 5.5 2.5 7.5 C2.5 10 4.2 12 6.5 12 C8.8 12 10.5 10 10.5 7.5 C10.5 5.5 8.5 3.5 6.5 1Z" stroke={C.gold} strokeWidth="0.85" fill="none"/>
+            <line x1="6.5" y1="12" x2="6.5" y2="14.5" stroke={C.gold} strokeWidth="0.85"/>
+          </svg>
+          <span style={{ fontFamily: SERIF, fontSize: "0.82rem", fontWeight: 400, letterSpacing: "0.26em", textTransform: "uppercase", color: C.goldSoft }}>
+            AURELIA
+          </span>
         </div>
 
-        {/* Desktop nav links */}
-        <div style={{ display: "flex", gap: "28px", alignItems: "center" }}>
-          {NAV_LINKS.map((link) => (
+        {/* Desktop nav */}
+        <div className="aur-nav-desktop" style={{ display: "flex", gap: "28px", alignItems: "center" }}>
+          {NAV_LINKS.map(link => (
             <a
               key={link.href}
               href={link.href}
               className="aur-nav-link"
-              style={{ color: scrolled ? C.warmWhite : C.warmWhite }}
-              onClick={(e) => { e.preventDefault(); handleNavLink(link.href); }}
+              onClick={e => { e.preventDefault(); handleNavLink(link.href); }}
             >
               {link.label}
             </a>
@@ -679,21 +954,14 @@ export default function AureliaTemplate({
         {/* Mobile hamburger */}
         <button
           onClick={() => setMobileMenuOpen(true)}
-          style={{
-            display:    "none",
-            background: "transparent",
-            border:     "none",
-            cursor:     "pointer",
-            padding:    "8px",
-            color:      C.warmWhite,
-          }}
           className="aur-hamburger"
+          style={{ display: "none", background: "transparent", border: "1px solid rgba(215,183,119,0.45)", cursor: "pointer", padding: "7px 10px", color: C.goldSoft, borderRadius: "4px" }}
           aria-label="Open menu"
         >
-          <svg width="22" height="16" viewBox="0 0 22 16" fill="none">
-            <line x1="0" y1="1"  x2="22" y2="1"  stroke="currentColor" strokeWidth="1.5"/>
-            <line x1="0" y1="8"  x2="22" y2="8"  stroke="currentColor" strokeWidth="1.5"/>
-            <line x1="0" y1="15" x2="22" y2="15" stroke="currentColor" strokeWidth="1.5"/>
+          <svg width="20" height="14" viewBox="0 0 20 14" fill="none">
+            <line x1="0" y1="1"  x2="20" y2="1"  stroke="currentColor" strokeWidth="1.5"/>
+            <line x1="0" y1="7"  x2="20" y2="7"  stroke="currentColor" strokeWidth="1.5"/>
+            <line x1="0" y1="13" x2="20" y2="13" stroke="currentColor" strokeWidth="1.5"/>
           </svg>
         </button>
       </nav>
@@ -701,38 +969,20 @@ export default function AureliaTemplate({
       {/* Mobile full-screen menu */}
       {mobileMenuOpen && (
         <div
-          style={{
-            position:       "fixed",
-            inset:          0,
-            zIndex:         1999,
-            background:     C.charcoal,
-            display:        "flex",
-            flexDirection:  "column",
-            alignItems:     "center",
-            justifyContent: "center",
-            gap:            "36px",
-          }}
+          className="aur-mobile-menu"
+          style={{ position: "fixed", inset: 0, zIndex: 1999, background: C.bgDark, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: "32px", paddingTop: "env(safe-area-inset-top)", paddingBottom: "env(safe-area-inset-bottom)" }}
         >
           <button
             onClick={() => setMobileMenuOpen(false)}
-            style={{ position: "absolute", top: "20px", right: "24px", background: "transparent", border: "none", color: C.warmGray, cursor: "pointer", fontSize: "1.4rem" }}
+            style={{ position: "absolute", top: "16px", right: "20px", background: "transparent", border: "1px solid rgba(215,183,119,0.28)", borderRadius: "50%", color: C.textMuted, cursor: "pointer", width: "44px", height: "44px", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "1.2rem" }}
             aria-label="Close menu"
-          >
-            ✕
-          </button>
-          {NAV_LINKS.map((link) => (
+          >&#10005;</button>
+          {NAV_LINKS.map(link => (
             <a
               key={link.href}
               href={link.href}
-              onClick={(e) => { e.preventDefault(); handleNavLink(link.href); }}
-              style={{
-                fontFamily:      SERIF,
-                fontSize:        "2rem",
-                fontWeight:      400,
-                color:           C.warmWhite,
-                textDecoration:  "none",
-                letterSpacing:   "0.04em",
-              }}
+              onClick={e => { e.preventDefault(); handleNavLink(link.href); }}
+              style={{ fontFamily: SERIF, fontSize: "clamp(1.8rem, 6vw, 2.4rem)", fontWeight: 300, color: C.textLight, textDecoration: "none", letterSpacing: "0.04em", padding: "6px 0", minHeight: "44px", display: "flex", alignItems: "center" }}
             >
               {link.label}
             </a>
@@ -745,103 +995,164 @@ export default function AureliaTemplate({
         <section
           id="aur-hero"
           data-v2-section="aur-hero"
-          style={{ position: "relative", minHeight: "100vh", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", overflow: "hidden" }}
+          className="aur-hero-sect"
+          style={{ position: "relative", display: "flex", flexDirection: "column", overflow: "hidden" }}
         >
-          {/* Parallax bg layer */}
+          {/* Parallax background */}
           <div
             ref={heroParallax.ref}
             style={{
-              position:   "absolute",
-              inset:      "-18% 0",
-              background: heroImage ? `url(${heroImage}) center/cover no-repeat` : `linear-gradient(160deg, #2C2420 0%, #1C1917 60%, #0F0E0C 100%)`,
-              transform:  `translateY(${heroParallax.offset}px)`,
-              zIndex:     0,
+              position: "absolute", inset: "-15% 0",
+              backgroundImage: `url(${heroImage})`,
+              backgroundSize: "cover", backgroundPosition: "center",
+              transform: `translateY(${heroParallax.offset}px)`,
+              zIndex: 0,
+              animation: "aur-hero-scale 2s cubic-bezier(0.25,0.46,0.45,0.94) both",
               willChange: "transform",
             }}
           />
-          <div style={{ position: "absolute", inset: 0, background: "linear-gradient(to bottom, rgba(6,4,2,0.55) 0%, rgba(6,4,2,0.20) 38%, rgba(6,4,2,0.62) 72%, rgba(6,4,2,0.92) 100%)", zIndex: 1 }} />
-          <div style={{ position: "absolute", inset: 0, background: "linear-gradient(100deg, rgba(6,4,2,0.42) 0%, transparent 55%)", zIndex: 1 }} />
+          {/* Spec dual overlay */}
+          <div style={{ position: "absolute", inset: 0, background: "radial-gradient(circle at 42% 50%, rgba(0,0,0,0.10), rgba(0,0,0,0.68))", zIndex: 1 }} />
+          <div style={{ position: "absolute", inset: 0, background: "linear-gradient(90deg, rgba(0,0,0,0.62), rgba(0,0,0,0.18), rgba(0,0,0,0.55))", zIndex: 1 }} />
 
+          {/* Content — visually weighted left */}
           <div
+            className="aur-hero-content-panel"
             style={{
-              position:  "relative",
-              zIndex:    2,
-              textAlign: "center",
-              padding:   "110px 24px 70px",
-              maxWidth:  "1000px",
-              width:     "100%",
-              animation: "aur-hero-reveal 1.5s cubic-bezier(0.25,0.46,0.45,0.94) both",
+              position: "relative", zIndex: 2,
+              padding: "clamp(88px, 14vh, 160px) clamp(24px, 8vw, 96px) 80px",
+              maxWidth: "860px",
+              flex: "1",
+              display: "flex", flexDirection: "column", justifyContent: "flex-end",
+              animation: "aur-hero-content 1.4s 0.3s cubic-bezier(0.25,0.46,0.45,0.94) both",
             }}
           >
-            {(heroTagline || cfg.hero.invitation) && (
-              <p
-                data-v2-element="aur-hero-tagline"
-                data-v2-type="text"
-                style={{ fontFamily: SANS, fontSize: "0.60rem", fontWeight: 500, letterSpacing: "0.30em", textTransform: "uppercase", color: C.champagne, marginBottom: "28px", opacity: 0.90 }}
-              >
-                {heroTagline || cfg.hero.invitation}
-              </p>
-            )}
+            <p
+              data-v2-element="aur-hero-intro"
+              data-v2-type="text"
+              style={{ fontFamily: SANS, fontSize: "0.57rem", fontWeight: 500, letterSpacing: "0.34em", textTransform: "uppercase", color: C.gold, marginBottom: "22px", opacity: 0.92 }}
+            >
+              WE&#39;RE GETTING MARRIED
+            </p>
+
             <h1
               className="aur-hero-names"
               data-v2-element="aur-hero-names"
               data-v2-type="text"
-              style={{ fontFamily: SERIF, fontSize: "clamp(3.6rem, 9vw, 9rem)", fontWeight: 300, letterSpacing: "0.015em", color: C.warmWhite, lineHeight: 1.0, margin: 0, textShadow: "0 4px 60px rgba(0,0,0,0.55)" }}
+              style={{
+                fontFamily: SERIF,
+                fontSize: "clamp(4rem, 8vw, 8.8rem)",
+                fontWeight: 300,
+                letterSpacing: "0.08em",
+                color: C.goldSoft,
+                lineHeight: 1.0,
+                margin: 0,
+                textShadow: "0 20px 60px rgba(0,0,0,0.55)",
+              }}
             >
               {groomName}
-              <span style={{ fontStyle: "italic", color: C.champagne, margin: "0 0.22em", fontWeight: 300 }}>{separator}</span>
+              <span style={{ fontStyle: "italic", color: C.gold, margin: "0 0.2em" }}>{separator}</span>
               {brideName}
             </h1>
-            <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: "14px", margin: "30px auto 26px" }}>
-              <div style={{ width: "52px", height: "1px", background: `${C.champagne}60` }} />
-              <svg width="9" height="9" viewBox="0 0 9 9"><path d="M4.5 0L9 4.5L4.5 9L0 4.5Z" fill={C.champagne} fillOpacity="0.80"/></svg>
-              <div style={{ width: "52px", height: "1px", background: `${C.champagne}60` }} />
+
+            {/* Decorative divider */}
+            <div style={{ display: "flex", alignItems: "center", gap: "14px", margin: "28px 0 22px" }}>
+              <div style={{ width: "50px", height: "1px", background: "rgba(215,183,119,0.50)" }} />
+              <svg width="7" height="7" viewBox="0 0 7 7"><path d="M3.5 0L7 3.5L3.5 7L0 3.5Z" fill={C.gold} fillOpacity="0.82"/></svg>
+              <div style={{ width: "50px", height: "1px", background: "rgba(215,183,119,0.50)" }} />
             </div>
+
             <p
               data-v2-element="aur-hero-date"
               data-v2-type="text"
-              style={{ fontFamily: SERIF, fontSize: "clamp(1.1rem, 2.5vw, 1.65rem)", fontWeight: 300, fontStyle: "italic", color: C.champagneLight, letterSpacing: "0.07em", marginBottom: "8px" }}
+              style={{ fontFamily: SERIF, fontSize: "clamp(1.1rem, 2vw, 1.55rem)", fontWeight: 300, fontStyle: "italic", color: C.ivoryMuted, letterSpacing: "0.07em", marginBottom: "7px" }}
             >
               {displayDate}
             </p>
-            {heroLocation && (
-              <p
-                data-v2-element="aur-hero-location"
-                data-v2-type="text"
-                style={{ fontFamily: SANS, fontSize: "0.60rem", fontWeight: 400, letterSpacing: "0.20em", textTransform: "uppercase", color: C.warmWhite, opacity: 0.58, marginBottom: "54px" }}
-              >
-                {heroLocation}
+            <p
+              data-v2-element="aur-hero-location"
+              data-v2-type="text"
+              style={{ fontFamily: SANS, fontSize: "0.56rem", fontWeight: 400, letterSpacing: "0.24em", textTransform: "uppercase", color: C.textLight, opacity: 0.52, marginBottom: "44px" }}
+            >
+              {heroLocation}
+            </p>
+
+            {/* CTA */}
+            <a
+              href="#aur-rsvp"
+              onClick={e => { e.preventDefault(); handleNavLink("#aur-rsvp"); }}
+              data-v2-element="aur-hero-cta"
+              data-v2-type="text"
+              style={{
+                display: "inline-flex", alignItems: "center", gap: "12px",
+                alignSelf: "flex-start",
+                fontFamily: SANS, fontSize: "0.62rem", fontWeight: 600, letterSpacing: "0.22em", textTransform: "uppercase",
+                color: C.bgDark,
+                background: `linear-gradient(135deg, ${C.goldSoft} 0%, ${C.gold} 100%)`,
+                padding: "14px 34px",
+                textDecoration: "none",
+              }}
+            >
+              RSVP NOW
+              <svg width="14" height="10" viewBox="0 0 14 10" fill="none"><path d="M0 5H12M9 1L13 5L9 9" stroke="currentColor" strokeWidth="1.5"/></svg>
+            </a>
+          </div>
+
+          {/* Countdown glass card — bottom-right */}
+          {cfg.sections?.countdown?.enabled !== false && (
+            <div
+              className="aur-countdown-card"
+              data-v2-element="aur-hero-countdown"
+              style={{
+                position: "absolute", bottom: "40px", right: "40px",
+                zIndex: 3,
+                backdropFilter: "blur(18px)",
+                WebkitBackdropFilter: "blur(18px)",
+                background: "rgba(10,16,13,0.58)",
+                border: "1px solid rgba(215,183,119,0.62)",
+                borderRadius: "18px",
+                boxShadow: "0 26px 70px rgba(0,0,0,0.55)",
+                padding: "20px 26px",
+                animation: "aur-countdown-slide 1.4s 0.9s cubic-bezier(0.25,0.46,0.45,0.94) both",
+              }}
+            >
+              <p style={{ fontFamily: SANS, fontSize: "0.50rem", letterSpacing: "0.26em", textTransform: "uppercase", color: C.gold, textAlign: "center", marginBottom: "14px", opacity: 0.88 }}>
+                {cfg.countdown.subtitle}
               </p>
-            )}
-            {cfg.sections?.countdown?.enabled !== false && (
-              <div
-                className="aur-glass"
-                style={{ display: "inline-flex", gap: 0, justifyContent: "center", flexWrap: "wrap", padding: "18px 0", animation: "aur-glow-pulse 4.5s ease-in-out infinite" }}
-              >
+              <div style={{ display: "flex", gap: 0 }}>
                 {[
                   { value: countdown.days,    label: cfg.countdown.labels.days    },
                   { value: countdown.hours,   label: cfg.countdown.labels.hours   },
                   { value: countdown.minutes, label: cfg.countdown.labels.minutes },
                   { value: countdown.seconds, label: cfg.countdown.labels.seconds },
                 ].map(({ value, label }, idx) => (
-                  <div key={label} style={{ textAlign: "center", minWidth: "74px", padding: "4px 18px", borderRight: idx < 3 ? `1px solid ${C.champagne}25` : "none" }}>
-                    <div style={{ fontFamily: SERIF, fontSize: "clamp(1.8rem, 4vw, 2.8rem)", fontWeight: 300, color: C.champagne, lineHeight: 1 }}>
+                  <div key={label} className="aur-countdown-unit" style={{ textAlign: "center", minWidth: "60px", padding: "0 10px", borderRight: idx < 3 ? "1px solid rgba(215,183,119,0.18)" : "none" }}>
+                    <div style={{ fontFamily: SERIF, fontSize: "clamp(1.5rem, 2.4vw, 2.1rem)", fontWeight: 300, color: C.goldSoft, lineHeight: 1 }}>
                       {String(value).padStart(2, "0")}
                     </div>
-                    <div style={{ fontFamily: SANS, fontSize: "0.46rem", letterSpacing: "0.18em", color: C.warmWhite, marginTop: "6px", opacity: 0.48, textTransform: "uppercase" }}>
+                    <div style={{ fontFamily: SANS, fontSize: "0.42rem", letterSpacing: "0.18em", color: C.textMuted, marginTop: "5px", textTransform: "uppercase" }}>
                       {label}
                     </div>
                   </div>
                 ))}
               </div>
-            )}
-          </div>
+            </div>
+          )}
 
-          <div style={{ position: "absolute", bottom: "30px", left: "50%", transform: "translateX(-50%)", zIndex: 2, display: "flex", flexDirection: "column", alignItems: "center", gap: "8px", opacity: 0.45 }}>
-            <span style={{ fontFamily: SANS, fontSize: "0.48rem", letterSpacing: "0.26em", color: C.warmWhite, textTransform: "uppercase" }}>Scroll</span>
-            <svg style={{ animation: "aur-scroll-bob 2.4s ease-in-out infinite" }} width="14" height="26" viewBox="0 0 14 26" fill="none">
-              <line x1="7" y1="0" x2="7" y2="20" stroke={C.champagne} strokeWidth="1"/>
-              <path d="M2 15 L7 21 L12 15" stroke={C.champagne} strokeWidth="1" fill="none"/>
+          {/* Scroll indicator */}
+          <div
+            style={{
+              position: "absolute", bottom: "32px", left: "50%",
+              zIndex: 2,
+              display: "flex", flexDirection: "column", alignItems: "center", gap: "7px",
+              opacity: 0.40,
+              animation: "aur-scroll-bob 2.8s ease-in-out infinite",
+            }}
+          >
+            <span style={{ fontFamily: SANS, fontSize: "0.43rem", letterSpacing: "0.28em", textTransform: "uppercase", color: C.textLight }}>Scroll</span>
+            <svg width="12" height="22" viewBox="0 0 12 22" fill="none">
+              <line x1="6" y1="0" x2="6" y2="17" stroke={C.gold} strokeWidth="1"/>
+              <path d="M1 12 L6 18 L11 12" stroke={C.gold} strokeWidth="1" fill="none"/>
             </svg>
           </div>
         </section>
@@ -853,68 +1164,77 @@ export default function AureliaTemplate({
           id="aur-story"
           data-v2-section="aur-story"
           ref={storyAnim.ref as React.RefObject<HTMLElement>}
-          style={{ position: "relative", background: C.charcoal, padding: "120px 40px 110px", overflow: "hidden", ...storyAnim.style }}
+          className="aur-story-sect"
+          style={{ position: "relative", display: "flex", alignItems: "center", overflow: "hidden", ...storyAnim.style }}
         >
-          {storyImage && (
-            <div style={{ position: "absolute", inset: 0, backgroundImage: `url(${storyImage})`, backgroundSize: "cover", backgroundPosition: "center", opacity: 0.07, filter: "blur(6px)", zIndex: 0 }} />
-          )}
-          <div style={{ position: "absolute", inset: 0, background: `linear-gradient(135deg, ${C.charcoal}F8 0%, ${C.charcoalMid}EC 100%)`, zIndex: 0 }} />
-
+          {/* Full-section background image with parallax */}
           <div
-            className="aur-story-split"
-            style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "72px", maxWidth: "1120px", margin: "0 auto", alignItems: "center", position: "relative", zIndex: 1 }}
-          >
-            <div style={{ position: "relative" }}>
-              <div style={{ position: "absolute", top: "22px", left: "22px", right: "-22px", bottom: "-22px", border: `1px solid ${C.champagne}38`, zIndex: 0, pointerEvents: "none" }} />
-              <div style={{ position: "absolute", top: "11px", left: "11px", right: "-11px", bottom: "-11px", border: `1px solid ${C.champagne}18`, zIndex: 0, pointerEvents: "none" }} />
-              <div style={{ position: "relative", paddingBottom: "125%", overflow: "hidden", zIndex: 1, boxShadow: "18px 22px 64px rgba(0,0,0,0.50)" }}>
-                <img
-                  ref={storyParallax.ref as React.RefObject<HTMLImageElement>}
-                  src={storyImage || "https://images.unsplash.com/photo-1511285560929-80b456fea0bc?w=800&q=80&auto=format&fit=crop"}
-                  alt="Our Story"
-                  style={{ position: "absolute", inset: 0, width: "100%", height: "115%", top: "-7.5%", objectFit: "cover", transform: `translateY(${storyParallax.offset * 0.45}px)`, willChange: "transform", display: "block" }}
-                />
-                <div style={{ position: "absolute", inset: 0, background: `linear-gradient(to top, ${C.charcoal}80 0%, transparent 50%)` }} />
-              </div>
-              <div className="aur-glass" style={{ position: "absolute", bottom: "26px", left: "26px", zIndex: 2, padding: "10px 20px" }}>
-                <span style={{ fontFamily: SERIF, fontSize: "1.35rem", fontWeight: 300, color: C.champagne, letterSpacing: "0.10em" }}>
-                  {groomName[0]}{brideName[0]}
-                </span>
-              </div>
-            </div>
+            ref={storyParallax.ref}
+            style={{
+              position: "absolute", inset: "-15% 0",
+              backgroundImage: `url(${storyImage || "https://images.unsplash.com/photo-1511285560929-80b456fea0bc?w=1400&q=80&auto=format&fit=crop"})`,
+              backgroundSize: "cover", backgroundPosition: "center",
+              transform: `translateY(${storyParallax.offset}px)`,
+              zIndex: 0, willChange: "transform",
+            }}
+          />
+          {/* Left-weighted dark overlay */}
+          <div style={{ position: "absolute", inset: 0, background: "linear-gradient(100deg, rgba(6,10,9,0.85) 0%, rgba(6,10,9,0.58) 52%, rgba(6,10,9,0.18) 100%)", zIndex: 1 }} />
 
-            <div style={{ paddingLeft: "8px" }}>
-              <p style={{ fontFamily: SANS, fontSize: "0.60rem", fontWeight: 500, letterSpacing: "0.24em", textTransform: "uppercase", color: C.champagne, marginBottom: "18px", opacity: 0.88 }}>
-                Our Story
-              </p>
-              <div style={{ width: "34px", height: "1px", background: C.champagne, marginBottom: "28px", opacity: 0.50 }} />
-              <h2
-                data-v2-element="aur-story-heading"
+          {/* Glass panel — floats LEFT */}
+          <div
+            className="aur-story-panel"
+            data-v2-element="aur-story-panel"
+            style={{
+              position: "relative", zIndex: 2,
+              marginLeft: "clamp(24px, 8vw, 110px)",
+              marginTop: "80px", marginBottom: "80px",
+              maxWidth: "490px", width: "100%",
+              background: "rgba(8,18,14,0.74)",
+              backdropFilter: "blur(22px)",
+              WebkitBackdropFilter: "blur(22px)",
+              border: "1px solid rgba(215,183,119,0.38)",
+              borderRadius: "16px",
+              boxShadow: "0 32px 80px rgba(0,0,0,0.55)",
+              padding: "52px 44px 48px",
+            }}
+          >
+            <p style={{ fontFamily: SANS, fontSize: "0.57rem", fontWeight: 500, letterSpacing: "0.32em", textTransform: "uppercase", color: C.gold, marginBottom: "16px", opacity: 0.92 }}>
+              OUR STORY
+            </p>
+            <div style={{ width: "32px", height: "1px", background: C.gold, marginBottom: "24px", opacity: 0.48 }} />
+            <h2
+              data-v2-element="aur-story-heading"
+              data-v2-type="text"
+              style={{ fontFamily: SERIF, fontSize: "clamp(2rem, 3.5vw, 3.2rem)", fontWeight: 300, lineHeight: 1.12, color: C.textLight, marginBottom: "22px" }}
+            >
+              {storyHeading}
+            </h2>
+            <p
+              data-v2-element="aur-story-body"
+              data-v2-type="textarea"
+              style={{ fontFamily: SANS, fontSize: "0.9rem", fontWeight: 300, lineHeight: 1.88, color: C.textMuted, marginBottom: "32px" }}
+            >
+              {storyBody}
+            </p>
+            {storyCtaLabel && (
+              <div
+                data-v2-element="aur-story-cta"
                 data-v2-type="text"
-                style={{ fontFamily: SERIF, fontSize: "clamp(2.2rem, 3.8vw, 3.5rem)", fontWeight: 300, lineHeight: 1.12, color: C.warmWhite, marginBottom: "26px" }}
+                style={{ display: "inline-flex", alignItems: "center", gap: "10px", fontFamily: SANS, fontSize: "0.60rem", fontWeight: 500, letterSpacing: "0.20em", textTransform: "uppercase", color: C.gold, paddingBottom: "3px", borderBottom: "1px solid rgba(215,183,119,0.42)", cursor: "default" }}
               >
-                {storyHeadingEmphasis
-                  ? <>{storyHeading.replace(storyHeadingEmphasis, "").trimStart()}<em style={{ color: C.champagne, fontStyle: "italic" }}> {storyHeadingEmphasis}</em></>
-                  : storyHeading
-                }
-              </h2>
-              <p
-                data-v2-element="aur-story-body"
-                data-v2-type="textarea"
-                style={{ fontFamily: SANS, fontSize: "0.97rem", fontWeight: 300, lineHeight: 1.88, color: C.warmGray, marginBottom: "36px" }}
-              >
-                {storyBody}
-              </p>
-              {storyCtaLabel && (
-                <div
-                  data-v2-element="aur-story-cta"
-                  data-v2-type="text"
-                  style={{ display: "inline-flex", alignItems: "center", gap: "10px", fontFamily: SANS, fontSize: "0.63rem", fontWeight: 500, letterSpacing: "0.20em", textTransform: "uppercase", color: C.champagne, paddingBottom: "3px", borderBottom: `1px solid ${C.champagne}50`, cursor: "default" }}
-                >
-                  {storyCtaLabel}
-                  <svg width="14" height="10" viewBox="0 0 14 10" fill="none"><path d="M0 5H12M9 1L13 5L9 9" stroke="currentColor" strokeWidth="1.2"/></svg>
-                </div>
-              )}
+                {storyCtaLabel}
+                <svg width="14" height="10" viewBox="0 0 14 10" fill="none"><path d="M0 5H12M9 1L13 5L9 9" stroke="currentColor" strokeWidth="1.2"/></svg>
+              </div>
+            )}
+            {/* Pagination 01 — 02 — 03 */}
+            <div style={{ display: "flex", alignItems: "center", gap: "10px", marginTop: "40px", opacity: 0.42 }}>
+              {["01", "02", "03"].map((n, i) => (
+                <React.Fragment key={n}>
+                  <span style={{ fontFamily: SANS, fontSize: "0.52rem", letterSpacing: "0.14em", color: i === 0 ? C.gold : C.textMuted }}>{n}</span>
+                  {i < 2 && <div style={{ width: "18px", height: "1px", background: "rgba(215,183,119,0.38)" }} />}
+                </React.Fragment>
+              ))}
             </div>
           </div>
         </section>
@@ -926,80 +1246,133 @@ export default function AureliaTemplate({
           id="aur-roadmap"
           data-v2-section="aur-roadmap"
           ref={roadmapAnim.ref as React.RefObject<HTMLElement>}
-          style={{ background: `linear-gradient(180deg, ${C.charcoalMid} 0%, ${C.charcoal} 100%)`, padding: "110px 24px 100px", ...roadmapAnim.style }}
+          style={{ position: "relative", minHeight: "140vh", overflow: "hidden", padding: "120px 24px 100px", ...roadmapAnim.style }}
         >
-          <div style={{ textAlign: "center", marginBottom: "80px" }}>
-            <p style={{ fontFamily: SANS, fontSize: "0.60rem", letterSpacing: "0.26em", textTransform: "uppercase", color: C.champagne, marginBottom: "16px", opacity: 0.85 }}>
-              The Journey
+          {/* Aerial/lakeside background */}
+          <div style={{ position: "absolute", inset: 0, backgroundImage: "url(https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=1600&q=80&auto=format&fit=crop)", backgroundSize: "cover", backgroundPosition: "center", zIndex: 0 }} />
+          <div style={{ position: "absolute", inset: 0, background: "rgba(4,8,8,0.74)", zIndex: 1 }} />
+
+          {/* Section header */}
+          <div style={{ position: "relative", zIndex: 2, textAlign: "center", marginBottom: "88px" }}>
+            <p style={{ fontFamily: SANS, fontSize: "0.57rem", letterSpacing: "0.30em", textTransform: "uppercase", color: C.gold, marginBottom: "16px", opacity: 0.85 }}>
+              OUR JOURNEY
             </p>
             <h2
               data-v2-element="aur-roadmap-heading"
               data-v2-type="text"
-              style={{ fontFamily: SERIF, fontSize: "clamp(2rem, 4vw, 3.4rem)", fontWeight: 300, color: C.warmWhite, letterSpacing: "0.02em", margin: 0 }}
+              style={{ fontFamily: SERIF, fontSize: "clamp(2.2rem, 4.5vw, 3.8rem)", fontWeight: 300, color: C.textLight, letterSpacing: "0.02em", margin: "0 0 18px" }}
             >
               {roadmapHeading}
             </h2>
+            <p style={{ fontFamily: SANS, fontSize: "0.88rem", fontWeight: 300, color: C.textMuted, maxWidth: "480px", margin: "0 auto", lineHeight: 1.8 }}>
+              Every great love story has a beginning &#8212; here is ours.
+            </p>
           </div>
 
-          <div ref={roadmapRef as React.RefObject<HTMLDivElement>} style={{ position: "relative", maxWidth: "820px", margin: "0 auto", padding: "0 24px" }}>
+          {/* Roadmap body */}
+          <div ref={roadmapRef as React.RefObject<HTMLDivElement>} style={{ position: "relative", maxWidth: "860px", margin: "0 auto", zIndex: 2 }}>
+
+            {/* ── DESKTOP roadmap (hidden on mobile) ── */}
+            <div className="aur-ms-desktop">
+            {/* SVG curved route — centred */}
             <div
-              className="aur-roadmap-center-line"
-              style={{ position: "absolute", left: "50%", top: 0, bottom: 0, transform: "translateX(-50%)", width: "2px", background: `${C.champagne}15`, zIndex: 1 }}
+              className="aur-ms-rail"
+              style={{ position: "absolute", left: "50%", top: 0, bottom: 0, transform: "translateX(-50%)", width: "300px", zIndex: 1, pointerEvents: "none" }}
             >
-              <div style={{ position: "absolute", top: 0, left: 0, width: "100%", height: `${progress * 100}%`, background: `linear-gradient(to bottom, ${C.champagne}BB, ${C.champagneDim}70)`, transition: "height 0.12s linear" }} />
-              <div style={{ position: "absolute", top: `${progress * 100}%`, left: "50%", transform: "translate(-50%, -50%)", zIndex: 5, transition: "top 0.12s linear", filter: `drop-shadow(0 0 10px ${C.champagne}88)` }}>
-                <svg width="26" height="26" viewBox="0 0 26 26" fill="none">
-                  <rect x="3" y="9" width="20" height="10" rx="2" fill={C.champagne} fillOpacity="0.92"/>
-                  <path d="M7 9L9.5 4.5H16.5L19 9" fill={C.champagne} fillOpacity="0.70"/>
-                  <circle cx="8.5"  cy="20" r="2.5" fill={C.charcoal} stroke={C.champagne} strokeWidth="1.2"/>
-                  <circle cx="17.5" cy="20" r="2.5" fill={C.charcoal} stroke={C.champagne} strokeWidth="1.2"/>
-                  <rect x="10" y="5.5" width="6" height="2.8" rx="0.4" fill={C.charcoal} fillOpacity="0.28"/>
-                </svg>
-              </div>
+              <svg viewBox="0 0 300 1200" preserveAspectRatio="none" style={{ width: "100%", height: "100%" }}>
+                {/* Ghost base */}
+                <path
+                  d="M150 0 C80 180 220 300 150 460 C80 640 220 780 150 1200"
+                  stroke="rgba(215,183,119,0.14)"
+                  strokeWidth="3"
+                  fill="none"
+                />
+                {/* Animated progress fill */}
+                <path
+                  ref={routePathRef}
+                  d="M150 0 C80 180 220 300 150 460 C80 640 220 780 150 1200"
+                  stroke={C.gold}
+                  strokeWidth="3"
+                  fill="none"
+                  strokeDasharray={pathLength > 0 ? pathLength : 1600}
+                  strokeDashoffset={(pathLength > 0 ? pathLength : 1600) * (1 - progress)}
+                  style={{ filter: "drop-shadow(0 0 7px rgba(215,183,119,0.62))", transition: "stroke-dashoffset 0.12s linear" }}
+                />
+                {/* Wedding car marker */}
+                {carPt && (
+                  <WeddingCarMapMarker
+                    x={carPt.x}
+                    y={carPt.y}
+                    size={52}
+                    strokeColor={C.gold}
+                    fillColor="#F7F0E3"
+                    accentColor={C.goldSoft}
+                    strokeWidth={1.3}
+                    showFloral={true}
+                    showHeart={true}
+                    glowStrength={0.65}
+                    animation="float"
+                  />
+                )}
+              </svg>
             </div>
 
-            <div ref={milestonesRef as React.RefObject<HTMLDivElement>}>
+            {/* Milestone cards */}
+            <div ref={milestonesRef as React.RefObject<HTMLDivElement>} className="aur-ms-cards-container">
               {milestones.map((m, i) => (
                 <div
-                  key={(m as any).id || i}
+                  key={String((m as Record<string, unknown>).id ?? i)}
                   data-aur-ms={i}
-                  className={i % 2 === 0 ? "aur-roadmap-milestone-left" : "aur-roadmap-milestone-right"}
+                  className={`${i % 2 === 0 ? "aur-ms-left" : "aur-ms-right"} aur-ms-card`}
                   style={{
-                    position: "relative", marginBottom: "60px",
-                    opacity:  milestoneVisible[i] ? 1 : 0,
-                    transform: milestoneVisible[i] ? "none" : `translateX(${i % 2 === 0 ? "-28px" : "28px"})`,
+                    position: "relative",
+                    marginBottom: "72px",
+                    opacity: milestoneVisible[i] ? 1 : 0,
+                    transform: milestoneVisible[i] ? "none" : `translateX(${i % 2 === 0 ? "-32px" : "32px"})`,
                     transition: "opacity 0.65s ease, transform 0.65s ease",
                     zIndex: 2,
+                    maxWidth: "360px",
+                    ...(i % 2 === 0 ? { marginLeft: "auto" } : {}),
                   }}
                 >
-                  <div style={{ background: `${C.charcoalMid}DD`, border: `1px solid ${C.champagne}28`, overflow: "hidden", boxShadow: "0 8px 40px rgba(0,0,0,0.32)" }}>
-                    {(m as any).image && (
-                      <div style={{ height: "130px", overflow: "hidden", position: "relative" }}>
-                        <img src={(m as any).image} alt={m.title} style={{ width: "100%", height: "100%", objectFit: "cover" }} />
-                        <div style={{ position: "absolute", inset: 0, background: `linear-gradient(to bottom, transparent 40%, ${C.charcoalMid}CC)` }} />
-                      </div>
-                    )}
+                  <div style={{ background: "rgba(8,18,14,0.80)", border: "1px solid rgba(215,183,119,0.22)", borderRadius: "10px", overflow: "hidden", backdropFilter: "blur(12px)", boxShadow: "0 12px 48px rgba(0,0,0,0.45)" }}>
+                    {(() => {
+                      const msImg = (m as Record<string, unknown>).image as string || MILESTONE_FALLBACKS[i % MILESTONE_FALLBACKS.length];
+                      return (
+                        <div style={{ height: "140px", overflow: "hidden", position: "relative" }}>
+                          <img
+                            src={msImg}
+                            alt={m.title}
+                            style={{ width: "100%", height: "100%", objectFit: "cover" }}
+                            onError={(e) => { (e.target as HTMLImageElement).src = MILESTONE_FALLBACKS[i % MILESTONE_FALLBACKS.length]; }}
+                          />
+                          <div style={{ position: "absolute", inset: 0, background: "linear-gradient(to bottom, transparent 40%, rgba(8,18,14,0.82))" }} />
+                        </div>
+                      );
+                    })()}
                     <div style={{ padding: "22px 24px 24px" }}>
-                      <div style={{ fontFamily: SERIF, fontSize: "0.72rem", fontWeight: 400, letterSpacing: "0.16em", color: C.champagne, marginBottom: "8px", opacity: 0.85 }}>
+                      <div style={{ fontFamily: SERIF, fontSize: "0.70rem", fontWeight: 400, letterSpacing: "0.18em", color: C.gold, marginBottom: "7px", opacity: 0.85 }}>
                         {m.time}
                       </div>
-                      <h3 style={{ fontFamily: SERIF, fontSize: "1.4rem", fontWeight: 400, color: C.warmWhite, margin: "0 0 10px", lineHeight: 1.2 }}>
+                      <h3 style={{ fontFamily: SERIF, fontSize: "1.35rem", fontWeight: 400, color: C.textLight, margin: "0 0 9px", lineHeight: 1.22 }}>
                         {m.title}
                       </h3>
                       {m.description && (
-                        <p style={{ fontFamily: SANS, fontSize: "0.83rem", fontWeight: 300, color: C.warmGray, lineHeight: 1.65, margin: 0 }}>
+                        <p style={{ fontFamily: SANS, fontSize: "0.82rem", fontWeight: 300, color: C.textMuted, lineHeight: 1.68, margin: 0 }}>
                           {m.description}
                         </p>
                       )}
                     </div>
                   </div>
+                  {/* Timeline dot */}
                   <div
+                    className="aur-ms-dot"
                     style={{
-                      position: "absolute", top: "26px",
-                      ...(i % 2 === 0 ? { right: "-37px" } : { left: "-37px" }),
-                      width: "11px", height: "11px", borderRadius: "50%",
-                      background: C.champagne, border: `2.5px solid ${C.charcoal}`,
-                      zIndex: 4, boxShadow: `0 0 12px ${C.champagne}55`,
+                      position: "absolute", top: "24px",
+                      ...(i % 2 === 0 ? { right: "-48px" } : { left: "-48px" }),
+                      width: "10px", height: "10px", borderRadius: "50%",
+                      background: C.gold, border: `2.5px solid ${C.bgDark}`,
+                      zIndex: 4, boxShadow: "0 0 14px rgba(215,183,119,0.65)",
                     }}
                   />
                 </div>
@@ -1007,12 +1380,131 @@ export default function AureliaTemplate({
             </div>
 
             {cfg.timeline.afterMessage?.thankYou && (
-              <div style={{ textAlign: "center", paddingTop: "48px", borderTop: `1px solid ${C.champagne}18`, marginTop: "12px" }}>
-                <p style={{ fontFamily: SERIF, fontSize: "1.15rem", fontWeight: 300, fontStyle: "italic", color: C.champagne, opacity: 0.75 }}>
+              <div style={{ textAlign: "center", paddingTop: "52px", borderTop: "1px solid rgba(215,183,119,0.14)", marginTop: "12px" }}>
+                <p style={{ fontFamily: SERIF, fontSize: "1.15rem", fontWeight: 300, fontStyle: "italic", color: C.gold, opacity: 0.68 }}>
                   {cfg.timeline.afterMessage.thankYou}
                 </p>
               </div>
             )}
+            </div>{/* end aur-ms-desktop */}
+
+            {/* ── MOBILE roadmap (shown on mobile only) ── */}
+            <div className="aur-ms-mobile" ref={mobileRoadmapRef as React.RefObject<HTMLDivElement>}>
+              {/* Vertical animated SVG path + car on left, cards on right */}
+              <div style={{ position: "relative", paddingLeft: "52px" }}>
+                {/* SVG rail strip — absolutely positioned on the left */}
+                <div style={{ position: "absolute", left: 0, top: 0, bottom: 0, width: "44px", zIndex: 1, pointerEvents: "none" }}>
+                  <svg viewBox="0 0 44 1400" preserveAspectRatio="none" style={{ width: "44px", height: "100%", minHeight: `${milestones.length * 180}px` }}>
+                    {/* ghost base */}
+                    <path
+                      d="M22 0 L22 1400"
+                      stroke="rgba(215,183,119,0.14)"
+                      strokeWidth="2"
+                      fill="none"
+                    />
+                    {/* animated progress fill */}
+                    <path
+                      ref={mobileRoutePathRef}
+                      d="M22 0 L22 1400"
+                      stroke={C.gold}
+                      strokeWidth="2"
+                      fill="none"
+                      strokeDasharray={mobilePathLength > 0 ? mobilePathLength : 1400}
+                      strokeDashoffset={(mobilePathLength > 0 ? mobilePathLength : 1400) * (1 - mobileProgress)}
+                      style={{ filter: "drop-shadow(0 0 5px rgba(215,183,119,0.58))", transition: "stroke-dashoffset 0.1s linear" }}
+                    />
+                    {/* Car marker at progress point */}
+                    {mobilePathLength > 0 && (() => {
+                      const pt = mobileRoutePathRef.current?.getPointAtLength(
+                        mobileProgress * mobilePathLength
+                      );
+                      if (!pt) return null;
+                      return (
+                        <WeddingCarMapMarker
+                          x={pt.x}
+                          y={pt.y}
+                          size={38}
+                          strokeColor={C.gold}
+                          fillColor="#F7F0E3"
+                          accentColor={C.goldSoft}
+                          strokeWidth={1.2}
+                          showFloral={true}
+                          showHeart={true}
+                          glowStrength={0.6}
+                          animation="float"
+                        />
+                      );
+                    })()}
+                  </svg>
+                </div>
+
+                {/* Milestone cards stacked vertically */}
+                <div ref={milestonesRef as React.RefObject<HTMLDivElement>}>
+                  {milestones.map((m, i) => (
+                    <div
+                      key={`mob-ms-${String((m as Record<string, unknown>).id ?? i)}`}
+                      data-aur-ms={i}
+                      style={{
+                        position: "relative",
+                        marginBottom: "28px",
+                        opacity: milestoneVisible[i] ? 1 : 0,
+                        transform: milestoneVisible[i] ? "none" : "translateX(20px)",
+                        transition: `opacity 0.6s ${i * 0.08}s ease, transform 0.6s ${i * 0.08}s ease`,
+                      }}
+                    >
+                      {/* connector dot */}
+                      <div style={{
+                        position: "absolute",
+                        left: "-34px", top: "22px",
+                        width: "9px", height: "9px",
+                        borderRadius: "50%",
+                        background: C.gold,
+                        border: `2px solid ${C.bgDark}`,
+                        boxShadow: "0 0 10px rgba(215,183,119,0.6)",
+                        zIndex: 4,
+                      }} />
+                      <div style={{ background: "rgba(8,18,14,0.82)", border: "1px solid rgba(215,183,119,0.20)", borderRadius: "10px", overflow: "hidden", backdropFilter: "blur(12px)", boxShadow: "0 8px 32px rgba(0,0,0,0.4)" }}>
+                        {(() => {
+                          const msImg = (m as Record<string, unknown>).image as string || MILESTONE_FALLBACKS[i % MILESTONE_FALLBACKS.length];
+                          return (
+                            <div style={{ height: "110px", overflow: "hidden", position: "relative" }}>
+                              <img
+                                src={msImg}
+                                alt={m.title}
+                                style={{ width: "100%", height: "100%", objectFit: "cover" }}
+                                onError={(e) => { (e.target as HTMLImageElement).src = MILESTONE_FALLBACKS[i % MILESTONE_FALLBACKS.length]; }}
+                              />
+                              <div style={{ position: "absolute", inset: 0, background: "linear-gradient(to bottom, transparent 40%, rgba(8,18,14,0.80))" }} />
+                            </div>
+                          );
+                        })()}
+                        <div style={{ padding: "16px 18px 18px" }}>
+                          <div style={{ fontFamily: SERIF, fontSize: "0.64rem", letterSpacing: "0.18em", color: C.gold, marginBottom: "5px", opacity: 0.82 }}>
+                            {m.time}
+                          </div>
+                          <h3 style={{ fontFamily: SERIF, fontSize: "1.18rem", fontWeight: 400, color: C.textLight, margin: "0 0 7px", lineHeight: 1.2 }}>
+                            {m.title}
+                          </h3>
+                          {m.description && (
+                            <p style={{ fontFamily: SANS, fontSize: "0.78rem", fontWeight: 300, color: C.textMuted, lineHeight: 1.65, margin: 0 }}>
+                              {m.description}
+                            </p>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {cfg.timeline.afterMessage?.thankYou && (
+                <div style={{ textAlign: "center", paddingTop: "40px", borderTop: "1px solid rgba(215,183,119,0.14)", marginTop: "8px" }}>
+                  <p style={{ fontFamily: SERIF, fontSize: "1rem", fontWeight: 300, fontStyle: "italic", color: C.gold, opacity: 0.68 }}>
+                    {cfg.timeline.afterMessage.thankYou}
+                  </p>
+                </div>
+              )}
+            </div>{/* end aur-ms-mobile */}
           </div>
         </section>
       )}
@@ -1023,58 +1515,48 @@ export default function AureliaTemplate({
           id="aur-details"
           data-v2-section="aur-details"
           ref={detailsAnim.ref as React.RefObject<HTMLElement>}
-          style={{ background: C.creamWarm, padding: "100px 40px", ...detailsAnim.style }}
+          className="aur-details-sect"
+          style={{ background: C.ivory, padding: "110px 40px 100px", ...detailsAnim.style }}
         >
-          <div style={{ maxWidth: "820px", margin: "0 auto" }}>
-            <div style={{ textAlign: "center", marginBottom: "56px" }}>
-              <p style={{ fontFamily: SANS, fontSize: "0.60rem", letterSpacing: "0.26em", textTransform: "uppercase", color: C.champagne, marginBottom: "16px", opacity: 0.85 }}>
-                {detailsLabel}
+          <div style={{ maxWidth: "1200px", margin: "0 auto" }}>
+            <div style={{ textAlign: "center", marginBottom: "70px" }}>
+              <p style={{ fontFamily: SANS, fontSize: "0.57rem", letterSpacing: "0.32em", textTransform: "uppercase", color: C.gold, marginBottom: "16px", opacity: 0.88 }}>
+                JOIN US
               </p>
-              <div style={{ width: "28px", height: "1px", background: C.champagne, margin: "0 auto", opacity: 0.45 }} />
+              <h2
+                data-v2-element="aur-details-title"
+                data-v2-type="text"
+                style={{ fontFamily: SERIF, fontSize: "clamp(2.2rem, 4vw, 3.6rem)", fontWeight: 300, color: "#1a140e", letterSpacing: "0.04em", margin: "0 0 22px" }}
+              >
+                {detailsLabel}
+              </h2>
+              <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: "12px" }}>
+                <div style={{ width: "40px", height: "1px", background: "rgba(175,140,75,0.42)" }} />
+                <svg width="7" height="7" viewBox="0 0 7 7"><path d="M3.5 0L7 3.5L3.5 7L0 3.5Z" fill={C.gold} fillOpacity="0.70"/></svg>
+                <div style={{ width: "40px", height: "1px", background: "rgba(175,140,75,0.42)" }} />
+              </div>
             </div>
 
-            <div className="aur-details-grid">
+            {/* 4-column cards */}
+            <div className="aur-details-grid" style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: "20px" }}>
               {venues.slice(0, 4).map((venue, i) => (
                 <div
-                  key={(venue as any).id || i}
+                  key={(venue as Record<string, unknown>).id as string || i}
                   className="aur-detail-card"
-                  style={{ background: C.cardBg, border: `1px solid ${C.border}`, padding: "38px 28px 34px", textAlign: "center" }}
+                  data-v2-element={`aur-detail-card-${i}`}
+                  style={{ background: "rgba(247,240,227,0.88)", border: "1px solid rgba(175,140,75,0.28)", borderRadius: "4px", padding: "40px 28px 36px", textAlign: "center", boxShadow: "0 4px 24px rgba(175,140,75,0.07), 0 1px 4px rgba(0,0,0,0.04)" }}
                 >
                   <div style={{ marginBottom: "20px", display: "flex", justifyContent: "center" }}>
-                    {i === 0 && (
-                      <svg width="36" height="36" viewBox="0 0 36 36" fill="none" stroke={C.champagne} strokeWidth="1.1" strokeLinecap="round" strokeLinejoin="round">
-                        <path d="M9 33V20H27V33"/><path d="M5 20h26"/><path d="M18 3v8M15 7h6"/>
-                        <path d="M14 20V14h8v6"/>
-                      </svg>
-                    )}
-                    {i === 1 && (
-                      <svg width="36" height="36" viewBox="0 0 36 36" fill="none" stroke={C.champagne} strokeWidth="1.1" strokeLinecap="round" strokeLinejoin="round">
-                        <path d="M11 4l4 14H7L11 4z"/><path d="M11 18v14M7 32h8"/>
-                        <path d="M25 4l4 14H21L25 4z"/><path d="M25 18v14M21 32h8"/>
-                        <path d="M15 10l6 2"/>
-                      </svg>
-                    )}
-                    {i === 2 && (
-                      <svg width="36" height="36" viewBox="0 0 36 36" fill="none" stroke={C.champagne} strokeWidth="1.1" strokeLinecap="round" strokeLinejoin="round">
-                        <circle cx="18" cy="14" r="5"/>
-                        <path d="M18 2a12 12 0 010 24C10 26 4 20 4 14A14 14 0 0118 2z"/>
-                        <path d="M18 26v8M14 31h8"/>
-                      </svg>
-                    )}
-                    {i >= 3 && (
-                      <svg width="36" height="36" viewBox="0 0 36 36" fill="none" stroke={C.champagne} strokeWidth="1.1" strokeLinecap="round" strokeLinejoin="round">
-                        <rect x="6" y="10" width="24" height="20" rx="1"/>
-                        <path d="M6 16h24M13 10V6M23 10V6"/>
-                      </svg>
-                    )}
+                    {detailIcon(i)}
                   </div>
-                  <p style={{ fontFamily: SANS, fontSize: "0.56rem", letterSpacing: "0.22em", textTransform: "uppercase", color: C.champagne, marginBottom: "12px" }}>
+                  <div style={{ width: "26px", height: "1px", background: "rgba(175,140,75,0.32)", margin: "0 auto 18px" }} />
+                  <p style={{ fontFamily: SANS, fontSize: "0.53rem", letterSpacing: "0.26em", textTransform: "uppercase", color: C.gold, marginBottom: "10px", opacity: 0.92 }}>
                     {venue.title}
                   </p>
-                  <p style={{ fontFamily: SERIF, fontSize: "1.7rem", fontWeight: 400, color: C.charcoal, marginBottom: "12px", lineHeight: 1.15 }}>
+                  <p style={{ fontFamily: SERIF, fontSize: "1.55rem", fontWeight: 400, color: "#1a140e", marginBottom: "10px", lineHeight: 1.2 }}>
                     {venue.name}
                   </p>
-                  <p style={{ fontFamily: SANS, fontSize: "0.84rem", fontWeight: 300, color: C.warmGray, lineHeight: 1.68, whiteSpace: "pre-line", marginBottom: venue.mapButton ? "20px" : 0 }}>
+                  <p style={{ fontFamily: SANS, fontSize: "0.82rem", fontWeight: 300, color: "#6b5e4e", lineHeight: 1.72, whiteSpace: "pre-line", marginBottom: venue.mapButton ? "18px" : 0 }}>
                     {venue.description}
                   </p>
                   {venue.mapButton && venue.address && (
@@ -1082,7 +1564,7 @@ export default function AureliaTemplate({
                       href={`https://www.google.com/maps/search/${encodeURIComponent(venue.address)}`}
                       target="_blank"
                       rel="noopener noreferrer"
-                      style={{ display: "inline-block", fontFamily: SANS, fontSize: "0.58rem", letterSpacing: "0.18em", textTransform: "uppercase", color: C.champagne, textDecoration: "none", borderBottom: `1px solid ${C.champagne}50`, paddingBottom: "2px" }}
+                      style={{ display: "inline-block", fontFamily: SANS, fontSize: "0.54rem", letterSpacing: "0.18em", textTransform: "uppercase", color: C.gold, textDecoration: "none", borderBottom: "1px solid rgba(175,140,75,0.42)", paddingBottom: "2px" }}
                     >
                       {venue.mapButton}
                     </a>
@@ -1100,67 +1582,107 @@ export default function AureliaTemplate({
           id="aur-venue"
           data-v2-section="aur-venue"
           ref={venueAnim.ref as React.RefObject<HTMLElement>}
-          style={{ position: "relative", minHeight: "640px", overflow: "hidden", ...venueAnim.style }}
+          style={{ position: "relative", minHeight: "700px", display: "flex", alignItems: "center", justifyContent: "center", overflow: "hidden", ...venueAnim.style }}
         >
           <div
             ref={venueParallax.ref}
             style={{
-              position:   "absolute",
-              inset:      "-18% 0",
-              background: `url(${venueImage || "https://images.unsplash.com/photo-1578774295889-02bc12c28e3a?w=1400&q=80&auto=format&fit=crop"}) center/cover no-repeat`,
-              transform:  `translateY(${venueParallax.offset}px)`,
-              zIndex:     0,
-              willChange: "transform",
+              position: "absolute", inset: "-15% 0",
+              backgroundImage: `url(${venueImage || "https://images.unsplash.com/photo-1578774295889-02bc12c28e3a?w=1600&q=80&auto=format&fit=crop"})`,
+              backgroundSize: "cover", backgroundPosition: "center",
+              transform: `translateY(${venueParallax.offset}px)`,
+              zIndex: 0, willChange: "transform",
             }}
           />
-          <div style={{ position: "absolute", inset: 0, background: "linear-gradient(to right, rgba(6,4,2,0.88) 0%, rgba(6,4,2,0.65) 45%, rgba(6,4,2,0.15) 100%)", zIndex: 1 }} />
+          <div style={{ position: "absolute", inset: 0, background: "linear-gradient(to bottom, rgba(4,8,8,0.28) 0%, rgba(4,8,8,0.40) 50%, rgba(4,8,8,0.55) 100%)", zIndex: 1 }} />
 
-          <div style={{ position: "relative", zIndex: 2, display: "flex", alignItems: "center", minHeight: "640px", padding: "80px 64px" }}>
-            <div style={{ maxWidth: "490px" }}>
-              <p
-                data-v2-element="aur-venue-subtitle"
-                data-v2-type="text"
-                style={{ fontFamily: SANS, fontSize: "0.60rem", letterSpacing: "0.24em", textTransform: "uppercase", color: C.champagne, marginBottom: "20px", opacity: 0.90 }}
-              >
-                {venueSubtitle}
+          {/* Centred glass panel */}
+          <div
+            data-v2-element="aur-venue-panel"
+            className="aur-venue-panel-inner"
+            style={{
+              position: "relative", zIndex: 2,
+              background: "rgba(8,18,14,0.74)",
+              backdropFilter: "blur(22px)",
+              WebkitBackdropFilter: "blur(22px)",
+              border: "1px solid rgba(215,183,119,0.42)",
+              borderRadius: "24px",
+              boxShadow: "0 40px 100px rgba(0,0,0,0.55)",
+              padding: "52px 56px",
+              maxWidth: "760px", width: "calc(100% - 48px)",
+              margin: "80px 24px",
+            }}
+          >
+            <div style={{ textAlign: "center", marginBottom: "32px" }}>
+              <p style={{ fontFamily: SANS, fontSize: "0.57rem", letterSpacing: "0.30em", textTransform: "uppercase", color: C.gold, marginBottom: "14px", opacity: 0.90 }}>
+                THE VENUE
               </p>
               <h2
                 data-v2-element="aur-venue-title"
                 data-v2-type="text"
-                style={{ fontFamily: SERIF, fontSize: "clamp(2.6rem, 4.5vw, 4.5rem)", fontWeight: 300, color: C.warmWhite, lineHeight: 1.05, marginBottom: "24px", textShadow: "0 2px 30px rgba(0,0,0,0.45)" }}
+                style={{ fontFamily: SERIF, fontSize: "clamp(2.4rem, 4.5vw, 4rem)", fontWeight: 300, color: C.textLight, lineHeight: 1.05, marginBottom: "8px" }}
               >
                 {venueTitle}
               </h2>
-              <div style={{ width: "40px", height: "1px", background: C.champagne, marginBottom: "26px", opacity: 0.55 }} />
               <p
-                data-v2-element="aur-venue-desc"
-                data-v2-type="textarea"
-                style={{ fontFamily: SANS, fontSize: "0.95rem", fontWeight: 300, lineHeight: 1.88, color: `${C.warmWhite}C8`, marginBottom: "28px" }}
+                data-v2-element="aur-venue-location"
+                data-v2-type="text"
+                style={{ fontFamily: SANS, fontSize: "0.60rem", letterSpacing: "0.18em", textTransform: "uppercase", color: C.gold, opacity: 0.72 }}
               >
-                {venueDescription}
+                {venueLocation}
               </p>
-              {venueAddress && (
-                <div style={{ display: "flex", gap: "10px", alignItems: "flex-start", marginBottom: "32px" }}>
-                  <svg width="13" height="17" viewBox="0 0 13 17" fill="none" style={{ flexShrink: 0, marginTop: "3px" }}>
-                    <path d="M6.5 0C3.46 0 1 2.46 1 5.5c0 4.88 5.5 10.5 5.5 10.5S12 10.38 12 5.5C12 2.46 9.54 0 6.5 0zm0 7.5A2 2 0 114.5 5.5 2 2 0 016.5 7.5z" fill={C.champagne} fillOpacity="0.80"/>
-                  </svg>
-                  <p style={{ fontFamily: SANS, fontSize: "0.84rem", fontWeight: 300, color: `${C.warmWhite}A8`, lineHeight: 1.68, whiteSpace: "pre-line", margin: 0 }}>
-                    {venueAddress}
-                  </p>
+            </div>
+            <div style={{ width: "38px", height: "1px", background: "rgba(215,183,119,0.40)", margin: "0 auto 26px" }} />
+            <p
+              data-v2-element="aur-venue-desc"
+              data-v2-type="textarea"
+              style={{ fontFamily: SANS, fontSize: "0.88rem", fontWeight: 300, lineHeight: 1.92, color: C.textMuted, textAlign: "center", marginBottom: "36px" }}
+            >
+              {venueDescription}
+            </p>
+
+            {/* Two-column feature grid */}
+            <div className="aur-venue-feats" style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "0 32px" }}>
+              {venueFeatures.map((feat, i) => (
+                <div key={i} className="aur-venue-feat">
+                  <div style={{ width: "32px", height: "32px", display: "flex", alignItems: "center", justifyContent: "center", border: "1px solid rgba(215,183,119,0.26)", borderRadius: "50%", flexShrink: 0 }}>
+                    {feat.icon}
+                  </div>
+                  <div>
+                    <p style={{ fontFamily: SANS, fontSize: "0.50rem", letterSpacing: "0.22em", textTransform: "uppercase", color: C.gold, marginBottom: "3px", opacity: 0.78 }}>
+                      {feat.label}
+                    </p>
+                    <p style={{ fontFamily: SERIF, fontSize: "1.12rem", fontWeight: 400, color: C.textLight, lineHeight: 1.28, margin: 0 }}>
+                      {feat.text}
+                    </p>
+                  </div>
                 </div>
-              )}
-              {venueCtaLabel && (
+              ))}
+            </div>
+
+            {venueCtaLabel && (
+              <div style={{ textAlign: "center", marginTop: "36px" }}>
                 <a
                   href={venueMapUrl}
                   target="_blank"
                   rel="noopener noreferrer"
-                  style={{ display: "inline-flex", alignItems: "center", gap: "10px", fontFamily: SANS, fontSize: "0.63rem", letterSpacing: "0.20em", textTransform: "uppercase", color: C.champagne, textDecoration: "none", borderBottom: `1px solid ${C.champagne}50`, paddingBottom: "2px" }}
+                  data-v2-element="aur-venue-cta"
+                  className="aur-venue-cta"
+                  style={{
+                    display: "inline-flex", alignItems: "center", gap: "10px",
+                    fontFamily: SANS, fontSize: "0.62rem", fontWeight: 600, letterSpacing: "0.20em", textTransform: "uppercase",
+                    color: C.bgDark,
+                    background: `linear-gradient(135deg, ${C.goldSoft} 0%, ${C.gold} 100%)`,
+                    padding: "13px 28px",
+                    textDecoration: "none",
+                    minHeight: "44px",
+                  }}
                 >
                   {venueCtaLabel}
-                  <svg width="14" height="10" viewBox="0 0 14 10" fill="none"><path d="M0 5H12M9 1L13 5L9 9" stroke="currentColor" strokeWidth="1.2"/></svg>
+                  <svg width="14" height="10" viewBox="0 0 14 10" fill="none"><path d="M0 5H12M9 1L13 5L9 9" stroke="currentColor" strokeWidth="1.5"/></svg>
                 </a>
-              )}
-            </div>
+              </div>
+            )}
           </div>
         </section>
       )}
@@ -1171,54 +1693,129 @@ export default function AureliaTemplate({
           id="aur-gallery"
           data-v2-section="aur-gallery"
           ref={galleryAnim.ref as React.RefObject<HTMLElement>}
-          style={{ background: C.charcoal, padding: "100px 40px 110px", ...galleryAnim.style }}
+          style={{ position: "relative", background: C.bgDark, padding: "110px 40px 100px", overflow: "hidden", ...galleryAnim.style }}
         >
-          <div style={{ textAlign: "center", marginBottom: "60px" }}>
-            <p style={{ fontFamily: SANS, fontSize: "0.60rem", letterSpacing: "0.26em", textTransform: "uppercase", color: C.champagne, marginBottom: "18px", opacity: 0.80 }}>
-              {gallerySubtitle}
+          {/* Floral background tint */}
+          <div style={{ position: "absolute", inset: 0, backgroundImage: "url(https://images.unsplash.com/photo-1585007600263-71228e40c8d1?w=1400&q=50&auto=format&fit=crop)", backgroundSize: "cover", opacity: 0.05, zIndex: 0 }} />
+
+          <div style={{ position: "relative", zIndex: 1, textAlign: "center", marginBottom: "68px" }}>
+            <p style={{ fontFamily: SANS, fontSize: "0.57rem", letterSpacing: "0.30em", textTransform: "uppercase", color: C.gold, marginBottom: "16px", opacity: 0.82 }}>
+              OUR MOMENTS
             </p>
             <h2
               data-v2-element="aur-gallery-title"
               data-v2-type="text"
-              style={{ fontFamily: SERIF, fontSize: "clamp(2rem, 4vw, 3.2rem)", fontWeight: 300, color: C.warmWhite, margin: 0, letterSpacing: "0.02em" }}
+              style={{ fontFamily: SERIF, fontSize: "clamp(2.2rem, 4vw, 3.6rem)", fontWeight: 300, color: C.textLight, margin: "0 0 18px", letterSpacing: "0.02em" }}
             >
               {galleryTitle}
             </h2>
+            <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: "12px", opacity: 0.48 }}>
+              <div style={{ width: "36px", height: "1px", background: C.gold }} />
+              <svg width="6" height="6" viewBox="0 0 6 6"><path d="M3 0L6 3L3 6L0 3Z" fill={C.gold}/></svg>
+              <div style={{ width: "36px", height: "1px", background: C.gold }} />
+            </div>
           </div>
 
-          {(() => {
-            const PLACEHOLDERS = [
-              "https://images.unsplash.com/photo-1465495976277-a3741a19326e?w=600&q=80&auto=format&fit=crop",
-              "https://images.unsplash.com/photo-1519741497674-611481863552?w=600&q=80&auto=format&fit=crop",
-              "https://images.unsplash.com/photo-1511285560929-80b456fea0bc?w=600&q=80&auto=format&fit=crop",
-              "https://images.unsplash.com/photo-1507504031003-b417219a0fde?w=600&q=80&auto=format&fit=crop",
-              "https://images.unsplash.com/photo-1606216794074-735e91aa2c92?w=600&q=80&auto=format&fit=crop",
-              "https://images.unsplash.com/photo-1583939003579-730e3918a45a?w=600&q=80&auto=format&fit=crop",
-            ];
-            const displayImages = galleryImages.length > 0 ? galleryImages : PLACEHOLDERS;
-            const isPlaceholder = galleryImages.length === 0;
-            return (
-              <div style={{ maxWidth: "1160px", margin: "0 auto" }}>
-                <div className="aur-gallery-grid">
-                  {displayImages.map((url: string, i: number) => (
-                    <div
-                      key={i}
-                      className="aur-gallery-tile"
-                      style={{ ...(i === 0 ? { gridRow: "span 2" } : {}), aspectRatio: i === 0 ? "auto" : "1 / 1" }}
-                    >
-                      <img src={url} alt={`Gallery ${i + 1}`} className="aur-gallery-img" loading="lazy" />
-                      {isPlaceholder && <div style={{ position: "absolute", inset: 0, background: "rgba(6,4,2,0.18)", pointerEvents: "none" }} />}
-                    </div>
-                  ))}
-                </div>
-                {isPlaceholder && (
-                  <p style={{ textAlign: "center", marginTop: "36px", fontFamily: SERIF, fontSize: "1.05rem", fontStyle: "italic", color: C.warmGray, opacity: 0.45, letterSpacing: "0.04em" }}>
-                    Your favourite moments will live here
-                  </p>
-                )}
-              </div>
-            );
-          })()}
+          {/* Layered stacked gallery — DESKTOP */}
+          <div className="aur-gal-desktop">
+          <div className="aur-gallery-wrap" style={{ position: "relative", zIndex: 1, maxWidth: "900px", margin: "0 auto", padding: "0 80px" }}>
+            <div className="aur-gallery-stage" style={{ position: "relative", height: "520px", display: "flex", alignItems: "center", justifyContent: "center" }}>
+              {allGalleryImages.map((url: string, i: number) => {
+                const total = allGalleryImages.length;
+                const rawOffset = ((i - galleryIndex) % total + total) % total;
+                const centeredOffset = rawOffset <= Math.floor(total / 2) ? rawOffset : rawOffset - total;
+                let cls = "aur-gal-hidden";
+                if (centeredOffset === 0)  cls = "aur-gal-center";
+                else if (centeredOffset === -1) cls = "aur-gal-left";
+                else if (centeredOffset ===  1) cls = "aur-gal-right";
+                return (
+                  <div
+                    key={i}
+                    className={`${cls} aur-gal-item`}
+                    style={{ position: "absolute", width: "370px", height: "490px", borderRadius: "8px", overflow: "hidden", cursor: "pointer" }}
+                    onClick={() => setGalleryIndex(i)}
+                  >
+                    <img src={url} alt={`Gallery ${i + 1}`} style={{ width: "100%", height: "100%", objectFit: "cover", display: "block" }} loading="lazy" onError={(e) => { (e.target as HTMLImageElement).src = GALLERY_FALLBACK; }} />
+                  </div>
+                );
+              })}
+            </div>
+
+            {/* Arrow controls */}
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginTop: "40px" }}>
+              <button onClick={galleryPrev} className="aur-gal-arrow" aria-label="Previous image">
+                <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M10 3L5 8L10 13" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round"/></svg>
+              </button>
+              <p style={{ fontFamily: SANS, fontSize: "0.49rem", letterSpacing: "0.28em", textTransform: "uppercase", color: C.textMuted, opacity: 0.58 }}>
+                DRAG OR SCROLL TO EXPLORE
+              </p>
+              <button onClick={galleryNext} className="aur-gal-arrow" aria-label="Next image">
+                <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M6 3L11 8L6 13" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round"/></svg>
+              </button>
+            </div>
+
+            {/* Dot indicators */}
+            <div style={{ display: "flex", justifyContent: "center", gap: "8px", marginTop: "20px" }}>
+              {allGalleryImages.map((_: string, i: number) => (
+                <button
+                  key={i}
+                  onClick={() => setGalleryIndex(i)}
+                  style={{ width: i === galleryIndex ? "20px" : "6px", height: "6px", borderRadius: "3px", background: i === galleryIndex ? C.gold : "rgba(215,183,119,0.26)", border: "none", cursor: "pointer", transition: "all 0.3s ease", padding: 0 }}
+                  aria-label={`Go to image ${i + 1}`}
+                />
+              ))}
+            </div>
+          </div>
+          </div>{/* end aur-gal-desktop */}
+
+          {/* Premium mobile gallery — coverflow with swipe */}
+          <div className="aur-gal-mobile" style={{ position: "relative", zIndex: 1, maxWidth: "100vw", overflow: "hidden" }}>
+            {/* Coverflow track */}
+            <div
+              className="aur-mob-gal-track"
+              style={{ height: "420px", width: "100%", overflow: "hidden" }}
+              onTouchStart={mobileGal.onTouchStart}
+              onTouchEnd={mobileGal.onTouchEnd}
+            >
+              {allGalleryImages.map((url: string, i: number) => {
+                const total = allGalleryImages.length;
+                const rawOffset = ((i - mobileGal.index) % total + total) % total;
+                const centeredOffset = rawOffset <= Math.floor(total / 2) ? rawOffset : rawOffset - total;
+                let stateClass = "state-hidden";
+                if (centeredOffset === 0)       stateClass = "state-center";
+                else if (centeredOffset === -1) stateClass = "state-left1";
+                else if (centeredOffset ===  1) stateClass = "state-right1";
+                else if (centeredOffset === -2) stateClass = "state-left2";
+                else if (centeredOffset ===  2) stateClass = "state-right2";
+                return (
+                  <div
+                    key={i}
+                    className={`aur-mob-gal-card ${stateClass}`}
+                    style={{ width: "min(280px, 75vw)", height: "360px" }}
+                    onClick={() => { if (centeredOffset !== 0) mobileGal.goTo(i); }}
+                  >
+                    <img src={url} alt={`Gallery ${i + 1}`} loading="lazy" onError={(e) => { (e.target as HTMLImageElement).src = GALLERY_FALLBACK; }} />
+                  </div>
+                );
+              })}
+            </div>
+
+            {/* Mobile dot indicators */}
+            <div style={{ display: "flex", justifyContent: "center", gap: "8px", marginTop: "24px" }}>
+              {allGalleryImages.map((_: string, i: number) => (
+                <button
+                  key={i}
+                  onClick={() => mobileGal.goTo(i)}
+                  style={{ width: i === mobileGal.index ? "18px" : "6px", height: "6px", borderRadius: "3px", background: i === mobileGal.index ? C.gold : "rgba(215,183,119,0.28)", border: "none", cursor: "pointer", transition: "all 0.3s ease", padding: 0 }}
+                  aria-label={`Go to image ${i + 1}`}
+                />
+              ))}
+            </div>
+            {/* Swipe hint */}
+            <p style={{ fontFamily: SANS, fontSize: "0.48rem", letterSpacing: "0.28em", textTransform: "uppercase", color: C.textMuted, opacity: 0.52, textAlign: "center", marginTop: "14px" }}>
+              SWIPE TO EXPLORE
+            </p>
+          </div>{/* end aur-gal-mobile */}
         </section>
       )}
 
@@ -1228,112 +1825,190 @@ export default function AureliaTemplate({
           id="aur-rsvp"
           data-v2-section="aur-rsvp"
           ref={rsvpAnim.ref as React.RefObject<HTMLElement>}
-          style={{ position: "relative", minHeight: "820px", display: "flex", alignItems: "center", justifyContent: "center", padding: "80px 24px", overflow: "hidden", ...rsvpAnim.style }}
+          className="aur-rsvp-sect"
+          style={{ position: "relative", overflow: "hidden", ...rsvpAnim.style }}
         >
           <div
             ref={rsvpParallax.ref}
             style={{
-              position:   "absolute",
-              inset:      "-18% 0",
-              background: `url(${rsvpBgImage || "https://images.unsplash.com/photo-1519741497674-611481863552?w=1400&q=80&auto=format&fit=crop"}) center/cover no-repeat`,
-              transform:  `translateY(${rsvpParallax.offset}px)`,
-              zIndex:     0,
-              willChange: "transform",
+              position: "absolute", inset: "-15% 0",
+              backgroundImage: `url(${rsvpBgImage || "https://images.unsplash.com/photo-1519741497674-611481863552?w=1400&q=80&auto=format&fit=crop"})`,
+              backgroundSize: "cover", backgroundPosition: "center",
+              transform: `translateY(${rsvpParallax.offset}px)`,
+              zIndex: 0, willChange: "transform",
             }}
           />
-          <div style={{ position: "absolute", inset: 0, background: "rgba(6,4,2,0.74)", zIndex: 1 }} />
+          <div style={{ position: "absolute", inset: 0, background: "linear-gradient(100deg, rgba(4,8,8,0.76) 0%, rgba(4,8,8,0.65) 52%, rgba(4,8,8,0.45) 100%)", zIndex: 1 }} />
 
+          {/* Two-column layout */}
           <div
-            className="aur-glass"
-            style={{ position: "relative", zIndex: 2, width: "100%", maxWidth: "540px", padding: "52px 48px", boxShadow: "0 32px 80px rgba(0,0,0,0.55)" }}
+            className="aur-rsvp-cols"
+            style={{
+              position: "relative", zIndex: 2,
+              display: "grid", gridTemplateColumns: "1fr 1fr", gap: "80px",
+              maxWidth: "1100px", width: "calc(100% - 48px)",
+              margin: "0 auto", padding: "100px 0",
+              alignItems: "center",
+            }}
           >
-            <h2
-              data-v2-element="aur-rsvp-title"
-              data-v2-type="text"
-              style={{ fontFamily: SERIF, fontSize: "2.8rem", fontWeight: 300, color: C.warmWhite, textAlign: "center", marginBottom: "10px", letterSpacing: "0.04em" }}
-            >
-              {cfg.rsvp.title}
-            </h2>
-            {cfg.rsvp.description && (
-              <p
-                data-v2-element="aur-rsvp-desc"
-                data-v2-type="textarea"
-                style={{ fontFamily: SANS, fontSize: "0.85rem", fontWeight: 300, color: C.warmGray, textAlign: "center", whiteSpace: "pre-line", lineHeight: 1.78, marginBottom: "36px" }}
-              >
-                {cfg.rsvp.description}
-              </p>
-            )}
-
-            {rsvpSuccess ? (
-              <div style={{ textAlign: "center", padding: "32px 0", fontFamily: SERIF, fontSize: "1.4rem", fontStyle: "italic", color: C.champagne, lineHeight: 1.6 }}>
-                {cfg.rsvp.messages.success}
+            {/* Left — large RSVP text */}
+            <div className="aur-rsvp-left">
+              <div style={{ marginBottom: "22px" }}>
+                <svg width="26" height="20" viewBox="0 0 26 20" fill="none">
+                  <path d="M13 1 L2 1 L2 19 L24 19 L24 1 L13 1 Z" stroke={C.gold} strokeWidth="1.3" strokeLinecap="round" strokeLinejoin="round"/>
+                  <path d="M2 1 L13 9 L24 1" stroke={C.gold} strokeWidth="1.3" strokeLinecap="round" strokeLinejoin="round"/>
+                </svg>
               </div>
-            ) : (
-              <form onSubmit={form.handleSubmit(onSubmit)} noValidate>
-                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "14px", marginBottom: "14px" }}>
-                  <div>
-                    <label style={RSVP_LABEL}>{cfg.rsvp.form.firstName}</label>
-                    <input {...form.register("firstName")} placeholder={cfg.rsvp.form.firstNamePlaceholder} className="aur-input" style={RSVP_INPUT(C)} />
-                    {form.formState.errors.firstName && <p style={RSVP_ERR}>{form.formState.errors.firstName.message}</p>}
+              <h2
+                data-v2-element="aur-rsvp-heading"
+                data-v2-type="text"
+                style={{ fontFamily: SERIF, fontSize: "clamp(4.5rem, 9vw, 9rem)", fontWeight: 300, letterSpacing: "0.04em", color: C.goldSoft, lineHeight: 0.92, marginBottom: "22px" }}
+              >
+                RSVP
+              </h2>
+              <div style={{ display: "flex", alignItems: "center", gap: "10px", marginBottom: "26px" }}>
+                <div style={{ width: "22px", height: "1px", background: "rgba(215,183,119,0.52)" }} />
+                <svg width="6" height="6" viewBox="0 0 6 6"><path d="M3 0L6 3L3 6L0 3Z" fill={C.gold} fillOpacity="0.72"/></svg>
+              </div>
+              <p
+                data-v2-element="aur-rsvp-deadline"
+                data-v2-type="text"
+                style={{ fontFamily: SERIF, fontSize: "clamp(1rem, 2vw, 1.4rem)", fontStyle: "italic", color: C.ivoryMuted, lineHeight: 1.58, marginBottom: "20px" }}
+              >
+                {rsvpDeadline}
+              </p>
+              <p
+                data-v2-element="aur-rsvp-note"
+                data-v2-type="textarea"
+                style={{ fontFamily: SANS, fontSize: "0.88rem", fontWeight: 300, color: C.textMuted, lineHeight: 1.88 }}
+              >
+                {rsvpNote}
+              </p>
+            </div>
+
+            {/* Right — glass form panel */}
+            <div
+              className="aur-rsvp-form-panel"
+              style={{
+                background: "rgba(8,18,14,0.74)",
+                backdropFilter: "blur(22px)",
+                WebkitBackdropFilter: "blur(22px)",
+                border: "1px solid rgba(215,183,119,0.38)",
+                borderRadius: "16px",
+                boxShadow: "0 32px 80px rgba(0,0,0,0.55)",
+                padding: "44px 40px",
+              }}
+            >
+              {rsvpSuccess ? (
+                <div style={{ textAlign: "center", padding: "40px 0", fontFamily: SERIF, fontSize: "1.45rem", fontStyle: "italic", color: C.gold, lineHeight: 1.65 }}>
+                  {cfg.rsvp.messages.success}
+                </div>
+              ) : (
+                <form onSubmit={form.handleSubmit(onSubmit)} noValidate>
+                  {/* Name */}
+                  <div style={{ marginBottom: "14px" }}>
+                    <label style={rsvpLabel(SANS)}>FULL NAME</label>
+                    <div className="aur-rsvp-name-row" style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "10px" }}>
+                      <div>
+                        <input {...form.register("firstName")} placeholder="First name" className="aur-input" style={rsvpInput(C, SANS)} />
+                        {form.formState.errors.firstName && <p style={RSVP_ERR}>{form.formState.errors.firstName.message}</p>}
+                      </div>
+                      <div>
+                        <input {...form.register("lastName")} placeholder="Last name" className="aur-input" style={rsvpInput(C, SANS)} />
+                        {form.formState.errors.lastName && <p style={RSVP_ERR}>{form.formState.errors.lastName.message}</p>}
+                      </div>
+                    </div>
                   </div>
-                  <div>
-                    <label style={RSVP_LABEL}>{cfg.rsvp.form.lastName}</label>
-                    <input {...form.register("lastName")} placeholder={cfg.rsvp.form.lastNamePlaceholder} className="aur-input" style={RSVP_INPUT(C)} />
-                    {form.formState.errors.lastName && <p style={RSVP_ERR}>{form.formState.errors.lastName.message}</p>}
+
+                  {/* Attendance */}
+                  <div style={{ marginBottom: "16px" }}>
+                    <label style={rsvpLabel(SANS)}>WILL YOU ATTEND?</label>
+                    <div className="aur-rsvp-attend-row" style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "10px" }}>
+                      {[
+                        { value: "attending",     label: "Accepts with pleasure" },
+                        { value: "not-attending", label: "Declines with regret"  },
+                      ].map(opt => {
+                        const selected = form.watch("attendance") === opt.value;
+                        return (
+                          <label
+                            key={opt.value}
+                            style={{
+                              display: "flex", alignItems: "center", gap: "9px",
+                              padding: "12px 14px",
+                              border: `1px solid ${selected ? C.gold : "rgba(215,183,119,0.20)"}`,
+                              background: selected ? "rgba(215,183,119,0.09)" : "transparent",
+                              cursor: "pointer",
+                              fontFamily: SANS, fontSize: "0.78rem",
+                              color: selected ? C.gold : C.textMuted,
+                              transition: "all 0.22s",
+                              borderRadius: "4px",
+                            }}
+                          >
+                            <input type="radio" {...form.register("attendance")} value={opt.value} style={{ display: "none" }} />
+                            <div style={{ width: "14px", height: "14px", borderRadius: "50%", border: `1px solid ${selected ? C.gold : "rgba(215,183,119,0.38)"}`, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+                              {selected && <div style={{ width: "7px", height: "7px", borderRadius: "50%", background: C.gold }} />}
+                            </div>
+                            {opt.label}
+                          </label>
+                        );
+                      })}
+                    </div>
+                    {form.formState.errors.attendance && <p style={RSVP_ERR}>{form.formState.errors.attendance.message}</p>}
                   </div>
-                </div>
-                <div style={{ marginBottom: "14px" }}>
-                  <label style={RSVP_LABEL}>{cfg.rsvp.form.email}</label>
-                  <input {...form.register("email")} type="email" placeholder={cfg.rsvp.form.emailPlaceholder} className="aur-input" style={RSVP_INPUT(C)} />
-                  {form.formState.errors.email && <p style={RSVP_ERR}>{form.formState.errors.email.message}</p>}
-                </div>
-                <div style={{ marginBottom: "14px" }}>
-                  <label style={RSVP_LABEL}>{cfg.rsvp.form.guestCount}</label>
-                  <select {...form.register("guestCount")} className="aur-input" style={{ ...RSVP_INPUT(C), cursor: "pointer" }}>
-                    {cfg.rsvp.guestOptions.map((opt) => (
-                      <option key={opt.value} value={opt.value}>{opt.label}</option>
-                    ))}
-                  </select>
-                </div>
-                <div style={{ marginBottom: "20px" }}>
-                  <label style={RSVP_LABEL}>{cfg.rsvp.form.guestNames}</label>
-                  <textarea {...form.register("guestNames")} placeholder={cfg.rsvp.form.guestNamesPlaceholder} rows={2} className="aur-input" style={{ ...RSVP_INPUT(C), resize: "vertical", lineHeight: 1.5 }} />
-                </div>
-                <div style={{ marginBottom: "28px" }}>
-                  <label style={{ ...RSVP_LABEL, marginBottom: "12px", display: "block" }}>{cfg.rsvp.form.attendance}</label>
-                  <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "10px" }}>
-                    {[
-                      { value: "attending",     label: cfg.rsvp.form.attendingYes },
-                      { value: "not-attending", label: cfg.rsvp.form.attendingNo  },
-                    ].map((opt) => {
-                      const selected = form.watch("attendance") === opt.value;
-                      return (
-                        <label
-                          key={opt.value}
-                          style={{ display: "block", padding: "14px", border: `1px solid ${selected ? C.champagne : `${C.champagne}28`}`, background: selected ? `${C.champagne}18` : "transparent", cursor: "pointer", textAlign: "center", fontFamily: SANS, fontSize: "0.78rem", color: selected ? C.champagne : C.warmGray, letterSpacing: "0.06em", transition: "all 0.2s" }}
-                        >
-                          <input type="radio" {...form.register("attendance")} value={opt.value} style={{ display: "none" }} />
-                          {opt.label}
-                        </label>
-                      );
-                    })}
+
+                  {/* Guest count */}
+                  <div style={{ marginBottom: "14px" }}>
+                    <label style={rsvpLabel(SANS)}>NUMBER ATTENDING</label>
+                    <select {...form.register("guestCount")} className="aur-input" style={{ ...rsvpInput(C, SANS), cursor: "pointer" }}>
+                      {cfg.rsvp.guestOptions.map(opt => (
+                        <option key={opt.value} value={opt.value} style={{ background: "#081212" }}>{opt.label}</option>
+                      ))}
+                    </select>
                   </div>
-                  {form.formState.errors.attendance && <p style={RSVP_ERR}>{form.formState.errors.attendance.message}</p>}
-                </div>
-                <button
-                  type="submit"
-                  disabled={rsvpMutation.isPending}
-                  style={{ width: "100%", padding: "16px", background: rsvpMutation.isPending ? C.charcoalLight : C.champagne, border: "none", color: C.charcoal, fontFamily: SANS, fontSize: "0.68rem", fontWeight: 600, letterSpacing: "0.18em", textTransform: "uppercase", cursor: rsvpMutation.isPending ? "not-allowed" : "pointer", transition: "background 0.2s" }}
-                >
-                  {rsvpMutation.isPending ? cfg.rsvp.form.submittingButton : cfg.rsvp.form.submitButton}
-                </button>
-                {rsvpMutation.isError && (
-                  <p style={{ marginTop: "12px", fontFamily: SANS, fontSize: "0.78rem", color: "#EF4444", textAlign: "center" }}>
-                    {cfg.rsvp.messages.error}
-                  </p>
-                )}
-              </form>
-            )}
+
+                  {/* Dietary */}
+                  <div style={{ marginBottom: "24px" }}>
+                    <label style={rsvpLabel(SANS)}>
+                      DIETARY RESTRICTIONS{" "}
+                      <span style={{ opacity: 0.52, fontSize: "0.90em" }}>(OPTIONAL)</span>
+                    </label>
+                    <textarea
+                      {...form.register("guestNames")}
+                      placeholder={cfg.rsvp.form.guestNamesPlaceholder}
+                      rows={3}
+                      className="aur-input"
+                      style={{ ...rsvpInput(C, SANS), resize: "vertical", lineHeight: 1.55 }}
+                    />
+                  </div>
+
+                  {/* Submit */}
+                  <button
+                    type="submit"
+                    disabled={rsvpMutation.isPending}
+                    style={{
+                      width: "100%", padding: "16px",
+                      background: rsvpMutation.isPending ? "rgba(215,183,119,0.45)" : `linear-gradient(135deg, ${C.goldSoft} 0%, ${C.gold} 100%)`,
+                      border: "none",
+                      color: C.bgDark,
+                      fontFamily: SANS, fontSize: "0.65rem", fontWeight: 700, letterSpacing: "0.22em", textTransform: "uppercase",
+                      cursor: rsvpMutation.isPending ? "not-allowed" : "pointer",
+                      display: "flex", alignItems: "center", justifyContent: "center", gap: "10px",
+                    }}
+                  >
+                    {rsvpMutation.isPending ? cfg.rsvp.form.submittingButton : "SEND REPLY"}
+                    {!rsvpMutation.isPending && (
+                      <svg width="14" height="10" viewBox="0 0 14 10" fill="none"><path d="M0 5H12M9 1L13 5L9 9" stroke="currentColor" strokeWidth="1.5"/></svg>
+                    )}
+                  </button>
+
+                  {rsvpMutation.isError && (
+                    <p style={{ marginTop: "12px", fontFamily: SANS, fontSize: "0.78rem", color: "#EF4444", textAlign: "center" }}>
+                      {cfg.rsvp.messages.error}
+                    </p>
+                  )}
+                </form>
+              )}
+            </div>
           </div>
         </section>
       )}
@@ -1342,103 +2017,50 @@ export default function AureliaTemplate({
       <footer
         data-v2-section="aur-footer"
         ref={footerAnim.ref as React.RefObject<HTMLElement>}
+        className="aur-footer"
         style={{
-          background:    C.charcoal,
-          padding:       "80px 40px 48px",
-          textAlign:     "center",
+          background: C.bgDeep,
+          padding: "80px 40px 48px",
+          textAlign: "center",
+          borderTop: "1px solid rgba(215,183,119,0.10)",
           ...footerAnim.style,
         }}
       >
-        {/* Couple names */}
-        <h2
-          style={{
-            fontFamily:   SERIF,
-            fontSize:     "clamp(2rem, 5vw, 3.5rem)",
-            fontWeight:   300,
-            letterSpacing:"0.04em",
-            color:        C.champagne,
-            margin:       "0 0 6px",
-          }}
-        >
+        <div style={{ marginBottom: "10px" }}>
+          <svg width="14" height="16" viewBox="0 0 14 16" fill="none" style={{ opacity: 0.38 }}>
+            <path d="M7 1 C5 3.5 3 5.5 3 7.5 C3 10 4.8 12 7 12 C9.2 12 11 10 11 7.5 C11 5.5 9 3.5 7 1Z" stroke={C.gold} strokeWidth="0.85" fill="none"/>
+            <line x1="7" y1="12" x2="7" y2="15" stroke={C.gold} strokeWidth="0.85"/>
+          </svg>
+        </div>
+        <h2 className="aur-footer-names" style={{ fontFamily: SERIF, fontSize: "clamp(2rem, 5vw, 3.6rem)", fontWeight: 300, letterSpacing: "0.04em", color: C.gold, margin: "0 0 6px" }}>
           {groomName}{" "}
-          <span style={{ fontStyle: "italic", opacity: 0.7 }}>{separator}</span>
+          <span style={{ fontStyle: "italic", opacity: 0.68 }}>{separator}</span>
           {" "}{brideName}
         </h2>
-
-        {/* Tagline */}
         <p
           data-v2-element="aur-footer-tagline"
           data-v2-type="text"
-          style={{
-            fontFamily:    SANS,
-            fontSize:      "0.62rem",
-            letterSpacing: "0.24em",
-            textTransform: "uppercase",
-            color:         C.warmGray,
-            marginBottom:  "36px",
-            opacity:       0.8,
-          }}
+          style={{ fontFamily: SANS, fontSize: "0.56rem", letterSpacing: "0.28em", textTransform: "uppercase", color: C.textMuted, marginBottom: "36px", opacity: 0.72 }}
         >
           {footerTagline}
         </p>
-
-        {/* Thin rule */}
-        <div style={{ width: "48px", height: "1px", background: C.champagne, margin: "0 auto 28px", opacity: 0.3 }} />
-
-        {/* Social links */}
+        <div style={{ width: "44px", height: "1px", background: C.gold, margin: "0 auto 28px", opacity: 0.26 }} />
         {(socialInstagram || socialFacebook || socialEmail) && (
           <div style={{ display: "flex", justifyContent: "center", gap: "24px", marginBottom: "36px" }}>
-            {socialInstagram && (
-              <a
-                href={socialInstagram}
-                target="_blank"
-                rel="noopener noreferrer"
-                style={{ color: C.warmGray, textDecoration: "none", fontSize: "0.75rem", letterSpacing: "0.1em", fontFamily: SANS, opacity: 0.7, transition: "opacity 0.2s" }}
-              >
-                Instagram
-              </a>
-            )}
-            {socialFacebook && (
-              <a
-                href={socialFacebook}
-                target="_blank"
-                rel="noopener noreferrer"
-                style={{ color: C.warmGray, textDecoration: "none", fontSize: "0.75rem", letterSpacing: "0.1em", fontFamily: SANS, opacity: 0.7, transition: "opacity 0.2s" }}
-              >
-                Facebook
-              </a>
-            )}
-            {socialEmail && (
-              <a
-                href={`mailto:${socialEmail}`}
-                style={{ color: C.warmGray, textDecoration: "none", fontSize: "0.75rem", letterSpacing: "0.1em", fontFamily: SANS, opacity: 0.7, transition: "opacity 0.2s" }}
-              >
-                Email
-              </a>
-            )}
+            {socialInstagram && <a href={socialInstagram} target="_blank" rel="noopener noreferrer" style={{ color: C.textMuted, textDecoration: "none", fontSize: "0.70rem", letterSpacing: "0.10em", fontFamily: SANS, opacity: 0.62 }}>Instagram</a>}
+            {socialFacebook  && <a href={socialFacebook}  target="_blank" rel="noopener noreferrer" style={{ color: C.textMuted, textDecoration: "none", fontSize: "0.70rem", letterSpacing: "0.10em", fontFamily: SANS, opacity: 0.62 }}>Facebook</a>}
+            {socialEmail     && <a href={`mailto:${socialEmail}`} style={{ color: C.textMuted, textDecoration: "none", fontSize: "0.70rem", letterSpacing: "0.10em", fontFamily: SANS, opacity: 0.62 }}>Email</a>}
           </div>
         )}
-
-        {/* Copyright */}
-        <p
-          style={{
-            fontFamily: SANS,
-            fontSize:   "0.6rem",
-            color:      C.warmGray,
-            opacity:    0.4,
-            letterSpacing: "0.08em",
-          }}
-        >
-          © {new Date().getFullYear()} {groomName} &amp; {brideName}. All rights reserved.
+        <p style={{ fontFamily: SANS, fontSize: "0.56rem", color: C.textMuted, opacity: 0.35, letterSpacing: "0.08em" }}>
+          &#169; {new Date().getFullYear()} {groomName} &amp; {brideName}. All rights reserved.
         </p>
       </footer>
     </div>
   );
 }
 
-// ─── Reusable sub-components ──────────────────────────────────────────────────
-
-/** Lazily injects Google Fonts for Cormorant Garamond + Raleway */
+// ─── Lazily inject Google Fonts ───────────────────────────────────────────────
 function AureliaFonts() {
   useEffect(() => {
     const id = "aurelia-gfonts";
@@ -1447,43 +2069,45 @@ function AureliaFonts() {
     link.id   = id;
     link.rel  = "stylesheet";
     link.href =
-      "https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;1,300;1,400&family=Raleway:wght@300;400;500;600&display=swap";
+      "https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;1,300;1,400&family=Montserrat:wght@300;400;500;600&display=swap";
     document.head.appendChild(link);
   }, []);
   return null;
 }
 
-// ─── RSVP form style helpers ──────────────────────────────────────────────────
-const RSVP_LABEL: React.CSSProperties = {
-  display:       "block",
-  fontFamily:    "Raleway, Inter, sans-serif",
-  fontSize:      "0.6rem",
-  fontWeight:    500,
-  letterSpacing: "0.16em",
-  textTransform: "uppercase",
-  color:         "#78716C",
-  marginBottom:  "6px",
-};
-
-function RSVP_INPUT(C: typeof C_DEFAULT): React.CSSProperties {
+// ─── RSVP style helpers ───────────────────────────────────────────────────────
+function rsvpLabel(sans: string): React.CSSProperties {
   return {
-    width:          "100%",
-    background:     "rgba(41,37,36,0.7)",
-    border:         `1px solid ${C.champagne}28`,
-    borderRadius:   0,
-    padding:        "10px 12px",
-    fontFamily:     "Raleway, Inter, sans-serif",
-    fontSize:       "0.82rem",
-    color:          C.warmWhite,
-    outline:        "none",
-    boxSizing:      "border-box",
-    appearance:     "none",
+    display: "block",
+    fontFamily: sans,
+    fontSize: "0.55rem",
+    fontWeight: 500,
+    letterSpacing: "0.18em",
+    textTransform: "uppercase",
+    color: "#CBBEA8",
+    marginBottom: "8px",
+  };
+}
+
+function rsvpInput(C: Record<keyof typeof C_DEFAULT, string>, sans: string): React.CSSProperties {
+  return {
+    width: "100%",
+    background: "rgba(4,10,8,0.72)",
+    border: "1px solid rgba(215,183,119,0.20)",
+    borderRadius: "4px",
+    padding: "11px 14px",
+    fontFamily: sans,
+    fontSize: "0.84rem",
+    color: C.textLight,
+    outline: "none",
+    boxSizing: "border-box",
+    appearance: "none",
   };
 }
 
 const RSVP_ERR: React.CSSProperties = {
-  marginTop:  "4px",
-  fontFamily: "Raleway, Inter, sans-serif",
-  fontSize:   "0.7rem",
-  color:      "#EF4444",
+  marginTop: "4px",
+  fontFamily: "'Montserrat', sans-serif",
+  fontSize: "0.7rem",
+  color: "#EF4444",
 };
