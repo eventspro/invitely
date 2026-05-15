@@ -25,6 +25,10 @@ import TemplateAdminPanel from "@/components/template-admin-panel";
 import TemplateIdentifierGuard from "@/components/TemplateIdentifierGuard";
 import ComingSoon from "@/pages/coming-soon";
 import BuilderV2Page from "@/pages/builder-v2/BuilderV2Page";
+import DemoLandingPage from "@/pages/demo/DemoLandingPage";
+import DemoSetupPage from "@/pages/demo/DemoSetupPage";
+import DemoEditorPage from "@/pages/demo/DemoEditorPage";
+import DemoFinalPage from "@/pages/demo/DemoFinalPage";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
 import { BootstrapProvider } from "@/contexts/BootstrapContext";
 
@@ -90,6 +94,13 @@ function Router() {
       {/* Dynamic template routes */}
       <Route path="/template/:templateId" component={TemplateRenderer} />
       
+      {/* Demo editor routes – must be before the catch-all /:templateIdentifier */}
+      <Route path="/demo/david-rose-romantic/edit/:editId/done" component={DemoFinalPage} />
+      <Route path="/demo/david-rose-romantic/edit/:editId" component={DemoEditorPage} />
+      <Route path="/demo/david-rose-romantic/edit" component={DemoEditorPage} />
+      <Route path="/demo/david-rose-romantic/setup" component={DemoSetupPage} />
+      <Route path="/demo/david-rose-romantic" component={DemoLandingPage} />
+
       {/* Template identifier route (clean URLs without prefix) */}
       <Route path="/:templateIdentifier" component={TemplateIdentifierGuard} />
       

@@ -512,14 +512,16 @@ export type InsertTranslationValue = z.infer<typeof insertTranslationValueSchema
 export type UpdateTranslationValue = z.infer<typeof updateTranslationValueSchema>;
 export type TelegramConnectionToken = typeof telegramConnectionTokens.$inferSelect;
 
-// ─── Telegram Bot Commands (configurable via platform admin) ──────────────────
+// ─── Telegram Bot Admin tables ────────────────────────────────────────────────
+// Configurable bot commands shown in the admin panel
+
 export const telegramBotCommands = pgTable("telegram_bot_commands", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
-  command: text("command").notNull().unique(), // e.g. "/start", "/pricing"
-  title: text("title").notNull(),              // Internal label for admin UI
+  command: text("command").notNull().unique(), // e.g. "/help"
+  description: text("title").notNull(),
   responseText: text("response_text").notNull(),
-  enabled: boolean("enabled").default(true),
-  orderIndex: integer("order_index").notNull().default(0),
+  isEnabled: boolean("enabled").default(true),
+  orderIndex: integer("order_index").default(0),
   createdAt: timestamp("created_at").default(sql`now()`),
   updatedAt: timestamp("updated_at").default(sql`now()`),
 });
@@ -528,99 +530,54 @@ export const telegramBotButtons = pgTable("telegram_bot_buttons", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
   commandId: varchar("command_id").notNull().references(() => telegramBotCommands.id, { onDelete: "cascade" }),
   label: text("label").notNull(),
-  // type: "url" | "command"
-  type: text("type").notNull().default("url"),
-  // For url type: the URL; for command type: the command string (e.g. "/pricing")
+  type: text("type").notNull(), // "url" | "command"
   value: text("value").notNull(),
-  orderIndex: integer("order_index").notNull().default(0),
+  orderIndex: integer("order_index").default(0),
   createdAt: timestamp("created_at").default(sql`now()`),
 });
 
-export const insertTelegramBotCommandSchema = createInsertSchema(telegramBotCommands).omit({
-  id: true,
-  createdAt: true,
-  updatedAt: true,
-}).extend({
-  command: z.string()
-    .min(2, "Command must be at least 2 characters")
-    .max(32, "Command must be at most 32 characters")
-    .regex(/^\/[a-zA-Z0-9_]+$/, "Command must start with / and contain only letters, digits, or underscores"),
-  title: z.string().min(1, "Title is required").max(100),
-  responseText: z.string().min(1, "Response text is required").max(4096, "Response text too long (Telegram limit is 4096 chars)"),
-  orderIndex: z.number().int().min(0).default(0),
+export const telegramBotUsers = pgTable("telegram_bot_users", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  telegramUserId: text("telegram_user_id").notNull().unique(),
+  telegramChatId: text("telegram_chat_id"),
+  username: text("username"),
+  firstName: text("first_name"),
+  lastName: text("last_name"),
+  languageCode: text("language_code"),
+  isConnectedCustomer: boolean("is_connected_customer").default(false),
+  customerId: varchar("customer_id").references(() => managementUsers.id, { onDelete: "set null" }),
+  templateId: varchar("template_id").references(() => templates.id, { onDelete: "set null" }),
+  firstSeenAt: timestamp("first_seen_at").default(sql`now()`),
+  lastSeenAt: timestamp("last_seen_at").default(sql`now()`),
 });
+
+export const insertTelegramBotCommandSchema = createInsertSchema(telegramBotCommands, {
+  command: z.string().min(2).max(64).regex(/^\/[a-zA-Z0-9_]+$/, "Command must start with / and contain only letters, digits, or underscores"),
+  description: z.string().min(1).max(256),
+  responseText: z.string().min(1).max(4096),
+  orderIndex: z.number().int().min(0).optional(),
+}).omit({ id: true, createdAt: true, updatedAt: true });
 
 export const updateTelegramBotCommandSchema = insertTelegramBotCommandSchema.partial();
-
-export const insertTelegramBotButtonSchema = createInsertSchema(telegramBotButtons).omit({
-  id: true,
-  createdAt: true,
-}).extend({
-  commandId: z.string().min(1, "Command ID is required"),
-  label: z.string().min(1, "Label is required").max(64, "Label too long"),
-  type: z.enum(["url", "command"]),
-  value: z.string().min(1, "Value is required").max(200),
-  orderIndex: z.number().int().min(0).default(0),
-}).superRefine((data, ctx) => {
-  if (data.type === "url") {
-    try {
-      const url = new URL(data.value);
-      if (url.protocol !== "http:" && url.protocol !== "https:") {
-        ctx.addIssue({ code: z.ZodIssueCode.custom, message: "URL must use http or https", path: ["value"] });
-      }
-    } catch {
-      ctx.addIssue({ code: z.ZodIssueCode.custom, message: "Invalid URL", path: ["value"] });
-    }
-  } else if (data.type === "command") {
-    if (!/^\/[a-zA-Z0-9_]+$/.test(data.value)) {
-      ctx.addIssue({ code: z.ZodIssueCode.custom, message: "Command value must start with / and contain only letters, digits, or underscores", path: ["value"] });
-    }
-  }
-});
 
 export type TelegramBotCommand = typeof telegramBotCommands.$inferSelect;
 export type InsertTelegramBotCommand = z.infer<typeof insertTelegramBotCommandSchema>;
 export type UpdateTelegramBotCommand = z.infer<typeof updateTelegramBotCommandSchema>;
 export type TelegramBotButton = typeof telegramBotButtons.$inferSelect;
-export type InsertTelegramBotButton = z.infer<typeof insertTelegramBotButtonSchema>;
-
-// Telegram bot users — tracks every unique Telegram user who has interacted with the bot
-export const telegramBotUsers = pgTable("telegram_bot_users", {
-  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
-  // Telegram's numeric user ID — used as the unique key for upsert
-  telegramUserId: text("telegram_user_id").notNull().unique(),
-  // Chat ID for private chats (usually same as userId)
-  telegramChatId: text("telegram_chat_id").notNull(),
-  // Optional Telegram fields (may be absent or change over time)
-  username: text("username"),
-  firstName: text("first_name"),
-  lastName: text("last_name"),
-  languageCode: text("language_code"),
-  // Whether this bot user has successfully connected via CONNECT <TOKEN>
-  isConnectedCustomer: boolean("is_connected_customer").default(false),
-  // FK to managementUsers if connected; nullable for anonymous bot users
-  customerId: varchar("customer_id").references(() => managementUsers.id, { onDelete: "set null" }),
-  // FK to templates if connected
-  templateId: varchar("template_id").references(() => templates.id, { onDelete: "set null" }),
-  // Timestamps
-  firstSeenAt: timestamp("first_seen_at").default(sql`now()`),
-  lastSeenAt: timestamp("last_seen_at").default(sql`now()`),
-});
-
 export type TelegramBotUser = typeof telegramBotUsers.$inferSelect;
 
-// ─── Sale Wheel (Spin & Win promo) ───────────────────────────────────────────
-// Lightweight lead capture table — NOT a user account system.
-// One spin per phone number, one spin per email (if provided), one spin per IP (soft check).
+// ─── Sale Wheel ────────────────────────────────────────────────────────────────
+// Records each spin / lead captured by the Spin & Win promotional wheel
+
 export const saleWheelSpins = pgTable("sale_wheel_spins", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
   name: text("name").notNull(),
-  phone: text("phone").notNull().unique(), // normalized E.164-ish, enforced unique
-  email: text("email"),                    // normalized lowercase, nullable
-  weddingDate: text("wedding_date"),       // free-form date string, optional
-  prizeKey: text("prize_key").notNull(),   // e.g. "discount_10"
-  prizeLabel: text("prize_label").notNull(), // e.g. "10% զեղչ"
-  discountCode: text("discount_code"),
+  phone: text("phone").notNull(),
+  email: text("email"),
+  weddingDate: text("wedding_date"),
+  prizeKey: text("prize_key").notNull(),
+  prizeLabel: text("prize_label").notNull(),
+  couponCode: text("discount_code"),
   claimed: boolean("claimed").default(false),
   ipAddress: text("ip_address"),
   userAgent: text("user_agent"),
@@ -628,21 +585,56 @@ export const saleWheelSpins = pgTable("sale_wheel_spins", {
   updatedAt: timestamp("updated_at").default(sql`now()`),
 });
 
-export const insertSaleWheelSpinSchema = createInsertSchema(saleWheelSpins).omit({
-  id: true,
-  prizeKey: true,
-  prizeLabel: true,
-  discountCode: true,
-  claimed: true,
-  createdAt: true,
-  updatedAt: true,
-}).extend({
-  name: z.string().min(2, "Անուն պարտադիր է").max(100),
-  phone: z.string().min(8, "Հեռախոսահամար պարտադիր է").max(30),
-  email: z.string().email("Անվավեր էլ. հասցե").max(200).optional().or(z.literal("")),
-  weddingDate: z.string().max(50).optional().or(z.literal("")),
-});
+export const insertSaleWheelSpinSchema = createInsertSchema(saleWheelSpins, {
+  name: z.string().min(1).max(128),
+  phone: z.string().min(5).max(32),
+  email: z.string().email().optional(),
+  prizeKey: z.string().min(1).max(64),
+  prizeLabel: z.string().min(1).max(128),
+}).omit({ id: true, createdAt: true });
 
 export type SaleWheelSpin = typeof saleWheelSpins.$inferSelect;
 export type InsertSaleWheelSpin = z.infer<typeof insertSaleWheelSpinSchema>;
+
+// ─── Customer Demo Edits ───────────────────────────────────────────────────────
+// Created when a visitor clicks "Try Now" on the demo landing page.
+// Completely isolated — does not reference or modify any live template.
+
+export const customerEdits = pgTable("customer_edits", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  sourceTemplateSlug: text("source_template_slug").notNull().default("david-rose-romantic"),
+  groomName: text("groom_name"),
+  brideName: text("bride_name"),
+  weddingDate: text("wedding_date"),
+  paletteId: text("palette_id"),
+  customerEmail: text("customer_email"),
+  customerPhone: text("customer_phone"),
+  customerInstagram: text("customer_instagram"),
+  heroImageUrl: text("hero_image_url"),
+  galleryImageUrls: jsonb("gallery_image_urls").$type<string[]>().default(sql`'[]'::jsonb`),
+  config: jsonb("config"),
+  status: text("status").notNull().default("demo"), // demo | contacted | converted | archived
+  notes: text("notes"),
+  createdAt: timestamp("created_at").default(sql`now()`),
+  updatedAt: timestamp("updated_at").default(sql`now()`),
+});
+
+export const insertCustomerEditSchema = createInsertSchema(customerEdits, {
+  sourceTemplateSlug: z.string().min(1).max(64).optional(),
+  groomName: z.string().max(80).optional(),
+  brideName: z.string().max(80).optional(),
+  weddingDate: z.string().max(32).optional(),
+  paletteId: z.string().max(64).optional(),
+  customerEmail: z.string().email().optional().nullable(),
+  customerPhone: z.string().max(32).optional().nullable(),
+  customerInstagram: z.string().max(64).optional().nullable(),
+  status: z.enum(["demo", "contacted", "converted", "archived"]).optional(),
+}).omit({ id: true, createdAt: true, updatedAt: true });
+
+export const updateCustomerEditSchema = insertCustomerEditSchema.partial();
+
+export type CustomerEdit = typeof customerEdits.$inferSelect;
+export type InsertCustomerEdit = z.infer<typeof insertCustomerEditSchema>;
+export type UpdateCustomerEdit = z.infer<typeof updateCustomerEditSchema>;
+
 

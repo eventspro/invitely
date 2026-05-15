@@ -24,6 +24,7 @@ import platformAdminRoutes from './routes/platform-admin.js';
 import telegramRoutes from './routes/telegram.js';
 import telegramBotAdminRoutes from './routes/telegram-bot-admin.js';
 import { saleWheelPublicRouter, saleWheelAdminRouter } from './routes/sale-wheel.js';
+import { customerDemoPublicRouter, customerDemoAdminRouter } from './routes/customer-demo.js';
 import { registerTemplateRoutes } from './routes/templates.js';
 import { registerTranslationRoutes } from './routes/translations.js';
 import { registerConfigurablePricingRoutes } from './routes/configurable-pricing.js';
@@ -119,8 +120,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Register sale-wheel admin routes BEFORE platform-admin (more specific path first)
   app.use('/api/platform-admin/sale-wheel', saleWheelAdminRouter);
 
+  // Register customer demo admin routes BEFORE platform-admin (more specific path)
+  app.use('/api/platform-admin/customer-edits', customerDemoAdminRouter);
+
   // Register platform admin routes (for platform owner)
   app.use('/api/platform-admin', platformAdminRoutes);
+
+  // Register public customer demo routes
+  app.use('/api/demo/customer-edits', customerDemoPublicRouter);
   
   // Register Telegram routes (connection codes, webhook, test, disconnect)
   app.use('/api/telegram', telegramRoutes);

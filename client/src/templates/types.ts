@@ -125,6 +125,7 @@ export interface WeddingConfig {
     comingSoonMessage: string;
     images?: string[]; // Array of love story image URLs
     galleryImages?: string[]; // Array of gallery image URLs
+    imagePositions?: number[]; // Vertical crop position per image (0=top, 50=center, 100=bottom)
   };
 
   // Photo Sharing Configuration (Guest Photo Upload)

@@ -19,12 +19,8 @@ import {
   templates,
   managementUsers,
   orders,
-  telegramBotCommands,
-  telegramBotButtons,
-  platformSettings,
-  telegramBotUsers,
 } from "../../shared/schema.js";
-import { eq, and, lt, asc } from "drizzle-orm";
+import { eq, and, lt } from "drizzle-orm";
 import crypto from "crypto";
 import {
   authenticateUser,
@@ -315,32 +311,6 @@ router.post("/webhook", async (req: Request, res: Response) => {
       `[TG webhook] update_id=${update?.update_id} text="${update?.message?.text}" chat_id=${update?.message?.chat?.id}`,
     );
 
-    // ─── Track every interacting user (non-fatal, fire before any flow) ────────
-    await upsertTelegramBotUser(update);
-
-    // ─── Handle callback_query (inline button taps) ───────────────────────────
-    if (update?.callback_query) {
-      const cq = update.callback_query;
-      const cqChatId = String(cq?.message?.chat?.id ?? cq?.from?.id ?? "");
-      const callbackData: string = (cq?.data ?? "").trim();
-
-      // Answer the callback query (required by Telegram to remove the loading spinner)
-      const botToken = process.env.TELEGRAM_BOT_TOKEN;
-      if (botToken && cq?.id) {
-        fetch(`https://api.telegram.org/bot${botToken}/answerCallbackQuery`, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ callback_query_id: cq.id }),
-        }).catch(() => {});
-      }
-
-      if (cqChatId && callbackData.startsWith("/")) {
-        await handleConfiguredCommand(cqChatId, callbackData);
-      }
-
-      return res.status(200).end();
-    }
-
     const message = update?.message;
     if (!message?.text || !message?.chat?.id) {
       console.log("[TG webhook] No message text or chat.id — ignoring");
@@ -356,12 +326,7 @@ router.post("/webhook", async (req: Request, res: Response) => {
     console.log(`[TG webhook] CONNECT match: ${match ? match[1] : "none"} (text="${text}")`);
 
     if (!match) {
-      // ─── Configurable command dispatch ───────────────────────────────────────
-      // Handles /start, /pricing, etc. — loaded from DB at runtime.
-      // Falls back to a configurable "unknown command" message.
-      // CONNECT flow above has already short-circuited; this never touches it.
-      await handleConfiguredCommand(chatId, text);
-      return res.status(200).end();
+      return res.status(200).end(); // Not a CONNECT command — ignore silently
     }
 
     const code = match[1].toUpperCase();
@@ -492,8 +457,6 @@ router.post("/webhook", async (req: Request, res: Response) => {
             `✅ Telegram connected to <b>${tmplName?.name ?? "your wedding site"}</b>!\n\nYou will receive RSVP notifications here.`,
             "HTML",
           );
-          // Link this Telegram user as a connected customer (owner path)
-          await linkTelegramBotUser(String(message.from?.id ?? chatId), tokenRow.userId, tokenRow.templateId);
           console.log(`[TG webhook] Owner panel auto-provisioned and Telegram connected`);
           return res.status(200).end();
         }
@@ -539,9 +502,6 @@ router.post("/webhook", async (req: Request, res: Response) => {
       `✅ Connected! You will now receive RSVP notifications for <b>${templateName}</b>.`,
     );
 
-    // Link this Telegram user as a connected customer
-    await linkTelegramBotUser(String(message.from?.id ?? chatId), tokenRow.userId, tokenRow.templateId);
-
     console.log(
       `✅ [TG webhook] Connected templateId=${tokenRow.templateId} chatId=${chatId} messageSent=${sent}`,
     );
@@ -552,139 +512,5 @@ router.post("/webhook", async (req: Request, res: Response) => {
     return res.status(200).end(); // always 200 to prevent Telegram retries
   }
 });
-
-// ─── Telegram bot user tracking ───────────────────────────────────────────────
-// Upserts a row in telegram_bot_users for every webhook update we receive.
-// Uses Telegram's `from.id` as the unique key — safe even if username changes.
-// Non-fatal: any DB error is caught and logged without breaking the webhook.
-async function upsertTelegramBotUser(update: any): Promise<void> {
-  try {
-    const from = update?.message?.from ?? update?.callback_query?.from;
-    if (!from?.id) return;
-
-    const telegramUserId = String(from.id);
-    const chat = update?.message?.chat ?? update?.callback_query?.message?.chat;
-    const telegramChatId = String(chat?.id ?? from.id);
-
-    await db
-      .insert(telegramBotUsers)
-      .values({
-        telegramUserId,
-        telegramChatId,
-        username: from.username ?? null,
-        firstName: from.first_name ?? null,
-        lastName: from.last_name ?? null,
-        languageCode: from.language_code ?? null,
-        lastSeenAt: new Date(),
-      })
-      .onConflictDoUpdate({
-        target: telegramBotUsers.telegramUserId,
-        set: {
-          telegramChatId,
-          username: from.username ?? null,
-          firstName: from.first_name ?? null,
-          lastName: from.last_name ?? null,
-          languageCode: from.language_code ?? null,
-          lastSeenAt: new Date(),
-        },
-      });
-  } catch (err) {
-    console.error("[TG webhook] upsertTelegramBotUser error:", err);
-    // Non-fatal — never break the webhook response
-  }
-}
-
-// ─── Link a Telegram user to a connected customer ─────────────────────────────
-// Called after a successful CONNECT <TOKEN> flow.
-async function linkTelegramBotUser(
-  telegramUserId: string,
-  customerId: string,
-  templateId: string,
-): Promise<void> {
-  try {
-    await db
-      .update(telegramBotUsers)
-      .set({ isConnectedCustomer: true, customerId, templateId, lastSeenAt: new Date() })
-      .where(eq(telegramBotUsers.telegramUserId, telegramUserId));
-  } catch (err) {
-    console.error("[TG webhook] linkTelegramBotUser error:", err);
-  }
-}
-
-// ─── Configurable command handler ─────────────────────────────────────────────
-// Called from the webhook for any message that is NOT a CONNECT command.
-// Looks up the command in DB, sends the configured response with inline buttons.
-// If no command found, sends the configured fallback message.
-// Never throws — errors are caught and logged safely.
-async function handleConfiguredCommand(chatId: string, text: string): Promise<void> {
-  try {
-    // Extract command name: "/pricing something" → "/pricing"
-    const commandName = text.split(/\s+/)[0]?.toLowerCase() ?? "";
-
-    let cmdRow: { id: string; responseText: string } | undefined;
-
-    if (commandName.startsWith("/")) {
-      const [found] = await db
-        .select({ id: telegramBotCommands.id, responseText: telegramBotCommands.responseText })
-        .from(telegramBotCommands)
-        .where(
-          and(
-            eq(telegramBotCommands.command, commandName),
-            eq(telegramBotCommands.enabled, true),
-          ),
-        )
-        .limit(1);
-      cmdRow = found;
-    }
-
-    if (cmdRow) {
-      // Fetch buttons for this command
-      const buttons = await db
-        .select()
-        .from(telegramBotButtons)
-        .where(eq(telegramBotButtons.commandId, cmdRow.id))
-        .orderBy(asc(telegramBotButtons.orderIndex));
-
-      // Build Telegram inline keyboard (each button on its own row)
-      let replyMarkup: object | undefined;
-      if (buttons.length > 0) {
-        replyMarkup = {
-          inline_keyboard: buttons.map((b) => {
-            if (b.type === "url") {
-              return [{ text: b.label, url: b.value }];
-            }
-            // command type → send as callback_data so it triggers another response
-            return [{ text: b.label, callback_data: b.value }];
-          }),
-        };
-      }
-
-      await sendTelegramMessage(chatId, cmdRow.responseText, "HTML", replyMarkup);
-    } else {
-      // Send fallback message
-      const fallback = await getFallbackMessage();
-      await sendTelegramMessage(chatId, fallback);
-    }
-  } catch (err) {
-    console.error("[TG webhook] handleConfiguredCommand error:", err);
-    // Don't re-throw — webhook must always 200
-  }
-}
-
-async function getFallbackMessage(): Promise<string> {
-  try {
-    const [row] = await db
-      .select()
-      .from(platformSettings)
-      .where(eq(platformSettings.key, "telegram_bot_fallback"))
-      .limit(1);
-    const v = row?.value as any;
-    return typeof v?.message === "string"
-      ? v.message
-      : "Ողջույն! Ես չճանաչեցի ձեր հարցումը։\n\nՕգտագործեք /help հրամանը հասանելի հրամանների ցուցակը տեսնելու համար։";
-  } catch {
-    return "Ողջույն! Ես չճանաչեցի ձեր հարցումը։\n\nՕգտագործեք /help հրամանը հասանելի հրամանների ցուցակը տեսնելու համար։";
-  }
-}
 
 export default router;
