@@ -1,18 +1,9 @@
 import React, { useState } from "react";
 import { Pencil, Trash2, Armchair, ChevronRight, MoreHorizontal, X } from "lucide-react";
-import { plannerText } from "../plannerTextConfig";
+import { usePlannerText } from "../PlannerLocaleContext";
 import VisualTable from "./VisualTable";
 import ProgressBar from "./ProgressBar";
 import type { WeddingTable, Seat, Guest } from "../types";
-
-const SHAPE_LABELS: Record<string, string> = {
-  circle: plannerText.tableShapes.circle,
-  square: plannerText.tableShapes.square,
-  rectangle: plannerText.tableShapes.rectangle,
-  long: plannerText.tableShapes.long,
-  oval: plannerText.tableShapes.oval,
-  head: plannerText.tableShapes.head,
-};
 
 interface TableCardProps {
   table: WeddingTable;
@@ -24,7 +15,17 @@ interface TableCardProps {
 }
 
 export default function TableCard({ table, seats, guests, onEdit, onDelete, onManageSeats }: TableCardProps) {
+  const pt = usePlannerText();
   const [menuOpen, setMenuOpen] = useState(false);
+
+  const SHAPE_LABELS: Record<string, string> = {
+    circle:    pt.tableShapes.circle,
+    square:    pt.tableShapes.square,
+    rectangle: pt.tableShapes.rectangle,
+    long:      pt.tableShapes.long,
+    oval:      pt.tableShapes.oval,
+    head:      pt.tableShapes.head,
+  };
 
   const tableSeats = seats.filter(s => s.tableId === table.id);
   const assigned = tableSeats.filter(s => !!s.guestId).length;
@@ -75,7 +76,6 @@ export default function TableCard({ table, seats, guests, onEdit, onDelete, onMa
 
         {/* Info area */}
         <div style={{ flex: 1, minWidth: 0, display: "flex", flexDirection: "column", gap: 0 }}>
-          {/* Header: name + locked badge + menu toggle */}
           <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: 6 }}>
             <div style={{ flex: 1, minWidth: 0 }}>
               <div style={{ display: "flex", alignItems: "center", gap: 6, flexWrap: "wrap" }}>
@@ -92,70 +92,48 @@ export default function TableCard({ table, seats, guests, onEdit, onDelete, onMa
                     padding: "2px 7px",
                     border: "1px solid #F0DCA8",
                   }}>
-                    {plannerText.tables.locked}
+                    {pt.tables.locked}
                   </span>
                 )}
               </div>
               <div style={{ fontSize: 12, color: "#6B7280", marginTop: 3 }}>
-                {SHAPE_LABELS[table.shape] ?? table.shape} · {table.capacity} {plannerText.common.seats}
+                {SHAPE_LABELS[table.shape] ?? table.shape} · {table.capacity} {pt.common.seats}
               </div>
             </div>
 
-            {/* "..." menu toggle */}
             {menuOpen ? (
               <div style={{ display: "flex", gap: 4, flexShrink: 0, alignItems: "center" }}>
                 <button
                   onClick={() => { onEdit(); setMenuOpen(false); }}
                   style={{
-                    width: 32,
-                    height: 32,
-                    display: "flex",
-                    alignItems: "center",
-                    justifyContent: "center",
-                    border: "1px solid #E5E7EB",
-                    background: "#F9FAFB",
-                    borderRadius: 10,
-                    cursor: "pointer",
-                    color: "#374151",
+                    width: 32, height: 32, display: "flex", alignItems: "center", justifyContent: "center",
+                    border: "1px solid #E5E7EB", background: "#F9FAFB", borderRadius: 10, cursor: "pointer", color: "#374151",
                   }}
-                  title={plannerText.common.edit}
+                  title={pt.common.edit}
                 >
                   <Pencil size={13} strokeWidth={1.75} />
                 </button>
                 <button
                   onClick={() => { if (!table.locked) { onDelete(); setMenuOpen(false); } }}
                   style={{
-                    width: 32,
-                    height: 32,
-                    display: "flex",
-                    alignItems: "center",
-                    justifyContent: "center",
+                    width: 32, height: 32, display: "flex", alignItems: "center", justifyContent: "center",
                     border: `1px solid ${table.locked ? "#F3F4F6" : "#FDE8E8"}`,
                     background: table.locked ? "#F9FAFB" : "#FEF2F2",
-                    borderRadius: 10,
-                    cursor: table.locked ? "default" : "pointer",
+                    borderRadius: 10, cursor: table.locked ? "default" : "pointer",
                     color: table.locked ? "#D1D5DB" : "#E85D5D",
                   }}
                   disabled={table.locked}
-                  title={plannerText.common.delete}
+                  title={pt.common.delete}
                 >
                   <Trash2 size={13} strokeWidth={1.75} />
                 </button>
                 <button
                   onClick={() => setMenuOpen(false)}
                   style={{
-                    width: 32,
-                    height: 32,
-                    display: "flex",
-                    alignItems: "center",
-                    justifyContent: "center",
-                    border: "1px solid #E5E7EB",
-                    background: "#F9FAFB",
-                    borderRadius: 10,
-                    cursor: "pointer",
-                    color: "#9CA3AF",
+                    width: 32, height: 32, display: "flex", alignItems: "center", justifyContent: "center",
+                    border: "1px solid #E5E7EB", background: "#F9FAFB", borderRadius: 10, cursor: "pointer", color: "#9CA3AF",
                   }}
-                  title={plannerText.common.close}
+                  title={pt.common.close}
                 >
                   <X size={13} strokeWidth={2} />
                 </button>
@@ -164,17 +142,8 @@ export default function TableCard({ table, seats, guests, onEdit, onDelete, onMa
               <button
                 onClick={() => setMenuOpen(true)}
                 style={{
-                  width: 32,
-                  height: 32,
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  border: "none",
-                  background: "transparent",
-                  borderRadius: 10,
-                  cursor: "pointer",
-                  color: "#9CA3AF",
-                  flexShrink: 0,
+                  width: 32, height: 32, display: "flex", alignItems: "center", justifyContent: "center",
+                  border: "none", background: "transparent", borderRadius: 10, cursor: "pointer", color: "#9CA3AF", flexShrink: 0,
                 }}
               >
                 <MoreHorizontal size={17} strokeWidth={1.75} />
@@ -186,7 +155,7 @@ export default function TableCard({ table, seats, guests, onEdit, onDelete, onMa
           <div style={{ marginTop: 10 }}>
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 5 }}>
               <span style={{ fontSize: 11.5, color: "#6B7280" }}>
-                {assigned}/{table.capacity} {plannerText.tables.seated}
+                {assigned}/{table.capacity} {pt.tables.seated}
               </span>
               <span style={{ fontSize: 11.5, fontWeight: 700, color: barColor }}>{pct}%</span>
             </div>
@@ -216,7 +185,7 @@ export default function TableCard({ table, seats, guests, onEdit, onDelete, onMa
       >
         <div style={{ display: "flex", alignItems: "center", gap: 7 }}>
           <Armchair size={14} strokeWidth={1.75} color="#064E3B" />
-          {plannerText.tables.manageSeats}
+          {pt.tables.manageSeats}
         </div>
         <ChevronRight size={14} strokeWidth={2.5} color="#064E3B" />
       </button>

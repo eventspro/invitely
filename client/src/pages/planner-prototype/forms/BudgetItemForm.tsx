@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { plannerText } from "../plannerTextConfig";
+import { usePlannerText } from "../PlannerLocaleContext";
 import { uid } from "../plannerUtils";
 import type { BudgetItem, BudgetCategory, BudgetStatus } from "../types";
 
@@ -9,33 +9,6 @@ interface BudgetItemFormProps {
   onSave: (item: BudgetItem) => void;
   onCancel: () => void;
 }
-
-const CATEGORY_OPTIONS: { value: BudgetCategory; label: string }[] = [
-  { value: "venue", label: plannerText.budget.categories.venue },
-  { value: "catering", label: plannerText.budget.categories.catering },
-  { value: "decor", label: plannerText.budget.categories.decor },
-  { value: "photo", label: plannerText.budget.categories.photo },
-  { value: "music", label: plannerText.budget.categories.music },
-  { value: "restaurant", label: plannerText.budget.categories.restaurant },
-  { value: "photographer", label: plannerText.budget.categories.photographer },
-  { value: "videographer", label: plannerText.budget.categories.videographer },
-  { value: "decorations", label: plannerText.budget.categories.decorations },
-  { value: "flowers", label: plannerText.budget.categories.flowers },
-  { value: "invitations", label: plannerText.budget.categories.invitations },
-  { value: "website", label: plannerText.budget.categories.website },
-  { value: "host", label: plannerText.budget.categories.host },
-  { value: "lighting", label: plannerText.budget.categories.lighting },
-  { value: "other", label: plannerText.budget.categories.other },
-];
-
-const STATUS_OPTIONS: { value: BudgetStatus; label: string }[] = [
-  { value: "planned", label: plannerText.budgetStatus.planned },
-  { value: "deposit_paid", label: plannerText.budgetStatus.deposit_paid },
-  { value: "partially_paid", label: plannerText.budgetStatus.partially_paid },
-  { value: "paid", label: plannerText.budgetStatus.paid },
-  { value: "overdue", label: plannerText.budgetStatus.overdue },
-  { value: "cancelled", label: plannerText.budgetStatus.cancelled },
-];
 
 const STATUS_COLORS: Record<BudgetStatus, string> = {
   planned: "#6B7280",
@@ -69,6 +42,7 @@ const labelStyle: React.CSSProperties = {
 const fieldStyle: React.CSSProperties = { marginBottom: 14 };
 
 export default function BudgetItemForm({ initial, currency, onSave, onCancel }: BudgetItemFormProps) {
+  const pt = usePlannerText();
   const [category, setCategory] = useState<BudgetCategory>(initial?.category ?? "other");
   const [title, setTitle] = useState(initial?.title ?? "");
   const [vendorName, setVendorName] = useState(initial?.vendorName ?? "");
@@ -80,9 +54,36 @@ export default function BudgetItemForm({ initial, currency, onSave, onCancel }: 
   const [notes, setNotes] = useState(initial?.notes ?? "");
   const [error, setError] = useState("");
 
+  const CATEGORY_OPTIONS: { value: BudgetCategory; label: string }[] = [
+    { value: "venue",        label: pt.budget.categories.venue        },
+    { value: "catering",     label: pt.budget.categories.catering     },
+    { value: "decor",        label: pt.budget.categories.decor        },
+    { value: "photo",        label: pt.budget.categories.photo        },
+    { value: "music",        label: pt.budget.categories.music        },
+    { value: "restaurant",   label: pt.budget.categories.restaurant   },
+    { value: "photographer", label: pt.budget.categories.photographer },
+    { value: "videographer", label: pt.budget.categories.videographer },
+    { value: "decorations",  label: pt.budget.categories.decorations  },
+    { value: "flowers",      label: pt.budget.categories.flowers      },
+    { value: "invitations",  label: pt.budget.categories.invitations  },
+    { value: "website",      label: pt.budget.categories.website      },
+    { value: "host",         label: pt.budget.categories.host         },
+    { value: "lighting",     label: pt.budget.categories.lighting     },
+    { value: "other",        label: pt.budget.categories.other        },
+  ];
+
+  const STATUS_OPTIONS: { value: BudgetStatus; label: string }[] = [
+    { value: "planned",        label: pt.budgetStatus.planned        },
+    { value: "deposit_paid",   label: pt.budgetStatus.deposit_paid   },
+    { value: "partially_paid", label: pt.budgetStatus.partially_paid },
+    { value: "paid",           label: pt.budgetStatus.paid           },
+    { value: "overdue",        label: pt.budgetStatus.overdue        },
+    { value: "cancelled",      label: pt.budgetStatus.cancelled      },
+  ];
+
   function handleSubmit() {
     if (!title.trim()) {
-      setError(plannerText.warnings.titleRequired);
+      setError(pt.warnings.titleRequired);
       return;
     }
     const item: BudgetItem = {
@@ -115,7 +116,7 @@ export default function BudgetItemForm({ initial, currency, onSave, onCancel }: 
   return (
     <div>
       <div style={fieldStyle}>
-        <label style={labelStyle}>{plannerText.budget.category}</label>
+        <label style={labelStyle}>{pt.budget.category}</label>
         <select
           style={{ ...inputStyle, cursor: "pointer" }}
           value={category}
@@ -128,26 +129,26 @@ export default function BudgetItemForm({ initial, currency, onSave, onCancel }: 
       </div>
 
       <div style={fieldStyle}>
-        <label style={labelStyle}>{plannerText.budget.itemTitle} <span style={{ color: "#E85D5D" }}>*</span></label>
+        <label style={labelStyle}>{pt.budget.itemTitle} <span style={{ color: "#E85D5D" }}>*</span></label>
         <input
           style={{ ...inputStyle, borderColor: error ? "#E85D5D" : "#E5E7EB" }}
           value={title}
           onChange={e => { setTitle(e.target.value); setError(""); }}
-          placeholder={plannerText.budget.itemTitlePlaceholder}
+          placeholder={pt.budget.itemTitlePlaceholder}
         />
         {error && <div style={{ fontSize: 11, color: "#E85D5D", marginTop: 4 }}>{error}</div>}
       </div>
 
       <div style={fieldStyle}>
-        <label style={labelStyle}>{plannerText.budget.vendorName}</label>
-        <input style={inputStyle} value={vendorName} onChange={e => setVendorName(e.target.value)} placeholder={plannerText.budget.vendorNamePlaceholder} />
+        <label style={labelStyle}>{pt.budget.vendorName}</label>
+        <input style={inputStyle} value={vendorName} onChange={e => setVendorName(e.target.value)} placeholder={pt.budget.vendorNamePlaceholder} />
       </div>
 
       <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 10 }}>
         {[
-          { label: `${plannerText.budget.planned} (${currency})`, value: plannedCost, set: setPlannedCost },
-          { label: `${plannerText.budget.actual} (${currency})`, value: actualCost, set: setActualCost },
-          { label: `${plannerText.budget.paid} (${currency})`, value: paidAmount, set: setPaidAmount },
+          { label: `${pt.budget.planned} (${currency})`, value: plannedCost, set: setPlannedCost },
+          { label: `${pt.budget.actual} (${currency})`,  value: actualCost,  set: setActualCost  },
+          { label: `${pt.budget.paid} (${currency})`,    value: paidAmount,  set: setPaidAmount  },
         ].map((col, i) => (
           <div key={i} style={fieldStyle}>
             <label style={labelStyle}>{col.label}</label>
@@ -157,12 +158,12 @@ export default function BudgetItemForm({ initial, currency, onSave, onCancel }: 
       </div>
 
       <div style={fieldStyle}>
-        <label style={labelStyle}>{plannerText.budget.dueDate}</label>
+        <label style={labelStyle}>{pt.budget.dueDate}</label>
         <input type="date" style={inputStyle} value={dueDate} onChange={e => setDueDate(e.target.value)} />
       </div>
 
       <div style={fieldStyle}>
-        <label style={labelStyle}>{plannerText.budget.statusLabel}</label>
+        <label style={labelStyle}>{pt.budget.statusLabel}</label>
         <div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
           {STATUS_OPTIONS.map(o => (
             <button key={o.value} style={chipBtn(status === o.value, STATUS_COLORS[o.value])} onClick={() => setStatus(o.value)}>
@@ -173,7 +174,7 @@ export default function BudgetItemForm({ initial, currency, onSave, onCancel }: 
       </div>
 
       <div style={fieldStyle}>
-        <label style={labelStyle}>{plannerText.common.notes}</label>
+        <label style={labelStyle}>{pt.common.notes}</label>
         <textarea
           style={{ ...inputStyle, resize: "vertical", minHeight: 60 }}
           value={notes}
@@ -185,34 +186,22 @@ export default function BudgetItemForm({ initial, currency, onSave, onCancel }: 
         <button
           onClick={onCancel}
           style={{
-            flex: 1,
-            padding: "13px",
-            borderRadius: 12,
-            border: "1.5px solid #E5E7EB",
-            background: "#FAFAFA",
-            color: "#374151",
-            fontSize: 14,
-            fontWeight: 600,
-            cursor: "pointer",
+            flex: 1, padding: "13px", borderRadius: 12,
+            border: "1.5px solid #E5E7EB", background: "#FAFAFA",
+            color: "#374151", fontSize: 14, fontWeight: 600, cursor: "pointer",
           }}
         >
-          {plannerText.common.cancel}
+          {pt.common.cancel}
         </button>
         <button
           onClick={handleSubmit}
           style={{
-            flex: 2,
-            padding: "13px",
-            borderRadius: 12,
-            border: "none",
+            flex: 2, padding: "13px", borderRadius: 12, border: "none",
             background: "linear-gradient(135deg, #00472F 0%, #006B4A 100%)",
-            color: "#FFFFFF",
-            fontSize: 14,
-            fontWeight: 700,
-            cursor: "pointer",
+            color: "#FFFFFF", fontSize: 14, fontWeight: 700, cursor: "pointer",
           }}
         >
-          {plannerText.common.save}
+          {pt.common.save}
         </button>
       </div>
     </div>

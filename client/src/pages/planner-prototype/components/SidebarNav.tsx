@@ -1,15 +1,7 @@
 import React from "react";
 import { Home, Users, LayoutGrid, Wallet, MoreHorizontal, Heart } from "lucide-react";
-import { plannerText } from "../plannerTextConfig";
+import { usePlannerText } from "../PlannerLocaleContext";
 import type { TabId } from "../types";
-
-const TABS: { id: TabId; label: string; icon: React.ElementType }[] = [
-  { id: "dashboard", label: plannerText.nav.dashboard, icon: Home },
-  { id: "guests", label: plannerText.nav.guests, icon: Users },
-  { id: "tables", label: plannerText.nav.tables, icon: LayoutGrid },
-  { id: "budget", label: plannerText.nav.budget, icon: Wallet },
-  { id: "more", label: plannerText.nav.more, icon: MoreHorizontal },
-];
 
 interface SidebarNavProps {
   active: TabId;
@@ -18,6 +10,16 @@ interface SidebarNavProps {
 }
 
 export default function SidebarNav({ active, onChange, coupleName }: SidebarNavProps) {
+  const pt = usePlannerText();
+
+  const TABS: { id: TabId; label: string; icon: React.ElementType }[] = [
+    { id: "dashboard", label: pt.nav.dashboard, icon: Home },
+    { id: "guests",    label: pt.nav.guests,    icon: Users },
+    { id: "tables",    label: pt.nav.tables,    icon: LayoutGrid },
+    { id: "budget",    label: pt.nav.budget,    icon: Wallet },
+    { id: "more",      label: pt.nav.more,      icon: MoreHorizontal },
+  ];
+
   return (
     <aside
       style={{
@@ -52,7 +54,7 @@ export default function SidebarNav({ active, onChange, coupleName }: SidebarNavP
           </div>
           <div>
             <div style={{ fontSize: 13, fontWeight: 800, color: "#111827", letterSpacing: "-0.02em" }}>
-              {plannerText.app.name}
+              {pt.app.name}
             </div>
             <div style={{ fontSize: 11, color: "#9CA3AF" }}>{coupleName}</div>
           </div>
@@ -115,7 +117,7 @@ export default function SidebarNav({ active, onChange, coupleName }: SidebarNavP
       {/* footer */}
       <div style={{ padding: "12px 16px 20px", borderTop: "1px solid #E5E7EB" }}>
         <div style={{ fontSize: 10, color: "#9CA3AF", lineHeight: 1.5 }}>
-          {plannerText.more.prototypeNote}
+          {pt.more.prototypeNote}
         </div>
       </div>
     </aside>

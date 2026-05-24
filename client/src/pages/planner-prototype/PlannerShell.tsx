@@ -3,16 +3,8 @@ import BottomNav from "./components/BottomNav";
 import SidebarNav from "./components/SidebarNav";
 import { Bell, Calendar, ArrowLeft, Menu, X, Home, Users, LayoutGrid, Wallet, MoreHorizontal, Heart } from "lucide-react";
 import { formatDate } from "./plannerUtils";
-import { plannerText } from "./plannerTextConfig";
+import { usePlannerText, LocaleSwitcher } from "./PlannerLocaleContext";
 import type { TabId, PlannerSettings } from "./types";
-
-const DRAWER_TABS: { id: TabId; label: string; icon: React.ElementType }[] = [
-  { id: "dashboard", label: plannerText.nav.dashboard, icon: Home },
-  { id: "guests",    label: plannerText.nav.guests,    icon: Users },
-  { id: "tables",    label: plannerText.nav.tables,    icon: LayoutGrid },
-  { id: "budget",    label: plannerText.nav.budget,    icon: Wallet },
-  { id: "more",      label: plannerText.nav.more,      icon: MoreHorizontal },
-];
 
 interface PlannerShellProps {
   active: TabId;
@@ -77,7 +69,16 @@ export default function PlannerShell({
   isDemoMode = false,
   onDemoContactUs,
 }: PlannerShellProps) {
+  const pt = usePlannerText();
   const [drawerOpen, setDrawerOpen] = useState(false);
+
+  const DRAWER_TABS: { id: TabId; label: string; icon: React.ElementType }[] = [
+    { id: "dashboard", label: pt.nav.dashboard, icon: Home },
+    { id: "guests",    label: pt.nav.guests,    icon: Users },
+    { id: "tables",    label: pt.nav.tables,    icon: LayoutGrid },
+    { id: "budget",    label: pt.nav.budget,    icon: Wallet },
+    { id: "more",      label: pt.nav.more,      icon: MoreHorizontal },
+  ];
 
   const initials = settings.coupleName
     .split(/\s*&\s*|\s+and\s+/i)
@@ -118,21 +119,23 @@ export default function PlannerShell({
             <div style={{ flex: 1, display: "flex", alignItems: "center", gap: 10 }}>
               {isDemoMode && (
                 <>
-                  <span style={{ fontSize: 11, fontWeight: 700, padding: "3px 8px", borderRadius: 6, background: "#FEF3C7", color: "#92400E", letterSpacing: "0.06em" }}>DEMO</span>
+                  <span style={{ fontSize: 11, fontWeight: 700, padding: "3px 8px", borderRadius: 6, background: "#FEF3C7", color: "#92400E", letterSpacing: "0.06em" }}>{pt.more.demoVersion}</span>
                   <button
                     onClick={onDemoContactUs}
                     style={{ fontSize: 12, fontWeight: 600, color: "#064E3B", background: "none", border: "none", cursor: "pointer", padding: 0, textDecoration: "underline", textUnderlineOffset: 2 }}
                   >
-                    Get Full Access &rarr;
+                    {pt.more.getFullAccess}
                   </button>
                 </>
               )}
             </div>
+            {/* Language switcher */}
+            <LocaleSwitcher />
             {/* Wedding date */}
             <div style={{ display: "flex", alignItems: "center", gap: 8, background: "#F9FAFB", borderRadius: 10, padding: "7px 14px", border: "1px solid #E5E7EB" }}>
               <Calendar size={14} color="#6B7280" strokeWidth={1.75} />
               <div>
-                <div style={{ fontSize: 10, color: "#9CA3AF", lineHeight: 1, fontWeight: 500 }}>Wedding Date</div>
+                <div style={{ fontSize: 10, color: "#9CA3AF", lineHeight: 1, fontWeight: 500 }}>{pt.app.weddingDate}</div>
                 <div style={{ fontSize: 12, fontWeight: 600, color: "#111827", lineHeight: 1.4 }}>{formatDate(settings.weddingDate)}</div>
               </div>
             </div>
@@ -186,14 +189,12 @@ export default function PlannerShell({
             <div style={{ fontSize: 17, fontWeight: 700, color: "#111827", letterSpacing: "-0.02em" }}>
               {headerTitle}
               {isDemoMode && (
-                <span style={{ marginLeft: 8, fontSize: 10, fontWeight: 700, padding: "2px 6px", borderRadius: 5, background: "#FEF3C7", color: "#92400E", letterSpacing: "0.06em", verticalAlign: "middle" }}>DEMO</span>
+                <span style={{ marginLeft: 8, fontSize: 10, fontWeight: 700, padding: "2px 6px", borderRadius: 5, background: "#FEF3C7", color: "#92400E", letterSpacing: "0.06em", verticalAlign: "middle" }}>{pt.more.demoVersion}</span>
               )}
             </div>
           </div>
           {headerRight ?? (
-            <button style={{ display: "flex", alignItems: "center", border: "none", background: "transparent", cursor: "pointer", color: "#374151", padding: 4, WebkitTapHighlightColor: "transparent" }}>
-              <Bell size={18} strokeWidth={1.75} />
-            </button>
+            <Bell size={18} strokeWidth={1.75} color="#374151" />
           )}
         </header>
         <main>
@@ -204,15 +205,10 @@ export default function PlannerShell({
         {/* Mobile drawer */}
         {drawerOpen && (
           <>
-            {/* Backdrop */}
             <div
               onClick={() => setDrawerOpen(false)}
-              style={{
-                position: "fixed", inset: 0, zIndex: 200,
-                background: "rgba(0,0,0,0.45)",
-              }}
+              style={{ position: "fixed", inset: 0, zIndex: 200, background: "rgba(0,0,0,0.45)" }}
             />
-            {/* Slide-in panel */}
             <div style={{
               position: "fixed", top: 0, left: 0, bottom: 0, zIndex: 201,
               width: 272,
@@ -226,7 +222,7 @@ export default function PlannerShell({
                   <Heart size={18} color="#FFFFFF" fill="#FFFFFF" />
                 </div>
                 <div style={{ flex: 1 }}>
-                  <div style={{ fontSize: 13, fontWeight: 800, color: "#111827", letterSpacing: "-0.02em" }}>{plannerText.app.name}</div>
+                  <div style={{ fontSize: 13, fontWeight: 800, color: "#111827", letterSpacing: "-0.02em" }}>{pt.app.name}</div>
                   <div style={{ fontSize: 11, color: "#9CA3AF" }}>{settings.coupleName}</div>
                 </div>
                 <button
@@ -262,12 +258,15 @@ export default function PlannerShell({
                   );
                 })}
               </nav>
-              {/* Wedding date footer */}
+              {/* Language switcher + wedding date footer */}
               <div style={{ padding: "12px 16px 28px", borderTop: "1px solid #E5E7EB" }}>
+                <div style={{ marginBottom: 12 }}>
+                  <LocaleSwitcher />
+                </div>
                 <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
                   <Calendar size={13} color="#9CA3AF" />
                   <div>
-                    <div style={{ fontSize: 10, color: "#9CA3AF", fontWeight: 500 }}>Wedding Date</div>
+                    <div style={{ fontSize: 10, color: "#9CA3AF", fontWeight: 500 }}>{pt.app.weddingDate}</div>
                     <div style={{ fontSize: 12, fontWeight: 600, color: "#374151" }}>{formatDate(settings.weddingDate)}</div>
                   </div>
                 </div>

@@ -20,6 +20,7 @@ export interface NavItem {
 export interface Navigation {
   items: NavItem[];
   loginLabel: LS;
+  loginHref: string;
   startLabel: LS;
 }
 

@@ -15,6 +15,7 @@ export const DEFAULT_HOMEPAGE_CONTENT: HomepageContent = {
       { id: "nav-planner",    label: { hy: "Wedding Planner", en: "Wedding Planner",  ru: "Wedding Planner"  }, href: "/demo/david-rose-romantic", visible: true },
     ],
     loginLabel: { hy: "Դեմո",  en: "Demo",        ru: "Демо"  },
+    loginHref: "/planner-prototype",
     startLabel: { hy: "Փորձել", en: "Get started", ru: "Начать" },
   },
 

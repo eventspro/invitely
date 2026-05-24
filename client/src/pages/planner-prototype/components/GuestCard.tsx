@@ -1,6 +1,6 @@
 import React from "react";
 import { Pencil, Trash2, MapPin } from "lucide-react";
-import { plannerText } from "../plannerTextConfig";
+import { usePlannerText } from "../PlannerLocaleContext";
 import { getInitials } from "../plannerUtils";
 import type { Guest } from "../types";
 
@@ -20,31 +20,32 @@ const PILL: Record<string, { bg: string; color: string }> = {
   invited:    { bg: "#F3F4F6", color: "#6B7280" },
 };
 
-const RSVP_LABEL: Record<string, string> = {
-  coming:     plannerText.rsvp.coming,
-  not_coming: plannerText.rsvp.not_coming,
-  waiting:    plannerText.rsvp.waiting,
-  maybe:      plannerText.rsvp.maybe,
-  invited:    plannerText.rsvp.invited,
-};
-
-const SIDE_LABEL: Record<string, string> = {
-  bride: plannerText.guestSide.bride,
-  groom: plannerText.guestSide.groom,
-  both:  plannerText.guestSide.both,
-  other: plannerText.guestSide.other,
-};
-
 export default function GuestCard({ guest, tableName, seatNumber, onEdit, onDelete }: GuestCardProps) {
+  const pt = usePlannerText();
   const pill = PILL[guest.rsvpStatus] ?? { bg: "#F3F4F6", color: "#6B7280" };
 
+  const RSVP_LABEL: Record<string, string> = {
+    coming:     pt.rsvp.coming,
+    not_coming: pt.rsvp.not_coming,
+    waiting:    pt.rsvp.waiting,
+    maybe:      pt.rsvp.maybe,
+    invited:    pt.rsvp.invited,
+  };
+
+  const SIDE_LABEL: Record<string, string> = {
+    bride: pt.guestSide.bride,
+    groom: pt.guestSide.groom,
+    both:  pt.guestSide.both,
+    other: pt.guestSide.other,
+  };
+
   const meta: string[] = [];
-  if (guest.guestCount > 1) meta.push(`${guest.guestCount} ${plannerText.common.guests}`);
+  if (guest.guestCount > 1) meta.push(`${guest.guestCount} ${pt.common.guests}`);
   if (guest.side) meta.push(SIDE_LABEL[guest.side] ?? guest.side);
   if (guest.groupName) meta.push(guest.groupName);
 
   const tableDisplay = tableName
-    ? (seatNumber ? `${tableName} · Seat ${seatNumber}` : tableName)
+    ? (seatNumber ? `${tableName} · ${pt.seats_screen.seatLabel} ${seatNumber}` : tableName)
     : null;
 
   return (
@@ -60,7 +61,7 @@ export default function GuestCard({ guest, tableName, seatNumber, onEdit, onDele
         gap: 12,
       }}
     >
-      {/* Avatar – circular */}
+      {/* Avatar */}
       <div
         style={{
           width: 44,
@@ -82,7 +83,6 @@ export default function GuestCard({ guest, tableName, seatNumber, onEdit, onDele
 
       {/* Content */}
       <div style={{ flex: 1, minWidth: 0 }}>
-        {/* Line 1: Name + status pill */}
         <div style={{ display: "flex", alignItems: "center", gap: 7, flexWrap: "wrap" }}>
           <span
             style={{
@@ -111,7 +111,6 @@ export default function GuestCard({ guest, tableName, seatNumber, onEdit, onDele
           </span>
         </div>
 
-        {/* Line 2: count · side · group */}
         {meta.length > 0 && (
           <div
             style={{
@@ -125,7 +124,6 @@ export default function GuestCard({ guest, tableName, seatNumber, onEdit, onDele
           </div>
         )}
 
-        {/* Line 3: Table / seat */}
         {tableDisplay && (
           <div
             style={{
@@ -149,7 +147,6 @@ export default function GuestCard({ guest, tableName, seatNumber, onEdit, onDele
           </div>
         )}
 
-        {/* Dietary notes */}
         {guest.dietaryNotes && (
           <div
             style={{

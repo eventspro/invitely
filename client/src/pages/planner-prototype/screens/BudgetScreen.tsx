@@ -1,9 +1,8 @@
 import React, { useState } from "react";
 import { Plus, Wallet } from "lucide-react";
-import { plannerText } from "../plannerTextConfig";
+import { usePlannerText } from "../PlannerLocaleContext";
 import BudgetItemCard from "../components/BudgetItemCard";
 import EmptyState from "../components/EmptyState";
-import ProgressBar from "../components/ProgressBar";
 import { getBudgetTotals, formatCurrency } from "../plannerUtils";
 import type { BudgetItem, BudgetCategory } from "../types";
 
@@ -17,21 +16,22 @@ interface BudgetScreenProps {
 
 type CategoryFilter = "all" | BudgetCategory;
 
-const CATEGORY_FILTERS: { value: CategoryFilter; label: string }[] = [
-  { value: "all",          label: plannerText.common.all },
-  { value: "venue",        label: plannerText.budget.categories.venue },
-  { value: "catering",     label: plannerText.budget.categories.catering },
-  { value: "photo",        label: plannerText.budget.categories.photo },
-  { value: "decor",        label: plannerText.budget.categories.decor },
-  { value: "flowers",      label: plannerText.budget.categories.flowers },
-  { value: "music",        label: plannerText.budget.categories.music },
-  { value: "other",        label: plannerText.budget.categories.other },
-];
-
 export default function BudgetScreen({ budgetItems, currency, onAdd, onEdit, onDelete }: BudgetScreenProps) {
+  const pt = usePlannerText();
   const [filter, setFilter] = useState<CategoryFilter>("all");
   const totals = getBudgetTotals(budgetItems);
   const filtered = filter === "all" ? budgetItems : budgetItems.filter(i => i.category === filter);
+
+  const CATEGORY_FILTERS: { value: CategoryFilter; label: string }[] = [
+    { value: "all",      label: pt.common.all },
+    { value: "venue",    label: pt.budget.categories.venue },
+    { value: "catering", label: pt.budget.categories.catering },
+    { value: "photo",    label: pt.budget.categories.photo },
+    { value: "decor",    label: pt.budget.categories.decor },
+    { value: "flowers",  label: pt.budget.categories.flowers },
+    { value: "music",    label: pt.budget.categories.music },
+    { value: "other",    label: pt.budget.categories.other },
+  ];
 
   /* ─── shared pieces ─── */
 
@@ -65,8 +65,8 @@ export default function BudgetScreen({ budgetItems, currency, onAdd, onEdit, onD
       {filtered.length === 0 ? (
         <EmptyState
           icon={<Wallet size={36} />}
-          title={plannerText.budget.emptyTitle}
-          description={plannerText.budget.emptyDesc}
+          title={pt.budget.emptyTitle}
+          description={pt.budget.emptyDesc}
           action={
             <button
               onClick={onAdd}
@@ -86,7 +86,7 @@ export default function BudgetScreen({ budgetItems, currency, onAdd, onEdit, onD
               }}
             >
               <Plus size={14} strokeWidth={2.5} />
-              {plannerText.budget.addExpense}
+              {pt.budget.addExpense}
             </button>
           }
         />
@@ -129,7 +129,7 @@ export default function BudgetScreen({ budgetItems, currency, onAdd, onEdit, onD
       }}
     >
       <Plus size={16} strokeWidth={2.5} />
-      {plannerText.budget.addExpense}
+      {pt.budget.addExpense}
     </button>
   );
 
@@ -151,7 +151,7 @@ export default function BudgetScreen({ budgetItems, currency, onAdd, onEdit, onD
 
       {/* label + main amount */}
       <div style={{ fontSize: 11, color: "rgba(255,255,255,0.55)", fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.06em", marginBottom: 4 }}>
-        {plannerText.budget.totalBudget}
+        {pt.budget.totalBudget}
       </div>
       <div style={{ fontSize: isMobile ? 32 : 36, fontWeight: 800, color: "#FFFFFF", letterSpacing: "-0.025em", lineHeight: 1, marginBottom: 16 }}>
         {formatCurrency(totals.planned, currency)}
@@ -161,7 +161,7 @@ export default function BudgetScreen({ budgetItems, currency, onAdd, onEdit, onD
       <div style={{ display: "flex", gap: 0, marginBottom: 14 }}>
         <div style={{ flex: 1, borderRight: "1px solid rgba(255,255,255,0.15)", paddingRight: 16 }}>
           <div style={{ fontSize: 10.5, color: "rgba(255,255,255,0.55)", fontWeight: 500 }}>
-            {plannerText.budget.paid}
+            {pt.budget.paid}
           </div>
           <div style={{ fontSize: 18, fontWeight: 700, color: "#FFFFFF", marginTop: 3 }}>
             {formatCurrency(totals.paid, currency)}
@@ -169,7 +169,7 @@ export default function BudgetScreen({ budgetItems, currency, onAdd, onEdit, onD
         </div>
         <div style={{ flex: 1, paddingLeft: 16 }}>
           <div style={{ fontSize: 10.5, color: "rgba(255,255,255,0.55)", fontWeight: 500 }}>
-            {plannerText.budget.remaining}
+            {pt.budget.remaining}
           </div>
           <div style={{ fontSize: 18, fontWeight: 700, color: "#FFFFFF", marginTop: 3 }}>
             {formatCurrency(totals.remaining, currency)}
@@ -189,7 +189,7 @@ export default function BudgetScreen({ budgetItems, currency, onAdd, onEdit, onD
         />
       </div>
       <div style={{ fontSize: 10.5, color: "rgba(255,255,255,0.5)", marginTop: 6, textAlign: "right" }}>
-        {totals.pct}% {plannerText.budget.used}
+        {totals.pct}% {pt.budget.used}
       </div>
     </div>
   );
@@ -230,10 +230,10 @@ export default function BudgetScreen({ budgetItems, currency, onAdd, onEdit, onD
           <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", marginBottom: 24 }}>
             <div>
               <h1 style={{ fontSize: 24, fontWeight: 800, color: "#111827", margin: 0, letterSpacing: "-0.02em" }}>
-                {plannerText.budget.title}
+                {pt.budget.title}
               </h1>
               <p style={{ fontSize: 13.5, color: "#6B7280", margin: "4px 0 0", fontWeight: 400 }}>
-                {plannerText.budget.subtitle}
+                {pt.budget.subtitle}
               </p>
             </div>
             <button
@@ -255,7 +255,7 @@ export default function BudgetScreen({ budgetItems, currency, onAdd, onEdit, onD
               }}
             >
               <Plus size={15} strokeWidth={2.5} />
-              {plannerText.budget.addExpense}
+              {pt.budget.addExpense}
             </button>
           </div>
 
@@ -266,9 +266,9 @@ export default function BudgetScreen({ budgetItems, currency, onAdd, onEdit, onD
 
             {/* Stat cards */}
             {[
-              { label: plannerText.budget.totalPlanned, value: formatCurrency(totals.planned, currency), sub: `${budgetItems.length} items` },
-              { label: plannerText.budget.paid,         value: formatCurrency(totals.paid, currency),    sub: `${totals.pct}% ${plannerText.budget.used}` },
-              { label: plannerText.budget.remaining,    value: formatCurrency(totals.remaining, currency), sub: plannerText.budget.remaining },
+              { label: pt.budget.totalPlanned, value: formatCurrency(totals.planned, currency), sub: `${budgetItems.length} items` },
+              { label: pt.budget.paid,         value: formatCurrency(totals.paid, currency),    sub: `${totals.pct}% ${pt.budget.used}` },
+              { label: pt.budget.remaining,    value: formatCurrency(totals.remaining, currency), sub: pt.budget.remaining },
             ].map((stat, i) => (
               <div
                 key={i}
@@ -315,4 +315,3 @@ export default function BudgetScreen({ budgetItems, currency, onAdd, onEdit, onD
     </>
   );
 }
-

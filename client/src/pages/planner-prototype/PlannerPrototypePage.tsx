@@ -16,17 +16,9 @@ import TaskForm from "./forms/TaskForm";
 import GenerateTablesSheet from "./forms/GenerateTablesSheet";
 import { loadData, saveData } from "./storage";
 import { applySuggestion, uid } from "./plannerUtils";
-import { plannerText } from "./plannerTextConfig";
+import { PlannerLocaleProvider, usePlannerText } from "./PlannerLocaleContext";
 import type { TabId, Guest, WeddingTable, BudgetItem, Seat, Task, PlannerData } from "./types";
 import type { TableSuggestion } from "./plannerUtils";
-
-const NAV_TITLES: Record<TabId, string> = {
-  dashboard: plannerText.nav.dashboard,
-  guests: plannerText.nav.guests,
-  tables: plannerText.nav.tables,
-  budget: plannerText.nav.budget,
-  more: plannerText.nav.more,
-};
 
 interface PlannerPrototypePageProps {
   isDemoMode?: boolean;
@@ -34,34 +26,46 @@ interface PlannerPrototypePageProps {
   onDemoLimitReached?: (feature: string) => void;
 }
 
-export default function PlannerPrototypePage({
+export default function PlannerPrototypePage(props: PlannerPrototypePageProps = {}) {
+  return (
+    <PlannerLocaleProvider>
+      <PlannerPrototypeContent {...props} />
+    </PlannerLocaleProvider>
+  );
+}
+
+function PlannerPrototypeContent({
   isDemoMode = false,
   demoLimits = { maxGuests: 5, maxTables: 2, maxBudgetItems: 5 },
   onDemoLimitReached,
-}: PlannerPrototypePageProps = {}) {
+}: PlannerPrototypePageProps) {
+  const pt = usePlannerText();
+
+  const NAV_TITLES: Record<TabId, string> = {
+    dashboard: pt.nav.dashboard,
+    guests: pt.nav.guests,
+    tables: pt.nav.tables,
+    budget: pt.nav.budget,
+    more: pt.nav.more,
+  };
+
   const [data, setData] = useState<PlannerData>(() => loadData());
   const [activeTab, setActiveTab] = useState<TabId>("dashboard");
 
-  // Tasks screen overlay
   const [showTasksScreen, setShowTasksScreen] = useState(false);
-
-  // Seat assignment overlay
   const [selectedTableId, setSelectedTableId] = useState<string | null>(null);
 
-  // Sheet open states
   const [guestSheetOpen, setGuestSheetOpen] = useState(false);
   const [tableSheetOpen, setTableSheetOpen] = useState(false);
   const [budgetSheetOpen, setBudgetSheetOpen] = useState(false);
   const [taskSheetOpen, setTaskSheetOpen] = useState(false);
   const [generateSheetOpen, setGenerateSheetOpen] = useState(false);
 
-  // Editing item
   const [editingGuest, setEditingGuest] = useState<Guest | undefined>(undefined);
   const [editingTable, setEditingTable] = useState<WeddingTable | undefined>(undefined);
   const [editingBudget, setEditingBudget] = useState<BudgetItem | undefined>(undefined);
   const [editingTask, setEditingTask] = useState<Task | undefined>(undefined);
 
-  // Save to localStorage on every data change
   useEffect(() => {
     saveData(data);
   }, [data]);
@@ -70,7 +74,6 @@ export default function PlannerPrototypePage({
     setData(next);
   }, []);
 
-  // ---- Guest CRUD ----
   function handleSaveGuest(g: Guest) {
     setData(prev => ({
       ...prev,
@@ -90,19 +93,14 @@ export default function PlannerPrototypePage({
     }));
   }
 
-  // ---- Table CRUD ----
   function handleSaveTable(t: WeddingTable) {
     if (editingTable) {
-      const oldCap = editingTable.capacity;
-      const newCap = t.capacity;
       setData(prev => {
         let seats = prev.seats.filter(s => s.tableId !== t.id);
-        // rebuild seats for changed table
-        for (let i = 1; i <= newCap; i++) {
+        for (let i = 1; i <= t.capacity; i++) {
           const oldSeat = prev.seats.find(s => s.tableId === t.id && s.seatNumber === i);
           seats.push(oldSeat ?? { id: uid(), tableId: t.id, seatNumber: i });
         }
-        // unassign guests from removed seats if capacity shrank
         const keptSeatIds = new Set(seats.map(s => s.id));
         const guests = prev.guests.map(g =>
           g.seatId && !keptSeatIds.has(g.seatId) ? { ...g, tableId: undefined, seatId: undefined } : g
@@ -134,12 +132,10 @@ export default function PlannerPrototypePage({
     }));
   }
 
-  // ---- Seat assignment ----
   function handleAssignSeat(seatId: string, guestId: string) {
     setData(prev => {
       const seat = prev.seats.find(s => s.id === seatId);
       if (!seat) return prev;
-      // unassign from old seat if guest was seated elsewhere
       const seats = prev.seats.map(s => {
         if (s.id === seatId) return { ...s, guestId };
         if (s.guestId === guestId) return { ...s, guestId: undefined };
@@ -165,7 +161,6 @@ export default function PlannerPrototypePage({
     });
   }
 
-  // ---- Budget CRUD ----
   function handleSaveBudget(item: BudgetItem) {
     setData(prev => ({
       ...prev,
@@ -181,7 +176,6 @@ export default function PlannerPrototypePage({
     setData(prev => ({ ...prev, budgetItems: prev.budgetItems.filter(i => i.id !== id) }));
   }
 
-  // ---- Task CRUD ----
   function handleSaveTask(task: Task) {
     setData(prev => ({
       ...prev,
@@ -204,12 +198,10 @@ export default function PlannerPrototypePage({
     }));
   }
 
-  // ---- Table generator ----
   function handleApplySuggestion(suggestion: TableSuggestion) {
     setData(prev => applySuggestion(prev, suggestion));
   }
 
-  // ---- Seat assignment screen ----
   const selectedTable = selectedTableId ? data.tables.find(t => t.id === selectedTableId) : undefined;
   if (selectedTable) {
     return (
@@ -225,7 +217,6 @@ export default function PlannerPrototypePage({
     );
   }
 
-  // ---- Tasks screen ----
   if (showTasksScreen) {
     return (
       <>
@@ -233,7 +224,7 @@ export default function PlannerPrototypePage({
           active={activeTab}
           onChange={(tab) => { setActiveTab(tab); setShowTasksScreen(false); }}
           settings={data.settings}
-          headerTitle={plannerText.tasks.title}
+          headerTitle={pt.tasks.title}
           showBack
           onBack={() => setShowTasksScreen(false)}
           isDemoMode={isDemoMode}
@@ -243,7 +234,7 @@ export default function PlannerPrototypePage({
               onClick={() => { setEditingTask(undefined); setTaskSheetOpen(true); }}
               style={{ display: "flex", alignItems: "center", border: "none", background: "#EAF5EF", borderRadius: 8, padding: "6px 12px", cursor: "pointer", color: "#064E3B", fontSize: 13, fontWeight: 700, gap: 4 }}
             >
-              <Plus size={15} /> {plannerText.common.add}
+              <Plus size={15} /> {pt.common.add}
             </button>
           }
         >
@@ -259,7 +250,7 @@ export default function PlannerPrototypePage({
         <BottomSheet
           open={taskSheetOpen}
           onClose={() => { setTaskSheetOpen(false); setEditingTask(undefined); }}
-          title={editingTask ? plannerText.tasks.editTask : plannerText.tasks.addTask}
+          title={editingTask ? pt.tasks.editTask : pt.tasks.addTask}
           height="auto"
         >
           <TaskForm
@@ -282,7 +273,7 @@ export default function PlannerPrototypePage({
       }}
       style={{ display: "flex", alignItems: "center", border: "none", background: "#EAF5EF", borderRadius: 8, padding: "6px 12px", cursor: "pointer", color: "#064E3B", fontSize: 13, fontWeight: 700, gap: 4 }}
     >
-      <Plus size={15} /> {plannerText.common.add}
+      <Plus size={15} /> {pt.common.add}
     </button>
   ) : activeTab === "tables" ? (
     <button
@@ -292,7 +283,7 @@ export default function PlannerPrototypePage({
       }}
       style={{ display: "flex", alignItems: "center", border: "none", background: "#EAF5EF", borderRadius: 8, padding: "6px 12px", cursor: "pointer", color: "#064E3B", fontSize: 13, fontWeight: 700, gap: 4 }}
     >
-      <Plus size={15} /> {plannerText.common.add}
+      <Plus size={15} /> {pt.common.add}
     </button>
   ) : activeTab === "budget" ? (
     <button
@@ -302,7 +293,7 @@ export default function PlannerPrototypePage({
       }}
       style={{ display: "flex", alignItems: "center", border: "none", background: "#EAF5EF", borderRadius: 8, padding: "6px 12px", cursor: "pointer", color: "#064E3B", fontSize: 13, fontWeight: 700, gap: 4 }}
     >
-      <Plus size={15} /> {plannerText.common.add}
+      <Plus size={15} /> {pt.common.add}
     </button>
   ) : undefined;
 
@@ -361,11 +352,10 @@ export default function PlannerPrototypePage({
         )}
       </PlannerShell>
 
-      {/* Guest sheet */}
       <BottomSheet
         open={guestSheetOpen}
         onClose={() => { setGuestSheetOpen(false); setEditingGuest(undefined); }}
-        title={editingGuest ? plannerText.guests.editGuest : plannerText.guests.addGuest}
+        title={editingGuest ? pt.guests.editGuest : pt.guests.addGuest}
         height="tall"
       >
         <GuestForm
@@ -375,11 +365,10 @@ export default function PlannerPrototypePage({
         />
       </BottomSheet>
 
-      {/* Table sheet */}
       <BottomSheet
         open={tableSheetOpen}
         onClose={() => { setTableSheetOpen(false); setEditingTable(undefined); }}
-        title={editingTable ? plannerText.tables.editTable : plannerText.tables.addTable}
+        title={editingTable ? pt.tables.editTable : pt.tables.addTable}
         height="auto"
       >
         <TableForm
@@ -389,11 +378,10 @@ export default function PlannerPrototypePage({
         />
       </BottomSheet>
 
-      {/* Budget sheet */}
       <BottomSheet
         open={budgetSheetOpen}
         onClose={() => { setBudgetSheetOpen(false); setEditingBudget(undefined); }}
-        title={editingBudget ? plannerText.budget.editExpense : plannerText.budget.addExpense}
+        title={editingBudget ? pt.budget.editExpense : pt.budget.addExpense}
         height="tall"
       >
         <BudgetItemForm
@@ -404,11 +392,10 @@ export default function PlannerPrototypePage({
         />
       </BottomSheet>
 
-      {/* Generate Tables sheet */}
       <BottomSheet
         open={generateSheetOpen}
         onClose={() => setGenerateSheetOpen(false)}
-        title={plannerText.generator.title}
+        title={pt.generator.title}
         height="tall"
       >
         <GenerateTablesSheet

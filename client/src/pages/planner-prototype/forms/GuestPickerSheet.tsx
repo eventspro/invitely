@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { Search, X } from "lucide-react";
-import { plannerText } from "../plannerTextConfig";
+import { usePlannerText } from "../PlannerLocaleContext";
 import { getInitials, RSVP_COLORS, RSVP_BG } from "../plannerUtils";
 import type { Guest, Seat } from "../types";
 
@@ -12,6 +12,7 @@ interface GuestPickerSheetProps {
 }
 
 export default function GuestPickerSheet({ guests, seats, onSelect, onClose }: GuestPickerSheetProps) {
+  const pt = usePlannerText();
   const [search, setSearch] = useState("");
 
   // guests who are coming and not yet assigned to a seat
@@ -42,7 +43,7 @@ export default function GuestPickerSheet({ guests, seats, onSelect, onClose }: G
         <input
           autoFocus
           style={{ flex: 1, border: "none", background: "transparent", outline: "none", fontSize: 14, color: "#111827" }}
-          placeholder={plannerText.guests.searchPlaceholder}
+          placeholder={pt.guests.searchPlaceholder}
           value={search}
           onChange={e => setSearch(e.target.value)}
         />
@@ -55,7 +56,7 @@ export default function GuestPickerSheet({ guests, seats, onSelect, onClose }: G
 
       {filtered.length === 0 ? (
         <div style={{ textAlign: "center", padding: "32px 0", color: "#9CA3AF", fontSize: 13 }}>
-          {plannerText.guests.noUnassignedGuests}
+          {pt.guests.noUnassignedGuests}
         </div>
       ) : (
         <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
@@ -98,7 +99,7 @@ export default function GuestPickerSheet({ guests, seats, onSelect, onClose }: G
                   {g.fullName}
                 </div>
                 {g.guestCount > 1 && (
-                  <div style={{ fontSize: 11, color: "#9CA3AF" }}>+{g.guestCount - 1} {plannerText.common.guests}</div>
+                  <div style={{ fontSize: 11, color: "#9CA3AF" }}>+{g.guestCount - 1} {pt.common.guests}</div>
                 )}
               </div>
               <span
@@ -112,7 +113,7 @@ export default function GuestPickerSheet({ guests, seats, onSelect, onClose }: G
                   flexShrink: 0,
                 }}
               >
-                {plannerText.rsvp[g.rsvpStatus as keyof typeof plannerText.rsvp] ?? g.rsvpStatus}
+                {pt.rsvp[g.rsvpStatus as keyof typeof pt.rsvp] ?? g.rsvpStatus}
               </span>
             </button>
           ))}

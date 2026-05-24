@@ -202,6 +202,7 @@ export default function EditorPanel({ content: c, locale, onChange }: Props) {
       {/* ── 1. Navigation */}
       <Section title="1. Navigation" badge={c.navigation.items.length} defaultOpen>
         <Field label={`Login label (${L})`} value={c.navigation.loginLabel[L]} onChange={v => setC({ navigation: { ...c.navigation, loginLabel: updateLS(c.navigation.loginLabel, L, v) } })} />
+        <Field label="Login button link (href)" value={c.navigation.loginHref} onChange={v => setC({ navigation: { ...c.navigation, loginHref: v } })} />
         <Field label={`Start button (${L})`} value={c.navigation.startLabel[L]} onChange={v => setC({ navigation: { ...c.navigation, startLabel: updateLS(c.navigation.startLabel, L, v) } })} />
         <div style={{ borderTop: "1px solid #f0ece8", paddingTop: 10, marginTop: 4 }}>
           <div style={{ fontSize: 11, fontWeight: 700, color: "#766c63", marginBottom: 8 }}>Nav items</div>

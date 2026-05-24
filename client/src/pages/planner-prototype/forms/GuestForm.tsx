@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { plannerText } from "../plannerTextConfig";
+import { usePlannerText } from "../PlannerLocaleContext";
 import { uid } from "../plannerUtils";
 import type { Guest, RsvpStatus, GuestSide } from "../types";
 
@@ -8,21 +8,6 @@ interface GuestFormProps {
   onSave: (g: Guest) => void;
   onCancel: () => void;
 }
-
-const RSVP_OPTIONS: { value: RsvpStatus; label: string }[] = [
-  { value: "invited", label: plannerText.rsvp.invited },
-  { value: "coming", label: plannerText.rsvp.coming },
-  { value: "not_coming", label: plannerText.rsvp.not_coming },
-  { value: "waiting", label: plannerText.rsvp.waiting },
-  { value: "maybe", label: plannerText.rsvp.maybe },
-];
-
-const SIDE_OPTIONS: { value: GuestSide; label: string }[] = [
-  { value: "bride", label: plannerText.guestSide.bride },
-  { value: "groom", label: plannerText.guestSide.groom },
-  { value: "both", label: plannerText.guestSide.both },
-  { value: "other", label: plannerText.guestSide.other },
-];
 
 const RSVP_ACTIVE: Record<RsvpStatus, string> = {
   invited: "#6B7280",
@@ -57,6 +42,7 @@ const fieldStyle: React.CSSProperties = {
 };
 
 export default function GuestForm({ initial, onSave, onCancel }: GuestFormProps) {
+  const pt = usePlannerText();
   const [fullName, setFullName] = useState(initial?.fullName ?? "");
   const [phone, setPhone] = useState(initial?.phone ?? "");
   const [email, setEmail] = useState(initial?.email ?? "");
@@ -68,9 +54,24 @@ export default function GuestForm({ initial, onSave, onCancel }: GuestFormProps)
   const [notes, setNotes] = useState(initial?.notes ?? "");
   const [error, setError] = useState("");
 
+  const RSVP_OPTIONS: { value: RsvpStatus; label: string }[] = [
+    { value: "invited",    label: pt.rsvp.invited    },
+    { value: "coming",     label: pt.rsvp.coming     },
+    { value: "not_coming", label: pt.rsvp.not_coming },
+    { value: "waiting",    label: pt.rsvp.waiting    },
+    { value: "maybe",      label: pt.rsvp.maybe      },
+  ];
+
+  const SIDE_OPTIONS: { value: GuestSide; label: string }[] = [
+    { value: "bride", label: pt.guestSide.bride },
+    { value: "groom", label: pt.guestSide.groom },
+    { value: "both",  label: pt.guestSide.both  },
+    { value: "other", label: pt.guestSide.other },
+  ];
+
   function handleSubmit() {
     if (!fullName.trim()) {
-      setError(plannerText.warnings.nameRequired);
+      setError(pt.warnings.nameRequired);
       return;
     }
     const guest: Guest = {
@@ -105,18 +106,18 @@ export default function GuestForm({ initial, onSave, onCancel }: GuestFormProps)
   return (
     <div>
       <div style={fieldStyle}>
-        <label style={labelStyle}>{plannerText.guests.fullName} <span style={{ color: "#E85D5D" }}>*</span></label>
+        <label style={labelStyle}>{pt.guests.fullName} <span style={{ color: "#E85D5D" }}>*</span></label>
         <input
           style={{ ...inputStyle, borderColor: error ? "#E85D5D" : "#E5E7EB" }}
           value={fullName}
           onChange={e => { setFullName(e.target.value); setError(""); }}
-          placeholder={plannerText.guests.fullNamePlaceholder}
+          placeholder={pt.guests.fullNamePlaceholder}
         />
         {error && <div style={{ fontSize: 11, color: "#E85D5D", marginTop: 4 }}>{error}</div>}
       </div>
 
       <div style={fieldStyle}>
-        <label style={labelStyle}>{plannerText.guests.rsvpStatus}</label>
+        <label style={labelStyle}>{pt.guests.rsvpStatus}</label>
         <div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
           {RSVP_OPTIONS.map(o => (
             <button key={o.value} style={chipBtn(rsvpStatus === o.value, RSVP_ACTIVE[o.value])} onClick={() => setRsvpStatus(o.value)}>
@@ -128,7 +129,7 @@ export default function GuestForm({ initial, onSave, onCancel }: GuestFormProps)
 
       <div style={{ display: "flex", gap: 12 }}>
         <div style={{ ...fieldStyle, flex: 1 }}>
-          <label style={labelStyle}>{plannerText.guests.guestCount}</label>
+          <label style={labelStyle}>{pt.guests.guestCount}</label>
           <input
             type="number"
             min={1}
@@ -139,7 +140,7 @@ export default function GuestForm({ initial, onSave, onCancel }: GuestFormProps)
           />
         </div>
         <div style={{ ...fieldStyle, flex: 2 }}>
-          <label style={labelStyle}>{plannerText.guests.side}</label>
+          <label style={labelStyle}>{pt.guests.side}</label>
           <div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
             {SIDE_OPTIONS.map(o => (
               <button key={o.value} style={chipBtn(side === o.value, "#064E3B")} onClick={() => setSide(o.value)}>
@@ -151,27 +152,27 @@ export default function GuestForm({ initial, onSave, onCancel }: GuestFormProps)
       </div>
 
       <div style={fieldStyle}>
-        <label style={labelStyle}>{plannerText.guests.phone}</label>
+        <label style={labelStyle}>{pt.guests.phone}</label>
         <input style={inputStyle} value={phone} onChange={e => setPhone(e.target.value)} placeholder="+1 555 000 0000" />
       </div>
 
       <div style={fieldStyle}>
-        <label style={labelStyle}>{plannerText.guests.email}</label>
+        <label style={labelStyle}>{pt.guests.email}</label>
         <input type="email" style={inputStyle} value={email} onChange={e => setEmail(e.target.value)} placeholder="name@example.com" />
       </div>
 
       <div style={fieldStyle}>
-        <label style={labelStyle}>{plannerText.guests.groupName}</label>
-        <input style={inputStyle} value={groupName} onChange={e => setGroupName(e.target.value)} placeholder={plannerText.guests.groupNamePlaceholder} />
+        <label style={labelStyle}>{pt.guests.groupName}</label>
+        <input style={inputStyle} value={groupName} onChange={e => setGroupName(e.target.value)} placeholder={pt.guests.groupNamePlaceholder} />
       </div>
 
       <div style={fieldStyle}>
-        <label style={labelStyle}>{plannerText.guests.dietaryNotes}</label>
-        <input style={inputStyle} value={dietaryNotes} onChange={e => setDietaryNotes(e.target.value)} placeholder={plannerText.guests.dietaryNotesPlaceholder} />
+        <label style={labelStyle}>{pt.guests.dietaryNotes}</label>
+        <input style={inputStyle} value={dietaryNotes} onChange={e => setDietaryNotes(e.target.value)} placeholder={pt.guests.dietaryNotesPlaceholder} />
       </div>
 
       <div style={fieldStyle}>
-        <label style={labelStyle}>{plannerText.guests.notes}</label>
+        <label style={labelStyle}>{pt.guests.notes}</label>
         <textarea
           style={{ ...inputStyle, resize: "vertical", minHeight: 64 }}
           value={notes}
@@ -183,34 +184,22 @@ export default function GuestForm({ initial, onSave, onCancel }: GuestFormProps)
         <button
           onClick={onCancel}
           style={{
-            flex: 1,
-            padding: "13px",
-            borderRadius: 12,
-            border: "1.5px solid #E5E7EB",
-            background: "#FAFAFA",
-            color: "#374151",
-            fontSize: 14,
-            fontWeight: 600,
-            cursor: "pointer",
+            flex: 1, padding: "13px", borderRadius: 12,
+            border: "1.5px solid #E5E7EB", background: "#FAFAFA",
+            color: "#374151", fontSize: 14, fontWeight: 600, cursor: "pointer",
           }}
         >
-          {plannerText.common.cancel}
+          {pt.common.cancel}
         </button>
         <button
           onClick={handleSubmit}
           style={{
-            flex: 2,
-            padding: "13px",
-            borderRadius: 12,
-            border: "none",
+            flex: 2, padding: "13px", borderRadius: 12, border: "none",
             background: "linear-gradient(135deg, #00472F 0%, #006B4A 100%)",
-            color: "#FFFFFF",
-            fontSize: 14,
-            fontWeight: 700,
-            cursor: "pointer",
+            color: "#FFFFFF", fontSize: 14, fontWeight: 700, cursor: "pointer",
           }}
         >
-          {plannerText.common.save}
+          {pt.common.save}
         </button>
       </div>
     </div>

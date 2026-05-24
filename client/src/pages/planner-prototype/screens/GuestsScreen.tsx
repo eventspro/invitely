@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { Search, X, UserPlus, Users } from "lucide-react";
-import { plannerText } from "../plannerTextConfig";
+import { usePlannerText } from "../PlannerLocaleContext";
 import { getGuestTotals } from "../plannerUtils";
 import GuestCard from "../components/GuestCard";
 import type { Guest, WeddingTable, Seat, RsvpStatus } from "../types";
@@ -17,6 +17,7 @@ interface GuestsScreenProps {
 type FilterStatus = "all" | RsvpStatus | "unseated";
 
 export default function GuestsScreen({ guests, tables, seats, onAdd, onEdit, onDelete }: GuestsScreenProps) {
+  const pt = usePlannerText();
   const [search, setSearch] = useState("");
   const [filter, setFilter] = useState<FilterStatus>("all");
 
@@ -41,13 +42,20 @@ export default function GuestsScreen({ guests, tables, seats, onAdd, onEdit, onD
   }
 
   const FILTERS: { value: FilterStatus; label: string; count: number }[] = [
-    { value: "all",        label: plannerText.common.all,        count: guests.length },
-    { value: "coming",     label: plannerText.rsvp.coming,       count: g.coming },
-    { value: "waiting",    label: plannerText.rsvp.waiting,      count: g.waiting },
-    { value: "not_coming", label: plannerText.rsvp.not_coming,   count: g.notComing },
-    { value: "maybe",      label: plannerText.rsvp.maybe,        count: g.maybe },
-    { value: "invited",    label: plannerText.rsvp.invited,      count: g.invited },
-    { value: "unseated",   label: plannerText.guests.unseated,   count: unseatedCount },
+    { value: "all",        label: pt.common.all,        count: guests.length },
+    { value: "coming",     label: pt.rsvp.coming,       count: g.coming },
+    { value: "waiting",    label: pt.rsvp.waiting,      count: g.waiting },
+    { value: "not_coming", label: pt.rsvp.not_coming,   count: g.notComing },
+    { value: "maybe",      label: pt.rsvp.maybe,        count: g.maybe },
+    { value: "invited",    label: pt.rsvp.invited,      count: g.invited },
+    { value: "unseated",   label: pt.guests.unseated,   count: unseatedCount },
+  ];
+
+  const STAT_ITEMS = [
+    { value: guests.length, label: pt.guests.totalGuests },
+    { value: g.coming,      label: pt.rsvp.coming },
+    { value: g.waiting,     label: pt.rsvp.waiting },
+    { value: unseatedCount, label: pt.guests.unseated },
   ];
 
   function getSeatNumber(guest: Guest): number | undefined {
@@ -88,7 +96,7 @@ export default function GuestsScreen({ guests, tables, seats, onAdd, onEdit, onD
               color: "#111827",
               fontFamily: "inherit",
             }}
-            placeholder={plannerText.guests.searchPlaceholder}
+            placeholder={pt.guests.searchPlaceholder}
             value={search}
             onChange={e => setSearch(e.target.value)}
           />
@@ -163,11 +171,11 @@ export default function GuestsScreen({ guests, tables, seats, onAdd, onEdit, onD
         <div style={{ textAlign: "center", padding: "48px 24px" }}>
           <Users size={36} color="#D1D5DB" strokeWidth={1.5} style={{ marginBottom: 12 }} />
           <div style={{ fontSize: 15, fontWeight: 600, color: "#374151", marginBottom: 6 }}>
-            {search ? plannerText.guests.emptySearch : plannerText.guests.emptyTitle}
+            {search ? pt.guests.emptySearch : pt.guests.emptyTitle}
           </div>
           {!search && (
             <p style={{ fontSize: 13, color: "#9CA3AF", marginBottom: 16 }}>
-              {plannerText.guests.emptyDesc}
+              {pt.guests.emptyDesc}
             </p>
           )}
           {!search && (
@@ -187,7 +195,7 @@ export default function GuestsScreen({ guests, tables, seats, onAdd, onEdit, onD
                 cursor: "pointer",
               }}
             >
-              <UserPlus size={15} /> {plannerText.guests.addGuest}
+              <UserPlus size={15} /> {pt.guests.addGuest}
             </button>
           )}
         </div>
@@ -230,14 +238,6 @@ export default function GuestsScreen({ guests, tables, seats, onAdd, onEdit, onD
       </div>
     );
   }
-
-  // ─── MOBILE: Stat strip item ─────────────────────────────────────────────
-  const STAT_ITEMS = [
-    { value: guests.length, label: plannerText.guests.totalGuests },
-    { value: g.coming,      label: plannerText.rsvp.coming },
-    { value: g.waiting,     label: plannerText.rsvp.waiting },
-    { value: unseatedCount, label: plannerText.guests.unseated },
-  ];
 
   return (
     <>
@@ -308,7 +308,7 @@ export default function GuestsScreen({ guests, tables, seats, onAdd, onEdit, onD
               fontFamily: "inherit",
             }}
           >
-            <UserPlus size={17} strokeWidth={2} /> {plannerText.guests.addGuest}
+            <UserPlus size={17} strokeWidth={2} /> {pt.guests.addGuest}
           </button>
         </div>
       </div>
@@ -337,10 +337,10 @@ export default function GuestsScreen({ guests, tables, seats, onAdd, onEdit, onD
                   lineHeight: 1.2,
                 }}
               >
-                {plannerText.guests.title}
+                {pt.guests.title}
               </h1>
               <p style={{ fontSize: 15, color: "#6B7280", margin: "4px 0 0", fontWeight: 400 }}>
-                {plannerText.guests.subtitle}
+                {pt.guests.subtitle}
               </p>
             </div>
             <button
@@ -363,16 +363,16 @@ export default function GuestsScreen({ guests, tables, seats, onAdd, onEdit, onD
                 fontFamily: "inherit",
               }}
             >
-              <UserPlus size={16} strokeWidth={2} /> {plannerText.guests.addGuest}
+              <UserPlus size={16} strokeWidth={2} /> {pt.guests.addGuest}
             </button>
           </div>
 
           {/* Stats row */}
           <div className="pp-stat-grid" style={{ gap: 14, marginBottom: 24 }}>
-            {statCard(guests.length, plannerText.guests.totalGuests)}
-            {statCard(g.coming, plannerText.rsvp.coming)}
-            {statCard(g.waiting, plannerText.rsvp.waiting)}
-            {statCard(unseatedCount, plannerText.guests.unseated)}
+            {statCard(guests.length, pt.guests.totalGuests)}
+            {statCard(g.coming, pt.rsvp.coming)}
+            {statCard(g.waiting, pt.rsvp.waiting)}
+            {statCard(unseatedCount, pt.guests.unseated)}
           </div>
 
           {/* Toolbar */}

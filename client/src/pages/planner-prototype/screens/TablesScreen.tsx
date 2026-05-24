@@ -1,6 +1,6 @@
 import React from "react";
 import { Plus, Wand2 } from "lucide-react";
-import { plannerText } from "../plannerTextConfig";
+import { usePlannerText } from "../PlannerLocaleContext";
 import TableCard from "../components/TableCard";
 import EmptyState from "../components/EmptyState";
 import { getSeatingTotals } from "../plannerUtils";
@@ -18,13 +18,14 @@ interface TablesScreenProps {
 }
 
 export default function TablesScreen({ tables, seats, guests, onAdd, onEdit, onDelete, onManageSeats, onGenerate }: TablesScreenProps) {
+  const pt = usePlannerText();
   const s = getSeatingTotals(tables, seats);
 
   const stats = [
-    { label: plannerText.tables.totalTables, val: tables.length },
-    { label: plannerText.tables.totalSeats,  val: s.totalCapacity },
-    { label: plannerText.tables.seated,      val: s.assigned },
-    { label: plannerText.tables.available,   val: s.free },
+    { label: pt.tables.totalTables, val: tables.length },
+    { label: pt.tables.totalSeats,  val: s.totalCapacity },
+    { label: pt.tables.seated,      val: s.assigned },
+    { label: pt.tables.available,   val: s.free },
   ];
 
   const tableCards = tables.map(t => (
@@ -62,15 +63,15 @@ export default function TablesScreen({ tables, seats, guests, onAdd, onEdit, onD
       }}
     >
       <Wand2 size={16} strokeWidth={2} />
-      {plannerText.tables.generatePlan}
+      {pt.tables.generatePlan}
     </button>
   );
 
   const emptyState = (
     <EmptyState
       icon={<Wand2 size={36} />}
-      title={plannerText.tables.emptyTitle}
-      description={plannerText.tables.emptyDesc}
+      title={pt.tables.emptyTitle}
+      description={pt.tables.emptyDesc}
       action={
         <button
           onClick={onGenerate}
@@ -90,7 +91,7 @@ export default function TablesScreen({ tables, seats, guests, onAdd, onEdit, onD
           }}
         >
           <Wand2 size={14} strokeWidth={2} />
-          {plannerText.tables.generatePlan}
+          {pt.tables.generatePlan}
         </button>
       }
     />
@@ -158,10 +159,10 @@ export default function TablesScreen({ tables, seats, guests, onAdd, onEdit, onD
           }}>
             <div>
               <h1 style={{ fontSize: 24, fontWeight: 800, color: "#111827", margin: 0, letterSpacing: "-0.02em" }}>
-                {plannerText.tables.title}
+                {pt.tables.title}
               </h1>
               <p style={{ fontSize: 13.5, color: "#6B7280", margin: "4px 0 0", fontWeight: 400 }}>
-                {plannerText.tables.subtitle}
+                {pt.tables.subtitle}
               </p>
             </div>
             <button
@@ -183,7 +184,7 @@ export default function TablesScreen({ tables, seats, guests, onAdd, onEdit, onD
               }}
             >
               <Plus size={15} strokeWidth={2.5} />
-              {plannerText.tables.addTable}
+              {pt.tables.addTable}
             </button>
           </div>
 
@@ -230,4 +231,3 @@ export default function TablesScreen({ tables, seats, guests, onAdd, onEdit, onD
     </>
   );
 }
-

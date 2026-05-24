@@ -1,6 +1,6 @@
 import React, { useMemo, useState } from "react";
 import { Check, Users, LayoutGrid } from "lucide-react";
-import { plannerText } from "../plannerTextConfig";
+import { usePlannerText } from "../PlannerLocaleContext";
 import { generateSuggestions, type TableSuggestion } from "../plannerUtils";
 import type { PlannerData } from "../types";
 
@@ -17,6 +17,7 @@ const PLAN_GRADIENT: Record<number, string> = {
 };
 
 export default function GenerateTablesSheet({ data, onApply, onClose }: GenerateTablesSheetProps) {
+  const pt = usePlannerText();
   const comingPersons = data.guests
     .filter(g => g.rsvpStatus === "coming")
     .reduce((sum, g) => sum + g.guestCount, 0);
@@ -60,20 +61,20 @@ export default function GenerateTablesSheet({ data, onApply, onClose }: Generate
       >
         <Users size={16} color="#064E3B" />
         <span style={{ fontSize: 13, color: "#064E3B", fontWeight: 600 }}>
-          {comingPersons} {plannerText.generator.guests}
+          {comingPersons} {pt.generator.guests}
         </span>
       </div>
 
       <div style={{ marginBottom: 14 }}>
         <div style={{ fontSize: 12, fontWeight: 600, color: "#374151", marginBottom: 8 }}>
-          {plannerText.generator.preferredShape}
+          {pt.generator.preferredShape}
         </div>
         <div style={{ display: "flex", gap: 8 }}>
           <button style={chipBtn(preferredShape === "circle")} onClick={() => setPreferredShape("circle")}>
-            {plannerText.tableShapes.circle}
+            {pt.tableShapes.circle}
           </button>
           <button style={chipBtn(preferredShape === "rectangle")} onClick={() => setPreferredShape("rectangle")}>
-            {plannerText.tableShapes.rectangle}
+            {pt.tableShapes.rectangle}
           </button>
         </div>
       </div>
@@ -99,7 +100,7 @@ export default function GenerateTablesSheet({ data, onApply, onClose }: Generate
                   {s.label}
                 </div>
                 <div style={{ fontSize: 12, color: selected === i ? "rgba(255,255,255,0.7)" : "#6B7280", marginTop: 2 }}>
-                  {s.tableCount} {plannerText.generator.tables} · {s.seatsPerTable} {plannerText.generator.seatsEach}
+                  {s.tableCount} {pt.generator.tables} · {s.seatsPerTable} {pt.generator.seatsEach}
                 </div>
               </div>
               {selected === i && (
@@ -121,7 +122,7 @@ export default function GenerateTablesSheet({ data, onApply, onClose }: Generate
             <div style={{ display: "flex", alignItems: "center", gap: 6, marginTop: 8 }}>
               <LayoutGrid size={12} color={selected === i ? "rgba(255,255,255,0.7)" : "#9CA3AF"} />
               <span style={{ fontSize: 11, color: selected === i ? "rgba(255,255,255,0.7)" : "#9CA3AF" }}>
-                {s.tableCount * s.seatsPerTable} {plannerText.generator.totalSeats}
+                {s.tableCount * s.seatsPerTable} {pt.generator.totalSeats}
               </span>
             </div>
           </button>
@@ -138,7 +139,7 @@ export default function GenerateTablesSheet({ data, onApply, onClose }: Generate
           color: "#92400E",
         }}
       >
-        {plannerText.generator.warning}
+        {pt.generator.warning}
       </div>
 
       <div style={{ display: "flex", gap: 10 }}>
@@ -156,7 +157,7 @@ export default function GenerateTablesSheet({ data, onApply, onClose }: Generate
             cursor: "pointer",
           }}
         >
-          {plannerText.common.cancel}
+          {pt.common.cancel}
         </button>
         <button
           onClick={handleApply}
@@ -172,7 +173,7 @@ export default function GenerateTablesSheet({ data, onApply, onClose }: Generate
             cursor: "pointer",
           }}
         >
-          {plannerText.generator.apply}
+          {pt.generator.apply}
         </button>
       </div>
     </div>

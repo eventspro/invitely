@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { Download, Upload, Trash2, Users, LayoutGrid, Wallet, CalendarDays } from "lucide-react";
-import { plannerText } from "../plannerTextConfig";
+import { usePlannerText } from "../PlannerLocaleContext";
 import { getGuestTotals, getSeatingTotals, getBudgetTotals, formatCurrency } from "../plannerUtils";
 import { exportData, importData, clearData } from "../storage";
 import type { PlannerData } from "../types";
@@ -25,6 +25,7 @@ const inputStyle: React.CSSProperties = {
 };
 
 export default function MoreScreen({ data, onUpdate, isDemoMode = false, onContactUs }: MoreScreenProps) {
+  const pt = usePlannerText();
   const [settings, setSettings] = useState({ ...data.settings });
   const [saved, setSaved] = useState(false);
 
@@ -50,14 +51,14 @@ export default function MoreScreen({ data, onUpdate, isDemoMode = false, onConta
         const imported = await importData(file);
         onUpdate(imported);
       } catch {
-        alert(plannerText.more.importError);
+        alert(pt.more.importError);
       }
     };
     input.click();
   }
 
   function handleReset() {
-    if (window.confirm(plannerText.warnings.resetConfirm)) {
+    if (window.confirm(pt.warnings.resetConfirm)) {
       clearData();
       window.location.reload();
     }
@@ -114,10 +115,10 @@ export default function MoreScreen({ data, onUpdate, isDemoMode = false, onConta
           background: "linear-gradient(145deg, #0d1e14 0%, #0f2d22 100%)",
           border: "1px solid rgba(216,182,106,0.3)",
         }}>
-          <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: "0.1em", color: "#d8b66a", marginBottom: 6 }}>DEMO VERSION</div>
-          <div style={{ fontSize: 16, fontWeight: 800, color: "#fff8ef", marginBottom: 6 }}>Unlock the Full Planner</div>
+          <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: "0.1em", color: "#d8b66a", marginBottom: 6 }}>{pt.more.demoVersion}</div>
+          <div style={{ fontSize: 16, fontWeight: 800, color: "#fff8ef", marginBottom: 6 }}>{pt.more.unlockTitle}</div>
           <div style={{ fontSize: 13, color: "rgba(255,255,255,0.55)", lineHeight: 1.5, marginBottom: 16 }}>
-            Unlimited guests, tables, budget items, seat assignment, export &amp; import — everything for your wedding day.
+            {pt.more.unlockDesc}
           </div>
           <button
             onClick={onContactUs}
@@ -128,18 +129,19 @@ export default function MoreScreen({ data, onUpdate, isDemoMode = false, onConta
               fontSize: 13, fontWeight: 700,
             }}
           >
-            Contact Us
+            {pt.more.contactUs}
           </button>
         </div>
       )}
+
       {/* Summary mini-cards */}
-      <div style={sectionLabel}>{plannerText.more.summary}</div>
+      <div style={sectionLabel}>{pt.more.summary}</div>
       <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
         {[
-          { icon: Users, label: plannerText.nav.guests, val: `${g.coming}/${g.total}`, sub: `${g.comingPersons} ${plannerText.common.persons}` },
-          { icon: LayoutGrid, label: plannerText.nav.tables, val: `${s.assigned}/${s.totalCapacity}`, sub: plannerText.common.seated },
-          { icon: Wallet, label: plannerText.more.budgetPaid, val: formatCurrency(b.paid, data.settings.currency), sub: `${b.pct}%` },
-          { icon: CalendarDays, label: plannerText.more.items, val: data.budgetItems.length, sub: plannerText.nav.budget },
+          { icon: Users,       label: pt.nav.guests,      val: `${g.coming}/${g.total}`,                sub: `${g.comingPersons} ${pt.common.persons}` },
+          { icon: LayoutGrid,  label: pt.nav.tables,      val: `${s.assigned}/${s.totalCapacity}`,      sub: pt.common.seated },
+          { icon: Wallet,      label: pt.more.budgetPaid, val: formatCurrency(b.paid, data.settings.currency), sub: `${b.pct}%` },
+          { icon: CalendarDays, label: pt.more.items,     val: data.budgetItems.length,                  sub: pt.nav.budget },
         ].map((item, i) => {
           const Icon = item.icon;
           return (
@@ -153,14 +155,14 @@ export default function MoreScreen({ data, onUpdate, isDemoMode = false, onConta
       </div>
 
       {/* Settings */}
-      <div style={sectionLabel}>{plannerText.more.settings}</div>
+      <div style={sectionLabel}>{pt.more.settings}</div>
       <div style={card}>
         {[
-          { label: plannerText.more.weddingDate, el: <input type="date" style={{ ...inputStyle, width: "auto", maxWidth: 160 }} value={settings.weddingDate} onChange={e => setSettings(s => ({ ...s, weddingDate: e.target.value }))} /> },
-          { label: plannerText.more.coupleName, el: <input style={{ ...inputStyle, width: "auto", maxWidth: 160 }} value={settings.coupleName} onChange={e => setSettings(s => ({ ...s, coupleName: e.target.value }))} /> },
-          { label: plannerText.more.currency, el: <input style={{ ...inputStyle, width: 60 }} value={settings.currency} maxLength={3} onChange={e => setSettings(s => ({ ...s, currency: e.target.value }))} /> },
-          { label: plannerText.more.seatsPerTable, el: <input type="number" min={1} max={40} style={{ ...inputStyle, width: 80 }} value={settings.defaultSeatsPerTable} onChange={e => setSettings(s => ({ ...s, defaultSeatsPerTable: Number(e.target.value) }))} /> },
-          { label: plannerText.more.pricePerGuest, el: <input type="number" min={0} style={{ ...inputStyle, width: 100 }} value={settings.restaurantPricePerGuest} onChange={e => setSettings(s => ({ ...s, restaurantPricePerGuest: Number(e.target.value) }))} /> },
+          { label: pt.more.weddingDate,   el: <input type="date" style={{ ...inputStyle, width: "auto", maxWidth: 160 }} value={settings.weddingDate} onChange={e => setSettings(s => ({ ...s, weddingDate: e.target.value }))} /> },
+          { label: pt.more.coupleName,    el: <input style={{ ...inputStyle, width: "auto", maxWidth: 160 }} value={settings.coupleName} onChange={e => setSettings(s => ({ ...s, coupleName: e.target.value }))} /> },
+          { label: pt.more.currency,      el: <input style={{ ...inputStyle, width: 60 }} value={settings.currency} maxLength={3} onChange={e => setSettings(s => ({ ...s, currency: e.target.value }))} /> },
+          { label: pt.more.seatsPerTable, el: <input type="number" min={1} max={40} style={{ ...inputStyle, width: 80 }} value={settings.defaultSeatsPerTable} onChange={e => setSettings(s => ({ ...s, defaultSeatsPerTable: Number(e.target.value) }))} /> },
+          { label: pt.more.pricePerGuest, el: <input type="number" min={0} style={{ ...inputStyle, width: 100 }} value={settings.restaurantPricePerGuest} onChange={e => setSettings(s => ({ ...s, restaurantPricePerGuest: Number(e.target.value) }))} /> },
         ].map((row, i, arr) => (
           <div key={i} style={{ ...settingRow, borderBottom: i < arr.length - 1 ? "1px solid #F3F4F6" : "none" }}>
             <span style={{ fontSize: 13, color: "#374151" }}>{row.label}</span>
@@ -184,33 +186,33 @@ export default function MoreScreen({ data, onUpdate, isDemoMode = false, onConta
           transition: "background 0.2s",
         }}
       >
-        {saved ? plannerText.more.saved : plannerText.more.saveSettings}
+        {saved ? pt.more.saved : pt.more.saveSettings}
       </button>
 
       {/* Data Management — hidden in demo mode */}
       {!isDemoMode && (
         <>
-          <div style={sectionLabel}>{plannerText.more.dataManagement}</div>
+          <div style={sectionLabel}>{pt.more.dataManagement}</div>
           <div style={card}>
             <button onClick={() => exportData(data)} style={{ ...actionRow, borderBottom: "1px solid #F3F4F6" }}>
               <Download size={16} color="#064E3B" />
               <div>
-                <div style={{ fontSize: 13, fontWeight: 600, color: "#111827" }}>{plannerText.more.exportData}</div>
-                <div style={{ fontSize: 11, color: "#9CA3AF" }}>{plannerText.more.exportDesc}</div>
+                <div style={{ fontSize: 13, fontWeight: 600, color: "#111827" }}>{pt.more.exportData}</div>
+                <div style={{ fontSize: 11, color: "#9CA3AF" }}>{pt.more.exportDesc}</div>
               </div>
             </button>
             <button onClick={handleImport} style={{ ...actionRow, borderBottom: "1px solid #F3F4F6" }}>
               <Upload size={16} color="#2563EB" />
               <div>
-                <div style={{ fontSize: 13, fontWeight: 600, color: "#111827" }}>{plannerText.more.importData}</div>
-                <div style={{ fontSize: 11, color: "#9CA3AF" }}>{plannerText.more.importDesc}</div>
+                <div style={{ fontSize: 13, fontWeight: 600, color: "#111827" }}>{pt.more.importData}</div>
+                <div style={{ fontSize: 11, color: "#9CA3AF" }}>{pt.more.importDesc}</div>
               </div>
             </button>
             <button onClick={handleReset} style={{ ...actionRow, borderBottom: "none" }}>
               <Trash2 size={16} color="#E85D5D" />
               <div>
-                <div style={{ fontSize: 13, fontWeight: 600, color: "#E85D5D" }}>{plannerText.more.resetData}</div>
-                <div style={{ fontSize: 11, color: "#9CA3AF" }}>{plannerText.more.resetDesc}</div>
+                <div style={{ fontSize: 13, fontWeight: 600, color: "#E85D5D" }}>{pt.more.resetData}</div>
+                <div style={{ fontSize: 11, color: "#9CA3AF" }}>{pt.more.resetDesc}</div>
               </div>
             </button>
           </div>
@@ -220,7 +222,7 @@ export default function MoreScreen({ data, onUpdate, isDemoMode = false, onConta
       {/* Prototype note */}
       <div style={{ marginTop: 20, padding: "12px 14px", background: "#F9FAFB", borderRadius: 12, border: "1px solid #E5E7EB" }}>
         <div style={{ fontSize: 11, color: "#9CA3AF", lineHeight: 1.5 }}>
-          {plannerText.more.prototypeNote}
+          {pt.more.prototypeNote}
         </div>
       </div>
     </div>

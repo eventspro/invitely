@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { Check, Trash2, Pencil, ClipboardList, Clock, CheckCircle2 } from "lucide-react";
-import { plannerText } from "../plannerTextConfig";
+import { usePlannerText } from "../PlannerLocaleContext";
 import { formatDate } from "../plannerUtils";
 import type { Task, TaskPriority } from "../types";
 
@@ -12,15 +12,17 @@ interface TasksScreenProps {
   onEdit: (task: Task) => void;
 }
 
-const PRIORITY_STYLE: Record<TaskPriority, { bg: string; color: string; label: string }> = {
-  high:   { bg: "#FEF2F2", color: "#E85D5D", label: plannerText.tasks.high },
-  medium: { bg: "#FFF3E0", color: "#D7951E", label: plannerText.tasks.medium },
-  low:    { bg: "#EFF6FF", color: "#3B82F6", label: plannerText.tasks.low },
-};
-
 type Filter = "all" | "pending" | "done";
 
 export default function TasksScreen({ tasks, onToggle, onDelete, onAdd, onEdit }: TasksScreenProps) {
+  const pt = usePlannerText();
+
+  const PRIORITY_STYLE: Record<TaskPriority, { bg: string; color: string; label: string }> = {
+    high:   { bg: "#FEF2F2", color: "#E85D5D", label: pt.tasks.high },
+    medium: { bg: "#FFF3E0", color: "#D7951E", label: pt.tasks.medium },
+    low:    { bg: "#EFF6FF", color: "#3B82F6", label: pt.tasks.low },
+  };
+
   const [filter, setFilter] = useState<Filter>("all");
 
   const pending  = tasks.filter(t => !t.done);
@@ -28,9 +30,9 @@ export default function TasksScreen({ tasks, onToggle, onDelete, onAdd, onEdit }
   const filtered = filter === "all" ? tasks : filter === "pending" ? pending : done;
 
   const FILTERS: { key: Filter; label: string; count: number }[] = [
-    { key: "all",     label: plannerText.tasks.all,     count: tasks.length },
-    { key: "pending", label: plannerText.tasks.pending,  count: pending.length },
-    { key: "done",    label: plannerText.tasks.done,     count: done.length },
+    { key: "all",     label: pt.tasks.all,     count: tasks.length },
+    { key: "pending", label: pt.tasks.pending,  count: pending.length },
+    { key: "done",    label: pt.tasks.done,     count: done.length },
   ];
 
   // ── Shared styles ────────────────────────────────────────────────────────
@@ -52,7 +54,7 @@ export default function TasksScreen({ tasks, onToggle, onDelete, onAdd, onEdit }
         WebkitTapHighlightColor: "transparent",
       }}
     >
-      + {plannerText.tasks.addTask}
+      + {pt.tasks.addTask}
     </button>
   );
 
@@ -99,10 +101,10 @@ export default function TasksScreen({ tasks, onToggle, onDelete, onAdd, onEdit }
         <ClipboardList size={28} color="#064E3B" strokeWidth={1.5} />
       </div>
       <div style={{ fontSize: 16, fontWeight: 700, color: "#111827", marginBottom: 6 }}>
-        {filter === "done" ? plannerText.tasks.noTasksDone : plannerText.tasks.noTasks}
+        {filter === "done" ? pt.tasks.noTasksDone : pt.tasks.noTasks}
       </div>
       <div style={{ fontSize: 13, color: "#9CA3AF" }}>
-        {filter === "done" ? plannerText.tasks.noTasksDoneDesc : plannerText.tasks.noTasksDesc}
+        {filter === "done" ? pt.tasks.noTasksDoneDesc : pt.tasks.noTasksDesc}
       </div>
     </div>
   );
@@ -172,7 +174,7 @@ export default function TasksScreen({ tasks, onToggle, onDelete, onAdd, onEdit }
                   <Pencil size={14} />
                 </button>
                 <button
-                  onClick={() => { if (window.confirm(plannerText.tasks.deleteConfirm)) onDelete(task.id); }}
+                  onClick={() => { if (window.confirm(pt.tasks.deleteConfirm)) onDelete(task.id); }}
                   style={{
                     border: "none", background: "transparent", cursor: "pointer",
                     color: "#D1D5DB", padding: 4, WebkitTapHighlightColor: "transparent",
@@ -191,9 +193,9 @@ export default function TasksScreen({ tasks, onToggle, onDelete, onAdd, onEdit }
   const mobileStatStrip = (
     <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 10, marginBottom: 16 }}>
       {[
-        { label: plannerText.tasks.totalTasks, value: tasks.length,   color: "#111827" },
-        { label: plannerText.tasks.pending,    value: pending.length, color: "#D7951E" },
-        { label: plannerText.tasks.done,       value: done.length,    color: "#16864A" },
+        { label: pt.tasks.totalTasks, value: tasks.length,   color: "#111827" },
+        { label: pt.tasks.pending,    value: pending.length, color: "#D7951E" },
+        { label: pt.tasks.done,       value: done.length,    color: "#16864A" },
       ].map(s => (
         <div key={s.label} style={{
           background: "#FFFFFF", borderRadius: 12, border: "1px solid #E5E7EB",
@@ -221,17 +223,17 @@ export default function TasksScreen({ tasks, onToggle, onDelete, onAdd, onEdit }
       <div className="pp-desktop-view pp-page-pad">
         <div style={{ marginBottom: 24 }}>
           <h1 style={{ fontSize: 28, fontWeight: 800, color: "#111827", margin: "0 0 4px", letterSpacing: "-0.03em" }}>
-            {plannerText.tasks.title}
+            {pt.tasks.title}
           </h1>
-          <p style={{ fontSize: 14, color: "#6B7280", margin: 0 }}>{plannerText.tasks.subtitle}</p>
+          <p style={{ fontSize: 14, color: "#6B7280", margin: 0 }}>{pt.tasks.subtitle}</p>
         </div>
 
         {/* Desktop stat cards */}
         <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 16, marginBottom: 24 }}>
           {[
-            { label: plannerText.tasks.totalTasks, value: tasks.length,   color: "#111827", iconBg: "#F3F4F6", Icon: ClipboardList, iconColor: "#6B7280" },
-            { label: plannerText.tasks.pending,    value: pending.length, color: "#D7951E", iconBg: "#FFF3E0", Icon: Clock,          iconColor: "#D7951E" },
-            { label: plannerText.tasks.done,       value: done.length,    color: "#16864A", iconBg: "#E6F4EC", Icon: CheckCircle2,   iconColor: "#16864A" },
+            { label: pt.tasks.totalTasks, value: tasks.length,   color: "#111827", iconBg: "#F3F4F6", Icon: ClipboardList, iconColor: "#6B7280" },
+            { label: pt.tasks.pending,    value: pending.length, color: "#D7951E", iconBg: "#FFF3E0", Icon: Clock,          iconColor: "#D7951E" },
+            { label: pt.tasks.done,       value: done.length,    color: "#16864A", iconBg: "#E6F4EC", Icon: CheckCircle2,   iconColor: "#16864A" },
           ].map(s => (
             <div key={s.label} style={{
               background: "#FFFFFF", borderRadius: 16, border: "1px solid #E5E7EB",
