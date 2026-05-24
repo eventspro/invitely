@@ -196,7 +196,7 @@ export default function ContactRequestModal({ feature = "more", onClose }: Props
             {/* Callback checkbox */}
             <label style={{ display: "flex", alignItems: "center", gap: 10, cursor: "pointer" }}>
               <div
-                onClick={() => setState(s => { setCallbackRequested(v => !v); return s; })}
+                onClick={() => setCallbackRequested(v => !v)}
                 style={{
                   width: 18, height: 18, borderRadius: 5,
                   border: `2px solid ${callbackRequested ? "#d8b66a" : "rgba(216,182,106,0.3)"}`,
