@@ -60,23 +60,17 @@ export const BUDGET_STATUS_COLORS: Record<BudgetStatus, string> = {
 };
 
 export const BUDGET_CATEGORIES = [
-  plannerText.budgetCategories.restaurant,
-  plannerText.budgetCategories.music,
-  plannerText.budgetCategories.photographer,
-  plannerText.budgetCategories.videographer,
-  plannerText.budgetCategories.decorations,
-  plannerText.budgetCategories.flowers,
-  plannerText.budgetCategories.dress,
-  plannerText.budgetCategories.suit,
-  plannerText.budgetCategories.makeup,
-  plannerText.budgetCategories.hair,
-  plannerText.budgetCategories.cake,
-  plannerText.budgetCategories.cars,
-  plannerText.budgetCategories.invitations,
-  plannerText.budgetCategories.website,
-  plannerText.budgetCategories.host,
-  plannerText.budgetCategories.lighting,
-  plannerText.budgetCategories.other,
+  plannerText.budget.categories.restaurant,
+  plannerText.budget.categories.music,
+  plannerText.budget.categories.photographer,
+  plannerText.budget.categories.videographer,
+  plannerText.budget.categories.decorations,
+  plannerText.budget.categories.flowers,
+  plannerText.budget.categories.invitations,
+  plannerText.budget.categories.website,
+  plannerText.budget.categories.host,
+  plannerText.budget.categories.lighting,
+  plannerText.budget.categories.other,
 ];
 
 export const NAV_ITEMS: { id: string; label: string }[] = [

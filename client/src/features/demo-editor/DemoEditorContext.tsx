@@ -8,6 +8,7 @@ import type { WeddingConfig } from "@/templates/types";
 import { defaultConfig as romanticDefaultConfig } from "@/templates/romantic/config";
 import { DEMO_DEFAULT_CONFIG } from "./demoConfig";
 import { saveDemoConfig } from "./demoStorage";
+import type { EditTarget } from "./click-editor/EditableElement";
 
 export type PreviewMode = "desktop" | "mobile";
 
@@ -17,15 +18,19 @@ interface DemoEditorContextValue {
   config: WeddingConfig;
   baseLoaded: boolean;
   previewMode: PreviewMode;
-  /** Current wizard step (1–7) */
   currentStep: number;
   isDirty: boolean;
+  isClickEditMode: boolean;
+  activeEditTarget: EditTarget | null;
   setPreviewMode: (m: PreviewMode) => void;
   setCurrentStep: (step: number) => void;
   updateConfig: (patch: DeepPartial<WeddingConfig>) => void;
   applyCustomerPatch: (patch: DeepPartial<WeddingConfig>) => void;
   saveConfig: () => void;
   resetConfig: () => void;
+  openEditor: (target: EditTarget) => void;
+  closeEditor: () => void;
+  updateConfigByPath: (path: string, value: string | string[]) => void;
 }
 
 const DemoEditorContext = createContext<DemoEditorContextValue | null>(null);
@@ -38,6 +43,8 @@ export function DemoEditorProvider({ children }: { children: React.ReactNode }) 
   const [previewMode, setPreviewMode] = useState<PreviewMode>("desktop");
   const [currentStep, setCurrentStep] = useState(1);
   const [isDirty, setIsDirty] = useState(false);
+  const [isClickEditMode] = useState(false);
+  const [activeEditTarget, setActiveEditTarget] = useState<EditTarget | null>(null);
 
   // Fetch the real live template config once on mount and use it as the base.
   // We deep-merge: romanticDefaultConfig (has all Armenian texts) + DB config (has real
@@ -100,6 +107,30 @@ export function DemoEditorProvider({ children }: { children: React.ReactNode }) 
     setCurrentStep(1);
   }, []);
 
+  const openEditor = useCallback((target: EditTarget) => {
+    setActiveEditTarget(target);
+  }, []);
+
+  const closeEditor = useCallback(() => {
+    setActiveEditTarget(null);
+  }, []);
+
+  const updateConfigByPath = useCallback((path: string, value: string | string[]) => {
+    setConfig(prev => {
+      const next = structuredClone(prev) as unknown as Record<string, unknown>;
+      const keys = path.split(".");
+      let cur: Record<string, unknown> = next;
+      for (let i = 0; i < keys.length - 1; i++) {
+        if (typeof cur[keys[i]] !== "object" || cur[keys[i]] === null) cur[keys[i]] = {};
+        cur = cur[keys[i]] as Record<string, unknown>;
+      }
+      cur[keys[keys.length - 1]] = value;
+      setIsDirty(true);
+      scheduleAutosave(next as unknown as WeddingConfig);
+      return next as unknown as WeddingConfig;
+    });
+  }, [scheduleAutosave]);
+
   useEffect(() => () => {
     if (autoSaveTimer.current) clearTimeout(autoSaveTimer.current);
   }, []);
@@ -108,8 +139,10 @@ export function DemoEditorProvider({ children }: { children: React.ReactNode }) 
     <DemoEditorContext.Provider
       value={{
         config, baseLoaded, previewMode, currentStep, isDirty,
+        isClickEditMode, activeEditTarget,
         setPreviewMode, setCurrentStep,
         updateConfig, applyCustomerPatch, saveConfig, resetConfig,
+        openEditor, closeEditor, updateConfigByPath,
       }}
     >
       {children}

@@ -8,7 +8,7 @@ function mergeWithDefaults(stored: Record<string, unknown>): HomepageContent {
   const result = { ...DEFAULT_HOMEPAGE_CONTENT } as Record<string, unknown>;
   for (const key of Object.keys(DEFAULT_HOMEPAGE_CONTENT) as (keyof HomepageContent)[]) {
     const storedVal = stored[key];
-    const defaultVal = (DEFAULT_HOMEPAGE_CONTENT as Record<string, unknown>)[key];
+    const defaultVal = (DEFAULT_HOMEPAGE_CONTENT as unknown as Record<string, unknown>)[key];
     if (storedVal === undefined) continue;
     if (
       typeof storedVal === "object" && storedVal !== null && !Array.isArray(storedVal) &&
@@ -20,7 +20,7 @@ function mergeWithDefaults(stored: Record<string, unknown>): HomepageContent {
       result[key] = storedVal;
     }
   }
-  return result as HomepageContent;
+  return result as unknown as HomepageContent;
 }
 
 export function loadHomepageContent(): HomepageContent {
