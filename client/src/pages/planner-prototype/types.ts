@@ -6,7 +6,8 @@ export type TaskPriority = "high" | "medium" | "low";
 export type BudgetCategory =
   | "venue" | "catering" | "decor" | "photo" | "music"
   | "restaurant" | "photographer" | "videographer" | "decorations"
-  | "flowers" | "invitations" | "website" | "host" | "lighting" | "other";
+  | "flowers" | "invitations" | "website" | "host" | "lighting" | "other"
+  | "custom";
 export type TabId = "dashboard" | "guests" | "tables" | "budget" | "more";
 
 export interface Task {
@@ -55,6 +56,7 @@ export interface Seat {
 export interface BudgetItem {
   id: string;
   category: BudgetCategory;
+  customCategoryName?: string;
   title: string;
   vendorName?: string;
   plannedCost: number;
@@ -63,6 +65,8 @@ export interface BudgetItem {
   dueDate?: string;
   status: BudgetStatus;
   notes?: string;
+  receiptDataUrl?: string;
+  receiptFileName?: string;
 }
 
 export interface PlannerSettings {
@@ -71,6 +75,7 @@ export interface PlannerSettings {
   currency: string;
   defaultSeatsPerTable: number;
   restaurantPricePerGuest: number;
+  totalBudget: number;
 }
 
 export interface PlannerData {

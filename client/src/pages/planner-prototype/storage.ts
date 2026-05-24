@@ -1,33 +1,33 @@
 import type { PlannerData } from "./types";
 import { DEFAULT_DATA } from "./defaultData";
 
-const LS_KEY = "wedding_planner_prototype_v2";
+const DEFAULT_LS_KEY = "wedding_planner_prototype_v2";
 
-export function loadData(): PlannerData {
+export function loadData(key = DEFAULT_LS_KEY, fallback: PlannerData = DEFAULT_DATA): PlannerData {
   try {
-    const raw = localStorage.getItem(LS_KEY);
-    if (!raw) return structuredClone(DEFAULT_DATA);
+    const raw = localStorage.getItem(key);
+    if (!raw) return structuredClone(fallback);
     const parsed = JSON.parse(raw) as PlannerData;
     if (!Array.isArray(parsed.guests) || !Array.isArray(parsed.tables)) {
-      return structuredClone(DEFAULT_DATA);
+      return structuredClone(fallback);
     }
-    return { ...structuredClone(DEFAULT_DATA), ...parsed };
+    return { ...structuredClone(fallback), ...parsed };
   } catch {
-    return structuredClone(DEFAULT_DATA);
+    return structuredClone(fallback);
   }
 }
 
-export function saveData(data: PlannerData): void {
+export function saveData(data: PlannerData, key = DEFAULT_LS_KEY): void {
   try {
-    localStorage.setItem(LS_KEY, JSON.stringify(data));
+    localStorage.setItem(key, JSON.stringify(data));
   } catch {
     // ignore quota errors
   }
 }
 
-export function clearData(): void {
+export function clearData(key = DEFAULT_LS_KEY): void {
   try {
-    localStorage.removeItem(LS_KEY);
+    localStorage.removeItem(key);
   } catch {
     // ignore
   }

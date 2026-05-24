@@ -10,6 +10,7 @@ interface MoreScreenProps {
   onUpdate: (data: PlannerData) => void;
   isDemoMode?: boolean;
   onContactUs?: () => void;
+  storageKey?: string;
 }
 
 const inputStyle: React.CSSProperties = {
@@ -24,7 +25,7 @@ const inputStyle: React.CSSProperties = {
   boxSizing: "border-box",
 };
 
-export default function MoreScreen({ data, onUpdate, isDemoMode = false, onContactUs }: MoreScreenProps) {
+export default function MoreScreen({ data, onUpdate, isDemoMode = false, onContactUs, storageKey }: MoreScreenProps) {
   const pt = usePlannerText();
   const [settings, setSettings] = useState({ ...data.settings });
   const [saved, setSaved] = useState(false);
@@ -59,7 +60,7 @@ export default function MoreScreen({ data, onUpdate, isDemoMode = false, onConta
 
   function handleReset() {
     if (window.confirm(pt.warnings.resetConfirm)) {
-      clearData();
+      clearData(storageKey);
       window.location.reload();
     }
   }

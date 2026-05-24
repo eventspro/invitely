@@ -1,7 +1,7 @@
 import express from 'express';
 import { db } from '../db.js';
 import { managementUsers, orders, userAdminPanels, templates } from '../../shared/schema.js';
-import { eq, and, sql } from 'drizzle-orm';
+import { eq, and, sql, or, isNull } from 'drizzle-orm';
 import { 
   hashPassword, 
   comparePassword, 
@@ -257,12 +257,12 @@ router.post('/login', authLimiter, async (req, res) => {
       })
       .from(userAdminPanels)
       .innerJoin(templates, eq(userAdminPanels.templateId, templates.id))
-      .innerJoin(orders, eq(userAdminPanels.orderId, orders.id))
+      .leftJoin(orders, eq(userAdminPanels.orderId, orders.id))
       .where(
         and(
           eq(userAdminPanels.userId, user.id),
           eq(userAdminPanels.isActive, true),
-          eq(orders.status, 'completed')
+          or(isNull(userAdminPanels.orderId), eq(orders.status, 'completed'))
         )
       );
 
@@ -346,12 +346,12 @@ router.post('/template-login', async (req, res) => {
       })
       .from(userAdminPanels)
       .innerJoin(templates, eq(userAdminPanels.templateId, templates.id))
-      .innerJoin(orders, eq(userAdminPanels.orderId, orders.id))
+      .leftJoin(orders, eq(userAdminPanels.orderId, orders.id))
       .where(
         and(
           eq(userAdminPanels.userId, user.id),
           eq(userAdminPanels.isActive, true),
-          eq(orders.status, 'completed')
+          or(isNull(userAdminPanels.orderId), eq(orders.status, 'completed'))
         )
       );
 
@@ -585,7 +585,7 @@ router.get('/profile', authenticateUser, async (req: AuthenticatedRequest, res) 
       })
       .from(userAdminPanels)
       .innerJoin(templates, eq(userAdminPanels.templateId, templates.id))
-      .innerJoin(orders, eq(userAdminPanels.orderId, orders.id))
+      .leftJoin(orders, eq(userAdminPanels.orderId, orders.id))
       .where(
         and(
           eq(userAdminPanels.userId, req.user!.id),

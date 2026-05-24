@@ -24,6 +24,10 @@ interface PlannerPrototypePageProps {
   isDemoMode?: boolean;
   demoLimits?: { maxGuests: number; maxTables: number; maxBudgetItems: number };
   onDemoLimitReached?: (feature: string) => void;
+  userDisplayName?: string;
+  onLogout?: () => void;
+  storageKey?: string;
+  initialData?: PlannerData;
 }
 
 export default function PlannerPrototypePage(props: PlannerPrototypePageProps = {}) {
@@ -38,6 +42,10 @@ function PlannerPrototypeContent({
   isDemoMode = false,
   demoLimits = { maxGuests: 5, maxTables: 2, maxBudgetItems: 5 },
   onDemoLimitReached,
+  userDisplayName,
+  onLogout,
+  storageKey,
+  initialData,
 }: PlannerPrototypePageProps) {
   const pt = usePlannerText();
 
@@ -49,7 +57,7 @@ function PlannerPrototypeContent({
     more: pt.nav.more,
   };
 
-  const [data, setData] = useState<PlannerData>(() => loadData());
+  const [data, setData] = useState<PlannerData>(() => loadData(storageKey, initialData));
   const [activeTab, setActiveTab] = useState<TabId>("dashboard");
 
   const [showTasksScreen, setShowTasksScreen] = useState(false);
@@ -67,8 +75,8 @@ function PlannerPrototypeContent({
   const [editingTask, setEditingTask] = useState<Task | undefined>(undefined);
 
   useEffect(() => {
-    saveData(data);
-  }, [data]);
+    saveData(data, storageKey);
+  }, [data, storageKey]);
 
   const updateData = useCallback((next: PlannerData) => {
     setData(next);
@@ -229,6 +237,8 @@ function PlannerPrototypeContent({
           onBack={() => setShowTasksScreen(false)}
           isDemoMode={isDemoMode}
           onDemoContactUs={() => onDemoLimitReached?.("more")}
+          userDisplayName={userDisplayName}
+          onLogout={onLogout}
           headerRight={
             <button
               onClick={() => { setEditingTask(undefined); setTaskSheetOpen(true); }}
@@ -307,6 +317,8 @@ function PlannerPrototypeContent({
         headerRight={headerRight}
         isDemoMode={isDemoMode}
         onDemoContactUs={() => onDemoLimitReached?.("more")}
+        userDisplayName={userDisplayName}
+        onLogout={onLogout}
       >
         {activeTab === "dashboard" && <DashboardScreen data={data} onNavigate={(tab) => setActiveTab(tab)} onViewTasks={() => setShowTasksScreen(true)} onToggleTask={handleToggleTask} />}
 
@@ -341,14 +353,16 @@ function PlannerPrototypeContent({
           <BudgetScreen
             budgetItems={data.budgetItems}
             currency={data.settings.currency}
+            settings={data.settings}
             onAdd={() => { setEditingBudget(undefined); setBudgetSheetOpen(true); }}
             onEdit={item => { setEditingBudget(item); setBudgetSheetOpen(true); }}
             onDelete={handleDeleteBudget}
+            onUpdateSettings={s => setData(prev => ({ ...prev, settings: s }))}
           />
         )}
 
         {activeTab === "more" && (
-          <MoreScreen data={data} onUpdate={updateData} isDemoMode={isDemoMode} onContactUs={() => onDemoLimitReached?.("more")} />
+          <MoreScreen data={data} onUpdate={updateData} isDemoMode={isDemoMode} onContactUs={() => onDemoLimitReached?.("more")} storageKey={storageKey} />
         )}
       </PlannerShell>
 

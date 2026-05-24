@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import BottomNav from "./components/BottomNav";
 import SidebarNav from "./components/SidebarNav";
-import { Bell, Calendar, ArrowLeft, Menu, X, Home, Users, LayoutGrid, Wallet, MoreHorizontal, Heart } from "lucide-react";
+import { Bell, Calendar, ArrowLeft, Menu, X, Home, Users, LayoutGrid, Wallet, MoreHorizontal, Heart, LogOut } from "lucide-react";
 import { formatDate } from "./plannerUtils";
 import { usePlannerText, LocaleSwitcher } from "./PlannerLocaleContext";
 import type { TabId, PlannerSettings } from "./types";
@@ -17,6 +17,8 @@ interface PlannerShellProps {
   onBack?: () => void;
   isDemoMode?: boolean;
   onDemoContactUs?: () => void;
+  userDisplayName?: string;
+  onLogout?: () => void;
 }
 
 const PLANNER_CSS = `
@@ -68,6 +70,8 @@ export default function PlannerShell({
   onBack,
   isDemoMode = false,
   onDemoContactUs,
+  userDisplayName,
+  onLogout,
 }: PlannerShellProps) {
   const pt = usePlannerText();
   const [drawerOpen, setDrawerOpen] = useState(false);
@@ -128,6 +132,14 @@ export default function PlannerShell({
                   </button>
                 </>
               )}
+              {!isDemoMode && userDisplayName && (
+                <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                  <div style={{ width: 30, height: 30, borderRadius: "50%", background: "linear-gradient(135deg, #00472F, #006B4A)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 11, fontWeight: 700, color: "#FFFFFF", flexShrink: 0 }}>
+                    {userDisplayName.slice(0, 2).toUpperCase()}
+                  </div>
+                  <span style={{ fontSize: 13, fontWeight: 600, color: "#374151" }}>{userDisplayName}</span>
+                </div>
+              )}
             </div>
             {/* Language switcher */}
             <LocaleSwitcher />
@@ -143,13 +155,23 @@ export default function PlannerShell({
             <button style={{ width: 38, height: 38, borderRadius: 10, border: "1px solid #E5E7EB", background: "#F9FAFB", display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer" }}>
               <Bell size={16} color="#6B7280" strokeWidth={1.75} />
             </button>
-            {/* Avatar */}
-            <button style={{ display: "flex", alignItems: "center", gap: 8, background: "#F9FAFB", border: "1px solid #E5E7EB", borderRadius: 10, padding: "5px 14px 5px 6px", cursor: "pointer" }}>
-              <div style={{ width: 30, height: 30, borderRadius: "50%", background: "linear-gradient(135deg, #00472F, #006B4A)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 11, fontWeight: 700, color: "#FFFFFF", flexShrink: 0 }}>
-                {initials}
-              </div>
-              <span style={{ fontSize: 13, fontWeight: 600, color: "#111827" }}>{settings.coupleName}</span>
-            </button>
+            {/* Logout (customer mode) or Avatar (prototype mode) */}
+            {onLogout ? (
+              <button
+                onClick={onLogout}
+                style={{ display: "flex", alignItems: "center", gap: 6, background: "#F9FAFB", border: "1px solid #E5E7EB", borderRadius: 10, padding: "6px 14px", cursor: "pointer", fontSize: 13, fontWeight: 600, color: "#6B7280" }}
+              >
+                <LogOut size={14} strokeWidth={1.75} />
+                {pt.auth.logout}
+              </button>
+            ) : (
+              <button style={{ display: "flex", alignItems: "center", gap: 8, background: "#F9FAFB", border: "1px solid #E5E7EB", borderRadius: 10, padding: "5px 14px 5px 6px", cursor: "pointer" }}>
+                <div style={{ width: 30, height: 30, borderRadius: "50%", background: "linear-gradient(135deg, #00472F, #006B4A)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 11, fontWeight: 700, color: "#FFFFFF", flexShrink: 0 }}>
+                  {initials}
+                </div>
+                <span style={{ fontSize: 13, fontWeight: 600, color: "#111827" }}>{settings.coupleName}</span>
+              </button>
+            )}
             {headerRight && <div style={{ marginLeft: 4 }}>{headerRight}</div>}
           </header>
           <main style={{ flex: 1, overflowY: "auto", overflowX: "hidden" }}>
@@ -270,6 +292,15 @@ export default function PlannerShell({
                     <div style={{ fontSize: 12, fontWeight: 600, color: "#374151" }}>{formatDate(settings.weddingDate)}</div>
                   </div>
                 </div>
+                {onLogout && (
+                  <button
+                    onClick={() => { setDrawerOpen(false); onLogout(); }}
+                    style={{ marginTop: 14, width: "100%", display: "flex", alignItems: "center", gap: 8, padding: "10px 12px", borderRadius: 10, border: "1px solid #E5E7EB", background: "#FAFAFA", color: "#6B7280", fontSize: 13, fontWeight: 600, cursor: "pointer", WebkitTapHighlightColor: "transparent" }}
+                  >
+                    <LogOut size={15} strokeWidth={1.75} />
+                    {pt.auth.logout}
+                  </button>
+                )}
               </div>
             </div>
           </>

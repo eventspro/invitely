@@ -82,5 +82,22 @@ export const DEFAULT_DATA: PlannerData = {
     currency: "$",
     defaultSeatsPerTable: 10,
     restaurantPricePerGuest: 150,
+    totalBudget: 0,
+  },
+};
+
+export const BLANK_DATA: PlannerData = {
+  guests: [],
+  tables: [],
+  seats: [],
+  budgetItems: [],
+  tasks: [],
+  settings: {
+    weddingDate: "",
+    coupleName: "",
+    currency: "$",
+    defaultSeatsPerTable: 10,
+    restaurantPricePerGuest: 150,
+    totalBudget: 0,
   },
 };
