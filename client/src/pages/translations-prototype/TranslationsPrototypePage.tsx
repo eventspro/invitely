@@ -4,7 +4,7 @@
  * Left panel: EditorPanel | Right panel: HomepagePreview
  * Persists to localStorage, supports JSON export/import.
  */
-import { useState, useRef, useCallback } from "react";
+import { useState, useRef, useCallback, useEffect } from "react";
 import {
   Download, Upload, RotateCcw, Save, Monitor, Smartphone,
 } from "lucide-react";
@@ -17,24 +17,38 @@ import {
   saveHomepageContent,
   resetHomepageContent,
   exportHomepageContent,
+  fetchHomepageContentFromServer,
+  publishHomepageContent,
 } from "../../content/homepage/homepageContentStorage";
 
 export default function TranslationsPrototypePage() {
   const [content, setContent] = useState<HomepageContent>(loadHomepageContent);
   const [locale, setLocale] = useState<Locale>("hy");
   const [previewMode, setPreviewMode] = useState<"desktop" | "mobile">("desktop");
-  const [saved, setSaved] = useState(false);
+  const [saved, setSaved] = useState<"idle" | "saving" | "saved" | "error">("idle");
   const [activeTab, setActiveTab] = useState<"editor" | "preview">("editor");
   const importRef = useRef<HTMLInputElement>(null);
+
+  // On mount: try to load the server-published version as the authoritative source
+  useEffect(() => {
+    fetchHomepageContentFromServer().then(serverContent => {
+      if (serverContent) {
+        setContent(serverContent);
+        saveHomepageContent(serverContent); // sync localStorage to match server
+      }
+    });
+  }, []);
 
   const handleChange = useCallback((c: HomepageContent) => {
     setContent(c);
   }, []);
 
-  function handleSave() {
-    saveHomepageContent(content);
-    setSaved(true);
-    setTimeout(() => setSaved(false), 2000);
+  async function handleSave() {
+    setSaved("saving");
+    saveHomepageContent(content); // always update localStorage
+    const ok = await publishHomepageContent(content);
+    setSaved(ok ? "saved" : "error");
+    setTimeout(() => setSaved("idle"), 2500);
   }
 
   function handleReset() {
@@ -116,9 +130,10 @@ export default function TranslationsPrototypePage() {
         <div style={{ flex: 1 }} />
 
         {/* Action buttons */}
-        <button type="button" onClick={handleSave} style={{ ...btnBase, background: saved ? "#d8f0e0" : "#f0cf82", color: "#0D2A20", border: "none" }}>
+        <button type="button" onClick={handleSave} disabled={saved === "saving"}
+          style={{ ...btnBase, background: saved === "saved" ? "#d8f0e0" : saved === "error" ? "#fde8e8" : "#f0cf82", color: "#0D2A20", border: "none", opacity: saved === "saving" ? 0.7 : 1 }}>
           <Save className="h-3.5 w-3.5" />
-          {saved ? "Saved!" : "Save Draft"}
+          {saved === "saving" ? "Publishing…" : saved === "saved" ? "Published!" : saved === "error" ? "Auth needed" : "Save Draft"}
         </button>
         <button type="button" onClick={handleExport} style={{ ...btnBase, background: "rgba(255,255,255,0.12)", color: "rgba(255,255,255,0.9)", border: "1px solid rgba(255,255,255,0.2)" }}>
           <Download className="h-3.5 w-3.5" /> Export

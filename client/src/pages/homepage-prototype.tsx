@@ -36,7 +36,7 @@ import {
   Users,
   X,
 } from "lucide-react";
-import { loadHomepageContent } from "../content/homepage/homepageContentStorage";
+import { loadHomepageContent, fetchHomepageContentFromServer, saveHomepageContent } from "../content/homepage/homepageContentStorage";
 import type { IconKey } from "../content/homepage/homepageContentTypes";
 import { SaleWheelModal } from "../components/SaleWheelModal";
 
@@ -301,8 +301,17 @@ export default function HomepagePrototype() {
   const [showSaleWheel, setShowSaleWheel] = useState(false);
   const carouselRef = useRef<HTMLDivElement>(null);
 
-  // Live config from translations-prototype / localStorage
+  // Live config from translations-prototype / localStorage, then server
   const [cfg, setCfg] = useState(() => loadHomepageContent());
+  useEffect(() => {
+    // Fetch authoritative content from server (overrides localStorage defaults for all visitors)
+    fetchHomepageContentFromServer().then(serverContent => {
+      if (serverContent) {
+        setCfg(serverContent);
+        saveHomepageContent(serverContent);
+      }
+    });
+  }, []);
   useEffect(() => {
     const refresh = () => setCfg(loadHomepageContent());
     const handleStorage = (e: StorageEvent) => {

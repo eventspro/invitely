@@ -64,3 +64,36 @@ export function exportHomepageContent(content: HomepageContent): void {
 export function importHomepageContent(json: string): HomepageContent {
   return JSON.parse(json) as HomepageContent;
 }
+
+// ── Server-side persistence ──────────────────────────────────────────────────
+
+/** Fetch the published homepage content from the server. Returns null if not yet published. */
+export async function fetchHomepageContentFromServer(): Promise<HomepageContent | null> {
+  try {
+    const res = await fetch("/api/homepage-content");
+    if (!res.ok) return null;
+    const data = await res.json() as { content: HomepageContent | null };
+    if (!data.content) return null;
+    return mergeWithDefaults(data.content as unknown as Record<string, unknown>);
+  } catch {
+    return null;
+  }
+}
+
+/** Publish homepage content to the server (admin JWT from localStorage required). */
+export async function publishHomepageContent(content: HomepageContent): Promise<boolean> {
+  try {
+    const token = localStorage.getItem("adminToken") ?? localStorage.getItem("admin-token") ?? "";
+    const res = await fetch("/api/homepage-content", {
+      method: "PUT",
+      headers: {
+        "Content-Type": "application/json",
+        ...(token ? { Authorization: `Bearer ${token}` } : {}),
+      },
+      body: JSON.stringify(content),
+    });
+    return res.ok;
+  } catch {
+    return false;
+  }
+}
