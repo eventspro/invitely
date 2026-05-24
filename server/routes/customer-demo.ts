@@ -30,7 +30,9 @@ import jwt from "jsonwebtoken";
 import { z } from "zod";
 
 // ─── Multer for demo image uploads ────────────────────────────────────────────
-const demoUploadDir = path.join(process.cwd(), "uploads", "demo-images");
+const demoUploadDir = process.env.VERCEL
+  ? path.join("/tmp", "uploads", "demo-images")
+  : path.join(process.cwd(), "uploads", "demo-images");
 fs.mkdirSync(demoUploadDir, { recursive: true });
 
 const demoStorage = multer.diskStorage({
