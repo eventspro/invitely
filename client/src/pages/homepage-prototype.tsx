@@ -1,4 +1,4 @@
-/**
+﻿/**
  * homepage-prototype.tsx
  *
  * Route: /homepage-prototype
@@ -319,7 +319,13 @@ export default function HomepagePrototype() {
   // ─── Derived data (always hy locale) ────────────────────────────────────
   const navItems = cfg.navigation.items
     .filter(i => i.visible)
-    .map(i => ({ label: i.label.hy, href: i.href }));
+    .map(i => ({
+      label: i.label.hy,
+      // Ensure Wedding Planner always points to /planner-prototype regardless of stored value
+      href: (i.id === "nav-planner" || i.label.en === "Wedding Planner")
+        ? "/planner-prototype"
+        : i.href,
+    }));
 
   const heroChips = cfg.hero.chips
     .filter(c => c.visible)
