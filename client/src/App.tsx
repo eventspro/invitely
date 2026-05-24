@@ -52,9 +52,9 @@ function Router() {
   return (
     <Switch>
       {/* Main landing page */}
-      <Route path="/" component={MainPage} />
+      <Route path="/" component={HomepagePrototype} />
 
-      {/* Isolated homepage redesign prototype */}
+      {/* Legacy homepage (kept for reference) */}
       <Route path="/homepage-prototype" component={HomepagePrototype} />
       
       {/* Templates showcase page */}
