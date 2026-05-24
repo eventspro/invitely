@@ -4,7 +4,6 @@ import { Heart, LayoutTemplate, LogOut } from "lucide-react";
 import { plannerText } from "../planner-prototype/plannerTextConfig";
 import { BLANK_DATA } from "../planner-prototype/defaultData";
 import { usePlannerAuth } from "./usePlannerAuth";
-import { PLANNER_TOKEN_KEY } from "./plannerAccessTypes";
 import PlannerPrototypePage from "../planner-prototype/PlannerPrototypePage";
 import type { PlannerData, Guest, RsvpStatus } from "../planner-prototype/types";
 
@@ -128,10 +127,10 @@ export default function PlannerPage() {
     }
 
     // First-time login: fetch RSVPs to pre-populate guests
-    fetchInitialData(project.templateId, token).then(data => {
-      setInitialData(data);
-      setDataReady(true);
-    });
+    fetchInitialData(project.templateId, token)
+      .then(data => { setInitialData(data); })
+      .catch(() => { setInitialData({ ...BLANK_DATA }); })
+      .finally(() => { setDataReady(true); });
   }, [authState.status]);
 
   if (authState.status === "loading" || authState.status === "unauthenticated") {

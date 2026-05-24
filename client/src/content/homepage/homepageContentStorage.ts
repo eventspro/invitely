@@ -80,10 +80,15 @@ export async function fetchHomepageContentFromServer(): Promise<HomepageContent 
   }
 }
 
-/** Publish homepage content to the server (admin JWT from localStorage required). */
+/** Publish homepage content to the server (any valid management user JWT accepted). */
 export async function publishHomepageContent(content: HomepageContent): Promise<boolean> {
   try {
-    const token = localStorage.getItem("adminToken") ?? localStorage.getItem("admin-token") ?? "";
+    const token =
+      localStorage.getItem("admin-token") ??
+      localStorage.getItem("adminToken") ??
+      localStorage.getItem("planner-token") ??
+      localStorage.getItem("templateAdminToken") ??
+      "";
     const res = await fetch("/api/homepage-content", {
       method: "PUT",
       headers: {
