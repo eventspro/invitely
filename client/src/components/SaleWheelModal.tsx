@@ -14,7 +14,7 @@
  */
 
 import React, { useState, useRef, useCallback, useEffect } from "react";
-import { X, Loader2 } from "lucide-react";
+import { X, Loader2, Heart } from "lucide-react";
 
 // PRIZES must match server/routes/sale-wheel.ts order exactly for animation
 export const PRIZES = [
@@ -30,16 +30,16 @@ export const PRIZES = [
 
 const SLICE_DEG = 360 / PRIZES.length;
 
-// Elegant warm wedding palette — alternating to distinguish adjacent slices
+// Brand palette: alternating dark forest green and warm gold
 const SEGMENT_COLORS = [
-  "#C9A96E", // warm gold
-  "#D4B896", // sand/beige
-  "#B8937A", // terracotta rose
-  "#8FAF8C", // muted sage
-  "#A3B8C8", // dusty blue
-  "#C4A0A0", // blush mauve
-  "#D6C3A0", // champagne
-  "#9BAF98", // sage green
+  "#14321f", // forest green
+  "#c9a030", // warm gold
+  "#0f2a1e", // deep forest
+  "#b8963e", // amber gold
+  "#1a4a2e", // rich forest
+  "#d4a94e", // light gold
+  "#173c2d", // dark forest
+  "#c9a030", // warm gold
 ];
 
 // ─── Read owner test key from URL (?swtest=<secret>) ────────────────────────
@@ -90,17 +90,17 @@ function drawWheel(canvas: HTMLCanvasElement, rotation: number) {
 
   ctx.clearRect(0, 0, size, size);
 
-  // Ivory backing ring
+  // Dark backing ring
   ctx.beginPath();
   ctx.arc(cx, cy, r + 6, 0, Math.PI * 2);
-  ctx.fillStyle = "#F5EDD8";
+  ctx.fillStyle = "#0a1610";
   ctx.fill();
 
   // Gold border ring
   ctx.beginPath();
   ctx.arc(cx, cy, r + 5, 0, Math.PI * 2);
-  ctx.strokeStyle = "#C9A96E";
-  ctx.lineWidth = 4;
+  ctx.strokeStyle = "#d8b66a";
+  ctx.lineWidth = 3;
   ctx.stroke();
 
   // Slices
@@ -108,8 +108,9 @@ function drawWheel(canvas: HTMLCanvasElement, rotation: number) {
     const startAngle = ((i * SLICE_DEG - 90 + rotation) * Math.PI) / 180;
     const endAngle   = (((i + 1) * SLICE_DEG - 90 + rotation) * Math.PI) / 180;
     const midAngle   = (startAngle + endAngle) / 2;
-    const base = SEGMENT_COLORS[i % SEGMENT_COLORS.length];
-    const fill = i % 2 === 0 ? base : adjustBrightness(base, -22);
+    const fill      = SEGMENT_COLORS[i % SEGMENT_COLORS.length];
+    const textFill  = i % 2 === 0 ? "#f0cf82" : "#0e1e15";
+    const textStroke = i % 2 === 0 ? "rgba(5,12,8,0.8)" : "rgba(255,248,230,0.7)";
 
     ctx.beginPath();
     ctx.moveTo(cx, cy);
@@ -118,8 +119,8 @@ function drawWheel(canvas: HTMLCanvasElement, rotation: number) {
     ctx.fillStyle = fill;
     ctx.fill();
 
-    ctx.strokeStyle = "rgba(255,250,240,0.9)";
-    ctx.lineWidth = 2;
+    ctx.strokeStyle = "rgba(216,182,106,0.35)";
+    ctx.lineWidth = 1.5;
     ctx.stroke();
 
     // Text group
@@ -128,32 +129,27 @@ function drawWheel(canvas: HTMLCanvasElement, rotation: number) {
     ctx.rotate(midAngle);
 
     // Available arc width at 58% radius (for wrapping calculation)
-    const textR     = r * 0.58;
-    const arcWidth  = 2 * textR * Math.sin((SLICE_DEG / 2) * Math.PI / 180) * 0.9;
+    const textR    = r * 0.58;
+    const arcWidth = 2 * textR * Math.sin((SLICE_DEG / 2) * Math.PI / 180) * 0.9;
     const labelSize = Math.round(Math.max(10, size / 30));
-    const emojiSize = Math.round(Math.max(13, size / 23));
 
     ctx.textAlign    = "center";
     ctx.textBaseline = "middle";
 
-    // Emoji (outer position)
-    ctx.font = `${emojiSize}px system-ui`;
-    ctx.fillText(prize.emoji, textR, -(labelSize * 1.4 + 2));
-
     // Wrapped label
     ctx.font = `bold ${labelSize}px -apple-system,system-ui,sans-serif`;
     const lines = wrapLabel(ctx, prize.label, arcWidth);
-    const lineH = labelSize * 1.25;
+    const lineH  = labelSize * 1.25;
     const totalH = lines.length * lineH;
     const startY = -(totalH / 2) + lineH / 2;
 
     lines.forEach((line, li) => {
       const y = startY + li * lineH;
       ctx.lineJoin    = "round";
-      ctx.lineWidth   = 3.5;
-      ctx.strokeStyle = "rgba(40,15,0,0.8)";
+      ctx.lineWidth   = 3;
+      ctx.strokeStyle = textStroke;
       ctx.strokeText(line, textR, y);
-      ctx.fillStyle   = "#FFFAF0";
+      ctx.fillStyle   = textFill;
       ctx.fillText(line, textR, y);
     });
 
@@ -162,19 +158,25 @@ function drawWheel(canvas: HTMLCanvasElement, rotation: number) {
 
   // Centre medallion
   ctx.beginPath();
-  ctx.arc(cx, cy, 30, 0, Math.PI * 2);
-  ctx.fillStyle = "#C9A96E";
+  ctx.arc(cx, cy, 32, 0, Math.PI * 2);
+  ctx.fillStyle = "#0a1610";
   ctx.fill();
 
   ctx.beginPath();
-  ctx.arc(cx, cy, 24, 0, Math.PI * 2);
-  ctx.fillStyle = "#FDF8F0";
+  ctx.arc(cx, cy, 27, 0, Math.PI * 2);
+  ctx.fillStyle = "#d8b66a";
   ctx.fill();
 
-  ctx.font = "20px system-ui";
+  ctx.beginPath();
+  ctx.arc(cx, cy, 21, 0, Math.PI * 2);
+  ctx.fillStyle = "#0f2a1e";
+  ctx.fill();
+
+  ctx.font = "bold 14px serif";
   ctx.textAlign = "center";
   ctx.textBaseline = "middle";
-  ctx.fillText("🎁", cx, cy);
+  ctx.fillStyle = "#f0cf82";
+  ctx.fillText("\u2665\uFE0E", cx, cy);
 }
 
 // ─── Types ────────────────────────────────────────────────────────────────────
@@ -333,13 +335,12 @@ export const SaleWheelModal: React.FC<SaleWheelModalProps> = ({ onClose }) => {
     if (e.target === e.currentTarget) onClose();
   };
 
-  const prizeInfo = result ? PRIZES.find((p) => p.key === result.prizeKey) ?? null : null;
   const isWheelVisible = step === "form" || step === "spinning";
 
   return (
     <div
       className="fixed inset-0 z-[200] flex items-center justify-center p-3 sm:p-4"
-      style={{ background: "rgba(40,25,10,0.65)", backdropFilter: "blur(4px)" }}
+      style={{ background: "rgba(5,12,8,0.82)", backdropFilter: "blur(4px)" }}
       onClick={handleOverlayClick}
     >
       {/* Outer wrapper: relative so close button is positioned against it, not inside the scroll */}
@@ -353,7 +354,7 @@ export const SaleWheelModal: React.FC<SaleWheelModalProps> = ({ onClose }) => {
           <button
             onClick={onClose}
             className="absolute top-3 right-3 z-30 w-8 h-8 flex items-center justify-center rounded-full transition-colors"
-            style={{ background: "rgba(201,169,110,0.18)", color: "#7C5210" }}
+            style={{ background: "rgba(216,182,106,0.12)", color: "#d8b66a" }}
             aria-label="Փակել"
           >
             <X size={16} />
@@ -366,17 +367,12 @@ export const SaleWheelModal: React.FC<SaleWheelModalProps> = ({ onClose }) => {
           style={{
             maxHeight: "95vh",
             overflowY: "auto",
-            background: "linear-gradient(145deg, #FDFAF4 0%, #F8F0E0 50%, #F5EBD5 100%)",
+            background: "linear-gradient(145deg, #0d1e14 0%, #0f2d22 100%)",
             borderRadius: 24,
-            boxShadow: "0 32px 80px rgba(100,60,0,0.25), 0 0 0 1px rgba(201,169,110,0.3)",
+            boxShadow: "0 32px 80px rgba(0,0,0,0.55), 0 0 0 1px rgba(216,182,106,0.2)",
           }}
         >
-        {/* Floral corners */}
-        <div className="absolute top-0 left-0 pointer-events-none select-none opacity-25" style={{ fontSize: 72, lineHeight: 1, transform: "translate(-16px,-16px) rotate(-15deg)" }}>🌸</div>
-        <div className="absolute top-0 right-0 pointer-events-none select-none opacity-25" style={{ fontSize: 72, lineHeight: 1, transform: "translate(16px,-16px) rotate(15deg)" }}>🌿</div>
-        <div className="absolute bottom-0 left-0 pointer-events-none select-none opacity-15" style={{ fontSize: 60, lineHeight: 1, transform: "translate(-12px,12px) rotate(10deg)" }}>🌿</div>
-        <div className="absolute bottom-0 right-0 pointer-events-none select-none opacity-15" style={{ fontSize: 60, lineHeight: 1, transform: "translate(12px,12px) rotate(-10deg)" }}>🌸</div>
-
+        <style>{`.sw-dark-input::placeholder{color:rgba(255,255,255,0.28)!important}`}</style>
         {/* ── FORM + WHEEL two-column layout ── */}
         {isWheelVisible && (
           <div className="flex flex-col md:flex-row md:items-center gap-0">
@@ -385,40 +381,39 @@ export const SaleWheelModal: React.FC<SaleWheelModalProps> = ({ onClose }) => {
             <div className="flex-1 px-6 pt-8 pb-6 md:pr-3" style={{ minWidth: 0 }}>
               {/* Ornamental divider */}
               <div className="flex items-center gap-2 mb-4">
-                <div style={{ flex: 1, height: 1, background: "linear-gradient(to right, transparent, #C9A96E)" }} />
-                <span style={{ fontSize: 20 }}>🎁</span>
-                <div style={{ flex: 1, height: 1, background: "linear-gradient(to left, transparent, #C9A96E)" }} />
+                <div style={{ flex: 1, height: 1, background: "linear-gradient(to right, transparent, rgba(216,182,106,0.4))" }} />
+                <Heart className="h-3.5 w-3.5 fill-[#d8b66a] text-[#d8b66a]" />
+                <div style={{ flex: 1, height: 1, background: "linear-gradient(to left, transparent, rgba(216,182,106,0.4))" }} />
               </div>
 
               <h2
                 className="font-bold leading-snug mb-2"
                 style={{
                   fontSize: "clamp(1.05rem,3.5vw,1.4rem)",
-                  color: "#4A2E0A",
+                  color: "#f0cf82",
                   fontFamily: "Georgia,'Times New Roman',serif",
                   letterSpacing: "0.01em",
                 }}
               >
                 Պտտիր անիվը և<br className="hidden sm:block" /> ստացիր հատուկ առաջարկ
               </h2>
-              <p className="text-sm mb-5" style={{ color: "#7C5210" }}>
+              <p className="text-sm mb-5" style={{ color: "rgba(255,255,255,0.6)" }}>
                 Մասնակցեք և ստացեք հատուկ նվերներ ու զեղչեր
               </p>
 
               <form onSubmit={handleSubmit} className="space-y-3">
                 {formError && (
                   <div
-                    className="text-sm px-3 py-2 rounded-xl flex items-start gap-2"
-                    style={{ background: "#FEF0F0", border: "1px solid #FECACA", color: "#991B1B" }}
+                    className="text-sm px-3 py-2 rounded-xl"
+                    style={{ background: "rgba(159,18,57,0.15)", border: "1px solid rgba(159,18,57,0.45)", color: "#fca5a5" }}
                   >
-                    <span className="mt-0.5 shrink-0">⚠️</span>
                     <span>{formError}</span>
                   </div>
                 )}
 
                 {/* Name */}
                 <div>
-                  <label className="block text-xs font-semibold mb-1" style={{ color: "#7C5210", letterSpacing: "0.05em" }}>
+                  <label className="block text-xs font-semibold mb-1" style={{ color: "#d8b66a", letterSpacing: "0.05em" }}>
                     Անուն <span style={{ color: "#C0392B" }}>*</span>
                   </label>
                   <input
@@ -428,19 +423,19 @@ export const SaleWheelModal: React.FC<SaleWheelModalProps> = ({ onClose }) => {
                     placeholder="Ձեր անունը"
                     autoComplete="given-name"
                     maxLength={100}
-                    className="w-full text-sm"
+                    className="w-full text-sm sw-dark-input"
                     style={{
-                      padding: "10px 14px", border: "1.5px solid #D4B896", borderRadius: 10,
-                      background: "rgba(255,252,245,0.9)", color: "#3D2000", outline: "none",
+                      padding: "10px 14px", border: "1.5px solid rgba(216,182,106,0.3)", borderRadius: 10,
+                      background: "rgba(255,255,255,0.06)", color: "rgba(255,255,255,0.9)", outline: "none",
                     }}
-                    onFocus={(e) => { e.currentTarget.style.borderColor = "#C9A96E"; }}
-                    onBlur={(e)  => { e.currentTarget.style.borderColor = "#D4B896"; }}
+                    onFocus={(e) => { e.currentTarget.style.borderColor = "#d8b66a"; }}
+                    onBlur={(e)  => { e.currentTarget.style.borderColor = "rgba(216,182,106,0.3)"; }}
                   />
                 </div>
 
                 {/* Phone */}
                 <div>
-                  <label className="block text-xs font-semibold mb-1" style={{ color: "#7C5210", letterSpacing: "0.05em" }}>
+                  <label className="block text-xs font-semibold mb-1" style={{ color: "#d8b66a", letterSpacing: "0.05em" }}>
                     Հեռախոսահամար <span style={{ color: "#C0392B" }}>*</span>
                   </label>
                   <input
@@ -451,28 +446,28 @@ export const SaleWheelModal: React.FC<SaleWheelModalProps> = ({ onClose }) => {
                     type="tel"
                     autoComplete="tel"
                     maxLength={30}
-                    className="w-full text-sm"
+                    className="w-full text-sm sw-dark-input"
                     style={{
                       padding: "10px 14px",
-                      border: `1.5px solid ${form.phone ? ((() => { const n = form.phone.replace(/[\s\-().]/g, ""); return /^\+[1-9]\d{6,14}$/.test(n) || /^\d{7,15}$/.test(n) ? "#6BA57D" : "#E07070"; })()) : "#D4B896"}`,
-                      borderRadius: 10, background: "rgba(255,252,245,0.9)", color: "#3D2000", outline: "none",
+                      border: `1.5px solid ${form.phone ? ((() => { const n = form.phone.replace(/[\s\-().]/g, ""); return /^\+[1-9]\d{6,14}$/.test(n) || /^\d{7,15}$/.test(n) ? "#4a9e6b" : "#e07070"; })()) : "rgba(216,182,106,0.3)"}`,
+                      borderRadius: 10, background: "rgba(255,255,255,0.06)", color: "rgba(255,255,255,0.9)", outline: "none",
                     }}
-                    onFocus={(e) => { if (!form.phone) e.currentTarget.style.borderColor = "#C9A96E"; }}
-                    onBlur={(e)  => { if (!form.phone) e.currentTarget.style.borderColor = "#D4B896"; }}
+                    onFocus={(e) => { if (!form.phone) e.currentTarget.style.borderColor = "#d8b66a"; }}
+                    onBlur={(e)  => { if (!form.phone) e.currentTarget.style.borderColor = "rgba(216,182,106,0.3)"; }}
                   />
                   {form.phone && (() => {
                     const n = form.phone.replace(/[\s\-().]/g, "");
                     return !/^\+[1-9]\d{6,14}$/.test(n) && !/^\d{7,15}$/.test(n)
-                      ? <p className="mt-0.5 text-xs" style={{ color: "#B91C1C" }}>Օրինակ՝ +374 91 234 567</p>
+                      ? <p className="mt-0.5 text-xs" style={{ color: "#fca5a5" }}>Օրինակ՝ +374 91 234 567</p>
                       : null;
                   })()}
                 </div>
 
                 {/* Email */}
                 <div>
-                  <label className="block text-xs font-semibold mb-1" style={{ color: "#7C5210", letterSpacing: "0.05em" }}>
+                  <label className="block text-xs font-semibold mb-1" style={{ color: "#d8b66a", letterSpacing: "0.05em" }}>
                     Էլ․ հասցե{" "}
-                    <span className="font-normal" style={{ color: "#9B7030", letterSpacing: 0 }}>(կամընտիր)</span>
+                    <span className="font-normal" style={{ color: "rgba(255,255,255,0.45)", letterSpacing: 0 }}>(կամընտիր)</span>
                   </label>
                   <input
                     name="email"
@@ -482,21 +477,21 @@ export const SaleWheelModal: React.FC<SaleWheelModalProps> = ({ onClose }) => {
                     type="email"
                     autoComplete="email"
                     maxLength={200}
-                    className="w-full text-sm"
+                    className="w-full text-sm sw-dark-input"
                     style={{
-                      padding: "10px 14px", border: "1.5px solid #D4B896", borderRadius: 10,
-                      background: "rgba(255,252,245,0.9)", color: "#3D2000", outline: "none",
+                      padding: "10px 14px", border: "1.5px solid rgba(216,182,106,0.3)", borderRadius: 10,
+                      background: "rgba(255,255,255,0.06)", color: "rgba(255,255,255,0.9)", outline: "none",
                     }}
-                    onFocus={(e) => { e.currentTarget.style.borderColor = "#C9A96E"; }}
-                    onBlur={(e)  => { e.currentTarget.style.borderColor = "#D4B896"; }}
+                    onFocus={(e) => { e.currentTarget.style.borderColor = "#d8b66a"; }}
+                    onBlur={(e)  => { e.currentTarget.style.borderColor = "rgba(216,182,106,0.3)"; }}
                   />
                 </div>
 
                 {/* Wedding date */}
                 <div>
-                  <label className="block text-xs font-semibold mb-1" style={{ color: "#7C5210", letterSpacing: "0.05em" }}>
+                  <label className="block text-xs font-semibold mb-1" style={{ color: "#d8b66a", letterSpacing: "0.05em" }}>
                     Հարսանիքի ամսաթիվ{" "}
-                    <span className="font-normal" style={{ color: "#9B7030", letterSpacing: 0 }}>(կամընտիր)</span>
+                    <span className="font-normal" style={{ color: "rgba(255,255,255,0.45)", letterSpacing: 0 }}>(կամընտիր)</span>
                   </label>
                   <input
                     name="weddingDate"
@@ -505,13 +500,13 @@ export const SaleWheelModal: React.FC<SaleWheelModalProps> = ({ onClose }) => {
                     placeholder="mm/dd/yyyy"
                     type="date"
                     maxLength={50}
-                    className="w-full text-sm"
+                    className="w-full text-sm sw-dark-input"
                     style={{
-                      padding: "10px 14px", border: "1.5px solid #D4B896", borderRadius: 10,
-                      background: "rgba(255,252,245,0.9)", color: "#3D2000", outline: "none",
+                      padding: "10px 14px", border: "1.5px solid rgba(216,182,106,0.3)", borderRadius: 10,
+                      background: "rgba(255,255,255,0.06)", color: "rgba(255,255,255,0.9)", outline: "none",
                     }}
-                    onFocus={(e) => { e.currentTarget.style.borderColor = "#C9A96E"; }}
-                    onBlur={(e)  => { e.currentTarget.style.borderColor = "#D4B896"; }}
+                    onFocus={(e) => { e.currentTarget.style.borderColor = "#d8b66a"; }}
+                    onBlur={(e)  => { e.currentTarget.style.borderColor = "rgba(216,182,106,0.3)"; }}
                   />
                 </div>
 
@@ -522,14 +517,14 @@ export const SaleWheelModal: React.FC<SaleWheelModalProps> = ({ onClose }) => {
                   className="w-full flex items-center justify-center gap-2 font-bold transition-all active:scale-95"
                   style={{
                     padding: "12px 20px", fontSize: 15,
-                    background: submitting ? "#D4B896" : "linear-gradient(135deg, #C9A96E 0%, #A0720A 50%, #C9A96E 100%)",
-                    color: "#FFF8E7", borderRadius: 12, border: "none",
+                    background: submitting ? "rgba(216,182,106,0.3)" : "linear-gradient(135deg, #d8b66a 0%, #c9a030 50%, #d8b66a 100%)",
+                    color: "#0e1e15", borderRadius: 12, border: "none",
                     cursor: submitting ? "not-allowed" : "pointer",
                     boxShadow: submitting ? "none" : "0 4px 16px rgba(160,114,10,0.4)",
                     letterSpacing: "0.02em", marginTop: 4,
                   }}
                 >
-                  {submitting ? (<><Loader2 size={16} className="animate-spin" /> Բեռնում...</>) : <>Պտտել անիվը &nbsp;🎯</>}
+                  {submitting ? (<><Loader2 size={16} className="animate-spin" /> Բեռնում...</>) : <>Պտտել անիվը</>}
                 </button>
               </form>
             </div>
@@ -543,8 +538,8 @@ export const SaleWheelModal: React.FC<SaleWheelModalProps> = ({ onClose }) => {
                     width: 0, height: 0, zIndex: 10, position: "relative",
                     borderLeft: "13px solid transparent",
                     borderRight: "13px solid transparent",
-                    borderTop: "28px solid #C9A96E",
-                    filter: "drop-shadow(0 3px 5px rgba(100,60,0,0.4))",
+                    borderTop: "28px solid #d8b66a",
+                    filter: "drop-shadow(0 3px 5px rgba(0,0,0,0.4))",
                     marginBottom: -4,
                   }}
                 />
@@ -553,8 +548,8 @@ export const SaleWheelModal: React.FC<SaleWheelModalProps> = ({ onClose }) => {
                   className="rounded-full"
                   style={{
                     padding: 5,
-                    background: "linear-gradient(135deg, #C9A96E, #F5D78E, #B8860B, #F5D78E, #C9A96E)",
-                    boxShadow: "0 8px 40px rgba(184,134,11,0.3)",
+                    background: "linear-gradient(135deg, #d8b66a, #f0cf82, #c9a030, #f0cf82, #d8b66a)",
+                    boxShadow: "0 8px 40px rgba(0,0,0,0.4)",
                   }}
                 >
                   <canvas
@@ -573,38 +568,42 @@ export const SaleWheelModal: React.FC<SaleWheelModalProps> = ({ onClose }) => {
         {/* Spinning subtitle */}
         {step === "spinning" && (
           <div className="pb-4 text-center">
-            <p className="text-sm font-semibold animate-pulse" style={{ color: "#9B7640", letterSpacing: "0.05em" }}>✨ Պտտվում է...</p>
+            <p className="text-sm font-semibold animate-pulse" style={{ color: "#d8b66a", letterSpacing: "0.05em" }}>Պտտվում է...</p>
           </div>
         )}
 
         {/* ── RESULT screen ── */}
         {step === "result" && result && (
           <div className="px-8 py-10 text-center space-y-5">
-            <div style={{ fontSize: 52, lineHeight: 1, marginBottom: 4 }}>{prizeInfo?.emoji ?? "🎉"}</div>
-            <p className="font-bold text-xl" style={{ color: "#4A2E0A", fontFamily: "Georgia,serif" }}>Շնորհավորում ենք! 🎉</p>
+            <div style={{ display: "flex", justifyContent: "center" }}>
+              <div style={{ width: 64, height: 64, borderRadius: "50%", border: "2px solid #d8b66a", display: "flex", alignItems: "center", justifyContent: "center" }}>
+                <Heart className="h-7 w-7 fill-[#d8b66a] text-[#d8b66a]" />
+              </div>
+            </div>
+            <p className="font-bold text-xl" style={{ color: "#f0cf82", fontFamily: "Georgia,serif" }}>Շնորհավորում ենք!</p>
             <div
               className="rounded-2xl py-5 px-6"
-              style={{ background: "linear-gradient(135deg, #FDF3DC, #F5E4B8)", border: "1px solid #D4B896" }}
+              style={{ background: "rgba(216,182,106,0.1)", border: "1px solid rgba(216,182,106,0.3)" }}
             >
-              <p className="text-sm mb-1" style={{ color: "#8B6530" }}>Դուք շահեցիք</p>
-              <p className="text-2xl font-black leading-tight" style={{ color: "#4A2E0A", fontFamily: "Georgia,serif" }}>
+              <p className="text-sm mb-1" style={{ color: "rgba(255,255,255,0.6)" }}>Դուք շահեցիք</p>
+              <p className="text-2xl font-black leading-tight" style={{ color: "#f0cf82", fontFamily: "Georgia,serif" }}>
                 {result.prizeLabel}
               </p>
             </div>
             <div
-              className="rounded-xl px-4 py-3 text-sm flex items-center gap-2 justify-center"
-              style={{ background: "#F0FAF3", border: "1px solid #A7D7B4", color: "#2D6A40" }}
+              className="rounded-xl px-4 py-3 text-sm text-center"
+              style={{ background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.1)", color: "rgba(255,255,255,0.7)" }}
             >
-              <span>✅</span> Մենք շուտով կկապվենք Ձեզ հետ։
+              Մենք շուտով կկապվենք Ձեզ հետ։
             </div>
             <button
               onClick={onClose}
               className="w-full font-bold transition-all active:scale-95"
               style={{
                 padding: "12px 20px", fontSize: 15,
-                background: "linear-gradient(135deg, #C9A96E 0%, #A0720A 50%, #C9A96E 100%)",
-                color: "#FFF8E7", borderRadius: 12, border: "none", cursor: "pointer",
-                boxShadow: "0 4px 16px rgba(160,114,10,0.4)",
+                background: "linear-gradient(135deg, #d8b66a 0%, #c9a030 50%, #d8b66a 100%)",
+                color: "#0e1e15", borderRadius: 12, border: "none", cursor: "pointer",
+                boxShadow: "0 4px 16px rgba(0,0,0,0.3)",
               }}
             >
               Փակել
@@ -615,32 +614,37 @@ export const SaleWheelModal: React.FC<SaleWheelModalProps> = ({ onClose }) => {
         {/* ── DUPLICATE screen ── */}
         {step === "duplicate" && (
           <div className="px-8 py-10 text-center space-y-5">
-            <div style={{ fontSize: 48 }}>ℹ️</div>
-            <p className="text-lg font-bold" style={{ color: "#4A2E0A", fontFamily: "Georgia,serif" }}>
+            <div style={{ display: "flex", justifyContent: "center" }}>
+              <div style={{ width: 56, height: 56, borderRadius: "50%", border: "2px solid rgba(216,182,106,0.5)", display: "flex", alignItems: "center", justifyContent: "center" }}>
+                <span style={{ fontSize: 22, fontWeight: 700, color: "#d8b66a", lineHeight: 1 }}>i</span>
+              </div>
+            </div>
+            <p className="text-lg font-bold" style={{ color: "#f0cf82", fontFamily: "Georgia,serif" }}>
               Դուք արդեն մասնակցել եք խաղարկությանը։
             </p>
             {result && (
               <div
                 className="rounded-2xl py-4 px-6"
-                style={{ background: "linear-gradient(135deg, #FDF3DC, #F5E4B8)", border: "1px solid #D4B896" }}
+                style={{ background: "rgba(216,182,106,0.1)", border: "1px solid rgba(216,182,106,0.3)" }}
               >
-                <p className="text-xs uppercase font-semibold mb-1" style={{ color: "#8B6530", letterSpacing: "0.06em" }}>Ձեր նախկին շահումը</p>
-                <p className="text-xl font-black" style={{ color: "#4A2E0A", fontFamily: "Georgia,serif" }}>{result.prizeLabel}</p>
+                <p className="text-xs uppercase font-semibold mb-1" style={{ color: "rgba(255,255,255,0.6)", letterSpacing: "0.06em" }}>Ձեր նախկին շահումը</p>
+                <p className="text-xl font-black" style={{ color: "#f0cf82", fontFamily: "Georgia,serif" }}>{result.prizeLabel}</p>
               </div>
             )}
             <div
-              className="rounded-xl px-4 py-3 text-sm flex items-center gap-2 justify-center"
-              style={{ background: "#EFF6FF", border: "1px solid #BFDBFE", color: "#1E40AF" }}
+              className="rounded-xl px-4 py-3 text-sm text-center"
+              style={{ background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.1)", color: "rgba(255,255,255,0.7)" }}
             >
-              <span>💌</span> Մենք շուտով կկապվենք Ձեզ հետ։
+              Մենք շուտով կկապվենք Ձեզ հետ։
             </div>
             <button
               onClick={onClose}
               className="w-full font-bold transition-all active:scale-95"
               style={{
                 padding: "12px 20px", fontSize: 15,
-                background: "#3D2800", color: "#FFF8E7",
-                borderRadius: 12, border: "none", cursor: "pointer",
+                background: "linear-gradient(135deg, #d8b66a 0%, #c9a030 50%, #d8b66a 100%)",
+                color: "#0e1e15", borderRadius: 12, border: "none", cursor: "pointer",
+                boxShadow: "0 4px 16px rgba(0,0,0,0.3)",
               }}
             >
               Փակել

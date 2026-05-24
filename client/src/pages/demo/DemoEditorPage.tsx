@@ -16,7 +16,8 @@ import { useParams, useLocation } from "wouter";
 import { DemoEditorProvider, useDemoEditor } from "@/features/demo-editor/DemoEditorContext";
 import DemoPreview from "@/features/demo-editor/DemoPreview";
 import { DEMO_PALETTES, getPaletteById } from "@/features/demo-editor/demoPalettes";
-import { ArrowLeft, Eye, Upload, X, Check, Loader2 } from "lucide-react";
+import { ArrowLeft, Eye, Upload, X, Check, Loader2, Phone } from "lucide-react";
+import { SaleWheelModal } from "@/components/SaleWheelModal";
 
 const TOTAL_STEPS = 5;
 const STEP_META = [
@@ -337,6 +338,8 @@ function WizardLayout({ editId }: { editId: string }) {
 
   const [step, setStep] = useState(1);
   const [showPreviewModal, setShowPreviewModal] = useState(false);
+  const [showExitMenu, setShowExitMenu] = useState(false);
+  const [showSaleWheel, setShowSaleWheel] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
   const [stepError, setStepError] = useState<string | null>(null);
@@ -508,9 +511,9 @@ function WizardLayout({ editId }: { editId: string }) {
   return (
     <div className="h-screen flex flex-col" style={{ background: "#faf8f4", fontFamily: "Inter, sans-serif" }}>
       <header className="flex items-center gap-3 px-4 py-3 bg-white border-b border-stone-200 sticky top-0 z-30 shrink-0">
-        <button onClick={handleBack} className="flex items-center gap-1.5 text-stone-400 hover:text-stone-600 text-sm transition-colors">
+        <button onClick={() => setShowExitMenu(true)} className="flex items-center gap-1.5 text-stone-400 hover:text-stone-600 text-sm transition-colors">
           <ArrowLeft size={15} />
-          <span className="hidden sm:inline">Back</span>
+          <span className="hidden sm:inline">Menu</span>
         </button>
         <span className="bg-amber-50 text-amber-700 text-[10px] font-bold px-2.5 py-1 rounded-full uppercase tracking-wider border border-amber-200">
           Demo mode
@@ -622,6 +625,96 @@ function WizardLayout({ editId }: { editId: string }) {
           </div>
         </div>
       )}
+
+      {/* ── Exit menu popup ── */}
+      {showExitMenu && (
+        <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center">
+          <div className="absolute inset-0 bg-black/50" onClick={() => setShowExitMenu(false)} />
+          <div className="relative w-full max-w-sm bg-white rounded-t-3xl sm:rounded-3xl shadow-2xl z-10 overflow-hidden max-h-[92dvh] overflow-y-auto">
+            {/* Handle bar (mobile) */}
+            <div className="flex justify-center pt-3 pb-1 sm:hidden">
+              <div className="w-10 h-1 rounded-full bg-stone-200" />
+            </div>
+
+            <div className="px-6 pb-8 pt-3 space-y-5">
+              {/* Header */}
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-base font-bold text-stone-800" style={{ fontFamily: "Playfair Display, serif" }}>4ever.am</p>
+                  <p className="text-xs text-stone-400 mt-0.5">Digital wedding invitations</p>
+                </div>
+                <button onClick={() => setShowExitMenu(false)} className="text-stone-300 hover:text-stone-500 transition-colors">
+                  <X size={18} />
+                </button>
+              </div>
+
+              {/* Contact */}
+              <div className="space-y-2">
+                <p className="text-[10px] font-bold text-stone-400 uppercase tracking-widest">Contact us</p>
+                <div className="grid grid-cols-3 gap-2">
+                  <a href="https://instagram.com/4ever.am" target="_blank" rel="noopener noreferrer"
+                    className="flex flex-col items-center gap-1.5 py-3 rounded-2xl border border-stone-200 text-stone-600 hover:border-rose-300 hover:bg-rose-50/40 transition-colors">
+                    <svg viewBox="0 0 24 24" fill="currentColor" className="w-5 h-5 text-[#E1306C]">
+                      <path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zm0-2.163c-3.259 0-3.667.014-4.947.072-4.358.2-6.78 2.618-6.98 6.98-.059 1.281-.073 1.689-.073 4.948 0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98 1.281.058 1.689.072 4.948.072 3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98-1.281-.059-1.69-.073-4.949-.073zm0 5.838c-3.403 0-6.162 2.759-6.162 6.162s2.759 6.163 6.162 6.163 6.162-2.759 6.162-6.163c0-3.403-2.759-6.162-6.162-6.162zm0 10.162c-2.209 0-4-1.79-4-4 0-2.209 1.791-4 4-4s4 1.791 4 4c0 2.21-1.791 4-4 4zm6.406-11.845c-.796 0-1.441.645-1.441 1.44s.645 1.44 1.441 1.44c.795 0 1.439-.645 1.439-1.44s-.644-1.44-1.439-1.44z"/>
+                    </svg>
+                    <span className="text-[11px] font-medium">Instagram</span>
+                  </a>
+                  <a href="https://t.me/4everam" target="_blank" rel="noopener noreferrer"
+                    className="flex flex-col items-center gap-1.5 py-3 rounded-2xl border border-stone-200 text-stone-600 hover:border-blue-300 hover:bg-blue-50/40 transition-colors">
+                    <svg viewBox="0 0 24 24" fill="currentColor" className="w-5 h-5 text-[#2AABEE]">
+                      <path d="M11.944 0A12 12 0 0 0 0 12a12 12 0 0 0 12 12 12 12 0 0 0 12-12A12 12 0 0 0 12 0a12 12 0 0 0-.056 0zm4.962 7.224c.1-.002.321.023.465.14a.506.506 0 0 1 .171.325c.016.093.036.306.02.472-.18 1.898-.962 6.502-1.36 8.627-.168.9-.499 1.201-.82 1.23-.696.065-1.225-.46-1.9-.902-1.056-.693-1.653-1.124-2.678-1.8-1.185-.78-.417-1.21.258-1.91.177-.184 3.247-2.977 3.307-3.23.007-.032.014-.15-.056-.212s-.174-.041-.249-.024c-.106.024-1.793 1.14-5.061 3.345-.48.33-.913.49-1.302.48-.428-.008-1.252-.241-1.865-.44-.752-.245-1.349-.374-1.297-.789.027-.216.325-.437.893-.663 3.498-1.524 5.83-2.529 6.998-3.014 3.332-1.386 4.025-1.627 4.476-1.635z"/>
+                    </svg>
+                    <span className="text-[11px] font-medium">Telegram</span>
+                  </a>
+                  <a href="tel:+37400000000"
+                    className="flex flex-col items-center gap-1.5 py-3 rounded-2xl border border-stone-200 text-stone-600 hover:border-green-300 hover:bg-green-50/40 transition-colors">
+                    <Phone size={18} className="text-green-600" />
+                    <span className="text-[11px] font-medium">Call us</span>
+                  </a>
+                </div>
+              </div>
+
+              {/* Spin & Win */}
+              <button
+                onClick={() => { setShowExitMenu(false); setShowSaleWheel(true); }}
+                className="w-full flex items-center gap-3 px-4 py-3.5 rounded-2xl bg-amber-50 border border-amber-200 hover:bg-amber-100 transition-colors text-left"
+              >
+                <span className="text-2xl">🎡</span>
+                <div>
+                  <p className="text-sm font-semibold text-amber-800">Spin & Win a Discount</p>
+                  <p className="text-xs text-amber-600 mt-0.5">Try your luck — win up to 20% off</p>
+                </div>
+              </button>
+
+              {/* Planner intro */}
+              <div className="rounded-2xl border border-stone-200 overflow-hidden">
+                <div className="bg-[#0f2d22] px-4 py-3 flex items-center gap-2">
+                  <span className="text-lg">📋</span>
+                  <p className="text-sm font-semibold text-white">Wedding Planner</p>
+                  <span className="ml-auto text-[10px] font-bold text-[#f0cf82] bg-[#f0cf82]/15 border border-[#f0cf82]/30 rounded-full px-2 py-0.5">NEW</span>
+                </div>
+                <div className="px-4 py-3 bg-white">
+                  <p className="text-xs text-stone-500 leading-relaxed">
+                    Manage your entire wedding in one place — guests, budget, tasks, and timeline. Built for Armenian couples.
+                  </p>
+                  <a href="/planner-prototype" target="_blank" rel="noopener noreferrer"
+                    className="inline-flex items-center gap-1 mt-2.5 text-xs font-semibold text-[#173c2d] hover:text-[#0f2d22] transition-colors">
+                    Explore the planner →
+                  </a>
+                </div>
+              </div>
+
+              {/* Go to homepage */}
+              <a href="/"
+                className="flex items-center justify-center gap-2 w-full py-3 rounded-2xl border-2 border-stone-200 text-sm font-semibold text-stone-600 hover:bg-stone-50 transition-colors">
+                ← Go to Homepage
+              </a>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {showSaleWheel && <SaleWheelModal onClose={() => setShowSaleWheel(false)} />}
     </div>
   );
 }

@@ -35,7 +35,7 @@ async function initializeEmailService(): Promise<boolean> {
   return emailServiceAvailable;
 }
 
-async function sendEmail(params: {
+export async function sendEmail(params: {
   to: string;
   from: string;
   subject: string;

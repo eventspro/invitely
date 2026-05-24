@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, lazy, Suspense } from "react";
 import { Switch, Route, useLocation } from "wouter";
 import { queryClient } from "./lib/queryClient";
 import { QueryClientProvider } from "@tanstack/react-query";
@@ -15,6 +15,7 @@ import { TemplateAdminLogin } from "@/components/admin/TemplateAdminLogin";
 import { TemplateAdminDashboard } from "@/components/admin/TemplateAdminDashboard";
 import Home from "@/pages/home";
 import MainPage from "@/pages/main";
+import HomepagePrototype from "@/pages/homepage-prototype";
 import PhotosPage from "@/pages/photos";
 import TemplatesPage from "@/pages/templates";
 import TranslationsPage from "@/pages/platform-translations";
@@ -41,11 +42,20 @@ export interface BootstrapData {
   initialLanguage: string;   // preferred-language from localStorage, resolved before React mounts
 }
 
+const LazyTranslationsPrototype = lazy(() => import("@/pages/translations-prototype/TranslationsPrototypePage"));
+const LazyPlannerPrototype = lazy(() => import("@/pages/planner-prototype/PlannerPrototypePage"));
+const LazyPlannerDemo = lazy(() => import("@/pages/planner-demo/PlannerDemoPage"));
+const LazyPlannerLoginPage = lazy(() => import("@/pages/planner/PlannerLoginPage"));
+const LazyPlannerPage = lazy(() => import("@/pages/planner/PlannerPage"));
+
 function Router() {
   return (
     <Switch>
       {/* Main landing page */}
       <Route path="/" component={MainPage} />
+
+      {/* Isolated homepage redesign prototype */}
+      <Route path="/homepage-prototype" component={HomepagePrototype} />
       
       {/* Templates showcase page */}
       <Route path="/templates" component={TemplatesPage} />
@@ -84,6 +94,33 @@ function Router() {
       {/* Platform admin routes */}
       <Route path="/platform" component={PlatformDashboard} />
       <Route path="/platform/translations" component={TranslationsPage} />
+      <Route path="/translations-prototype" component={() => (
+        <Suspense fallback={<div style={{ height: "100dvh", display: "flex", alignItems: "center", justifyContent: "center", color: "#0D2A20" }}>Loading editor…</div>}>
+          <LazyTranslationsPrototype />
+        </Suspense>
+      )} />
+      <Route path="/planner-prototype" component={() => (
+        <Suspense fallback={<div style={{ height: "100dvh", display: "flex", alignItems: "center", justifyContent: "center", background: "#fff8ef", color: "#173c2d" }}>Loading planner…</div>}>
+          <LazyPlannerPrototype />
+        </Suspense>
+      )} />
+      <Route path="/planner-demo" component={() => (
+        <Suspense fallback={<div style={{ height: "100dvh", display: "flex", alignItems: "center", justifyContent: "center", background: "#FBFAF7", color: "#064E3B" }}>Loading demo…</div>}>
+          <LazyPlannerDemo />
+        </Suspense>
+      )} />
+
+      {/* Real customer planner — must be before /:templateIdentifier catch-all */}
+      <Route path="/planner/login" component={() => (
+        <Suspense fallback={<div style={{ height: "100dvh", display: "flex", alignItems: "center", justifyContent: "center", background: "#FBFAF7", color: "#064E3B" }}>Loading…</div>}>
+          <LazyPlannerLoginPage />
+        </Suspense>
+      )} />
+      <Route path="/planner" component={() => (
+        <Suspense fallback={<div style={{ height: "100dvh", display: "flex", alignItems: "center", justifyContent: "center", background: "#FBFAF7", color: "#064E3B" }}>Loading…</div>}>
+          <LazyPlannerPage />
+        </Suspense>
+      )} />
       <Route path="/platform/builder-v2/:templateId" component={BuilderV2Page} />
       <Route path="/platform/templates/:templateId" component={TemplateAdminPanel} />
       
