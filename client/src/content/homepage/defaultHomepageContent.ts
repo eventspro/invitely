@@ -12,7 +12,7 @@ export const DEFAULT_HOMEPAGE_CONTENT: HomepageContent = {
       { id: "nav-howitworks", label: { hy: "Գործընթաց", en: "How It Works",     ru: "Как это работает" }, href: "#how-it-works",     visible: true },
       { id: "nav-guest",      label: { hy: "Հյուրերի փորձ", en: "Guest Experience", ru: "Опыт гостей"      }, href: "#guest-experience", visible: true },
       { id: "nav-contact",    label: { hy: "Կապ", en: "Contact",          ru: "Контакт"          }, href: "#contact",          visible: true },
-      { id: "nav-planner",    label: { hy: "Wedding Planner", en: "Wedding Planner",  ru: "Wedding Planner"  }, href: "/planner-prototype", visible: true },
+      { id: "nav-planner",    label: { hy: "Wedding Planner", en: "Wedding Planner",  ru: "Wedding Planner"  }, href: "/demo/david-rose-romantic", visible: true },
     ],
     loginLabel: { hy: "Դեմո",  en: "Demo",        ru: "Демо"  },
     startLabel: { hy: "Փորձել", en: "Get started", ru: "Начать" },
