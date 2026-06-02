@@ -9,6 +9,8 @@ import { registerAdminRoutes } from "./routes/admin.js";
 import { registerMusicUploadRoutes } from "./routes/music-upload.js";
 import { registerManifestRoutes } from "./routes/manifest.js";
 import { registerCronBackupRoute } from "./routes/cron-backup.js";
+import { processReminders } from "./routes/cron-task-reminders.js";
+import { bootstrapReminders } from "./reminderScheduler.js";
 import { apiLimiter, cspReportLimiter } from "./middleware/rateLimiter.js";
 
 // Structured security event logger — no PII fields
@@ -248,6 +250,21 @@ app.use((req, res, next) => {
           }
         });
       });
+
+      // Local cron: bootstrap precise per-task timeouts (0 delay)
+      await bootstrapReminders();
+
+      // Safety-net: catch any tasks that slipped through (e.g. created while server was down)
+      const runLocal = async () => {
+        try {
+          const result = await processReminders();
+          if (result.processed > 0) log(`[local-cron] reminders: ${JSON.stringify(result)}`);
+        } catch (err) {
+          console.error("[local-cron] reminder error:", err);
+        }
+      };
+      setInterval(runLocal, 60_000);
+      runLocal(); // fire once immediately on startup
     }
     // On Vercel: routes are now registered on `app`; Vercel calls app(req, res)
     // directly — no listen() needed.

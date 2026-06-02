@@ -7,6 +7,9 @@
  * The CONNECT token flow and RSVP notification flow are NOT touched here.
  *
  * Routes:
+ *   GET    /api/platform-admin/telegram-bot/webhook-info         — get registered webhook status
+ *   POST   /api/platform-admin/telegram-bot/webhook-setup        — register/update webhook URL
+ *   DELETE /api/platform-admin/telegram-bot/webhook-setup        — remove webhook (switch to polling)
  *   GET    /api/platform-admin/telegram-bot/commands            — list all commands
  *   POST   /api/platform-admin/telegram-bot/commands            — create command
  *   PUT    /api/platform-admin/telegram-bot/commands/:id        — update command
@@ -67,6 +70,79 @@ async function getFallbackMessage(): Promise<string> {
 
 const DEFAULT_FALLBACK =
   "Ողջույն! Ես չճանաչեցի ձեր հարցումը։\n\nՕգտագործեք /help հրամանը հասանելի հրամանների ցուցակը տեսնելու համար։";
+
+const TG_API = "https://api.telegram.org";
+
+function getBotToken(): string | null {
+  return process.env.TELEGRAM_BOT_TOKEN ?? null;
+}
+
+// ─── GET /webhook-info ────────────────────────────────────────────────────────
+router.get("/webhook-info", async (_req, res) => {
+  const token = getBotToken();
+  if (!token) return res.status(500).json({ error: "TELEGRAM_BOT_TOKEN not set" });
+  try {
+    const r = await fetch(`${TG_API}/bot${token}/getWebhookInfo`);
+    const data = await r.json() as any;
+    return res.json(data);
+  } catch (err) {
+    console.error("[TG Bot Admin] getWebhookInfo error:", err);
+    return res.status(500).json({ error: "Failed to fetch webhook info" });
+  }
+});
+
+// ─── POST /webhook-setup ──────────────────────────────────────────────────────
+// Body: { url: "https://yourapp.vercel.app" }  — we append /api/telegram/webhook
+router.post("/webhook-setup", async (req, res) => {
+  const token = getBotToken();
+  if (!token) return res.status(500).json({ error: "TELEGRAM_BOT_TOKEN not set" });
+
+  const { url } = req.body as { url?: string };
+  if (!url || typeof url !== "string") {
+    return res.status(400).json({ error: "url is required (e.g. https://yourapp.vercel.app)" });
+  }
+
+  const webhookUrl = url.replace(/\/$/, "") + "/api/telegram/webhook";
+  const secret = process.env.TELEGRAM_WEBHOOK_SECRET;
+
+  const payload: Record<string, unknown> = {
+    url: webhookUrl,
+    allowed_updates: ["message", "callback_query"],
+    drop_pending_updates: false,
+  };
+  if (secret) payload.secret_token = secret;
+
+  try {
+    const r = await fetch(`${TG_API}/bot${token}/setWebhook`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload),
+    });
+    const data = await r.json() as any;
+    return res.json({ webhookUrl, telegramResponse: data });
+  } catch (err) {
+    console.error("[TG Bot Admin] setWebhook error:", err);
+    return res.status(500).json({ error: "Failed to set webhook" });
+  }
+});
+
+// ─── DELETE /webhook-setup ────────────────────────────────────────────────────
+router.delete("/webhook-setup", async (_req, res) => {
+  const token = getBotToken();
+  if (!token) return res.status(500).json({ error: "TELEGRAM_BOT_TOKEN not set" });
+  try {
+    const r = await fetch(`${TG_API}/bot${token}/deleteWebhook`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ drop_pending_updates: false }),
+    });
+    const data = await r.json() as any;
+    return res.json(data);
+  } catch (err) {
+    console.error("[TG Bot Admin] deleteWebhook error:", err);
+    return res.status(500).json({ error: "Failed to delete webhook" });
+  }
+});
 
 // ─── GET /commands ─────────────────────────────────────────────────────────────
 router.get("/commands", async (_req, res) => {

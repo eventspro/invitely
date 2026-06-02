@@ -9,6 +9,7 @@ import type { Rsvp } from "../shared/schema.js";
 import { db } from "./db.js";
 import { userAdminPanels } from "../shared/schema.js";
 import { eq, and } from "drizzle-orm";
+import { toZonedTime, format as formatTz } from "date-fns-tz";
 
 const TELEGRAM_API_BASE = "https://api.telegram.org";
 
@@ -142,5 +143,117 @@ export async function sendRsvpTelegramNotification(
   } catch (err) {
     // Log but never propagate — RSVP is already saved
     console.error("sendRsvpTelegramNotification error:", err);
+  }
+}
+
+// ─── Task reminder helpers ────────────────────────────────────────────────────
+
+/** Send a task reminder with Done / Stop inline keyboard. Returns messageId on success. */
+export async function sendTaskReminderMessage(params: {
+  chatId: string;
+  firstName: string;
+  taskTitle: string;
+  dueAtUtc: Date;
+  timezone: string;
+  doneCallbackData: string;
+  stopCallbackData: string;
+}): Promise<{ success: boolean; messageId?: string }> {
+  const token = getBotToken();
+  if (!token) return { success: false };
+
+  const { chatId, firstName, taskTitle, dueAtUtc, timezone, doneCallbackData, stopCallbackData } = params;
+
+  let dueLine: string;
+  try {
+    const zoned = toZonedTime(dueAtUtc, timezone);
+    const tzAbbr = timezone.split("/").pop()?.replace("_", " ") ?? timezone;
+    dueLine = `📅 Due: ${formatTz(zoned, "MMM d, yyyy, HH:mm", { timeZone: timezone })} (${tzAbbr})`;
+  } catch {
+    dueLine = `📅 Due: ${dueAtUtc.toISOString()}`;
+  }
+
+  const text = [
+    "🔔 <b>Wedding Planner Reminder</b>",
+    "",
+    `Hi ${escapeHtml(firstName)}, don't forget: <b>${escapeHtml(taskTitle)}</b>`,
+    "",
+    dueLine,
+  ].join("\n");
+
+  const replyMarkup = {
+    inline_keyboard: [[
+      { text: "✅ Done", callback_data: doneCallbackData },
+      { text: "🔕 Stop reminders", callback_data: stopCallbackData },
+    ]],
+  };
+
+  try {
+    const url = `${TELEGRAM_API_BASE}/bot${token}/sendMessage`;
+    const body = { chat_id: chatId, text, parse_mode: "HTML", reply_markup: replyMarkup };
+    const res = await fetch(url, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(body),
+    });
+    if (!res.ok) {
+      const errText = await res.text().catch(() => "");
+      console.error(`[telegram] sendTaskReminderMessage failed [${res.status}]: ${errText.slice(0, 200)}`);
+      return { success: false };
+    }
+    const data = (await res.json()) as { ok: boolean; result?: { message_id?: number } };
+    const messageId = data.result?.message_id != null ? String(data.result.message_id) : undefined;
+    return { success: true, messageId };
+  } catch (err) {
+    console.error("[telegram] sendTaskReminderMessage error:", err);
+    return { success: false };
+  }
+}
+
+/** Dismiss the Telegram loading spinner after an inline button click. */
+export async function answerCallbackQuery(
+  callbackQueryId: string,
+  text?: string,
+): Promise<void> {
+  const token = getBotToken();
+  if (!token) return;
+  try {
+    const url = `${TELEGRAM_API_BASE}/bot${token}/answerCallbackQuery`;
+    await fetch(url, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ callback_query_id: callbackQueryId, text: text ?? "" }),
+    });
+  } catch (err) {
+    console.error("[telegram] answerCallbackQuery error:", err);
+  }
+}
+
+/** Edit an existing Telegram message text and remove inline keyboard. */
+export async function editTelegramMessageText(
+  chatId: string | number,
+  messageId: number,
+  text: string,
+): Promise<void> {
+  const token = getBotToken();
+  if (!token) return;
+  try {
+    const url = `${TELEGRAM_API_BASE}/bot${token}/editMessageText`;
+    const res = await fetch(url, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        chat_id: chatId,
+        message_id: messageId,
+        text,
+        parse_mode: "HTML",
+        reply_markup: { inline_keyboard: [] },
+      }),
+    });
+    if (!res.ok) {
+      const errText = await res.text().catch(() => "");
+      console.error(`[telegram] editMessageText failed [${res.status}]: ${errText.slice(0, 200)}`);
+    }
+  } catch (err) {
+    console.error("[telegram] editTelegramMessageText error:", err);
   }
 }
