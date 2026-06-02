@@ -21,6 +21,7 @@
 // ── Registered V2 templates ───────────────────────────────────────────────────
 import "./florence/manifest";
 import "./aurelia/manifest";
+import "./envelope/manifest";
 
 // Future templates — add import lines here as they are created:
 // import "./iris/manifest";

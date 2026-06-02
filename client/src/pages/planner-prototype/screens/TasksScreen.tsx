@@ -2,7 +2,16 @@ import React, { useState } from "react";
 import { Check, Trash2, Pencil, ClipboardList, Clock, CheckCircle2 } from "lucide-react";
 import { usePlannerText } from "../PlannerLocaleContext";
 import { formatDate } from "../plannerUtils";
-import type { Task, TaskPriority } from "../types";
+import type { Task, TaskPriority, TelegramReminderState } from "../types";
+
+const REMINDER_BADGE: Partial<Record<TelegramReminderState, { icon: string; color: string }>> = {
+  scheduled:  { icon: "🔔", color: "#3B82F6" },
+  sent:       { icon: "📤", color: "#6B7280" },
+  repeating:  { icon: "🔄", color: "#3B82F6" },
+  stopped:    { icon: "🔕", color: "#9CA3AF" },
+  completed:  { icon: "✅", color: "#16864A" },
+  failed:     { icon: "⚠️", color: "#E85D5D" },
+};
 
 interface TasksScreenProps {
   tasks: Task[];
@@ -103,9 +112,22 @@ export default function TasksScreen({ tasks, onToggle, onDelete, onAdd, onEdit }
       <div style={{ fontSize: 16, fontWeight: 700, color: "#111827", marginBottom: 6 }}>
         {filter === "done" ? pt.tasks.noTasksDone : pt.tasks.noTasks}
       </div>
-      <div style={{ fontSize: 13, color: "#9CA3AF" }}>
+      <div style={{ fontSize: 13, color: "#9CA3AF", marginBottom: filter === "done" ? 0 : 24 }}>
         {filter === "done" ? pt.tasks.noTasksDoneDesc : pt.tasks.noTasksDesc}
       </div>
+      {filter !== "done" && (
+        <button
+          onClick={onAdd}
+          style={{
+            display: "inline-flex", alignItems: "center", gap: 6,
+            padding: "10px 20px", borderRadius: 12, border: "none",
+            background: "linear-gradient(135deg, #00472F 0%, #006B4A 100%)",
+            color: "#FFFFFF", fontSize: 14, fontWeight: 700, cursor: "pointer",
+          }}
+        >
+          <span style={{ fontSize: 18, lineHeight: 1 }}>+</span> {pt.tasks.addTask}
+        </button>
+      )}
     </div>
   );
 
@@ -141,12 +163,25 @@ export default function TasksScreen({ tasks, onToggle, onDelete, onAdd, onEdit }
                   {task.title}
                 </div>
                 <div style={{ display: "flex", alignItems: "center", flexWrap: "wrap", gap: 6, marginTop: 5 }}>
-                  {task.dueDate && (
+                  {(task.dueDate || task.dueAtLocal) && (
                     <span style={{ fontSize: 11, color: "#9CA3AF", display: "flex", alignItems: "center", gap: 3 }}>
                       <Clock size={10} color="#9CA3AF" />
-                      {formatDate(task.dueDate)}
+                      {formatDate((task.dueAtLocal ?? task.dueDate)!.slice(0, 10))}
                     </span>
                   )}
+                  {task.telegramReminderState && REMINDER_BADGE[task.telegramReminderState] && (() => {
+                    const b = REMINDER_BADGE[task.telegramReminderState!]!;
+                    const badgeLabel = (pt.tasks.reminderBadge as Record<string, string>)[task.telegramReminderState!];
+                    return (
+                      <span style={{
+                        fontSize: 10, fontWeight: 600, color: b.color,
+                        display: "inline-flex", alignItems: "center", gap: 3,
+                        background: `${b.color}15`, borderRadius: 6, padding: "2px 6px",
+                      }}>
+                        {b.icon} {badgeLabel}
+                      </span>
+                    );
+                  })()}
                   <span style={{
                     fontSize: 10.5, fontWeight: 700, padding: "2px 8px", borderRadius: 999,
                     background: prio.bg, color: prio.color,

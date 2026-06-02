@@ -25,4 +25,6 @@ export type {
   HomepageContent,
   ValidationWarning,
   IconKey,
+  PlannerFeatureCard,
+  PlannerShowcaseSection,
 } from "../../pages/translations-prototype/types";

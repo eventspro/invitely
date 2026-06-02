@@ -8,15 +8,36 @@ export type BudgetCategory =
   | "restaurant" | "photographer" | "videographer" | "decorations"
   | "flowers" | "invitations" | "website" | "host" | "lighting" | "other"
   | "custom";
-export type TabId = "dashboard" | "guests" | "tables" | "budget" | "more";
+export type TabId = "dashboard" | "guests" | "tables" | "tasks" | "budget" | "more";
+
+export type TelegramReminderState =
+  | "not_scheduled" | "scheduled" | "sent"
+  | "repeating" | "stopped" | "completed" | "failed";
 
 export interface Task {
   id: string;
   title: string;
-  dueDate?: string;
   priority: TaskPriority;
-  done: boolean;
-  notes?: string;
+  done: boolean;             // derived: status === 'done', or legacy boolean
+  // Legacy localStorage fields (kept for backward compat)
+  dueDate?: string;          // "YYYY-MM-DD"
+  notes?: string;            // alias for description
+  // Backend fields (absent in localStorage tasks, present in API tasks)
+  status?: "pending" | "done" | "cancelled";
+  description?: string;
+  dueAtLocal?: string;       // "2026-06-15T15:00" — datetime-local input value
+  dueAtUtc?: string | null;
+  timezone?: string;
+  reminderEnabled?: boolean;
+  repeatIntervalMinutes?: number | null;
+  telegramReminderState?: TelegramReminderState;
+  nextReminderAtUtc?: string | null;
+  lastReminderSentAt?: string | null;
+  sendRetryCount?: number;
+  sendLastError?: string | null;
+  completedAt?: string | null;
+  createdAt?: string;
+  updatedAt?: string;
 }
 
 export interface Guest {

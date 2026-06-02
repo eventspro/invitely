@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import BottomNav from "./components/BottomNav";
 import SidebarNav from "./components/SidebarNav";
-import { Bell, Calendar, ArrowLeft, Menu, X, Home, Users, LayoutGrid, Wallet, MoreHorizontal, Heart, LogOut } from "lucide-react";
+import { Bell, Calendar, ArrowLeft, Menu, X, Home, Users, LayoutGrid, Wallet, MoreHorizontal, Heart, LogOut, ClipboardList } from "lucide-react";
 import { formatDate } from "./plannerUtils";
 import { usePlannerText, LocaleSwitcher } from "./PlannerLocaleContext";
 import type { TabId, PlannerSettings } from "./types";
@@ -80,6 +80,7 @@ export default function PlannerShell({
     { id: "dashboard", label: pt.nav.dashboard, icon: Home },
     { id: "guests",    label: pt.nav.guests,    icon: Users },
     { id: "tables",    label: pt.nav.tables,    icon: LayoutGrid },
+    { id: "tasks",     label: pt.nav.tasks,     icon: ClipboardList },
     { id: "budget",    label: pt.nav.budget,    icon: Wallet },
     { id: "more",      label: pt.nav.more,      icon: MoreHorizontal },
   ];

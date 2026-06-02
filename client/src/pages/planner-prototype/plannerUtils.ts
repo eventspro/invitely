@@ -6,9 +6,11 @@ export function uid(): string {
   return Math.random().toString(36).slice(2, 9) + Date.now().toString(36);
 }
 
-export function formatCurrency(amount: number, currency = "$"): string {
+export function formatCurrency(amount: number, currency = "֏"): string {
   const n = Math.abs(amount).toLocaleString("en-US");
-  return (amount < 0 ? "-" : "") + currency + n;
+  const sign = amount < 0 ? "-" : "";
+  const postfix = currency === "֏" || currency === "₽";
+  return postfix ? `${sign}${n}${currency}` : `${sign}${currency}${n}`;
 }
 
 export function formatDate(iso: string): string {

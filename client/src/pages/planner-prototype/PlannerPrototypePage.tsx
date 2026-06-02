@@ -9,6 +9,7 @@ import SeatAssignmentScreen from "./screens/SeatAssignmentScreen";
 import BudgetScreen from "./screens/BudgetScreen";
 import MoreScreen from "./screens/MoreScreen";
 import BottomSheet from "./components/BottomSheet";
+import LoginGreetingBanner from "./components/LoginGreetingBanner";
 import GuestForm from "./forms/GuestForm";
 import TableForm from "./forms/TableForm";
 import BudgetItemForm from "./forms/BudgetItemForm";
@@ -17,6 +18,7 @@ import GenerateTablesSheet from "./forms/GenerateTablesSheet";
 import { loadData, saveData } from "./storage";
 import { applySuggestion, uid } from "./plannerUtils";
 import { PlannerLocaleProvider, usePlannerText } from "./PlannerLocaleContext";
+import { listTasks, createTask, updateTask, deleteTask } from "./api/tasksApi";
 import type { TabId, Guest, WeddingTable, BudgetItem, Seat, Task, PlannerData } from "./types";
 import type { TableSuggestion } from "./plannerUtils";
 
@@ -28,6 +30,8 @@ interface PlannerPrototypePageProps {
   onLogout?: () => void;
   storageKey?: string;
   initialData?: PlannerData;
+  token?: string;
+  templateId?: string;
 }
 
 export default function PlannerPrototypePage(props: PlannerPrototypePageProps = {}) {
@@ -46,13 +50,18 @@ function PlannerPrototypeContent({
   onLogout,
   storageKey,
   initialData,
+  token,
+  templateId,
 }: PlannerPrototypePageProps) {
   const pt = usePlannerText();
+
+  const isApiMode = !isDemoMode && !!token && !!templateId;
 
   const NAV_TITLES: Record<TabId, string> = {
     dashboard: pt.nav.dashboard,
     guests: pt.nav.guests,
     tables: pt.nav.tables,
+    tasks: pt.tasks.title,
     budget: pt.nav.budget,
     more: pt.nav.more,
   };
@@ -60,7 +69,6 @@ function PlannerPrototypeContent({
   const [data, setData] = useState<PlannerData>(() => loadData(storageKey, initialData));
   const [activeTab, setActiveTab] = useState<TabId>("dashboard");
 
-  const [showTasksScreen, setShowTasksScreen] = useState(false);
   const [selectedTableId, setSelectedTableId] = useState<string | null>(null);
 
   const [guestSheetOpen, setGuestSheetOpen] = useState(false);
@@ -74,9 +82,48 @@ function PlannerPrototypeContent({
   const [editingBudget, setEditingBudget] = useState<BudgetItem | undefined>(undefined);
   const [editingTask, setEditingTask] = useState<Task | undefined>(undefined);
 
+  // API-mode task state
+  const [apiTasks, setApiTasks] = useState<Task[]>([]);
+  const [telegramConnected, setTelegramConnected] = useState(false);
+  const [showImportPrompt, setShowImportPrompt] = useState(false);
+
+  // Greeting banner — shown once per session when pending tasks exist
+  const greetingKey = isApiMode ? `planner_greeting_shown_${templateId}` : null;
+  const [showGreeting, setShowGreeting] = useState(false);
+
   useEffect(() => {
     saveData(data, storageKey);
   }, [data, storageKey]);
+
+  // Fetch API tasks + telegram status on mount
+  useEffect(() => {
+    if (!isApiMode) return;
+
+    listTasks(templateId!, token!)
+      .then(tasks => {
+        setApiTasks(tasks);
+        if (tasks.length === 0 && data.tasks.length > 0) {
+          setShowImportPrompt(true);
+        }
+        // Show greeting if not dismissed this session and there are pending tasks
+        const alreadyShown = greetingKey ? sessionStorage.getItem(greetingKey) : null;
+        if (!alreadyShown && tasks.some(t => t.status === "pending" && !t.done)) {
+          setShowGreeting(true);
+        }
+      })
+      .catch(err => console.error("[tasks] fetch error:", err));
+
+    fetch(`/api/planner/telegram-status/${templateId}`, {
+      headers: { Authorization: `Bearer ${token}` },
+    })
+      .then(r => r.json())
+      .then((d: { telegramConnected?: boolean }) => setTelegramConnected(d.telegramConnected ?? false))
+      .catch(() => {});
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isApiMode]);
+
+  const effectiveTasks = isApiMode ? apiTasks : data.tasks;
+  const effectiveData: PlannerData = isApiMode ? { ...data, tasks: apiTasks } : data;
 
   const updateData = useCallback((next: PlannerData) => {
     setData(next);
@@ -184,26 +231,100 @@ function PlannerPrototypeContent({
     setData(prev => ({ ...prev, budgetItems: prev.budgetItems.filter(i => i.id !== id) }));
   }
 
-  function handleSaveTask(task: Task) {
-    setData(prev => ({
-      ...prev,
-      tasks: editingTask
-        ? prev.tasks.map(t => t.id === task.id ? task : t)
-        : [...prev.tasks, task],
-    }));
+  async function handleSaveTask(task: Task) {
+    if (isApiMode) {
+      try {
+        const input = {
+          title: task.title,
+          description: task.notes,
+          priority: task.priority,
+          dueAtLocal: task.dueAtLocal,
+          timezone: task.timezone,
+          reminderEnabled: task.reminderEnabled ?? false,
+          repeatIntervalMinutes: task.repeatIntervalMinutes ?? null,
+        };
+        if (editingTask) {
+          const updated = await updateTask(templateId!, editingTask.id, token!, input);
+          setApiTasks(prev => prev.map(t => t.id === updated.id ? updated : t));
+        } else {
+          const created = await createTask(templateId!, token!, input);
+          setApiTasks(prev => [created, ...prev]);
+        }
+      } catch (err) {
+        console.error("[tasks] save error:", err);
+      }
+    } else {
+      setData(prev => ({
+        ...prev,
+        tasks: editingTask
+          ? prev.tasks.map(t => t.id === task.id ? task : t)
+          : [...prev.tasks, task],
+      }));
+    }
     setTaskSheetOpen(false);
     setEditingTask(undefined);
   }
 
-  function handleDeleteTask(id: string) {
-    setData(prev => ({ ...prev, tasks: prev.tasks.filter(t => t.id !== id) }));
+  async function handleDeleteTask(id: string) {
+    if (isApiMode) {
+      try {
+        await deleteTask(templateId!, id, token!);
+        setApiTasks(prev => prev.filter(t => t.id !== id));
+      } catch (err) {
+        console.error("[tasks] delete error:", err);
+      }
+    } else {
+      setData(prev => ({ ...prev, tasks: prev.tasks.filter(t => t.id !== id) }));
+    }
   }
 
-  function handleToggleTask(id: string) {
-    setData(prev => ({
-      ...prev,
-      tasks: prev.tasks.map(t => t.id === id ? { ...t, done: !t.done } : t),
-    }));
+  async function handleToggleTask(id: string) {
+    if (isApiMode) {
+      const task = apiTasks.find(t => t.id === id);
+      if (!task) return;
+      try {
+        const updated = await updateTask(templateId!, id, token!, {
+          status: task.done ? "pending" : "done",
+        });
+        setApiTasks(prev => prev.map(t => t.id === updated.id ? updated : t));
+      } catch (err) {
+        console.error("[tasks] toggle error:", err);
+      }
+    } else {
+      setData(prev => ({
+        ...prev,
+        tasks: prev.tasks.map(t => t.id === id ? { ...t, done: !t.done } : t),
+      }));
+    }
+  }
+
+  async function handleImportTasks() {
+    for (const task of data.tasks) {
+      try {
+        const created = await createTask(templateId!, token!, {
+          title: task.title,
+          description: task.notes,
+          priority: task.priority,
+          dueAtLocal: task.dueAtLocal ?? (task.dueDate ? `${task.dueDate}T09:00` : undefined),
+          timezone: task.timezone ?? "Asia/Yerevan",
+          reminderEnabled: false,
+        });
+        setApiTasks(prev => [...prev, created]);
+      } catch { /* skip individual failures */ }
+    }
+    setShowImportPrompt(false);
+  }
+
+  function handleDismissGreeting() {
+    setShowGreeting(false);
+    if (greetingKey) sessionStorage.setItem(greetingKey, "dismissed");
+  }
+
+  async function handleGreetingMarkDone(taskId: string) {
+    await handleToggleTask(taskId);
+    // If no more pending tasks after this, auto-hide greeting
+    const stillPending = effectiveTasks.filter(t => t.id !== taskId && t.status === "pending" && !t.done);
+    if (stillPending.length === 0) handleDismissGreeting();
   }
 
   function handleApplySuggestion(suggestion: TableSuggestion) {
@@ -225,54 +346,6 @@ function PlannerPrototypeContent({
     );
   }
 
-  if (showTasksScreen) {
-    return (
-      <>
-        <PlannerShell
-          active={activeTab}
-          onChange={(tab) => { setActiveTab(tab); setShowTasksScreen(false); }}
-          settings={data.settings}
-          headerTitle={pt.tasks.title}
-          showBack
-          onBack={() => setShowTasksScreen(false)}
-          isDemoMode={isDemoMode}
-          onDemoContactUs={() => onDemoLimitReached?.("more")}
-          userDisplayName={userDisplayName}
-          onLogout={onLogout}
-          headerRight={
-            <button
-              onClick={() => { setEditingTask(undefined); setTaskSheetOpen(true); }}
-              style={{ display: "flex", alignItems: "center", border: "none", background: "#EAF5EF", borderRadius: 8, padding: "6px 12px", cursor: "pointer", color: "#064E3B", fontSize: 13, fontWeight: 700, gap: 4 }}
-            >
-              <Plus size={15} /> {pt.common.add}
-            </button>
-          }
-        >
-          <TasksScreen
-            tasks={data.tasks}
-            onToggle={handleToggleTask}
-            onDelete={handleDeleteTask}
-            onAdd={() => { setEditingTask(undefined); setTaskSheetOpen(true); }}
-            onEdit={task => { setEditingTask(task); setTaskSheetOpen(true); }}
-          />
-        </PlannerShell>
-
-        <BottomSheet
-          open={taskSheetOpen}
-          onClose={() => { setTaskSheetOpen(false); setEditingTask(undefined); }}
-          title={editingTask ? pt.tasks.editTask : pt.tasks.addTask}
-          height="auto"
-        >
-          <TaskForm
-            initial={editingTask}
-            onSave={handleSaveTask}
-            onCancel={() => { setTaskSheetOpen(false); setEditingTask(undefined); }}
-          />
-        </BottomSheet>
-      </>
-    );
-  }
-
   const headerTitle = NAV_TITLES[activeTab];
 
   const headerRight = activeTab === "guests" ? (
@@ -291,6 +364,13 @@ function PlannerPrototypeContent({
         if (isDemoMode && data.tables.length >= demoLimits.maxTables) { onDemoLimitReached?.("tables"); return; }
         setEditingTable(undefined); setTableSheetOpen(true);
       }}
+      style={{ display: "flex", alignItems: "center", border: "none", background: "#EAF5EF", borderRadius: 8, padding: "6px 12px", cursor: "pointer", color: "#064E3B", fontSize: 13, fontWeight: 700, gap: 4 }}
+    >
+      <Plus size={15} /> {pt.common.add}
+    </button>
+  ) : activeTab === "tasks" ? (
+    <button
+      onClick={() => { setEditingTask(undefined); setTaskSheetOpen(true); }}
       style={{ display: "flex", alignItems: "center", border: "none", background: "#EAF5EF", borderRadius: 8, padding: "6px 12px", cursor: "pointer", color: "#064E3B", fontSize: 13, fontWeight: 700, gap: 4 }}
     >
       <Plus size={15} /> {pt.common.add}
@@ -320,7 +400,60 @@ function PlannerPrototypeContent({
         userDisplayName={userDisplayName}
         onLogout={onLogout}
       >
-        {activeTab === "dashboard" && <DashboardScreen data={data} onNavigate={(tab) => setActiveTab(tab)} onViewTasks={() => setShowTasksScreen(true)} onToggleTask={handleToggleTask} />}
+        {activeTab === "dashboard" && (
+          <>
+            {showGreeting && isApiMode && (
+              <div style={{ padding: "12px 14px 0" }}>
+                <LoginGreetingBanner
+                  tasks={effectiveTasks}
+                  firstName={data.settings.coupleName.split(/\s*&\s*|\s+and\s+/i)[0].trim().split(" ")[0]}
+                  onDismiss={handleDismissGreeting}
+                  onViewTasks={() => { handleDismissGreeting(); setActiveTab("tasks"); }}
+                  onMarkDone={handleGreetingMarkDone}
+                />
+              </div>
+            )}
+            <DashboardScreen data={effectiveData} onNavigate={(tab) => setActiveTab(tab)} onViewTasks={() => setActiveTab("tasks")} onToggleTask={handleToggleTask} />
+          </>
+        )}
+
+        {activeTab === "tasks" && (
+          <>
+            {showImportPrompt && (
+              <div style={{
+                background: "#FFF3E0", border: "1px solid #D7951E", borderRadius: 12,
+                padding: "12px 14px", margin: "12px 16px 0", display: "flex",
+                alignItems: "center", justifyContent: "space-between", gap: 10,
+                flexWrap: "wrap",
+              }}>
+                <span style={{ fontSize: 13, color: "#92400E", fontWeight: 500, flex: 1 }}>
+                  {pt.tasks.importTasks}
+                </span>
+                <div style={{ display: "flex", gap: 8, flexShrink: 0 }}>
+                  <button
+                    onClick={handleImportTasks}
+                    style={{ padding: "6px 12px", borderRadius: 8, border: "none", background: "#D7951E", color: "#FFFFFF", fontSize: 12, fontWeight: 700, cursor: "pointer" }}
+                  >
+                    {pt.tasks.importBtn}
+                  </button>
+                  <button
+                    onClick={() => setShowImportPrompt(false)}
+                    style={{ padding: "6px 12px", borderRadius: 8, border: "1px solid #D7951E", background: "transparent", color: "#92400E", fontSize: 12, fontWeight: 600, cursor: "pointer" }}
+                  >
+                    {pt.tasks.importLater}
+                  </button>
+                </div>
+              </div>
+            )}
+            <TasksScreen
+              tasks={effectiveTasks}
+              onToggle={handleToggleTask}
+              onDelete={handleDeleteTask}
+              onAdd={() => { setEditingTask(undefined); setTaskSheetOpen(true); }}
+              onEdit={task => { setEditingTask(task); setTaskSheetOpen(true); }}
+            />
+          </>
+        )}
 
         {activeTab === "guests" && (
           <GuestsScreen
@@ -362,7 +495,7 @@ function PlannerPrototypeContent({
         )}
 
         {activeTab === "more" && (
-          <MoreScreen data={data} onUpdate={updateData} isDemoMode={isDemoMode} onContactUs={() => onDemoLimitReached?.("more")} storageKey={storageKey} />
+          <MoreScreen data={data} onUpdate={updateData} isDemoMode={isDemoMode} onContactUs={() => onDemoLimitReached?.("more")} storageKey={storageKey} token={token} templateId={templateId} />
         )}
       </PlannerShell>
 
@@ -416,6 +549,21 @@ function PlannerPrototypeContent({
           data={data}
           onApply={handleApplySuggestion}
           onClose={() => setGenerateSheetOpen(false)}
+        />
+      </BottomSheet>
+
+      <BottomSheet
+        open={taskSheetOpen}
+        onClose={() => { setTaskSheetOpen(false); setEditingTask(undefined); }}
+        title={editingTask ? pt.tasks.editTask : pt.tasks.addTask}
+        height="auto"
+      >
+        <TaskForm
+          initial={editingTask}
+          telegramConnected={telegramConnected}
+          isDemoMode={isDemoMode}
+          onSave={handleSaveTask}
+          onCancel={() => { setTaskSheetOpen(false); setEditingTask(undefined); }}
         />
       </BottomSheet>
     </>

@@ -153,6 +153,8 @@ export default function PlannerPage() {
 
   return (
     <PlannerPrototypePage
+      token={session.token}
+      templateId={session.project.templateId}
       userDisplayName={displayName}
       onLogout={handleLogout}
       storageKey={storageKey}

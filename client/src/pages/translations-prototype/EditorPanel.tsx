@@ -289,8 +289,46 @@ export default function EditorPanel({ content: c, locale, onChange }: Props) {
         ))}
       </Section>
 
-      {/* ── 4. How It Works */}
-      <Section title="4. How It Works">
+      {/* ── 4. Planner Showcase */}
+      <Section title="4. Planner Showcase" badge={c.plannerShowcase.features.filter(f => f.visible).length}>
+        <Field label={`Eyebrow (${L})`} value={c.plannerShowcase.eyebrow[L]} onChange={v => setC({ plannerShowcase: { ...c.plannerShowcase, eyebrow: updateLS(c.plannerShowcase.eyebrow, L, v) } })} />
+        <Field label={`Title (${L})`} value={c.plannerShowcase.title[L]} onChange={v => setC({ plannerShowcase: { ...c.plannerShowcase, title: updateLS(c.plannerShowcase.title, L, v) } })} rows={2} />
+        <Field label={`Subtitle (${L})`} value={c.plannerShowcase.subtitle[L]} onChange={v => setC({ plannerShowcase: { ...c.plannerShowcase, subtitle: updateLS(c.plannerShowcase.subtitle, L, v) } })} rows={3} />
+        <div style={{ borderTop: "1px solid #f0ece8", paddingTop: 8, marginTop: 4 }}>
+          <div style={{ fontSize: 11, fontWeight: 700, color: "#766c63", marginBottom: 6 }}>Primary CTA</div>
+          <Field label={`Label (${L})`} value={c.plannerShowcase.primaryCta.label[L]} onChange={v => setC({ plannerShowcase: { ...c.plannerShowcase, primaryCta: { ...c.plannerShowcase.primaryCta, label: updateLS(c.plannerShowcase.primaryCta.label, L, v) } } })} />
+          <Field label="Link (href)" value={c.plannerShowcase.primaryCta.href} onChange={v => setC({ plannerShowcase: { ...c.plannerShowcase, primaryCta: { ...c.plannerShowcase.primaryCta, href: v } } })} />
+        </div>
+        <div style={{ borderTop: "1px solid #f0ece8", paddingTop: 8, marginTop: 4 }}>
+          <div style={{ fontSize: 11, fontWeight: 700, color: "#766c63", marginBottom: 6 }}>Secondary CTA</div>
+          <Field label={`Label (${L})`} value={c.plannerShowcase.secondaryCta.label[L]} onChange={v => setC({ plannerShowcase: { ...c.plannerShowcase, secondaryCta: { ...c.plannerShowcase.secondaryCta, label: updateLS(c.plannerShowcase.secondaryCta.label, L, v) } } })} />
+          <Field label="Link (href)" value={c.plannerShowcase.secondaryCta.href} onChange={v => setC({ plannerShowcase: { ...c.plannerShowcase, secondaryCta: { ...c.plannerShowcase.secondaryCta, href: v } } })} />
+        </div>
+        <div style={{ borderTop: "1px solid #f0ece8", paddingTop: 8, marginTop: 4 }}>
+          <div style={{ fontSize: 11, fontWeight: 700, color: "#766c63", marginBottom: 6 }}>Feature cards</div>
+          {c.plannerShowcase.features.map((feat, i) => (
+            <div key={feat.id} style={{ marginBottom: 10, padding: "10px", borderRadius: 8, border: "1px solid #ede6dc", background: "#fffaf5" }}>
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 6 }}>
+                <span style={{ fontSize: 11, fontWeight: 700, color: "#0D2A20" }}>Feature {i + 1}</span>
+                <Toggle value={feat.visible} onChange={v => setC({ plannerShowcase: { ...c.plannerShowcase, features: c.plannerShowcase.features.map((f, j) => j === i ? { ...f, visible: v } : f) } })} label="" />
+              </div>
+              <div style={{ display: "flex", gap: 6, marginBottom: 6 }}>
+                <select value={feat.icon} onChange={e => setC({ plannerShowcase: { ...c.plannerShowcase, features: c.plannerShowcase.features.map((f, j) => j === i ? { ...f, icon: e.target.value } : f) } })}
+                  style={{ fontSize: 11, border: "1px solid #ddd6cc", borderRadius: 5, padding: "3px 6px", background: "#fffdf9", outline: "none", width: 90, flexShrink: 0 }}>
+                  {["users","calendar","wallet","check","bell","send","heart","gift","star","clock","sparkles"].map(ic => <option key={ic} value={ic}>{ic}</option>)}
+                </select>
+                <input type="text" value={feat.title[L]} onChange={e => setC({ plannerShowcase: { ...c.plannerShowcase, features: c.plannerShowcase.features.map((f, j) => j === i ? { ...f, title: updateLS(f.title, L, e.target.value) } : f) } })}
+                  placeholder={`Title (${L})`} style={{ flex: 1, fontSize: 12, border: "1px solid #ddd6cc", borderRadius: 6, padding: "4px 8px", background: "#fffdf9", outline: "none" }} />
+              </div>
+              <textarea value={feat.text[L]} onChange={e => setC({ plannerShowcase: { ...c.plannerShowcase, features: c.plannerShowcase.features.map((f, j) => j === i ? { ...f, text: updateLS(f.text, L, e.target.value) } : f) } })}
+                rows={2} placeholder={`Description (${L})`} style={{ width: "100%", fontSize: 11, border: "1px solid #ddd6cc", borderRadius: 6, padding: "5px 8px", background: "#fffdf9", outline: "none", resize: "vertical", boxSizing: "border-box" }} />
+            </div>
+          ))}
+        </div>
+      </Section>
+
+      {/* ── 5. How It Works */}
+      <Section title="5. How It Works">
         <Field label={`Eyebrow (${L})`} value={c.howItWorks.eyebrow[L]} onChange={v => setC({ howItWorks: { ...c.howItWorks, eyebrow: updateLS(c.howItWorks.eyebrow, L, v) } })} />
         <Field label={`Title (${L})`} value={c.howItWorks.title[L]} onChange={v => setC({ howItWorks: { ...c.howItWorks, title: updateLS(c.howItWorks.title, L, v) } })} />
         {c.howItWorks.steps.map((step, i) => (
@@ -306,8 +344,8 @@ export default function EditorPanel({ content: c, locale, onChange }: Props) {
         ))}
       </Section>
 
-      {/* ── 5. Guest Features */}
-      <Section title="5. Guest Features" badge={c.features.items.length}>
+      {/* ── 6. Guest Features */}
+      <Section title="6. Guest Features" badge={c.features.items.length}>
         <Field label={`Eyebrow (${L})`} value={c.features.eyebrow[L]} onChange={v => setC({ features: { ...c.features, eyebrow: updateLS(c.features.eyebrow, L, v) } })} />
         <Field label={`Title (${L})`} value={c.features.title[L]} onChange={v => setC({ features: { ...c.features, title: updateLS(c.features.title, L, v) } })} />
         {c.features.items.map((item, i) => (
@@ -339,7 +377,7 @@ export default function EditorPanel({ content: c, locale, onChange }: Props) {
       </Section>
 
       {/* ── 6. Mobile Experience */}
-      <Section title="6. Mobile Experience">
+      <Section title="7. Mobile Experience">
         <Field label={`Eyebrow (${L})`} value={c.mobileExperience.eyebrow[L]} onChange={v => setC({ mobileExperience: { ...c.mobileExperience, eyebrow: updateLS(c.mobileExperience.eyebrow, L, v) } })} />
         <Field label={`Title (${L})`} value={c.mobileExperience.title[L]} onChange={v => setC({ mobileExperience: { ...c.mobileExperience, title: updateLS(c.mobileExperience.title, L, v) } })} rows={2} />
         <Field label={`Subtitle (${L})`} value={c.mobileExperience.subtitle[L]} onChange={v => setC({ mobileExperience: { ...c.mobileExperience, subtitle: updateLS(c.mobileExperience.subtitle, L, v) } })} rows={3} />
@@ -365,7 +403,7 @@ export default function EditorPanel({ content: c, locale, onChange }: Props) {
       </Section>
 
       {/* ── 7. FAQ */}
-      <Section title="7. FAQ" badge={c.faq.items.filter(f => f.visible).length}>
+      <Section title="8. FAQ" badge={c.faq.items.filter(f => f.visible).length}>
         <Field label={`Eyebrow (${L})`} value={c.faq.eyebrow[L]} onChange={v => setC({ faq: { ...c.faq, eyebrow: updateLS(c.faq.eyebrow, L, v) } })} />
         <Field label={`Title (${L})`} value={c.faq.title[L]} onChange={v => setC({ faq: { ...c.faq, title: updateLS(c.faq.title, L, v) } })} />
         {c.faq.items.map((item, i) => (
@@ -390,7 +428,7 @@ export default function EditorPanel({ content: c, locale, onChange }: Props) {
       </Section>
 
       {/* ── 8. Contact */}
-      <Section title="8. Contact">
+      <Section title="9. Contact">
         <Field label={`Eyebrow (${L})`} value={c.contact.eyebrow[L]} onChange={v => setC({ contact: { ...c.contact, eyebrow: updateLS(c.contact.eyebrow, L, v) } })} />
         <Field label={`Title (${L})`} value={c.contact.title[L]} onChange={v => setC({ contact: { ...c.contact, title: updateLS(c.contact.title, L, v) } })} rows={2} />
         <Field label={`Subtitle (${L})`} value={c.contact.subtitle[L]} onChange={v => setC({ contact: { ...c.contact, subtitle: updateLS(c.contact.subtitle, L, v) } })} rows={2} />
@@ -419,7 +457,7 @@ export default function EditorPanel({ content: c, locale, onChange }: Props) {
       </Section>
 
       {/* ── 9. Footer */}
-      <Section title="9. Footer" defaultOpen={false}>
+      <Section title="10. Footer" defaultOpen={false}>
         <Field label="Email" value={c.footer.email} onChange={v => setC({ footer: { ...c.footer, email: v } })} placeholder="info@4ever.am" />
         <Field label="Phone" value={c.footer.phone} onChange={v => setC({ footer: { ...c.footer, phone: v } })} placeholder="+374 77 000 000" />
         <Field label={`Copyright (${L})`} value={c.footer.copyright[L]} onChange={v => setC({ footer: { ...c.footer, copyright: updateLS(c.footer.copyright, L, v) } })} />
@@ -447,7 +485,7 @@ export default function EditorPanel({ content: c, locale, onChange }: Props) {
       </Section>
 
       {/* ── 10. Benefits (hero micro-badges) */}
-      <Section title="10. Benefits" badge={c.benefits.filter(b => b.visible).length}>
+      <Section title="11. Benefits" badge={c.benefits.filter(b => b.visible).length}>
         {c.benefits.map((item, i) => (
           <div key={item.id} style={{ marginBottom: 8, padding: "10px", borderRadius: 8, border: "1px solid #ede6dc", background: "#fffaf5" }}>
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 6 }}>

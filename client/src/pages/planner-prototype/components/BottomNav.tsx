@@ -1,5 +1,5 @@
 import React from "react";
-import { Home, Users, LayoutGrid, Wallet, MoreHorizontal } from "lucide-react";
+import { Home, Users, LayoutGrid, Wallet, MoreHorizontal, ClipboardList } from "lucide-react";
 import { usePlannerText } from "../PlannerLocaleContext";
 import type { TabId } from "../types";
 
@@ -14,7 +14,7 @@ export default function BottomNav({ active, onChange }: BottomNavProps) {
   const TABS: { id: TabId; label: string; icon: React.ElementType }[] = [
     { id: "dashboard", label: pt.nav.dashboard, icon: Home },
     { id: "guests",    label: pt.nav.guests,    icon: Users },
-    { id: "tables",    label: pt.nav.tables,    icon: LayoutGrid },
+    { id: "tasks",     label: pt.nav.tasks,     icon: ClipboardList },
     { id: "budget",    label: pt.nav.budget,    icon: Wallet },
     { id: "more",      label: pt.nav.more,      icon: MoreHorizontal },
   ];

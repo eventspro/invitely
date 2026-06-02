@@ -139,6 +139,26 @@ export const templates: Record<string, TemplateDefinition> = {
       "Responsive Mobile Design",
       "Fixed Transparent Navigation",
     ]
+  },
+  envelope: {
+    key: "envelope",
+    name: "Envelope Romance",
+    description: "Luxury bright wedding template with an animated envelope opening experience — seal breaks, flap lifts, invitation slides out",
+    defaultConfig: {} as WeddingConfig,
+    component: lazy(() => import("./envelope/EnvelopeTemplate")),
+    previewImage: "/templates/envelope-preview.jpg",
+    features: [
+      "Animated Envelope Opening",
+      "Wax Seal & Flap Animation",
+      "Gold & Ivory Bright Palette",
+      "Live Countdown Timer",
+      "Wedding Detail Cards",
+      "Timeline / Our Story",
+      "Masonry Photo Gallery",
+      "RSVP Form with Email Notifications",
+      "Responsive Mobile Design",
+      "10 Curated Color Palettes",
+    ]
   }
   // Future templates can be added here:
   // minimal: { ... },
@@ -182,6 +202,9 @@ export const loadTemplateConfig = async (templateKey: string): Promise<WeddingCo
       case "florence":
         const florenceConfig = await import("./florence/config");
         return florenceConfig.defaultConfig;
+      case "envelope":
+        const envelopeConfig = await import("./envelope/config");
+        return envelopeConfig.defaultConfig;
       default:
         return null;
     }

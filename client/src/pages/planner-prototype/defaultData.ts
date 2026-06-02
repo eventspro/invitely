@@ -79,7 +79,7 @@ export const DEFAULT_DATA: PlannerData = {
   settings: {
     weddingDate: "2026-06-20",
     coupleName: "Aram & Ani",
-    currency: "$",
+    currency: "֏",
     defaultSeatsPerTable: 10,
     restaurantPricePerGuest: 150,
     totalBudget: 0,
@@ -95,7 +95,7 @@ export const BLANK_DATA: PlannerData = {
   settings: {
     weddingDate: "",
     coupleName: "",
-    currency: "$",
+    currency: "֏",
     defaultSeatsPerTable: 10,
     restaurantPricePerGuest: 150,
     totalBudget: 0,

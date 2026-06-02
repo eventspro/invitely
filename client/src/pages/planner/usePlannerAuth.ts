@@ -2,42 +2,85 @@ import { useState, useEffect, useCallback } from "react";
 import type { PlannerSession, PlannerProject } from "./plannerAccessTypes";
 import { PLANNER_TOKEN_KEY, PLANNER_SESSION_KEY } from "./plannerAccessTypes";
 
-/**
- * Phase 1 — Customer planner authentication hook.
- *
- * Uses the existing /api/auth/login endpoint (managementUsers + userAdminPanels).
- * Stores token and session in localStorage under separate keys from platform admin.
- *
- * TODO Phase 2+: Extend to refresh token on expiry, verify token server-side on
- * mount, and add customer-specific planner data loading.
- */
-
 export type AuthState =
   | { status: "loading" }
   | { status: "unauthenticated" }
   | { status: "authenticated"; session: PlannerSession };
 
+// A panel is the user's OWN wedding planner entry if it is NOT a super_admin
+// entry on someone else's template.  Null / undefined / 'customer' roles all
+// belong to the user as the couple themselves.
+function isOwnPanel(role: string | null | undefined): boolean {
+  return role !== "super_admin";
+}
+
 export function usePlannerAuth() {
   const [authState, setAuthState] = useState<AuthState>({ status: "loading" });
 
-  // ─── Hydrate from localStorage on mount ────────────────────────────────────
+  // ─── Hydrate from localStorage, then validate against the server ───────────
   useEffect(() => {
     const token = localStorage.getItem(PLANNER_TOKEN_KEY);
     const sessionStr = localStorage.getItem(PLANNER_SESSION_KEY);
 
-    if (token && sessionStr) {
-      try {
-        const session: PlannerSession = JSON.parse(sessionStr);
-        setAuthState({ status: "authenticated", session });
-      } catch {
-        // Corrupted session data — clear it
-        localStorage.removeItem(PLANNER_TOKEN_KEY);
-        localStorage.removeItem(PLANNER_SESSION_KEY);
-        setAuthState({ status: "unauthenticated" });
-      }
-    } else {
+    if (!token || !sessionStr) {
       setAuthState({ status: "unauthenticated" });
+      return;
     }
+
+    let session: PlannerSession;
+    try {
+      session = JSON.parse(sessionStr);
+    } catch {
+      localStorage.removeItem(PLANNER_TOKEN_KEY);
+      localStorage.removeItem(PLANNER_SESSION_KEY);
+      setAuthState({ status: "unauthenticated" });
+      return;
+    }
+
+    // Validate the stored session against the server.
+    // This detects stale sessions where the user no longer has customer-level
+    // access to the stored templateId (e.g. they were re-assigned, or they are
+    // an owner whose session was accidentally pointing to another user's template).
+    fetch("/api/auth/profile", {
+      headers: { Authorization: `Bearer ${token}` },
+    })
+      .then(r => {
+        if (!r.ok) return Promise.reject(r.status as number);
+        return r.json() as Promise<{ adminPanels: Array<{ templateId: string; role: string | null }> }>;
+      })
+      .then(profile => {
+        const panels = profile.adminPanels ?? [];
+        const storedTemplateId = session.project?.templateId;
+
+        // The profile endpoint only returns templates whose ownerEmail matches
+        // the logged-in user.  If the stored templateId is not in that list,
+        // the session is stale (e.g. an owner who was accidentally pointed at
+        // another couple's template) — clear it.
+        const stillValid =
+          !storedTemplateId ||
+          panels.some((p: { templateId: string }) => p.templateId === storedTemplateId);
+
+        if (!stillValid) {
+          localStorage.removeItem(PLANNER_TOKEN_KEY);
+          localStorage.removeItem(PLANNER_SESSION_KEY);
+          setAuthState({ status: "unauthenticated" });
+          return;
+        }
+
+        setAuthState({ status: "authenticated", session });
+      })
+      .catch((statusOrError: number | unknown) => {
+        // Auth errors (401 / 403 / 404) mean the token or access is invalid.
+        // Network / server errors: trust the stored session optimistically so
+        // we don't break users who are temporarily offline.
+        if (typeof statusOrError === "number" && [401, 403, 404].includes(statusOrError)) {
+          localStorage.removeItem(PLANNER_TOKEN_KEY);
+          localStorage.removeItem(PLANNER_SESSION_KEY);
+          setAuthState({ status: "unauthenticated" });
+        } else {
+          setAuthState({ status: "authenticated", session });
+        }
+      });
   }, []);
 
   // ─── Login ─────────────────────────────────────────────────────────────────
@@ -58,9 +101,13 @@ export function usePlannerAuth() {
         return { error: data.error || "Invalid login details." };
       }
 
-      // Map first active admin panel as the planner project.
-      // Phase 2+: Support multiple projects or let the user choose.
-      const rawPanel = data.user?.adminPanels?.[0] ?? null;
+      // Pick the user's own planner panel.  The server now filters by
+      // templates.ownerEmail = user.email so every panel in this list truly
+      // belongs to the logged-in user — no role filtering needed here.
+      const rawPanel =
+        (data.user?.adminPanels as Array<{ id: string; templateId: string; templateName: string; templateSlug?: string; isActive?: boolean; role?: string | null }> | undefined)
+          ?.[0] ?? null;
+
       const project: PlannerProject | null = rawPanel
         ? {
             panelId: rawPanel.id,
