@@ -697,3 +697,23 @@ export const telegramCallbackTokens = pgTable("telegram_callback_tokens", {
 });
 
 export type TelegramCallbackToken = typeof telegramCallbackTokens.$inferSelect;
+
+// ─── Cron Job Health Tracking ─────────────────────────────────────────────────
+// One row per named cron job. Upserted on every successful/failed run.
+
+export const cronHealth = pgTable("cron_health", {
+  id:                 varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  jobName:            text("job_name").notNull().unique(),
+  lastRunAt:          timestamp("last_run_at", { withTimezone: true }),
+  lastSuccessAt:      timestamp("last_success_at", { withTimezone: true }),
+  lastErrorAt:        timestamp("last_error_at", { withTimezone: true }),
+  lastError:          text("last_error"),
+  lastProcessedCount: integer("last_processed_count").notNull().default(0),
+  lastSentCount:      integer("last_sent_count").notNull().default(0),
+  lastFailedCount:    integer("last_failed_count").notNull().default(0),
+  lastSkippedCount:   integer("last_skipped_count").notNull().default(0),
+  lastRetryingCount:  integer("last_retrying_count").notNull().default(0),
+  updatedAt:          timestamp("updated_at").default(sql`now()`),
+});
+
+export type CronHealth = typeof cronHealth.$inferSelect;
