@@ -134,6 +134,15 @@ export function registerAdminRoutes(app: Express) {
             case "nature":
               templateConfigModule = await import("../../client/src/templates/nature/config.js");
               break;
+            case "aurelia":
+              templateConfigModule = await import("../../client/src/templates/aurelia/config.js");
+              break;
+            case "florence":
+              templateConfigModule = await import("../../client/src/templates/florence/config.js");
+              break;
+            case "envelope":
+              templateConfigModule = await import("../../client/src/templates/envelope/config.js");
+              break;
             default:
               return res.status(400).json({ message: "Unknown template key" });
           }

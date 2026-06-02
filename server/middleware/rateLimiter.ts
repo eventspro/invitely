@@ -46,12 +46,12 @@ export const authLimiter = rateLimit({
 });
 
 /**
- * Admin panel rate limiter — 20 requests per 15 minutes per IP
- * Applied globally to all /api/admin-panel/* routes
+ * Admin panel rate limiter — 200 requests per 15 minutes per IP
+ * Applied to /api/admin-panel/* and /api/planner/* routes.
  */
 export const adminLimiter = rateLimit({
   windowMs: 15 * 60 * 1000,
-  max: 20,
+  max: 200,
   message: {
     success: false,
     error: 'Too many admin panel requests, please try again later.'

@@ -32,6 +32,8 @@ import { registerTranslationRoutes } from './routes/translations.js';
 import { registerConfigurablePricingRoutes } from './routes/configurable-pricing.js';
 import { adminLimiter, authLimiter } from './middleware/rateLimiter.js';
 import { authenticateUser, requireAdminPanelAccess } from './middleware/auth.js';
+import taskRoutes from './routes/tasks.js';
+import cronTaskRemindersRouter from './routes/cron-task-reminders.js';
 
 // Configure multer for file uploads
 const uploadsDir = process.env.VERCEL ? '/tmp/uploads' : path.join(process.cwd(), 'uploads');
@@ -138,6 +140,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.use('/api/sale-wheel', saleWheelPublicRouter);
   app.use('/api/planner-demo', plannerDemoContactRouter);
   app.use('/api/homepage-content', homepageContentRouter);
+
+  // Planner tasks CRUD (authenticated, rate-limited)
+  app.use('/api/planner', adminLimiter, taskRoutes);
+
+  // Cron job: task reminder scheduler (auth handled inside the route)
+  app.use('/api/cron', cronTaskRemindersRouter);
   
   // Register template routes (for template-specific endpoints)
   registerTemplateRoutes(app);

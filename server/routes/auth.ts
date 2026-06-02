@@ -245,7 +245,8 @@ router.post('/login', authLimiter, async (req, res) => {
       .set({ lastLogin: new Date() })
       .where(eq(managementUsers.id, user.id));
 
-    // Check for admin panel access
+    // Check for admin panel access — only surfaces templates whose ownerEmail
+    // matches the logged-in user so no user ever sees another couple's planner.
     const adminPanelResult = await db
       .select({
         id: userAdminPanels.id,
@@ -262,6 +263,7 @@ router.post('/login', authLimiter, async (req, res) => {
         and(
           eq(userAdminPanels.userId, user.id),
           eq(userAdminPanels.isActive, true),
+          eq(templates.ownerEmail, user.email),
           or(isNull(userAdminPanels.orderId), eq(orders.status, 'completed'))
         )
       );
@@ -573,7 +575,8 @@ router.get('/profile', authenticateUser, async (req: AuthenticatedRequest, res) 
 
     const user = userResult[0];
 
-    // Get admin panels
+    // Get admin panels — only surfaces templates whose ownerEmail matches the
+    // logged-in user so the profile endpoint cannot leak other couples' data.
     const adminPanelResult = await db
       .select({
         id: userAdminPanels.id,
@@ -582,6 +585,7 @@ router.get('/profile', authenticateUser, async (req: AuthenticatedRequest, res) 
         templateSlug: templates.slug,
         orderNumber: orders.orderNumber,
         isActive: userAdminPanels.isActive,
+        role: userAdminPanels.role,
       })
       .from(userAdminPanels)
       .innerJoin(templates, eq(userAdminPanels.templateId, templates.id))
@@ -589,7 +593,8 @@ router.get('/profile', authenticateUser, async (req: AuthenticatedRequest, res) 
       .where(
         and(
           eq(userAdminPanels.userId, req.user!.id),
-          eq(userAdminPanels.isActive, true)
+          eq(userAdminPanels.isActive, true),
+          eq(templates.ownerEmail, req.user!.email)
         )
       );
 

@@ -637,4 +637,63 @@ export type CustomerEdit = typeof customerEdits.$inferSelect;
 export type InsertCustomerEdit = z.infer<typeof insertCustomerEditSchema>;
 export type UpdateCustomerEdit = z.infer<typeof updateCustomerEditSchema>;
 
+// ─── Planner Tasks ────────────────────────────────────────────────────────────
 
+export const plannerTasks = pgTable("planner_tasks", {
+  id:                    varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  userId:                varchar("user_id").notNull().references(() => managementUsers.id, { onDelete: "cascade" }),
+  templateId:            varchar("template_id").notNull().references(() => templates.id, { onDelete: "cascade" }),
+  title:                 text("title").notNull(),
+  description:           text("description"),
+  priority:              text("priority").notNull().default("medium"),   // high | medium | low
+  status:                text("status").notNull().default("pending"),    // pending | done | cancelled
+  dueAtUtc:              timestamp("due_at_utc", { withTimezone: true }),
+  timezone:              text("timezone").notNull().default("Asia/Yerevan"),
+  reminderEnabled:       boolean("reminder_enabled").notNull().default(false),
+  repeatIntervalMinutes: integer("repeat_interval_minutes"),             // null = no repeat
+  telegramReminderState: text("telegram_reminder_state").notNull().default("not_scheduled"),
+  // not_scheduled | scheduled | sent | repeating | stopped | completed | failed
+  // 'stopped' = reminders halted by user; task itself stays pending
+  nextReminderAtUtc:     timestamp("next_reminder_at_utc", { withTimezone: true }),
+  lastReminderSentAt:    timestamp("last_reminder_sent_at", { withTimezone: true }),
+  sendRetryCount:        integer("send_retry_count").notNull().default(0),
+  sendLastError:         text("send_last_error"),
+  completedAt:           timestamp("completed_at", { withTimezone: true }),
+  createdAt:             timestamp("created_at").default(sql`now()`),
+  updatedAt:             timestamp("updated_at").default(sql`now()`),
+});
+
+export type PlannerTask = typeof plannerTasks.$inferSelect;
+export type InsertPlannerTask = typeof plannerTasks.$inferInsert;
+
+// ─── Task Reminder Logs ───────────────────────────────────────────────────────
+
+export const taskReminderLogs = pgTable("task_reminder_logs", {
+  id:                varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  taskId:            varchar("task_id").notNull().references(() => plannerTasks.id, { onDelete: "cascade" }),
+  userId:            varchar("user_id").notNull().references(() => managementUsers.id, { onDelete: "cascade" }),
+  templateId:        varchar("template_id").notNull().references(() => templates.id, { onDelete: "cascade" }),
+  channel:           text("channel").notNull().default("telegram"),
+  status:            text("status").notNull(),                          // sent | failed | skipped
+  telegramMessageId: text("telegram_message_id"),
+  errorMessage:      text("error_message"),
+  sentAt:            timestamp("sent_at").default(sql`now()`),
+});
+
+export type TaskReminderLog = typeof taskReminderLogs.$inferSelect;
+
+// ─── Telegram Callback Tokens ─────────────────────────────────────────────────
+// Short DB-backed tokens used in inline button callback_data.
+// Format: "td:<token>" (done) or "ts:<token>" (stop) — 11 bytes total.
+
+export const telegramCallbackTokens = pgTable("telegram_callback_tokens", {
+  id:        varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  token:     varchar("token", { length: 8 }).notNull().unique(),
+  taskId:    varchar("task_id").notNull().references(() => plannerTasks.id, { onDelete: "cascade" }),
+  action:    text("action").notNull(),                                  // 'done' | 'stop'
+  usedAt:    timestamp("used_at", { withTimezone: true }),
+  expiresAt: timestamp("expires_at", { withTimezone: true }).notNull(),
+  createdAt: timestamp("created_at").default(sql`now()`),
+});
+
+export type TelegramCallbackToken = typeof telegramCallbackTokens.$inferSelect;

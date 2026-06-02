@@ -4,7 +4,7 @@ import bcrypt from 'bcryptjs';
 import crypto from 'crypto';
 import { db } from '../db.js';
 import { managementUsers, orders, userAdminPanels } from '../../shared/schema.js';
-import { eq, and } from 'drizzle-orm';
+import { eq, and, isNull, or } from 'drizzle-orm';
 
 // Structured security event logger — no PII fields
 const securityEvent = (
@@ -179,8 +179,18 @@ export const requireAdminPanelAccess = async (req: AuthenticatedRequest, res: Re
       return res.status(400).json({ error: 'Template ID required' });
     }
 
-    // Platform admins have unrestricted access to all templates
-    if (req.user.isPlatformAdmin) {
+    // Only legacy token-based platform admins (those who authenticated via
+    // /api/admin/login with username+password, identifiable by the synthetic
+    // @platform.internal email) keep the unrestricted bypass.
+    //
+    // managementUsers with isOwner=true are real user accounts.  They must have
+    // an explicit userAdminPanels row for the requested template — this prevents
+    // them from accidentally reading any other customer's data via the planner.
+    const isLegacyTokenAdmin =
+      req.user.isPlatformAdmin === true &&
+      req.user.email.endsWith('@platform.internal');
+
+    if (isLegacyTokenAdmin) {
       req.adminPanel = {
         id: 'platform-admin',
         userId: req.user.id,
@@ -193,7 +203,46 @@ export const requireAdminPanelAccess = async (req: AuthenticatedRequest, res: Re
       return next();
     }
 
-    // Check if user has admin panel access for this template
+    // isOwner management users: still require an explicit userAdminPanels row
+    // but we skip the order/plan requirement (they are internal accounts without
+    // purchase orders).
+    if (req.user.isPlatformAdmin) {
+      const [ownerPanel] = await db.select({
+        id: userAdminPanels.id,
+        userId: userAdminPanels.userId,
+        templateId: userAdminPanels.templateId,
+        orderId: userAdminPanels.orderId,
+        isActive: userAdminPanels.isActive,
+        role: userAdminPanels.role,
+      })
+      .from(userAdminPanels)
+      .where(and(
+        eq(userAdminPanels.userId, req.user.id),
+        eq(userAdminPanels.templateId, templateId),
+        eq(userAdminPanels.isActive, true),
+      ));
+
+      if (!ownerPanel) {
+        securityEvent('admin_access_denied', {
+          userId: req.user?.id,
+          templateId,
+          route: req.path,
+          ip: req.ip,
+          status: 404
+        });
+        return res.status(404).json({ error: 'Not found' });
+      }
+
+      req.adminPanel = {
+        ...ownerPanel,
+        templatePlan: 'ultimate',
+        role: ownerPanel.role || 'super_admin',
+      };
+      return next();
+    }
+
+    // Regular customers: must have a userAdminPanels row linked to a completed
+    // ultimate-plan order.
     const [adminPanel] = await db.select({
       id: userAdminPanels.id,
       userId: userAdminPanels.userId,
@@ -209,8 +258,10 @@ export const requireAdminPanelAccess = async (req: AuthenticatedRequest, res: Re
       eq(userAdminPanels.userId, req.user.id),
       eq(userAdminPanels.templateId, templateId),
       eq(userAdminPanels.isActive, true),
-      eq(orders.status, 'completed'),
-      eq(orders.templatePlan, 'ultimate')
+      or(
+        isNull(userAdminPanels.orderId),
+        and(eq(orders.status, 'completed'), eq(orders.templatePlan, 'ultimate'))
+      )
     ));
 
     if (!adminPanel) {
