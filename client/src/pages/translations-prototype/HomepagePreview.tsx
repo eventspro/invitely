@@ -5,9 +5,9 @@
  */
 import { useState } from "react";
 import {
-  ArrowRight, Bell, Calendar, Camera, CheckCircle, ChevronLeft, ChevronRight,
+  ArrowRight, Calendar, Camera, CheckCircle, ChevronLeft, ChevronRight,
   Clock, Edit3, Gift, Heart, Lock, MapPin, Menu, MessageCircle, Phone,
-  Palette, Send, Share2, Smartphone, Sparkles, Star, Users, Wallet, X,
+  Palette, Send, Share2, Smartphone, Sparkles, Star, Users, X,
 } from "lucide-react";
 import type { HomepageContent, Locale, IconKey } from "./types";
 
@@ -17,7 +17,7 @@ const ICON_MAP: Record<IconKey, React.ElementType> = {
   message: MessageCircle, phone: Phone, gift: Gift, lock: Lock,
   star: Star, users: Users, check: CheckCircle, smartphone: Smartphone,
   share: Share2, edit: Edit3, sparkles: Sparkles, clock: Clock,
-  palette: Palette, send: Send, arrow: ArrowRight, bell: Bell, wallet: Wallet,
+  palette: Palette, send: Send, arrow: ArrowRight,
   instagram: () => (
     <svg viewBox="0 0 24 24" fill="currentColor" className="h-4 w-4">
       <path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zm0-2.163c-3.259 0-3.667.014-4.947.072-4.358.2-6.78 2.618-6.98 6.98-.059 1.281-.073 1.689-.073 4.948 0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98 1.281.058 1.689.072 4.948.072 3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98-1.281-.059-1.69-.073-4.949-.073zm0 5.838c-3.403 0-6.162 2.759-6.162 6.162s2.759 6.163 6.162 6.163 6.162-2.759 6.162-6.163c0-3.403-2.759-6.162-6.162-6.162zm0 10.162c-2.209 0-4-1.79-4-4 0-2.209 1.791-4 4-4s4 1.791 4 4c0 2.21-1.791 4-4 4zm6.406-11.845c-.796 0-1.441.645-1.441 1.44s.645 1.44 1.441 1.44c.795 0 1.439-.645 1.439-1.44s-.644-1.44-1.439-1.44z" />
@@ -279,224 +279,6 @@ export default function HomepagePreview({ content, locale, mode }: Props) {
           {visibleTemplates.map((_, i) => (
             <button key={i} onClick={() => setActiveTpl(i)} style={{ height: 7, width: i === activeTpl ? 24 : 7, borderRadius: 99, border: "none", background: i === activeTpl ? "#c9a85a" : "rgba(201,168,90,0.35)", cursor: "pointer", padding: 0, transition: "width 0.3s" }} />
           ))}
-        </div>
-      </section>
-
-      {/* ──────── PLANNER SHOWCASE ──────── */}
-      <section id="planner-showcase" style={{ background: "#0b1d14", padding: isMobile ? "44px 20px" : "64px 40px", overflow: "hidden" }}>
-        <div style={{ maxWidth: 1280, margin: "0 auto" }}>
-          <div style={{ display: "grid", gridTemplateColumns: isMobile ? "1fr" : "minmax(0,300px) 1fr", gap: isMobile ? 32 : 56, alignItems: "center" }}>
-
-            {/* Left: text */}
-            <div>
-              <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 10 }}>
-                <span style={{ height: 1, width: 24, background: "#c9a85a" }} />
-                <Heart className="h-3 w-3 fill-[#c9a85a] text-[#c9a85a]" />
-                <span style={{ height: 1, width: 24, background: "#c9a85a" }} />
-              </div>
-              <p style={{ fontSize: 10, fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.22em", color: "#c9a85a", marginBottom: 14 }}>
-                {t(content.plannerShowcase.eyebrow, locale)}
-              </p>
-              <h2 style={{ fontSize: isMobile ? "2rem" : "2.4rem", fontWeight: 700, color: "white", lineHeight: 1.15, marginBottom: 16, ...serif }}>
-                {t(content.plannerShowcase.title, locale)}
-              </h2>
-              <p style={{ fontSize: 14, color: "rgba(255,255,255,0.65)", lineHeight: 1.7, marginBottom: 28 }}>
-                {t(content.plannerShowcase.subtitle, locale)}
-              </p>
-              <div style={{ display: "flex", flexWrap: "wrap", gap: 10 }}>
-                {content.plannerShowcase.primaryCta.visible && (
-                  <a href={content.plannerShowcase.primaryCta.href} style={{ display: "inline-flex", alignItems: "center", gap: 6, padding: "10px 22px", borderRadius: 24, background: "#f0cf82", color: "#10241b", fontSize: 13, fontWeight: 600, textDecoration: "none" }}>
-                    {t(content.plannerShowcase.primaryCta.label, locale)}
-                    <ArrowRight className="h-3.5 w-3.5" />
-                  </a>
-                )}
-                {content.plannerShowcase.secondaryCta.visible && (
-                  <a href={content.plannerShowcase.secondaryCta.href} style={{ display: "inline-flex", alignItems: "center", gap: 6, padding: "10px 22px", borderRadius: 24, background: "rgba(255,255,255,0.1)", color: "white", fontSize: 13, fontWeight: 600, textDecoration: "none", border: "1px solid rgba(255,255,255,0.2)" }}>
-                    {t(content.plannerShowcase.secondaryCta.label, locale)}
-                  </a>
-                )}
-              </div>
-            </div>
-
-            {/* Right: chips + tablet + chips */}
-            <div>
-              {/* Desktop: [left chips | tablet | right chips] */}
-              {!isMobile && (
-                <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 16 }}>
-                  {/* Left chips */}
-                  <div style={{ display: "flex", flexDirection: "column", gap: 10, width: 130, flexShrink: 0 }}>
-                    {content.plannerShowcase.features.filter(f => f.visible).slice(0, 3).map(feat => (
-                      <div key={feat.id} style={{ padding: "10px 12px", borderRadius: 14, background: "rgba(255,255,255,0.06)", border: "1px solid rgba(255,255,255,0.1)" }}>
-                        <Icon name={feat.icon} className="h-4 w-4 text-[#c9a85a] mb-1" />
-                        <p style={{ fontSize: 11, fontWeight: 600, color: "white", lineHeight: 1.3 }}>{t(feat.title, locale)}</p>
-                        <p style={{ fontSize: 10, color: "rgba(255,255,255,0.5)", marginTop: 3, lineHeight: 1.4 }}>{t(feat.text, locale)}</p>
-                      </div>
-                    ))}
-                  </div>
-
-                  {/* Tablet dashboard */}
-                  <div style={{ flexShrink: 0, width: 540, borderRadius: 20, background: "#0e1c13", border: "10px solid #0e1c13", boxShadow: "0 0 0 1px rgba(216,182,106,0.3), 0 24px 80px rgba(0,0,0,0.6)", outline: "1px solid rgba(216,182,106,0.2)" }}>
-                    {/* Header */}
-                    <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "10px 14px", borderBottom: "1px solid rgba(255,255,255,0.08)" }}>
-                      <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                        <div style={{ width: 28, height: 28, borderRadius: "50%", background: "linear-gradient(135deg,#2d5a3d,#1a3d28)", display: "flex", alignItems: "center", justifyContent: "center" }}>
-                          <Heart className="h-3.5 w-3.5 fill-[#f0cf82] text-[#f0cf82]" />
-                        </div>
-                        <div>
-                          <p style={{ fontSize: 12, fontWeight: 700, color: "white" }}>Aram &amp; Ani</p>
-                          <p style={{ fontSize: 10, color: "rgba(255,255,255,0.5)" }}>Wedding Planner · 14 Հունիս 2026</p>
-                        </div>
-                      </div>
-                      <div style={{ display: "inline-flex", alignItems: "center", gap: 5, padding: "3px 10px", borderRadius: 20, background: "rgba(0,180,100,0.15)", border: "1px solid rgba(0,180,100,0.35)" }}>
-                        <span style={{ width: 6, height: 6, borderRadius: "50%", background: "#00c872" }} />
-                        <span style={{ fontSize: 10, fontWeight: 600, color: "#00c872" }}>Telegram</span>
-                      </div>
-                    </div>
-                    {/* Stats row */}
-                    <div style={{ display: "grid", gridTemplateColumns: "repeat(4,1fr)", gap: 8, padding: "10px 14px" }}>
-                      {[
-                        { val: "182", label: "Հյուրեր", color: "white" },
-                        { val: "146", label: "Գալիս է", color: "#00c872" },
-                        { val: "20",  label: "Սեղաններ", color: "white" },
-                        { val: "֏6.8M", label: "Բյուջե",  color: "#f0cf82" },
-                      ].map((s, i) => (
-                        <div key={i} style={{ padding: "8px 6px", borderRadius: 10, background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.08)", textAlign: "center" }}>
-                          <p style={{ fontSize: 16, fontWeight: 700, color: s.color }}>{s.val}</p>
-                          <p style={{ fontSize: 9, color: "rgba(255,255,255,0.5)", marginTop: 2 }}>{s.label}</p>
-                        </div>
-                      ))}
-                    </div>
-                    {/* 2-col grid */}
-                    <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8, padding: "0 14px 10px" }}>
-                      {/* RSVP */}
-                      <div style={{ padding: "10px 12px", borderRadius: 12, background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.08)" }}>
-                        <p style={{ fontSize: 10, fontWeight: 600, color: "rgba(255,255,255,0.8)", marginBottom: 6 }}>RSVP</p>
-                        <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 4 }}>
-                          <span style={{ fontSize: 9, color: "rgba(255,255,255,0.5)" }}>146 / 182 Գալիս են</span>
-                          <span style={{ fontSize: 9, fontWeight: 600, color: "#00c872" }}>80%</span>
-                        </div>
-                        <div style={{ height: 5, borderRadius: 99, background: "rgba(255,255,255,0.1)", overflow: "hidden" }}>
-                          <div style={{ height: "100%", width: "80%", borderRadius: 99, background: "linear-gradient(90deg,#00a86b,#00c872)" }} />
-                        </div>
-                      </div>
-                      {/* Tables */}
-                      <div style={{ padding: "10px 12px", borderRadius: 12, background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.08)" }}>
-                        <p style={{ fontSize: 10, fontWeight: 600, color: "rgba(255,255,255,0.8)", marginBottom: 6 }}>Սեղաններ</p>
-                        <div style={{ display: "flex", flexWrap: "wrap", gap: 3, marginBottom: 4 }}>
-                          {Array.from({ length: 20 }).map((_, i) => (
-                            <div key={i} style={{ width: 12, height: 12, borderRadius: 3, background: i < 17 ? "#2d7a50" : "rgba(255,255,255,0.12)" }} />
-                          ))}
-                        </div>
-                        <p style={{ fontSize: 9, color: "rgba(255,255,255,0.5)" }}>146 նստած</p>
-                      </div>
-                      {/* Budget */}
-                      <div style={{ padding: "10px 12px", borderRadius: 12, background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.08)" }}>
-                        <p style={{ fontSize: 10, fontWeight: 600, color: "rgba(255,255,255,0.8)", marginBottom: 6 }}>Բյուջե</p>
-                        <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 4 }}>
-                          <span style={{ fontSize: 9, color: "rgba(255,255,255,0.5)" }}>֏3.2M Վճարված</span>
-                          <span style={{ fontSize: 9, fontWeight: 600, color: "#f0cf82" }}>47%</span>
-                        </div>
-                        <div style={{ height: 5, borderRadius: 99, background: "rgba(255,255,255,0.1)", overflow: "hidden" }}>
-                          <div style={{ height: "100%", width: "47%", borderRadius: 99, background: "linear-gradient(90deg,#c9a85a,#f0cf82)" }} />
-                        </div>
-                        <p style={{ fontSize: 9, color: "rgba(255,255,255,0.4)", marginTop: 3 }}>֏6.8M Ընդհանուր · ֏3.6M Մնացած</p>
-                      </div>
-                      {/* Tasks */}
-                      <div style={{ padding: "10px 12px", borderRadius: 12, background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.08)" }}>
-                        <p style={{ fontSize: 10, fontWeight: 600, color: "rgba(255,255,255,0.8)", marginBottom: 6 }}>Անելիքներ</p>
-                        {[
-                          { label: "Զանգել նկարիչներին", due: "Հունիսի 8", done: false },
-                          { label: "Վճարել երաժիշտներին",     due: "Հունիսի 10", done: false },
-                          { label: "Պայմանավորվել դիզայների հետ",   due: "Հունիսի 5",  done: true },
-                        ].map((task, i) => (
-                          <div key={i} style={{ display: "flex", alignItems: "center", gap: 5, marginBottom: 4 }}>
-                            <div style={{ width: 12, height: 12, borderRadius: "50%", flexShrink: 0, border: task.done ? "none" : "1.5px solid rgba(255,255,255,0.3)", background: task.done ? "#00c872" : "transparent", display: "flex", alignItems: "center", justifyContent: "center" }}>
-                              {task.done && <span style={{ fontSize: 7, color: "white" }}>✓</span>}
-                            </div>
-                            <span style={{ fontSize: 9, color: task.done ? "rgba(255,255,255,0.4)" : "rgba(255,255,255,0.75)", textDecoration: task.done ? "line-through" : "none", flex: 1 }}>{task.label}</span>
-                            <span style={{ fontSize: 8, color: "rgba(255,255,255,0.35)" }}>{task.due}</span>
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-                    {/* Telegram chip */}
-                    <div style={{ padding: "0 14px 12px", display: "flex", justifyContent: "center" }}>
-                      <div style={{ display: "inline-flex", alignItems: "center", gap: 6, padding: "5px 14px", borderRadius: 20, background: "rgba(0,180,100,0.12)", border: "1px solid rgba(0,180,100,0.3)" }}>
-                        <span style={{ width: 6, height: 6, borderRadius: "50%", background: "#00c872" }} />
-                        <span style={{ fontSize: 10, color: "#00c872", fontWeight: 500 }}>Telegram հիշեցումները միացված են</span>
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Right chips */}
-                  <div style={{ display: "flex", flexDirection: "column", gap: 10, width: 130, flexShrink: 0 }}>
-                    {content.plannerShowcase.features.filter(f => f.visible).slice(3, 6).map(feat => (
-                      <div key={feat.id} style={{ padding: "10px 12px", borderRadius: 14, background: "rgba(255,255,255,0.06)", border: "1px solid rgba(255,255,255,0.1)" }}>
-                        <Icon name={feat.icon} className="h-4 w-4 text-[#c9a85a] mb-1" />
-                        <p style={{ fontSize: 11, fontWeight: 600, color: "white", lineHeight: 1.3 }}>{t(feat.title, locale)}</p>
-                        <p style={{ fontSize: 10, color: "rgba(255,255,255,0.5)", marginTop: 3, lineHeight: 1.4 }}>{t(feat.text, locale)}</p>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              )}
-
-              {/* Mobile: tablet card + feature grid */}
-              {isMobile && (
-                <div>
-                  {/* Compact tablet card */}
-                  <div style={{ borderRadius: 16, background: "#0e1c13", border: "8px solid #0e1c13", boxShadow: "0 0 0 1px rgba(216,182,106,0.25), 0 16px 48px rgba(0,0,0,0.5)", marginBottom: 20 }}>
-                    <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "8px 12px", borderBottom: "1px solid rgba(255,255,255,0.08)" }}>
-                      <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
-                        <Heart className="h-4 w-4 fill-[#f0cf82] text-[#f0cf82]" />
-                        <span style={{ fontSize: 11, fontWeight: 700, color: "white" }}>Aram &amp; Ani</span>
-                      </div>
-                      <span style={{ fontSize: 9, fontWeight: 600, color: "#00c872" }}>● Telegram</span>
-                    </div>
-                    <div style={{ display: "grid", gridTemplateColumns: "repeat(4,1fr)", gap: 6, padding: "8px 10px" }}>
-                      {[["182","Հyurer","white"],["146","Galiss","#00c872"],["20","Seghan","white"],["֏6.8M","Bjuje","#f0cf82"]].map(([v,l,c],i) => (
-                        <div key={i} style={{ padding: "6px 4px", borderRadius: 8, background: "rgba(255,255,255,0.05)", textAlign: "center" }}>
-                          <p style={{ fontSize: 13, fontWeight: 700, color: c }}>{v}</p>
-                          <p style={{ fontSize: 8, color: "rgba(255,255,255,0.45)", marginTop: 1 }}>{l}</p>
-                        </div>
-                      ))}
-                    </div>
-                    <div style={{ padding: "0 10px 8px" }}>
-                      <div style={{ marginBottom: 6 }}>
-                        <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 3 }}>
-                          <span style={{ fontSize: 9, color: "rgba(255,255,255,0.6)" }}>RSVP</span>
-                          <span style={{ fontSize: 9, fontWeight: 600, color: "#00c872" }}>80%</span>
-                        </div>
-                        <div style={{ height: 4, borderRadius: 99, background: "rgba(255,255,255,0.1)" }}>
-                          <div style={{ height: "100%", width: "80%", borderRadius: 99, background: "#00c872" }} />
-                        </div>
-                      </div>
-                      <div>
-                        <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 3 }}>
-                          <span style={{ fontSize: 9, color: "rgba(255,255,255,0.6)" }}>Bjuje</span>
-                          <span style={{ fontSize: 9, fontWeight: 600, color: "#f0cf82" }}>47%</span>
-                        </div>
-                        <div style={{ height: 4, borderRadius: 99, background: "rgba(255,255,255,0.1)" }}>
-                          <div style={{ height: "100%", width: "47%", borderRadius: 99, background: "#f0cf82" }} />
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                  {/* Feature grid */}
-                  <div style={{ display: "grid", gridTemplateColumns: "repeat(2,1fr)", gap: 10 }}>
-                    {content.plannerShowcase.features.filter(f => f.visible).map(feat => (
-                      <div key={feat.id} style={{ padding: "12px 12px", borderRadius: 14, background: "rgba(255,255,255,0.06)", border: "1px solid rgba(255,255,255,0.1)" }}>
-                        <Icon name={feat.icon} className="h-4 w-4 text-[#c9a85a] mb-2" />
-                        <p style={{ fontSize: 11, fontWeight: 600, color: "white", lineHeight: 1.3 }}>{t(feat.title, locale)}</p>
-                        <p style={{ fontSize: 10, color: "rgba(255,255,255,0.5)", marginTop: 3, lineHeight: 1.4 }}>{t(feat.text, locale)}</p>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              )}
-            </div>
-
-          </div>
         </div>
       </section>
 

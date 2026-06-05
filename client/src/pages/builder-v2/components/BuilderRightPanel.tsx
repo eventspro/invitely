@@ -335,6 +335,8 @@ function StyleTab() {
   const { selectedElement, draftConfig } = state;
   const cfg = draftConfig as any;
 
+  const hasPalettes = !!(manifest?.themePalettes && manifest.colorRoleConfigPaths);
+
   // Show element-label-aware style controls when an element is selected
   if (selectedElement) {
     const elementLabel = manifest?.elements[selectedElement]?.label ?? selectedElement;
@@ -367,6 +369,12 @@ function StyleTab() {
             onChange={(val) => updateConfig((c) => ({ ...c, theme: { ...c.theme, colors: { ...c.theme?.colors, textColor: val } } }))}
           />
         </FieldGroup>
+        {hasPalettes && (
+          <PalettePickerControl
+            palettes={manifest!.themePalettes!}
+            roleMap={manifest!.colorRoleConfigPaths!}
+          />
+        )}
       </div>
     );
   }
@@ -374,19 +382,29 @@ function StyleTab() {
   // No element selected — global section background / typography controls
   return (
     <div style={CONTENT_STYLE}>
-      <FieldGroup label="Section Background">
+      <FieldGroup label="Colors">
         <ColorField
-          label="Background Color"
-          value={cfg.theme?.colors?.background || "#F5F1EA"}
-          onChange={(val) => updateConfig((c) => ({ ...c, theme: { ...c.theme, colors: { ...c.theme?.colors, background: val } } }))}
+          label="Gold / Primary"
+          value={cfg.theme?.colors?.primary || "#C9A86A"}
+          onChange={(val) => updateConfig((c) => ({ ...c, theme: { ...c.theme, colors: { ...c.theme?.colors, primary: val } } }))}
         />
         <ColorField
           label="Dark / Secondary"
           value={cfg.theme?.colors?.secondary || "#2E3427"}
           onChange={(val) => updateConfig((c) => ({ ...c, theme: { ...c.theme, colors: { ...c.theme?.colors, secondary: val } } }))}
         />
+        <ColorField
+          label="Background"
+          value={cfg.theme?.colors?.background || "#F5F1EA"}
+          onChange={(val) => updateConfig((c) => ({ ...c, theme: { ...c.theme, colors: { ...c.theme?.colors, background: val } } }))}
+        />
+        <ColorField
+          label="Text Color"
+          value={cfg.theme?.colors?.textColor || "#252B1F"}
+          onChange={(val) => updateConfig((c) => ({ ...c, theme: { ...c.theme, colors: { ...c.theme?.colors, textColor: val } } }))}
+        />
       </FieldGroup>
-      <FieldGroup label="Global Typography">
+      <FieldGroup label="Typography">
         <SelectField
           label="Heading Font"
           value={cfg.theme?.fonts?.heading || "Playfair Display, Georgia, serif"}
@@ -410,6 +428,12 @@ function StyleTab() {
           ]}
         />
       </FieldGroup>
+      {hasPalettes && (
+        <PalettePickerControl
+          palettes={manifest!.themePalettes!}
+          roleMap={manifest!.colorRoleConfigPaths!}
+        />
+      )}
     </div>
   );
 }

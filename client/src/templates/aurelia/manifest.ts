@@ -54,11 +54,12 @@ const AURELIA_SECTIONS: V2SectionManifest[] = [
     ],
   },
   {
-    id: "aur-roadmap", label: "Our Journey", icon: "◻",
+    id: "aur-roadmap", label: "Wedding Route", icon: "◻",
     hideable: true, configKey: "timeline",
     children: [
-      { id: "aur-roadmap-heading",    label: "Section Heading", icon: "T", sectionId: "aur-roadmap", elementId: "aur-roadmap-heading" },
-      { id: "aur-roadmap-milestones", label: "Milestones",      icon: "≡", sectionId: "aur-roadmap" },
+      { id: "aur-roadmap-heading",     label: "Section Heading", icon: "T", sectionId: "aur-roadmap", elementId: "aur-roadmap-heading" },
+      { id: "aur-roadmap-instruction", label: "Scroll Instruction", icon: "T", sectionId: "aur-roadmap" },
+      { id: "aur-roadmap-milestones",  label: "Route Stops",     icon: "≡", sectionId: "aur-roadmap" },
     ],
   },
   {
@@ -114,6 +115,16 @@ const AURELIA_ELEMENTS: Record<string, V2ElementManifest> = {
     getValue: (c) => (c as any).heroTagline ?? "",
     setValue: (c, v) => ({ ...c, heroTagline: v }),
   },
+  "aur-hero-invitation": {
+    id: "aur-hero-invitation", sectionId: "aur-hero", label: "Invitation Line", type: "text",
+    getValue: (c) => (c as any).heroInvitationLine ?? "",
+    setValue: (c, v) => ({ ...c, heroInvitationLine: v }),
+  },
+  "aur-hero-cta": {
+    id: "aur-hero-cta", sectionId: "aur-hero", label: "RSVP Button", type: "text",
+    getValue: (c) => (c as any).heroCta ?? "",
+    setValue: (c, v) => ({ ...c, heroCta: v }),
+  },
   "aur-hero-names": {
     id: "aur-hero-names", sectionId: "aur-hero", label: "Couple Names", type: "text",
     getValue: (c) => c.couple?.combinedNames ?? "",
@@ -128,6 +139,11 @@ const AURELIA_ELEMENTS: Record<string, V2ElementManifest> = {
     id: "aur-hero-location", sectionId: "aur-hero", label: "Location", type: "text",
     getValue: (c) => (c as any).heroLocation ?? "",
     setValue: (c, v) => ({ ...c, heroLocation: v }),
+  },
+  "aur-story-small-title": {
+    id: "aur-story-small-title", sectionId: "aur-story", label: "Section Label", type: "text",
+    getValue: (c) => (c as any).storySmallTitle ?? "",
+    setValue: (c, v) => ({ ...c, storySmallTitle: v }),
   },
   "aur-story-heading": {
     id: "aur-story-heading", sectionId: "aur-story", label: "Story Heading", type: "text",
@@ -144,10 +160,30 @@ const AURELIA_ELEMENTS: Record<string, V2ElementManifest> = {
     getValue: (c) => (c as any).storyCtaLabel ?? "",
     setValue: (c, v) => ({ ...c, storyCtaLabel: v }),
   },
+  "aur-roadmap-small-title": {
+    id: "aur-roadmap-small-title", sectionId: "aur-roadmap", label: "Section Label", type: "text",
+    getValue: (c) => (c as any).roadmapSmallTitle ?? "",
+    setValue: (c, v) => ({ ...c, roadmapSmallTitle: v }),
+  },
   "aur-roadmap-heading": {
     id: "aur-roadmap-heading", sectionId: "aur-roadmap", label: "Roadmap Heading", type: "text",
     getValue: (c) => (c as any).roadmapHeading ?? "",
     setValue: (c, v) => ({ ...c, roadmapHeading: v }),
+  },
+  "aur-roadmap-subtitle": {
+    id: "aur-roadmap-subtitle", sectionId: "aur-roadmap", label: "Roadmap Subtitle", type: "textarea",
+    getValue: (c) => (c as any).roadmapSubtitle ?? "",
+    setValue: (c, v) => ({ ...c, roadmapSubtitle: v }),
+  },
+  "aur-roadmap-instruction": {
+    id: "aur-roadmap-instruction", sectionId: "aur-roadmap", label: "Scroll Instruction", type: "text",
+    getValue: (c) => (c as any).routeInstruction ?? "",
+    setValue: (c, v) => ({ ...c, routeInstruction: v }),
+  },
+  "aur-details-small-title": {
+    id: "aur-details-small-title", sectionId: "aur-details", label: "Small Label", type: "text",
+    getValue: (c) => (c as any).detailsSmallTitle ?? "",
+    setValue: (c, v) => ({ ...c, detailsSmallTitle: v }),
   },
   "aur-venue-subtitle": {
     id: "aur-venue-subtitle", sectionId: "aur-venue", label: "Section Label", type: "text",
@@ -164,10 +200,25 @@ const AURELIA_ELEMENTS: Record<string, V2ElementManifest> = {
     getValue: (c) => (c as any).venueDescription ?? "",
     setValue: (c, v) => ({ ...c, venueDescription: v }),
   },
+  "aur-venue-address": {
+    id: "aur-venue-address", sectionId: "aur-venue", label: "Location", type: "text",
+    getValue: (c) => (c as any).venueAddress ?? "",
+    setValue: (c, v) => ({ ...c, venueAddress: v }),
+  },
+  "aur-gallery-small-label": {
+    id: "aur-gallery-small-label", sectionId: "aur-gallery", label: "Section Label", type: "text",
+    getValue: (c) => (c as any).gallerySubtitle ?? "",
+    setValue: (c, v) => ({ ...c, gallerySubtitle: v }),
+  },
   "aur-gallery-title": {
     id: "aur-gallery-title", sectionId: "aur-gallery", label: "Gallery Title", type: "text",
     getValue: (c) => (c as any).galleryTitle ?? c.photos?.title ?? "",
     setValue: (c, v) => ({ ...c, galleryTitle: v }),
+  },
+  "aur-gallery-hint": {
+    id: "aur-gallery-hint", sectionId: "aur-gallery", label: "Navigation Hint", type: "text",
+    getValue: (c) => (c as any).galleryHint ?? "",
+    setValue: (c, v) => ({ ...c, galleryHint: v }),
   },
   "aur-rsvp-title": {
     id: "aur-rsvp-title", sectionId: "aur-rsvp", label: "RSVP Title", type: "text",

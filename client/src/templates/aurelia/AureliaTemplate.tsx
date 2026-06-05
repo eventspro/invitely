@@ -25,7 +25,8 @@ import { insertRsvpSchema, type InsertRsvp } from "@shared/schema";
 import { apiRequest } from "@/lib/queryClient";
 import type { WeddingConfig } from "../types";
 import { defaultConfig, type AureliaExtendedConfig } from "./config";
-import { WeddingCarMapMarker } from "./components/WeddingCarRoadmapIcon";
+import { WeddingCarMapMarker, WeddingCarRoadmapIcon } from "./components/WeddingCarRoadmapIcon";
+import { DetailIcon, DETAIL_ICON_KEYS } from "../shared/detail-icons";
 
 // ─── Spec colour palette — dark teal + gold ───────────────────────────────────
 const C_DEFAULT = {
@@ -88,7 +89,7 @@ function useRoadmapProgress(builderMode: boolean) {
       const rect = el.getBoundingClientRect();
       const winH = window.innerHeight;
       const start = winH * 0.8 - rect.top;
-      const total = el.offsetHeight * 0.85;
+      const total = el.offsetHeight * 1.3;
       setProgress(Math.max(0, Math.min(1, start / total)));
     };
     const onScroll = () => {
@@ -129,37 +130,41 @@ function useParallax(factor = 0.3, builderMode = false) {
 }
 
 // ─── Milestone sequential reveal hook ────────────────────────────────────────
+// Uses two separate refs (desktop + mobile) so both can be observed independently.
+// data-aur-ms value is used as the index to avoid double-counting elements.
 function useMilestoneReveal(count: number, builderMode: boolean) {
   const [visible, setVisible] = useState<boolean[]>(() => Array(count).fill(false));
-  const containerRef = useRef<HTMLDivElement>(null);
+  const desktopRef = useRef<HTMLDivElement>(null);
+  const mobileRef  = useRef<HTMLDivElement>(null);
   useEffect(() => {
     const prefersReduced =
       typeof window !== "undefined" &&
       window.matchMedia("(prefers-reduced-motion: reduce)").matches;
     if (builderMode || prefersReduced) { setVisible(Array(count).fill(true)); return; }
-    const container = containerRef.current;
-    if (!container) return;
-    const items = Array.from(container.querySelectorAll("[data-aur-ms]"));
     const observers: IntersectionObserver[] = [];
-    items.forEach((el, i) => {
-      const obs = new IntersectionObserver(
-        ([entry]) => {
-          if (entry.isIntersecting) {
-            setTimeout(
-              () => setVisible(prev => { const n = [...prev]; n[i] = true; return n; }),
-              i * 120
-            );
-            obs.disconnect();
-          }
-        },
-        { threshold: 0.18, rootMargin: "0px 0px -40px 0px" }
-      );
-      obs.observe(el);
-      observers.push(obs);
+    [desktopRef.current, mobileRef.current].forEach(container => {
+      if (!container) return;
+      Array.from(container.querySelectorAll("[data-aur-ms]")).forEach(el => {
+        const idx = parseInt((el as HTMLElement).dataset.aurMs ?? "0", 10);
+        const obs = new IntersectionObserver(
+          ([entry]) => {
+            if (entry.isIntersecting) {
+              setTimeout(
+                () => setVisible(prev => { const n = [...prev]; n[idx] = true; return n; }),
+                idx * 120
+              );
+              obs.disconnect();
+            }
+          },
+          { threshold: 0.18, rootMargin: "0px 0px -40px 0px" }
+        );
+        obs.observe(el);
+        observers.push(obs);
+      });
     });
     return () => observers.forEach(o => o.disconnect());
   }, [count, builderMode]);
-  return { containerRef, visible };
+  return { desktopRef, mobileRef, visible };
 }
 
 // ─── Mobile roadmap progress (mirrors desktop but for the vertical mobile path) ─
@@ -178,7 +183,7 @@ function useMobileRoadmapProgress(builderMode: boolean) {
       const rect = el.getBoundingClientRect();
       const winH = window.innerHeight;
       const start = winH * 0.75 - rect.top;
-      const total = el.offsetHeight * 0.88;
+      const total = el.offsetHeight * 1.3;
       setProgress(Math.max(0, Math.min(1, start / total)));
     };
     const onScroll = () => {
@@ -223,6 +228,8 @@ interface AureliaTemplateProps {
   templateId?: string;
   /** When true: sticky nav, all animations at final state, data-v2-* active */
   builderMode?: boolean;
+  /** "desktop" | "tablet" | "mobile" — controls CSS class for preview simulation */
+  devicePreview?: string;
 }
 
 // ─── Component ────────────────────────────────────────────────────────────────
@@ -230,6 +237,7 @@ export default function AureliaTemplate({
   config,
   templateId,
   builderMode = false,
+  devicePreview,
 }: AureliaTemplateProps) {
 
   // ── Config merge ──────────────────────────────────────────────────────────────
@@ -253,18 +261,22 @@ export default function AureliaTemplate({
   // Cast for Aurelia-extended fields
   const ext = cfg as unknown as AureliaExtendedConfig & WeddingConfig & Record<string, unknown>;
 
+  // Builder device preview flags (simulate CSS media queries via class names)
+  const isBuilderMobile  = builderMode && devicePreview === "mobile";
+  const isBuilderTablet  = builderMode && (devicePreview === "tablet" || devicePreview === "mobile");
+
   // ── Dynamic theme ─────────────────────────────────────────────────────────────
   const colors = (cfg.theme?.colors ?? {}) as Record<string, string | undefined>;
   const C: Record<keyof typeof C_DEFAULT, string> = {
     ...C_DEFAULT,
     gold:       colors.primary          ?? C_DEFAULT.gold,
     goldSoft:   colors.primary          ?? C_DEFAULT.goldSoft,
-    bgDark:     colors.background       ?? C_DEFAULT.bgDark,
-    bgDeep:     colors.sectionDarkBg    ?? C_DEFAULT.bgDeep,
-    textLight:  colors.lightText        ?? C_DEFAULT.textLight,
-    textMuted:  colors.mutedText        ?? C_DEFAULT.textMuted,
-    ivory:      colors.sectionLightBg   ?? C_DEFAULT.ivory,
-    ivoryMuted: colors.sectionLightText ?? C_DEFAULT.ivoryMuted,
+    bgDark:     colors.secondary    ?? C_DEFAULT.bgDark,
+    bgDeep:     colors.secondary    ?? C_DEFAULT.bgDeep,
+    textLight:  colors.lightText    ?? C_DEFAULT.textLight,
+    textMuted:  colors.mutedText    ?? C_DEFAULT.textMuted,
+    ivory:      colors.background   ?? C_DEFAULT.ivory,
+    ivoryMuted: colors.textColor    ?? C_DEFAULT.ivoryMuted,
   };
 
   const SERIF = cfg.theme?.fonts?.heading || SERIF_DEFAULT;
@@ -276,29 +288,46 @@ export default function AureliaTemplate({
   const separator   = (ext.nameSeparator as string | undefined) ?? cfg.footer.separator ?? "&";
   const displayDate = cfg.wedding.displayDate || "20 \u2022 09 \u2022 2026";
   const HERO_DEFAULT = "https://images.unsplash.com/photo-1519741497674-611481863552?w=1920&q=80&auto=format&fit=crop";
-  const heroImage   = (cfg.hero.images && cfg.hero.images[0]) || HERO_DEFAULT;
-  const heroLocation = (ext.heroLocation as string | undefined) ?? "Amalfi Coast, Italy";
+  const heroImage          = (cfg.hero.images && cfg.hero.images[0]) || HERO_DEFAULT;
+  const heroLocation       = (ext.heroLocation as string | undefined)       ?? "Amalfi Coast, Italy";
+  const heroInvitationLine = (ext.heroInvitationLine as string | undefined) ?? "WE\u2019RE GETTING MARRIED";
+  const heroCta            = (ext.heroCta as string | undefined)            ?? "RSVP NOW";
 
-  const storyHeading  = (ext.storyHeading as string | undefined)  ?? "Our Love Story";
-  const storyBody     = (ext.storyBody as string | undefined)      ?? "We crossed paths on a warm summer evening in Rome \u2014 a chance encounter that neither of us expected. What started as a brief conversation turned into hours, then days, then years of shared adventure and quiet joy.";
-  const storyCtaLabel = (ext.storyCtaLabel as string | undefined)  ?? "READ OUR STORY";
-  const storyImage    = (ext.storyImage as string | undefined)     ?? "";
+  const storySmallTitle = (ext.storySmallTitle as string | undefined) ?? "OUR STORY";
+  const storyHeading    = (ext.storyHeading as string | undefined)    ?? "Our Love Story";
+  const storyBody       = (ext.storyBody as string | undefined)       ?? "We crossed paths on a warm summer evening in Rome \u2014 a chance encounter that neither of us expected. What started as a brief conversation turned into hours, then days, then years of shared adventure and quiet joy.";
+  const storyCtaLabel   = (ext.storyCtaLabel as string | undefined)   ?? "READ OUR STORY";
+  const storyImage      = (ext.storyImage as string | undefined)      ?? "";
 
-  const roadmapHeading = (ext.roadmapHeading as string | undefined) ?? "The Road That Led Us Here";
+  const roadmapSmallTitle  = (ext.roadmapSmallTitle as string | undefined)  ?? "WEDDING ROUTE";
+  const roadmapHeading     = (ext.roadmapHeading as string | undefined)     ?? "Your Wedding Day Roadmap";
+  const roadmapSubtitle    = (ext.roadmapSubtitle as string | undefined)    ?? "Follow the route from the first stop to the final celebration.";
+  const roadmapBgImage     = (ext.roadmapBgImage as string | undefined)     ?? "";
+  const routeInstruction   = (ext.routeInstruction as string | undefined)   ?? "Scroll to follow the route";
+  const showStopNumbers    = (ext.showStopNumbers as boolean | undefined)   ?? true;
   const milestones = cfg.timeline.events.length > 0 ? cfg.timeline.events : defaultConfig.timeline.events;
+  // Progress threshold at which each stop's dot activates (evenly spaced, reached slightly before halfway through each segment)
+  const stopProgressPositions = milestones.map((_, i) => (i + 0.5) / milestones.length);
 
-  const detailsLabel = cfg.locations.sectionTitle || "THE CELEBRATION";
-  const venues       = cfg.locations.venues;
+  const detailsSmallTitle = (ext.detailsSmallTitle as string | undefined) ?? "WEDDING NOTES";
+  const detailsLabel      = cfg.locations.sectionTitle || "THE CELEBRATION";
+  const venues            = cfg.locations.venues;
 
+  const venueSubtitle    = (ext.venueSubtitle as string | undefined)    ?? "THE VENUE";
   const venueTitle       = (ext.venueTitle as string | undefined)       ?? "Villa Cimbrone";
-  const venueLocation    = (ext.venueLocation as string | undefined)    ?? "Ravello, Amalfi Coast";
+  // venueAddress (from inspector) takes priority; venueLocation is legacy alias
+  const venueLocation    = (ext.venueAddress as string | undefined)     ?? (ext.venueLocation as string | undefined) ?? "Ravello, Amalfi Coast";
   const venueDescription = (ext.venueDescription as string | undefined) ?? "A timeless Italian villa perched on the clifftops above the Amalfi Coast, surrounded by ancient gardens and breathtaking sea views.";
   const venueCtaLabel    = (ext.venueCtaLabel as string | undefined)    ?? "EXPLORE THE VENUE";
   const venueMapUrl      = (ext.venueMapUrl as string | undefined)      || (venues[0]?.address ? `https://www.google.com/maps/search/${encodeURIComponent(venues[0].address)}` : "#");
   const venueImage       = (ext.venueImage as string | undefined)       ?? "";
 
-  const galleryTitle  = (ext.galleryTitle as string | undefined)  ?? cfg.photos.title;
-  const galleryImages = cfg.photos.galleryImages || [];
+  const galleryTitle     = (ext.galleryTitle as string | undefined)     ?? cfg.photos.title;
+  const gallerySmallLabel = (ext.gallerySubtitle as string | undefined) ?? "OUR MOMENTS";
+  const galleryBgImage   = (ext.galleryBgImage as string | undefined)   ?? "";
+  const galleryHint      = (ext.galleryHint as string | undefined)      ?? "DRAG OR SCROLL TO EXPLORE";
+  const galleryImages    = cfg.photos.galleryImages || [];
+  const filteredGalleryImages = galleryImages.filter(Boolean);
 
   const rsvpBgImage  = (ext.rsvpBgImage as string | undefined)  ?? "";
   const rsvpNote     = (ext.rsvpNote as string | undefined)     ?? "We can\u2019t wait to celebrate with you in the beautiful surroundings of the Amalfi Coast.";
@@ -391,13 +420,10 @@ export default function AureliaTemplate({
     "https://images.unsplash.com/photo-1519741497674-611481863552?w=600&q=80&auto=format&fit=crop",
     "https://images.unsplash.com/photo-1465495976277-a3741a19326e?w=600&q=80&auto=format&fit=crop",
   ];
-  const filteredGalleryImages = galleryImages.filter(Boolean);
   const allGalleryImages = filteredGalleryImages.length > 0 ? filteredGalleryImages : GALLERY_PLACEHOLDERS;
   const [galleryIndex, setGalleryIndex] = useState(0);
   const galleryPrev = useCallback(() => setGalleryIndex(i => (i - 1 + allGalleryImages.length) % allGalleryImages.length), [allGalleryImages.length]);
   const galleryNext = useCallback(() => setGalleryIndex(i => (i + 1) % allGalleryImages.length), [allGalleryImages.length]);
-
-  // ── SVG route path (desktop) ──────────────────────────────────────────────────
   const routePathRef = useRef<SVGPathElement>(null);
   const [pathLength, setPathLength] = useState(0);
   useEffect(() => {
@@ -407,12 +433,39 @@ export default function AureliaTemplate({
   }, []);
 
   // ── SVG route path (mobile vertical) ─────────────────────────────────────────
-  const mobileRoutePathRef = useRef<SVGPathElement>(null);
-  const [mobilePathLength, setMobilePathLength] = useState(0);
+  const mobileRoutePathRef   = useRef<SVGPathElement>(null);
+  const msMobileContainerRef = useRef<HTMLDivElement>(null);   // position:relative wrapper — measured for y-scaling
+  const MOBILE_PATH_APPROX   = 1550;
+  const [mobilePathLength, setMobilePathLength] = useState(MOBILE_PATH_APPROX);
+  // Measured height of the cards container = SVG rendered height
+  const [mobileRailH, setMobileRailH] = useState(0);
+  // Car position in CSS pixels relative to msMobileContainerRef
+  const [mobileCarPos, setMobileCarPos] = useState({ x: 30, y: 0 });
+
+  // Retry getTotalLength until the path is visible and laid out
   useEffect(() => {
-    if (mobileRoutePathRef.current) {
-      setMobilePathLength(mobileRoutePathRef.current.getTotalLength());
-    }
+    let rafId: number;
+    const tryGet = () => {
+      const el = mobileRoutePathRef.current;
+      if (el) {
+        const len = el.getTotalLength();
+        if (len > 0) { setMobilePathLength(len); return; }
+      }
+      rafId = requestAnimationFrame(tryGet);
+    };
+    rafId = requestAnimationFrame(tryGet);
+    return () => cancelAnimationFrame(rafId);
+  }, []);
+
+  // Use ResizeObserver to reliably capture when the container has real pixel height
+  useEffect(() => {
+    const el = msMobileContainerRef.current;
+    if (!el) return;
+    const update = () => { const h = el.offsetHeight; if (h > 0) setMobileRailH(h); };
+    const ro = new ResizeObserver(update);
+    ro.observe(el);
+    update();
+    return () => ro.disconnect();
   }, []);
 
   // ── Section entrance animations ───────────────────────────────────────────────
@@ -433,7 +486,22 @@ export default function AureliaTemplate({
   // ── Roadmap animation ─────────────────────────────────────────────────────────
   const { sectionRef: roadmapRef, progress } = useRoadmapProgress(builderMode);
   const { sectionRef: mobileRoadmapRef, progress: mobileProgress } = useMobileRoadmapProgress(builderMode);
-  const { containerRef: milestonesRef, visible: milestoneVisible } =
+
+  // Recompute car position whenever progress, path length, or measured height changes.
+  // viewBox y (0–1400) maps to screen y (0–mobileRailH). x maps 1:1 (CSS width = viewBox width = 60px).
+  useEffect(() => {
+    const path = mobileRoutePathRef.current;
+    if (!path || mobileRailH === 0) return;
+    let rafId: number;
+    rafId = requestAnimationFrame(() => {
+      const len = path.getTotalLength() || MOBILE_PATH_APPROX;
+      const pt  = path.getPointAtLength(mobileProgress * len);
+      setMobileCarPos({ x: pt.x, y: pt.y * (mobileRailH / 1400) });
+    });
+    return () => cancelAnimationFrame(rafId);
+  }, [mobileProgress, mobilePathLength, mobileRailH]);
+
+  const { desktopRef: msDesktopRef, mobileRef: msMobileRef, visible: milestoneVisible } =
     useMilestoneReveal(milestones.length, builderMode);
 
   // ── Mobile detection (SSR-safe) ───────────────────────────────────────────────
@@ -458,7 +526,7 @@ export default function AureliaTemplate({
 
   const NAV_LINKS = [
     { label: "Our Story",   href: "#aur-story"   },
-    { label: "The Journey", href: "#aur-roadmap" },
+    { label: "The Route",   href: "#aur-roadmap" },
     { label: "Details",     href: "#aur-details" },
     { label: "Venue",       href: "#aur-venue"   },
     { label: "Gallery",     href: "#aur-gallery" },
@@ -511,30 +579,21 @@ export default function AureliaTemplate({
   ];
 
   // ── Detail card icons ─────────────────────────────────────────────────────────
-  function detailIcon(i: number) {
-    const s: React.SVGProps<SVGSVGElement> = {
-      width: 38, height: 38, viewBox: "0 0 38 38", fill: "none",
-      stroke: C.gold, strokeWidth: "1.1",
-      strokeLinecap: "round" as const,
-      strokeLinejoin: "round" as const,
-    };
-    if (i === 0) return (
-      <svg {...s}><path d="M9 34V21H29V34"/><path d="M5 21h28"/><path d="M19 4v8M16 8h6"/><path d="M15 21V14h8v7"/></svg>
-    );
-    if (i === 1) return (
-      <svg {...s}><path d="M12 4l4 14H8L12 4z"/><path d="M12 18v14M8 32h8"/><path d="M26 4l4 14H22L26 4z"/><path d="M26 18v14M22 32h8"/><path d="M16 10l6 2"/></svg>
-    );
-    if (i === 2) return (
-      <svg {...s}><circle cx="19" cy="14" r="5"/><path d="M19 3a11 11 0 010 22C11 25 5 19 5 14A14 14 0 0119 3z"/><path d="M19 25v8M15 31h8"/></svg>
-    );
-    return (
-      <svg {...s}><rect x="6" y="10" width="26" height="21" rx="1"/><path d="M6 17h26M13 10V6M25 10V6"/></svg>
-    );
+  const FALLBACK_ICON_KEYS = ["hanger", "gift", "car", "calendar"];
+  function detailIcon(venue: (typeof venues)[0], i: number) {
+    const iconKey = (venue as Record<string, unknown>).mapIcon as string | undefined;
+    const key = (iconKey && (DETAIL_ICON_KEYS as readonly string[]).includes(iconKey))
+      ? iconKey
+      : FALLBACK_ICON_KEYS[i] ?? "calendar";
+    return <DetailIcon iconKey={key} stroke={C.gold} size={38} />;
   }
 
   // ─────────────────────────────────────────────────────────────────────────────
   return (
     <div
+      className={[
+        isBuilderMobile ? "aur-builder-mobile aur-builder-tablet" : isBuilderTablet ? "aur-builder-tablet" : "",
+      ].filter(Boolean).join(" ") || undefined}
       style={{
         fontFamily: SANS,
         color: C.textLight,
@@ -544,7 +603,7 @@ export default function AureliaTemplate({
       }}
     >
       {/* Google Fonts */}
-      <AureliaFonts />
+      <AureliaFonts headingFont={SERIF} bodyFont={SANS} />
 
       {/* Scoped CSS */}
       <style>{`
@@ -903,6 +962,44 @@ export default function AureliaTemplate({
         @media (prefers-reduced-motion: reduce) {
           *, *::before, *::after { animation: none !important; transition: none !important; }
         }
+
+        /* ─── Builder device preview — tablet (mirrors ≤768px) ─────── */
+        .aur-builder-tablet .aur-nav { padding: 0 20px !important; }
+        .aur-builder-tablet .aur-hamburger { display: flex !important; align-items: center; justify-content: center; min-width: 44px; min-height: 44px; padding: 0 !important; }
+        .aur-builder-tablet .aur-nav-desktop { display: none !important; }
+        .aur-builder-tablet .aur-rsvp-cols { grid-template-columns: 1fr !important; gap: 0 !important; padding: 72px 24px !important; }
+        .aur-builder-tablet .aur-rsvp-left { display: none !important; }
+        .aur-builder-tablet .aur-hero-content-panel { padding-left: 24px !important; padding-right: 24px !important; padding-bottom: 80px !important; }
+        .aur-builder-tablet .aur-countdown-card { bottom: 16px !important; right: 12px !important; padding: 14px 16px !important; border-radius: 14px !important; }
+        .aur-builder-tablet .aur-countdown-unit { min-width: 48px !important; padding: 0 8px !important; }
+        .aur-builder-tablet .aur-story-panel { margin-left: 20px !important; margin-right: 20px !important; margin-top: 64px !important; margin-bottom: 64px !important; max-width: calc(100% - 40px) !important; padding: 38px 30px 34px !important; }
+        .aur-builder-tablet .aur-details-grid { grid-template-columns: repeat(2, 1fr) !important; gap: 16px !important; }
+        .aur-builder-tablet .aur-details-sect { padding: 80px 24px 72px !important; }
+        .aur-builder-tablet .aur-venue-feats { grid-template-columns: 1fr !important; }
+        .aur-builder-tablet .aur-venue-panel-inner { padding: 36px 28px !important; border-radius: 16px !important; width: calc(100% - 40px) !important; margin: 40px 20px !important; }
+        .aur-builder-tablet .aur-ms-desktop { display: none !important; }
+        .aur-builder-tablet .aur-ms-mobile  { display: block !important; }
+        .aur-builder-tablet .aur-rsvp-name-row   { grid-template-columns: 1fr !important; gap: 12px !important; }
+        .aur-builder-tablet .aur-rsvp-attend-row { grid-template-columns: 1fr !important; gap: 10px !important; }
+        .aur-builder-tablet .aur-footer { padding: 64px 24px 40px !important; }
+        .aur-builder-tablet .aur-gal-desktop { display: none !important; }
+        .aur-builder-tablet .aur-gal-mobile  { display: block !important; }
+
+        /* ─── Builder device preview — mobile (mirrors ≤520px + ≤390px) */
+        .aur-builder-mobile .aur-hero-names { font-size: clamp(2.4rem, 9.5vw, 3.4rem) !important; word-break: break-word !important; overflow-wrap: break-word !important; }
+        .aur-builder-mobile .aur-hero-content-panel { padding-left: 20px !important; padding-right: 20px !important; padding-bottom: 72px !important; }
+        .aur-builder-mobile .aur-countdown-card { bottom: 12px !important; right: 8px !important; padding: 12px 14px !important; }
+        .aur-builder-mobile .aur-countdown-unit { min-width: 36px !important; padding: 0 5px !important; }
+        .aur-builder-mobile .aur-story-panel { padding: 28px 22px 26px !important; }
+        .aur-builder-mobile .aur-details-grid { grid-template-columns: 1fr !important; gap: 14px !important; }
+        .aur-builder-mobile .aur-details-sect { padding: 64px 20px 56px !important; }
+        .aur-builder-mobile .aur-venue-panel-inner { padding: 28px 20px !important; width: calc(100% - 32px) !important; margin: 28px 16px !important; }
+        .aur-builder-mobile .aur-venue-cta { width: 100% !important; justify-content: center !important; display: flex !important; padding: 15px 20px !important; }
+        .aur-builder-mobile .aur-rsvp-form-panel { padding: 24px 20px !important; }
+        .aur-builder-mobile .aur-gallery-stage { height: 340px !important; }
+        .aur-builder-mobile .aur-gal-item.aur-gal-center { width: calc(100% - 40px) !important; height: 320px !important; }
+        .aur-builder-mobile .aur-footer { padding: 52px 20px 36px !important; }
+        .aur-builder-mobile .aur-footer-names { font-size: clamp(1.7rem, 8.5vw, 2.4rem) !important; }
       `}</style>
 
       {/* ══════════════════ NAVBAR ══════════════════ */}
@@ -1032,7 +1129,7 @@ export default function AureliaTemplate({
               data-v2-type="text"
               style={{ fontFamily: SANS, fontSize: "0.57rem", fontWeight: 500, letterSpacing: "0.34em", textTransform: "uppercase", color: C.gold, marginBottom: "22px", opacity: 0.92 }}
             >
-              WE&#39;RE GETTING MARRIED
+              {heroInvitationLine}
             </p>
 
             <h1
@@ -1093,7 +1190,7 @@ export default function AureliaTemplate({
                 textDecoration: "none",
               }}
             >
-              RSVP NOW
+              {heroCta}
               <svg width="14" height="10" viewBox="0 0 14 10" fill="none"><path d="M0 5H12M9 1L13 5L9 9" stroke="currentColor" strokeWidth="1.5"/></svg>
             </a>
           </div>
@@ -1200,7 +1297,7 @@ export default function AureliaTemplate({
             }}
           >
             <p style={{ fontFamily: SANS, fontSize: "0.57rem", fontWeight: 500, letterSpacing: "0.32em", textTransform: "uppercase", color: C.gold, marginBottom: "16px", opacity: 0.92 }}>
-              OUR STORY
+              {storySmallTitle}
             </p>
             <div style={{ width: "32px", height: "1px", background: C.gold, marginBottom: "24px", opacity: 0.48 }} />
             <h2
@@ -1240,7 +1337,7 @@ export default function AureliaTemplate({
         </section>
       )}
 
-      {/* ══════════════════ JOURNEY / ROADMAP ══════════════════ */}
+      {/* ══════════════════ WEDDING ROUTE / ROADMAP ══════════════════ */}
       {showRoadmap && (
         <section
           id="aur-roadmap"
@@ -1249,13 +1346,13 @@ export default function AureliaTemplate({
           style={{ position: "relative", minHeight: "140vh", overflow: "hidden", padding: "120px 24px 100px", ...roadmapAnim.style }}
         >
           {/* Aerial/lakeside background */}
-          <div style={{ position: "absolute", inset: 0, backgroundImage: "url(https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=1600&q=80&auto=format&fit=crop)", backgroundSize: "cover", backgroundPosition: "center", zIndex: 0 }} />
+          <div style={{ position: "absolute", inset: 0, backgroundImage: `url(${roadmapBgImage || "https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=1600&q=80&auto=format&fit=crop"})`, backgroundSize: "cover", backgroundPosition: "center", zIndex: 0 }} />
           <div style={{ position: "absolute", inset: 0, background: "rgba(4,8,8,0.74)", zIndex: 1 }} />
 
           {/* Section header */}
           <div style={{ position: "relative", zIndex: 2, textAlign: "center", marginBottom: "88px" }}>
             <p style={{ fontFamily: SANS, fontSize: "0.57rem", letterSpacing: "0.30em", textTransform: "uppercase", color: C.gold, marginBottom: "16px", opacity: 0.85 }}>
-              OUR JOURNEY
+              {roadmapSmallTitle}
             </p>
             <h2
               data-v2-element="aur-roadmap-heading"
@@ -1265,7 +1362,10 @@ export default function AureliaTemplate({
               {roadmapHeading}
             </h2>
             <p style={{ fontFamily: SANS, fontSize: "0.88rem", fontWeight: 300, color: C.textMuted, maxWidth: "480px", margin: "0 auto", lineHeight: 1.8 }}>
-              Every great love story has a beginning &#8212; here is ours.
+              {roadmapSubtitle}
+            </p>
+            <p style={{ fontFamily: SANS, fontSize: "0.48rem", letterSpacing: "0.28em", textTransform: "uppercase", color: C.textMuted, opacity: 0.55, marginTop: "16px" }}>
+              {routeInstruction}
             </p>
           </div>
 
@@ -1279,7 +1379,7 @@ export default function AureliaTemplate({
               className="aur-ms-rail"
               style={{ position: "absolute", left: "50%", top: 0, bottom: 0, transform: "translateX(-50%)", width: "300px", zIndex: 1, pointerEvents: "none" }}
             >
-              <svg viewBox="0 0 300 1200" preserveAspectRatio="none" style={{ width: "100%", height: "100%" }}>
+              <svg viewBox="0 0 300 1200" preserveAspectRatio="none" style={{ width: "100%", height: "100%", overflow: "visible" }}>
                 {/* Ghost base */}
                 <path
                   d="M150 0 C80 180 220 300 150 460 C80 640 220 780 150 1200"
@@ -1318,7 +1418,7 @@ export default function AureliaTemplate({
             </div>
 
             {/* Milestone cards */}
-            <div ref={milestonesRef as React.RefObject<HTMLDivElement>} className="aur-ms-cards-container">
+            <div ref={msDesktopRef} className="aur-ms-cards-container">
               {milestones.map((m, i) => (
                 <div
                   key={String((m as Record<string, unknown>).id ?? i)}
@@ -1351,6 +1451,11 @@ export default function AureliaTemplate({
                       );
                     })()}
                     <div style={{ padding: "22px 24px 24px" }}>
+                      {showStopNumbers && (
+                        <div style={{ fontFamily: SERIF, fontSize: "0.60rem", fontWeight: 400, letterSpacing: "0.20em", color: C.gold, marginBottom: "4px", opacity: 0.55 }}>
+                          {String(i + 1).padStart(2, "0")}
+                        </div>
+                      )}
                       <div style={{ fontFamily: SERIF, fontSize: "0.70rem", fontWeight: 400, letterSpacing: "0.18em", color: C.gold, marginBottom: "7px", opacity: 0.85 }}>
                         {m.time}
                       </div>
@@ -1358,23 +1463,57 @@ export default function AureliaTemplate({
                         {m.title}
                       </h3>
                       {m.description && (
-                        <p style={{ fontFamily: SANS, fontSize: "0.82rem", fontWeight: 300, color: C.textMuted, lineHeight: 1.68, margin: 0 }}>
+                        <p style={{ fontFamily: SANS, fontSize: "0.82rem", fontWeight: 300, color: C.textMuted, lineHeight: 1.68, margin: "0 0 10px" }}>
                           {m.description}
                         </p>
                       )}
+                      {(() => {
+                        const stopAddress  = (m as Record<string, unknown>).address as string | undefined;
+                        const stopMapUrl   = (m as Record<string, unknown>).mapUrl as string | undefined;
+                        const stopBtnTxt   = (m as Record<string, unknown>).buttonText as string | undefined ?? "Open in Maps";
+                        const placeholder  = "Add address here";
+                        const addrClean    = stopAddress?.trim() && stopAddress !== placeholder ? stopAddress.trim() : null;
+                        const mapHref      = stopMapUrl ? stopMapUrl : addrClean ? `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(addrClean)}` : null;
+                        return (
+                          <>
+                            {addrClean && (
+                              <div style={{ display: "flex", alignItems: "flex-start", gap: "5px", marginBottom: mapHref ? "10px" : 0 }}>
+                                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke={C.textMuted} strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" style={{ flexShrink: 0, marginTop: "1px" }}><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7z"/><circle cx="12" cy="9" r="2.5"/></svg>
+                                <span style={{ fontFamily: SANS, fontSize: "0.72rem", color: C.textMuted, lineHeight: 1.5 }}>{addrClean}</span>
+                              </div>
+                            )}
+                            {mapHref && (
+                              <a href={mapHref} target="_blank" rel="noopener noreferrer" style={{ display: "inline-flex", alignItems: "center", gap: "5px", fontFamily: SANS, fontSize: "0.58rem", letterSpacing: "0.16em", textTransform: "uppercase", color: C.gold, textDecoration: "none", borderBottom: "1px solid rgba(215,183,119,0.35)", paddingBottom: "2px", transition: "border-color 0.2s", marginTop: "2px" }}>
+                                {stopBtnTxt}
+                                <svg width="9" height="9" viewBox="0 0 12 12" fill="none" stroke={C.gold} strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round"><path d="M5 1h6v6M11 1L1 11"/></svg>
+                              </a>
+                            )}
+                          </>
+                        );
+                      })()}
                     </div>
                   </div>
-                  {/* Timeline dot */}
-                  <div
-                    className="aur-ms-dot"
-                    style={{
-                      position: "absolute", top: "24px",
-                      ...(i % 2 === 0 ? { right: "-48px" } : { left: "-48px" }),
-                      width: "10px", height: "10px", borderRadius: "50%",
-                      background: C.gold, border: `2.5px solid ${C.bgDark}`,
-                      zIndex: 4, boxShadow: "0 0 14px rgba(215,183,119,0.65)",
-                    }}
-                  />
+                  {/* Timeline dot — activates as car reaches this stop */}
+                  {(() => {
+                    const dotActive = progress >= stopProgressPositions[i] - 0.04;
+                    return (
+                      <div
+                        className="aur-ms-dot"
+                        style={{
+                          position: "absolute", top: "24px",
+                          ...(i % 2 === 0 ? { right: "-48px" } : { left: "-48px" }),
+                          width: dotActive ? "12px" : "9px",
+                          height: dotActive ? "12px" : "9px",
+                          borderRadius: "50%",
+                          background: dotActive ? C.gold : "rgba(215,183,119,0.28)",
+                          border: `2.5px solid ${C.bgDark}`,
+                          zIndex: 4,
+                          boxShadow: dotActive ? "0 0 16px rgba(215,183,119,0.78)" : "none",
+                          transition: "all 0.4s ease",
+                        }}
+                      />
+                    );
+                  })()}
                 </div>
               ))}
             </div>
@@ -1391,13 +1530,13 @@ export default function AureliaTemplate({
             {/* ── MOBILE roadmap (shown on mobile only) ── */}
             <div className="aur-ms-mobile" ref={mobileRoadmapRef as React.RefObject<HTMLDivElement>}>
               {/* Vertical animated SVG path + car on left, cards on right */}
-              <div style={{ position: "relative", paddingLeft: "52px" }}>
+              <div ref={msMobileContainerRef} style={{ position: "relative", paddingLeft: "72px" }}>
                 {/* SVG rail strip — absolutely positioned on the left */}
-                <div style={{ position: "absolute", left: 0, top: 0, bottom: 0, width: "44px", zIndex: 1, pointerEvents: "none" }}>
-                  <svg viewBox="0 0 44 1400" preserveAspectRatio="none" style={{ width: "44px", height: "100%", minHeight: `${milestones.length * 180}px` }}>
-                    {/* ghost base */}
+                <div style={{ position: "absolute", left: 0, top: 0, bottom: 0, width: "60px", zIndex: 1, pointerEvents: "none" }}>
+                  <svg viewBox="0 0 60 1400" preserveAspectRatio="none" style={{ width: "60px", height: "100%", minHeight: `${milestones.length * 200}px`, overflow: "visible" }}>
+                    {/* ghost base — soft S-curve */}
                     <path
-                      d="M22 0 L22 1400"
+                      d="M30 0 C60 300 0 500 30 700 C60 900 0 1100 30 1400"
                       stroke="rgba(215,183,119,0.14)"
                       strokeWidth="2"
                       fill="none"
@@ -1405,41 +1544,33 @@ export default function AureliaTemplate({
                     {/* animated progress fill */}
                     <path
                       ref={mobileRoutePathRef}
-                      d="M22 0 L22 1400"
+                      d="M30 0 C60 300 0 500 30 700 C60 900 0 1100 30 1400"
                       stroke={C.gold}
                       strokeWidth="2"
                       fill="none"
-                      strokeDasharray={mobilePathLength > 0 ? mobilePathLength : 1400}
-                      strokeDashoffset={(mobilePathLength > 0 ? mobilePathLength : 1400) * (1 - mobileProgress)}
+                      strokeDasharray={mobilePathLength}
+                      strokeDashoffset={mobilePathLength * (1 - mobileProgress)}
                       style={{ filter: "drop-shadow(0 0 5px rgba(215,183,119,0.58))", transition: "stroke-dashoffset 0.1s linear" }}
                     />
-                    {/* Car marker at progress point */}
-                    {mobilePathLength > 0 && (() => {
-                      const pt = mobileRoutePathRef.current?.getPointAtLength(
-                        mobileProgress * mobilePathLength
-                      );
-                      if (!pt) return null;
-                      return (
-                        <WeddingCarMapMarker
-                          x={pt.x}
-                          y={pt.y}
-                          size={38}
-                          strokeColor={C.gold}
-                          fillColor="#F7F0E3"
-                          accentColor={C.goldSoft}
-                          strokeWidth={1.2}
-                          showFloral={true}
-                          showHeart={true}
-                          glowStrength={0.6}
-                          animation="float"
-                        />
-                      );
-                    })()}
                   </svg>
+                  {/* Car rendered as HTML element — avoids foreignObject+preserveAspectRatio distortion */}
+                  <div style={{ position: "absolute", left: mobileCarPos.x - 19, top: mobileCarPos.y - 19, width: 38, height: 38, zIndex: 5, pointerEvents: "none" }}>
+                    <WeddingCarRoadmapIcon
+                      size={38}
+                      strokeColor={C.gold}
+                      fillColor="#F7F0E3"
+                      accentColor={C.goldSoft}
+                      strokeWidth={1.2}
+                      showFloral={true}
+                      showHeart={true}
+                      glowStrength={0.6}
+                      animation="float"
+                    />
+                  </div>
                 </div>
 
                 {/* Milestone cards stacked vertically */}
-                <div ref={milestonesRef as React.RefObject<HTMLDivElement>}>
+                <div ref={msMobileRef}>
                   {milestones.map((m, i) => (
                     <div
                       key={`mob-ms-${String((m as Record<string, unknown>).id ?? i)}`}
@@ -1452,17 +1583,24 @@ export default function AureliaTemplate({
                         transition: `opacity 0.6s ${i * 0.08}s ease, transform 0.6s ${i * 0.08}s ease`,
                       }}
                     >
-                      {/* connector dot */}
-                      <div style={{
-                        position: "absolute",
-                        left: "-34px", top: "22px",
-                        width: "9px", height: "9px",
-                        borderRadius: "50%",
-                        background: C.gold,
-                        border: `2px solid ${C.bgDark}`,
-                        boxShadow: "0 0 10px rgba(215,183,119,0.6)",
-                        zIndex: 4,
-                      }} />
+                      {/* connector dot — activates as car reaches this stop */}
+                      {(() => {
+                        const dotActive = mobileProgress >= stopProgressPositions[i] - 0.04;
+                        return (
+                          <div style={{
+                            position: "absolute",
+                            left: "-40px", top: "22px",
+                            width: dotActive ? "11px" : "8px",
+                            height: dotActive ? "11px" : "8px",
+                            borderRadius: "50%",
+                            background: dotActive ? C.gold : "rgba(215,183,119,0.28)",
+                            border: `2px solid ${C.bgDark}`,
+                            boxShadow: dotActive ? "0 0 12px rgba(215,183,119,0.75)" : "none",
+                            zIndex: 4,
+                            transition: "all 0.4s ease",
+                          }} />
+                        );
+                      })()}
                       <div style={{ background: "rgba(8,18,14,0.82)", border: "1px solid rgba(215,183,119,0.20)", borderRadius: "10px", overflow: "hidden", backdropFilter: "blur(12px)", boxShadow: "0 8px 32px rgba(0,0,0,0.4)" }}>
                         {(() => {
                           const msImg = (m as Record<string, unknown>).image as string || MILESTONE_FALLBACKS[i % MILESTONE_FALLBACKS.length];
@@ -1479,6 +1617,11 @@ export default function AureliaTemplate({
                           );
                         })()}
                         <div style={{ padding: "16px 18px 18px" }}>
+                          {showStopNumbers && (
+                            <div style={{ fontFamily: SERIF, fontSize: "0.55rem", letterSpacing: "0.20em", color: C.gold, marginBottom: "3px", opacity: 0.55 }}>
+                              {String(i + 1).padStart(2, "0")}
+                            </div>
+                          )}
                           <div style={{ fontFamily: SERIF, fontSize: "0.64rem", letterSpacing: "0.18em", color: C.gold, marginBottom: "5px", opacity: 0.82 }}>
                             {m.time}
                           </div>
@@ -1486,10 +1629,34 @@ export default function AureliaTemplate({
                             {m.title}
                           </h3>
                           {m.description && (
-                            <p style={{ fontFamily: SANS, fontSize: "0.78rem", fontWeight: 300, color: C.textMuted, lineHeight: 1.65, margin: 0 }}>
+                            <p style={{ fontFamily: SANS, fontSize: "0.78rem", fontWeight: 300, color: C.textMuted, lineHeight: 1.65, margin: "0 0 8px" }}>
                               {m.description}
                             </p>
                           )}
+                          {(() => {
+                            const stopAddress  = (m as Record<string, unknown>).address as string | undefined;
+                            const stopMapUrl   = (m as Record<string, unknown>).mapUrl as string | undefined;
+                            const stopBtnTxt   = (m as Record<string, unknown>).buttonText as string | undefined ?? "Open in Maps";
+                            const placeholder  = "Add address here";
+                            const addrClean    = stopAddress?.trim() && stopAddress !== placeholder ? stopAddress.trim() : null;
+                            const mapHref      = stopMapUrl ? stopMapUrl : addrClean ? `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(addrClean)}` : null;
+                            return (
+                              <>
+                                {addrClean && (
+                                  <div style={{ display: "flex", alignItems: "flex-start", gap: "4px", marginBottom: mapHref ? "8px" : 0 }}>
+                                    <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke={C.textMuted} strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" style={{ flexShrink: 0, marginTop: "1px" }}><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7z"/><circle cx="12" cy="9" r="2.5"/></svg>
+                                    <span style={{ fontFamily: SANS, fontSize: "0.68rem", color: C.textMuted, lineHeight: 1.5 }}>{addrClean}</span>
+                                  </div>
+                                )}
+                                {mapHref && (
+                                  <a href={mapHref} target="_blank" rel="noopener noreferrer" style={{ display: "inline-flex", alignItems: "center", gap: "4px", fontFamily: SANS, fontSize: "0.55rem", letterSpacing: "0.14em", textTransform: "uppercase", color: C.gold, textDecoration: "none", borderBottom: "1px solid rgba(215,183,119,0.35)", paddingBottom: "2px" }}>
+                                    {stopBtnTxt}
+                                    <svg width="8" height="8" viewBox="0 0 12 12" fill="none" stroke={C.gold} strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round"><path d="M5 1h6v6M11 1L1 11"/></svg>
+                                  </a>
+                                )}
+                              </>
+                            );
+                          })()}
                         </div>
                       </div>
                     </div>
@@ -1521,7 +1688,7 @@ export default function AureliaTemplate({
           <div style={{ maxWidth: "1200px", margin: "0 auto" }}>
             <div style={{ textAlign: "center", marginBottom: "70px" }}>
               <p style={{ fontFamily: SANS, fontSize: "0.57rem", letterSpacing: "0.32em", textTransform: "uppercase", color: C.gold, marginBottom: "16px", opacity: 0.88 }}>
-                JOIN US
+                {detailsSmallTitle}
               </p>
               <h2
                 data-v2-element="aur-details-title"
@@ -1547,7 +1714,7 @@ export default function AureliaTemplate({
                   style={{ background: "rgba(247,240,227,0.88)", border: "1px solid rgba(175,140,75,0.28)", borderRadius: "4px", padding: "40px 28px 36px", textAlign: "center", boxShadow: "0 4px 24px rgba(175,140,75,0.07), 0 1px 4px rgba(0,0,0,0.04)" }}
                 >
                   <div style={{ marginBottom: "20px", display: "flex", justifyContent: "center" }}>
-                    {detailIcon(i)}
+                    {detailIcon(venue, i)}
                   </div>
                   <div style={{ width: "26px", height: "1px", background: "rgba(175,140,75,0.32)", margin: "0 auto 18px" }} />
                   <p style={{ fontFamily: SANS, fontSize: "0.53rem", letterSpacing: "0.26em", textTransform: "uppercase", color: C.gold, marginBottom: "10px", opacity: 0.92 }}>
@@ -1615,7 +1782,7 @@ export default function AureliaTemplate({
           >
             <div style={{ textAlign: "center", marginBottom: "32px" }}>
               <p style={{ fontFamily: SANS, fontSize: "0.57rem", letterSpacing: "0.30em", textTransform: "uppercase", color: C.gold, marginBottom: "14px", opacity: 0.90 }}>
-                THE VENUE
+                {venueSubtitle}
               </p>
               <h2
                 data-v2-element="aur-venue-title"
@@ -1696,11 +1863,11 @@ export default function AureliaTemplate({
           style={{ position: "relative", background: C.bgDark, padding: "110px 40px 100px", overflow: "hidden", ...galleryAnim.style }}
         >
           {/* Floral background tint */}
-          <div style={{ position: "absolute", inset: 0, backgroundImage: "url(https://images.unsplash.com/photo-1585007600263-71228e40c8d1?w=1400&q=50&auto=format&fit=crop)", backgroundSize: "cover", opacity: 0.05, zIndex: 0 }} />
+          <div style={{ position: "absolute", inset: 0, backgroundImage: `url(${galleryBgImage || "https://images.unsplash.com/photo-1585007600263-71228e40c8d1?w=1400&q=50&auto=format&fit=crop"})`, backgroundSize: "cover", opacity: 0.05, zIndex: 0 }} />
 
           <div style={{ position: "relative", zIndex: 1, textAlign: "center", marginBottom: "68px" }}>
             <p style={{ fontFamily: SANS, fontSize: "0.57rem", letterSpacing: "0.30em", textTransform: "uppercase", color: C.gold, marginBottom: "16px", opacity: 0.82 }}>
-              OUR MOMENTS
+              {gallerySmallLabel}
             </p>
             <h2
               data-v2-element="aur-gallery-title"
@@ -1741,20 +1908,23 @@ export default function AureliaTemplate({
               })}
             </div>
 
-            {/* Arrow controls */}
+            {/* Arrow controls — hidden if only 1 image */}
+            {filteredGalleryImages.length !== 1 && (
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginTop: "40px" }}>
               <button onClick={galleryPrev} className="aur-gal-arrow" aria-label="Previous image">
                 <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M10 3L5 8L10 13" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round"/></svg>
               </button>
               <p style={{ fontFamily: SANS, fontSize: "0.49rem", letterSpacing: "0.28em", textTransform: "uppercase", color: C.textMuted, opacity: 0.58 }}>
-                DRAG OR SCROLL TO EXPLORE
+                {galleryHint}
               </p>
               <button onClick={galleryNext} className="aur-gal-arrow" aria-label="Next image">
                 <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M6 3L11 8L6 13" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round"/></svg>
               </button>
             </div>
+            )}
 
-            {/* Dot indicators */}
+            {/* Dot indicators — hidden if only 1 image */}
+            {filteredGalleryImages.length !== 1 && (
             <div style={{ display: "flex", justifyContent: "center", gap: "8px", marginTop: "20px" }}>
               {allGalleryImages.map((_: string, i: number) => (
                 <button
@@ -1765,6 +1935,7 @@ export default function AureliaTemplate({
                 />
               ))}
             </div>
+            )}
           </div>
           </div>{/* end aur-gal-desktop */}
 
@@ -1995,7 +2166,7 @@ export default function AureliaTemplate({
                       display: "flex", alignItems: "center", justifyContent: "center", gap: "10px",
                     }}
                   >
-                    {rsvpMutation.isPending ? cfg.rsvp.form.submittingButton : "SEND REPLY"}
+                    {rsvpMutation.isPending ? cfg.rsvp.form.submittingButton : (cfg.rsvp.form.submitButton || "SEND REPLY")}
                     {!rsvpMutation.isPending && (
                       <svg width="14" height="10" viewBox="0 0 14 10" fill="none"><path d="M0 5H12M9 1L13 5L9 9" stroke="currentColor" strokeWidth="1.5"/></svg>
                     )}
@@ -2061,17 +2232,38 @@ export default function AureliaTemplate({
 }
 
 // ─── Lazily inject Google Fonts ───────────────────────────────────────────────
-function AureliaFonts() {
+function extractFamilyName(fontValue: string): string {
+  // Strip weight variants like "Cormorant Garamond:ital,wght@..."
+  return fontValue.split(":")[0].split(",")[0].trim();
+}
+
+function AureliaFonts({ headingFont, bodyFont }: { headingFont: string; bodyFont: string }) {
   useEffect(() => {
-    const id = "aurelia-gfonts";
+    const families = [
+      extractFamilyName(headingFont),
+      extractFamilyName(bodyFont),
+    ].filter(Boolean);
+
+    const id = `aurelia-gfonts-${families.join("-").replace(/\s+/g, "_")}`;
     if (document.getElementById(id)) return;
+
+    // Always ensure defaults are loaded
+    const alwaysLoad = [
+      "Cormorant+Garamond:ital,wght@0,300;0,400;0,500;1,300;1,400",
+      "Montserrat:wght@300;400;500;600",
+    ];
+    const dynamicFamilies = families
+      .filter((f) => f && f !== "Cormorant Garamond" && f !== "Montserrat")
+      .map((f) => f.replace(/\s+/g, "+") + ":wght@300;400;500;600");
+
+    const allFamilies = [...alwaysLoad, ...dynamicFamilies];
+    const query = allFamilies.map((f) => `family=${f}`).join("&");
     const link = document.createElement("link");
     link.id   = id;
     link.rel  = "stylesheet";
-    link.href =
-      "https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;1,300;1,400&family=Montserrat:wght@300;400;500;600&display=swap";
+    link.href = `https://fonts.googleapis.com/css2?${query}&display=swap`;
     document.head.appendChild(link);
-  }, []);
+  }, [headingFont, bodyFont]);
   return null;
 }
 

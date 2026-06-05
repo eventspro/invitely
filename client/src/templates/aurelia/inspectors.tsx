@@ -112,7 +112,13 @@ export function HeroInspector() {
             placeholder="&"
           />
         </FieldGroup>
-        <FieldGroup label="Content">
+        <FieldGroup label="Hero Text">
+          <TextField
+            label="Invitation Line"
+            value={cfg.heroInvitationLine ?? ""}
+            onChange={(v) => updateConfig((c) => ({ ...c, heroInvitationLine: v }))}
+            placeholder="WE'RE GETTING MARRIED"
+          />
           <TextField
             label="Tagline"
             value={cfg.heroTagline ?? ""}
@@ -125,6 +131,12 @@ export function HeroInspector() {
             onChange={(v) => updateConfig((c) => ({ ...c, heroLocation: v }))}
             placeholder="Amalfi Coast, Italy"
           />
+          <TextField
+            label="RSVP Button Label"
+            value={cfg.heroCta ?? ""}
+            onChange={(v) => updateConfig((c) => ({ ...c, heroCta: v }))}
+            placeholder="RSVP NOW"
+          />
         </FieldGroup>
         <FieldGroup label="Wedding Date">
           <DateField
@@ -136,6 +148,38 @@ export function HeroInspector() {
                 wedding: { ...c.wedding, date: iso, displayDate: display },
               }))
             }
+          />
+        </FieldGroup>
+        <FieldGroup label="Countdown">
+          <TextField
+            label="Subtitle"
+            value={cfg.countdown?.subtitle ?? ""}
+            onChange={(v) => updateConfig((c) => ({ ...c, countdown: { ...c.countdown, subtitle: v } }))}
+            placeholder="UNTIL WE SAY I DO"
+          />
+          <TextField
+            label="Days Label"
+            value={cfg.countdown?.labels?.days ?? ""}
+            onChange={(v) => updateConfig((c) => ({ ...c, countdown: { ...c.countdown, labels: { ...(c.countdown?.labels || {}), days: v } } }))}
+            placeholder="DAYS"
+          />
+          <TextField
+            label="Hours Label"
+            value={cfg.countdown?.labels?.hours ?? ""}
+            onChange={(v) => updateConfig((c) => ({ ...c, countdown: { ...c.countdown, labels: { ...(c.countdown?.labels || {}), hours: v } } }))}
+            placeholder="HOURS"
+          />
+          <TextField
+            label="Minutes Label"
+            value={cfg.countdown?.labels?.minutes ?? ""}
+            onChange={(v) => updateConfig((c) => ({ ...c, countdown: { ...c.countdown, labels: { ...(c.countdown?.labels || {}), minutes: v } } }))}
+            placeholder="MINUTES"
+          />
+          <TextField
+            label="Seconds Label"
+            value={cfg.countdown?.labels?.seconds ?? ""}
+            onChange={(v) => updateConfig((c) => ({ ...c, countdown: { ...c.countdown, labels: { ...(c.countdown?.labels || {}), seconds: v } } }))}
+            placeholder="SECONDS"
           />
         </FieldGroup>
         <FieldGroup label="Background Image">
@@ -188,6 +232,12 @@ export function StoryInspector() {
       <InspectorHeader title="Our Story" subtitle="Editorial two-column section" />
       <div style={CONTENT_STYLE}>
         <FieldGroup label="Content">
+          <TextField
+            label="Section Label"
+            value={cfg.storySmallTitle ?? ""}
+            onChange={(v) => updateConfig((c) => ({ ...c, storySmallTitle: v }))}
+            placeholder="OUR STORY"
+          />
           <TextField
             label="Heading"
             value={cfg.storyHeading ?? ""}
@@ -249,24 +299,95 @@ export function StoryInspector() {
 export function RoadmapInspector() {
   const { state, updateConfig } = useBuilderV2();
   const cfg = state.draftConfig as any;
+  const templateId = state.templateId;
 
-  const milestones = (cfg.timeline?.events || []) as Array<{ id?: string; time: string; title: string; description: string }>;
+  const milestones = (cfg.timeline?.events || []) as Array<{ id?: string; time: string; title: string; description: string; image?: string; address?: string; mapUrl?: string; buttonText?: string }>;
+
+  const uploadRoadmapBg = useCallback(makeUploader(templateId, "roadmap"), [templateId]);
+  const handleRoadmapBgUpload = async (file: File) => {
+    const url = await uploadRoadmapBg(file);
+    updateConfig((c) => ({ ...c, roadmapBgImage: url }));
+    return url;
+  };
+
+  const makeMilestoneImageUploader = useCallback(
+    (idx: number) => async (file: File): Promise<string> => {
+      const url = await makeUploader(templateId, "journey")(file);
+      updateConfig((c) => {
+        const events = [...(c.timeline?.events || [])] as any[];
+        events[idx] = { ...events[idx], image: url };
+        return { ...c, timeline: { ...c.timeline, events } };
+      });
+      return url;
+    },
+    [templateId, updateConfig],
+  );
 
   return (
     <>
-      <InspectorHeader title="Our Journey" subtitle="Animated roadmap section" />
+      <InspectorHeader title="Wedding Route" subtitle="Animated wedding-day route map" />
       <div style={CONTENT_STYLE}>
         <FieldGroup label="Content">
+          <TextField
+            label="Section Label"
+            value={cfg.roadmapSmallTitle ?? ""}
+            onChange={(v) => updateConfig((c) => ({ ...c, roadmapSmallTitle: v }))}
+            placeholder="WEDDING ROUTE"
+          />
           <TextField
             label="Section Heading"
             value={cfg.roadmapHeading ?? ""}
             onChange={(v) => updateConfig((c) => ({ ...c, roadmapHeading: v }))}
-            placeholder="The Road That Led Us Here"
+            placeholder="Your Wedding Day Roadmap"
+          />
+          <TextareaField
+            label="Subtitle"
+            value={cfg.roadmapSubtitle ?? ""}
+            onChange={(v) => updateConfig((c) => ({ ...c, roadmapSubtitle: v }))}
+            rows={2}
+            placeholder="Follow the route from the first stop to the final celebration."
+          />
+          <TextField
+            label="Scroll Instruction"
+            value={cfg.routeInstruction ?? ""}
+            onChange={(v) => updateConfig((c) => ({ ...c, routeInstruction: v }))}
+            placeholder="Scroll to follow the route"
+          />
+          <ToggleField
+            label="Show stop numbers (01, 02…)"
+            value={cfg.showStopNumbers ?? true}
+            onChange={(v) => updateConfig((c) => ({ ...c, showStopNumbers: v }))}
           />
         </FieldGroup>
-        <FieldGroup label="Milestones">
+        <FieldGroup label="Background Image">
+          {cfg.roadmapBgImage && (
+            <div style={{ position: "relative", marginBottom: "8px" }}>
+              <img
+                src={cfg.roadmapBgImage}
+                alt="Roadmap background"
+                style={{ width: "100%", height: "80px", objectFit: "cover", borderRadius: "6px", border: "1px solid #374151" }}
+              />
+              <button
+                type="button"
+                onClick={() => updateConfig((c) => ({ ...c, roadmapBgImage: "" }))}
+                style={{ position: "absolute", top: "4px", right: "4px", background: "rgba(0,0,0,0.7)", border: "none", borderRadius: "4px", color: "#EF4444", cursor: "pointer", padding: "2px 6px", fontSize: "0.65rem" }}
+              >
+                ✕ Remove
+              </button>
+            </div>
+          )}
+          <UploadImageButton onUpload={handleRoadmapBgUpload} label="Upload Section Background" />
+          <TextField
+            label="Or paste image URL"
+            value={cfg.roadmapBgImage ?? ""}
+            onChange={(v) => updateConfig((c) => ({ ...c, roadmapBgImage: v }))}
+            placeholder="https://…"
+            monospace
+          />
+        </FieldGroup>
+        <FieldGroup label="Route Stops">
           <InfoNote>
-            Add milestones in chronological order. The animated line and traveling marker will progress through them on scroll.
+            Add route stops in order. Each stop can have an address and a map link.
           </InfoNote>
           <MilestoneEditor
             milestones={milestones}
@@ -276,6 +397,7 @@ export function RoadmapInspector() {
                 timeline: { ...c.timeline, events: updated },
               }))
             }
+            onImageUpload={makeMilestoneImageUploader}
           />
         </FieldGroup>
         <FieldGroup label="Closing Message">
@@ -291,7 +413,7 @@ export function RoadmapInspector() {
                 },
               }))
             }
-            placeholder="Thank you for being part of our journey"
+            placeholder="We can't wait to celebrate with you!"
           />
         </FieldGroup>
       </div>
@@ -315,9 +437,15 @@ export function DetailsInspector() {
 
   return (
     <>
-      <InspectorHeader title="Wedding Details" subtitle="Four-card details section" />
+      <InspectorHeader title="Wedding Notes" subtitle="Logistical info cards" />
       <div style={CONTENT_STYLE}>
         <FieldGroup label="Section Label">
+          <TextField
+            label="Small Label"
+            value={cfg.detailsSmallTitle ?? ""}
+            onChange={(v) => updateConfig((c) => ({ ...c, detailsSmallTitle: v }))}
+            placeholder="WEDDING NOTES"
+          />
           <TextField
             label="Section Title"
             value={cfg.locations?.sectionTitle ?? ""}
@@ -327,10 +455,13 @@ export function DetailsInspector() {
                 locations: { ...c.locations, sectionTitle: v },
               }))
             }
-            placeholder="WEDDING DETAILS"
+            placeholder="WEDDING NOTES"
           />
         </FieldGroup>
-        <FieldGroup label="Detail Cards">
+        <FieldGroup label="Info Cards">
+          <InfoNote>
+            Logistical info cards — dress code, parking, gifts, RSVP deadline, etc.
+          </InfoNote>
           <VenueCardEditor
             venues={venues as any[]}
             onChange={(updated) =>
@@ -377,18 +508,18 @@ export function VenueInspector() {
             onChange={(v) => updateConfig((c) => ({ ...c, venueTitle: v }))}
             placeholder="Villa Cimbrone"
           />
+          <TextField
+            label="Location (city / region)"
+            value={cfg.venueAddress ?? ""}
+            onChange={(v) => updateConfig((c) => ({ ...c, venueAddress: v }))}
+            placeholder="Ravello, Amalfi Coast"
+          />
           <TextareaField
             label="Description"
             value={cfg.venueDescription ?? ""}
             onChange={(v) => updateConfig((c) => ({ ...c, venueDescription: v }))}
             rows={3}
             placeholder="A timeless Italian villa..."
-          />
-          <TextField
-            label="Address (use \\n for line break)"
-            value={cfg.venueAddress ?? ""}
-            onChange={(v) => updateConfig((c) => ({ ...c, venueAddress: v }))}
-            placeholder="Via del Salviatino, 6\nRavello, Italy"
           />
           <TextField
             label="CTA Label"
@@ -442,6 +573,7 @@ export function GalleryInspector() {
   const templateId = state.templateId;
 
   const upload = useCallback(makeUploader(templateId, "gallery"), [templateId]);
+  const uploadBg = useCallback(makeUploader(templateId, "gallery-bg"), [templateId]);
 
   const handleGalleryUpload = async (file: File) => {
     const url = await upload(file);
@@ -455,6 +587,12 @@ export function GalleryInspector() {
     return url;
   };
 
+  const handleGalleryBgUpload = async (file: File) => {
+    const url = await uploadBg(file);
+    updateConfig((c) => ({ ...c, galleryBgImage: url }));
+    return url;
+  };
+
   const galleryImages: string[] = cfg.photos?.galleryImages || [];
 
   return (
@@ -463,17 +601,42 @@ export function GalleryInspector() {
       <div style={CONTENT_STYLE}>
         <FieldGroup label="Content">
           <TextField
-            label="Gallery Title"
-            value={cfg.galleryTitle ?? cfg.photos?.title ?? ""}
-            onChange={(v) => updateConfig((c) => ({ ...c, galleryTitle: v }))}
+            label="Section Label"
+            value={cfg.gallerySubtitle ?? cfg.photos?.description ?? ""}
+            onChange={(v) => updateConfig((c) => ({ ...c, gallerySubtitle: v }))}
             placeholder="OUR MOMENTS"
           />
           <TextField
-            label="Subtitle"
-            value={cfg.gallerySubtitle ?? cfg.photos?.description ?? ""}
-            onChange={(v) => updateConfig((c) => ({ ...c, gallerySubtitle: v }))}
-            placeholder="A collection of memories"
+            label="Gallery Title"
+            value={cfg.galleryTitle ?? cfg.photos?.title ?? ""}
+            onChange={(v) => updateConfig((c) => ({ ...c, galleryTitle: v }))}
+            placeholder="A Collection of Memories"
           />
+          <TextField
+            label="Navigation Hint"
+            value={cfg.galleryHint ?? ""}
+            onChange={(v) => updateConfig((c) => ({ ...c, galleryHint: v }))}
+            placeholder="DRAG OR SCROLL TO EXPLORE"
+          />
+        </FieldGroup>
+        <FieldGroup label="Background Tint">
+          {cfg.galleryBgImage && (
+            <div style={{ position: "relative", marginBottom: "8px" }}>
+              <img
+                src={cfg.galleryBgImage}
+                alt="Gallery background"
+                style={{ width: "100%", height: "60px", objectFit: "cover", borderRadius: "6px", border: "1px solid #374151" }}
+              />
+              <button
+                type="button"
+                onClick={() => updateConfig((c) => ({ ...c, galleryBgImage: "" }))}
+                style={{ position: "absolute", top: "4px", right: "4px", background: "rgba(0,0,0,0.7)", border: "none", borderRadius: "4px", color: "#EF4444", cursor: "pointer", padding: "2px 6px", fontSize: "0.65rem" }}
+              >
+                ✕ Remove
+              </button>
+            </div>
+          )}
+          <UploadImageButton onUpload={handleGalleryBgUpload} label="Upload Background Image" />
         </FieldGroup>
         <FieldGroup label="Images">
           {galleryImages.length > 0 && (

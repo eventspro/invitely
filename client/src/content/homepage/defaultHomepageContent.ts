@@ -29,7 +29,7 @@ export const DEFAULT_HOMEPAGE_CONTENT: HomepageContent = {
       en: "Invitations, photos, venue, schedule, RSVP responses and all the details — in one elegant link.",
       ru: "Приглашение, фотографии, место, расписание, ответы на RSVP и все детали — в одной изящной ссылке.",
     },
-    primaryCta:   { label: { hy: "Փորձել դեմոն",   en: "Try the demo",   ru: "Попробовать демо"  }, href: "/planner-prototype", visible: true },
+    primaryCta:   { label: { hy: "Փորձել դեմոն",   en: "Try the demo",   ru: "Попробовать демо"  }, href: "/demo/david-rose-romantic", visible: true },
     secondaryCta: { label: { hy: "Դիտել կաղապարները", en: "View templates", ru: "Смотреть шаблоны" }, href: "#templates",               visible: true },
     chips: [
       { id: "chip-rsvp",   label: { hy: "RSVP",          en: "RSVP",     ru: "RSVP"            }, visible: true },
@@ -51,22 +51,6 @@ export const DEFAULT_HOMEPAGE_CONTENT: HomepageContent = {
       { id: "tpl-4", name: { hy: "Ամալֆի", en: "Coastal Luxe",   ru: "Прибрежная роскошь" }, description: { hy: "Լուսավոր և բարդզրակարգ", en: "Bright and upscale",      ru: "Светлый и изысканный"       }, tag: { hy: "լուսավոր և Պրեմիում", en: "Bright & Upscale", ru: "Светлый и изысканный"       }, price: { hy: "25,000 ֏", en: "֏25,000", ru: "֏25 000" }, image: "/template_previews/img5.webp", href: "/alexander-isabella-elegant", buttonLabel: { hy: "Դիտել", en: "Preview", ru: "Просмотр" }, visible: true },
       { id: "tpl-5", name: { hy: "Դասական", en: "Rose Evening",   ru: "Розовый вечер"       }, description: { hy: "Ռոմանտիկ և տակ", en: "Romantic and warm",       ru: "Романтичный и тёплый"       }, tag: { hy: "ռոմանտիկ և տակ", en: "Romantic & Warm",    ru: "Романтичный и тёплый"       }, price: { hy: "20,000 ֏", en: "֏20,000", ru: "֏20 000" }, image: "/template_previews/img1.webp", href: "/david-rose-romantic",        buttonLabel: { hy: "Դիտել", en: "Preview", ru: "Просмотр" }, visible: true },
       { id: "tpl-6", name: { hy: "Մինիմալ", en: "Minimal",        ru: "Минимал"                }, description: { hy: "Պարզ և նուրբ", en: "Simple and delicate",     ru: "Простой и нежный"           }, tag: { hy: "պարզ և նուրբ", en: "Simple & Elegant",   ru: "Простой и элегантный"   }, price: { hy: "20,000 ֏", en: "֏20,000", ru: "֏20 000" }, image: "/template_previews/img4.webp", href: "/michael-sarah-classic",      buttonLabel: { hy: "Դիտել", en: "Preview", ru: "Просмотр" }, visible: true },
-    ],
-  },
-
-  plannerShowcase: {
-    eyebrow:  { hy: "ՀԱՐՍԱՆԵԿԱՆ ԾՐԱԳՐՈՂ", en: "WEDDING PLANNER",         ru: "СВАДЕБНЫЙ ПЛАНИРОВЩИК"   },
-    title:    { hy: "Կազմակերպեք ձեր հարսանիքը մեկ վայրում", en: "Plan your wedding in one place", ru: "Планируйте свадьбу в одном месте" },
-    subtitle: { hy: "Հյուրերի ցուցակ, նստատեղերի պլան, բյուջե, առաջադրանքներ — բոլոր ծրագրված առանձնահատկությունները ձեր ձեռքի տակ։", en: "Guest list, seating plan, budget, tasks — all the planning tools in one elegant app.", ru: "Список гостей, рассадка, бюджет, задачи — всё под рукой." },
-    primaryCta:   { label: { hy: "Փորձել ծրագրողը", en: "Try the planner", ru: "Попробовать планировщик" }, href: "/planner-prototype", visible: true },
-    secondaryCta: { label: { hy: "Դիտել դեմոն",     en: "View demo",       ru: "Смотреть демо"          }, href: "/demo/david-rose-romantic", visible: true },
-    features: [
-      { id: "pf-1", icon: "users",    title: { hy: "Հյուրերի ցուցակ",      en: "Guest list",    ru: "Список гостей" }, text: { hy: "Կառավարեք հյուրերին, RSVP-ն ու կոնտակտները", en: "Manage guests, RSVPs and contacts",    ru: "Управляйте гостями и RSVP"       }, visible: true },
-      { id: "pf-2", icon: "calendar", title: { hy: "Սեղաններ",              en: "Tables",        ru: "Рассадка"      }, text: { hy: "Կազմեք նստատեղերի ծրագիր հեշտությամբ",     en: "Create your seating plan with ease",   ru: "Составьте план рассадки"         }, visible: true },
-      { id: "pf-3", icon: "wallet",     title: { hy: "Բյուջե",               en: "Budget",        ru: "Бюджет"        }, text: { hy: "Վերահսկեք ծախսերն ու վճարումները",         en: "Track expenses and payments",          ru: "Отслеживайте расходы"            }, visible: true },
-      { id: "pf-4", icon: "check",    title: { hy: "Առաջադրանքներ",        en: "Tasks",         ru: "Задачи"        }, text: { hy: "Կատարեք բոլոր նախապատրաստական քայլերը",   en: "Complete every planning step on time", ru: "Выполняйте все шаги вовремя"     }, visible: true },
-      { id: "pf-5", icon: "bell",     title: { hy: "Հիշեցումներ",         en: "Reminders",     ru: "Напоминания"   }, text: { hy: "Ստացեք հիշեցումներ ճիշտ ժամին",         en: "Get reminders at the right time",      ru: "Получайте напоминания вовремя"       }, visible: true },
-      { id: "pf-6", icon: "send",     title: { hy: "RSVP համաժամացում",    en: "RSVP sync",     ru: "Синхронизация" }, text: { hy: "Բոլոր հաստատումները հավաքվում են ծրագրողում",  en: "Sync confirmations to the planner",    ru: "Все подтверждения в планировщике"}, visible: true },
     ],
   },
 

@@ -4,6 +4,7 @@
  */
 
 import React, { useState, useRef } from "react";
+import { DetailIcon, DETAIL_ICON_KEYS, DETAIL_ICON_LABELS } from "../../../templates/shared/detail-icons";
 
 // ─── Shared styles ────────────────────────────────────────────────────────────
 const LABEL_STYLE: React.CSSProperties = {
@@ -786,15 +787,21 @@ export function UploadImageButton({
 // ─── MilestoneEditor (enhanced) ──────────────────────────────────────────────
 // Replaces old MilestoneEditor — now supports add / remove / reorder.
 interface Milestone {
-  id?: string;
-  time:        string;
-  title:       string;
-  description: string;
+  id?:          string;
+  time:         string;
+  title:        string;
+  description:  string;
+  image?:       string;
+  address?:     string;
+  mapUrl?:      string;
+  buttonText?:  string;
 }
 
 interface MilestoneEditorProps {
-  milestones: Milestone[];
-  onChange:   (milestones: Milestone[]) => void;
+  milestones:     Milestone[];
+  onChange:       (milestones: Milestone[]) => void;
+  /** If provided, each milestone card shows an image upload button */
+  onImageUpload?: (milestoneIndex: number) => (file: File) => Promise<string>;
 }
 
 function genId(): string {
@@ -803,7 +810,7 @@ function genId(): string {
     : Date.now().toString(36) + Math.random().toString(36).slice(2);
 }
 
-export function MilestoneEditor({ milestones, onChange }: MilestoneEditorProps) {
+export function MilestoneEditor({ milestones, onChange, onImageUpload }: MilestoneEditorProps) {
   const update = (idx: number, field: keyof Milestone, val: string) =>
     onChange(milestones.map((m, i) => (i === idx ? { ...m, [field]: val } : m)));
 
@@ -827,7 +834,7 @@ export function MilestoneEditor({ milestones, onChange }: MilestoneEditorProps) 
   const add = () =>
     onChange([
       ...milestones,
-      { id: genId(), time: "", title: "New Milestone", description: "" },
+      { id: genId(), time: "", title: "New Route Stop", description: "" },
     ]);
 
   const BTN: React.CSSProperties = {
@@ -860,7 +867,7 @@ export function MilestoneEditor({ milestones, onChange }: MilestoneEditorProps) 
           {/* Row: label + reorder + remove */}
           <div style={{ display: "flex", alignItems: "center", gap: "4px" }}>
             <p style={{ ...LABEL_STYLE, marginBottom: 0, color: "#6366F1", flex: 1 }}>
-              Milestone {idx + 1}
+              Route Stop {idx + 1}
             </p>
             <button style={BTN} onClick={() => moveUp(idx)}   title="Move up">↑</button>
             <button style={BTN} onClick={() => moveDown(idx)} title="Move down">↓</button>
@@ -875,7 +882,7 @@ export function MilestoneEditor({ milestones, onChange }: MilestoneEditorProps) 
           <input
             value={m.time}
             onChange={(e) => update(idx, "time", e.target.value)}
-            placeholder="Year (e.g. 2021)"
+            placeholder="Time (e.g. 11:00 AM)"
             style={{ ...INPUT_BASE, fontSize: "0.75rem" }}
           />
           <input
@@ -890,6 +897,59 @@ export function MilestoneEditor({ milestones, onChange }: MilestoneEditorProps) 
             placeholder="Short description"
             style={{ ...INPUT_BASE, fontSize: "0.75rem" }}
           />
+          <input
+            value={m.address ?? ""}
+            onChange={(e) => update(idx, "address", e.target.value)}
+            placeholder="Address (optional)"
+            style={{ ...INPUT_BASE, fontSize: "0.75rem" }}
+          />
+          <input
+            value={m.mapUrl ?? ""}
+            onChange={(e) => update(idx, "mapUrl", e.target.value)}
+            placeholder="Map URL (overrides address)"
+            style={{ ...INPUT_BASE, fontSize: "0.75rem" }}
+          />
+          <input
+            value={m.buttonText ?? ""}
+            onChange={(e) => update(idx, "buttonText", e.target.value)}
+            placeholder='Button text (default: "Open in Maps")'
+            style={{ ...INPUT_BASE, fontSize: "0.75rem" }}
+          />
+          {/* Image URL + optional upload */}
+          {m.image && (
+            <div style={{ position: "relative", marginBottom: "2px" }}>
+              <img src={m.image} alt="milestone" style={{ width: "100%", height: "56px", objectFit: "cover", borderRadius: "4px", border: "1px solid #374151" }} />
+              <button
+                type="button"
+                onClick={() => update(idx, "image", "")}
+                style={{ position: "absolute", top: "2px", right: "2px", background: "rgba(0,0,0,0.7)", border: "none", borderRadius: "3px", color: "#EF4444", cursor: "pointer", padding: "1px 5px", fontSize: "0.6rem" }}
+              >✕</button>
+            </div>
+          )}
+          <div style={{ display: "flex", gap: "4px", alignItems: "center" }}>
+            <input
+              value={m.image ?? ""}
+              onChange={(e) => update(idx, "image", e.target.value)}
+              placeholder="Image URL (optional)"
+              style={{ ...INPUT_BASE, fontSize: "0.72rem", flex: 1 }}
+            />
+            {onImageUpload && (
+              <label style={{ cursor: "pointer", flexShrink: 0 }}>
+                <input
+                  type="file"
+                  accept="image/*"
+                  style={{ display: "none" }}
+                  onChange={async (e) => {
+                    const file = e.target.files?.[0];
+                    if (file) { e.target.value = ""; await onImageUpload(idx)(file); }
+                  }}
+                />
+                <span style={{ display: "inline-flex", alignItems: "center", justifyContent: "center", background: "#374151", border: "1px solid #4B5563", borderRadius: "4px", color: "#9CA3AF", padding: "4px 7px", fontSize: "0.65rem", cursor: "pointer", whiteSpace: "nowrap" }}>
+                  ↑ Upload
+                </span>
+              </label>
+            )}
+          </div>
         </div>
       ))}
       <button
@@ -909,6 +969,86 @@ export function MilestoneEditor({ milestones, onChange }: MilestoneEditorProps) 
       >
         + Add Milestone
       </button>
+    </div>
+  );
+}
+
+// ─── IconPicker ───────────────────────────────────────────────────────────────
+function IconPicker({ value, onChange }: { value: string; onChange: (key: string) => void }) {
+  const [open, setOpen] = useState(false);
+  const ref = useRef<HTMLDivElement>(null);
+
+  // Close on outside click
+  React.useEffect(() => {
+    if (!open) return;
+    function handler(e: MouseEvent) {
+      if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false);
+    }
+    document.addEventListener("mousedown", handler);
+    return () => document.removeEventListener("mousedown", handler);
+  }, [open]);
+
+  return (
+    <div ref={ref} style={{ position: "relative", flexShrink: 0 }}>
+      <button
+        type="button"
+        onClick={() => setOpen((o) => !o)}
+        title={value ? DETAIL_ICON_LABELS[value as keyof typeof DETAIL_ICON_LABELS] ?? value : "Choose icon"}
+        style={{
+          width:         "38px",
+          height:        "38px",
+          background:    open ? "#374151" : "#111827",
+          border:        "1px solid #374151",
+          borderRadius:  "6px",
+          cursor:        "pointer",
+          display:       "flex",
+          alignItems:    "center",
+          justifyContent: "center",
+          padding:       0,
+        }}
+      >
+        {value
+          ? <DetailIcon iconKey={value} stroke="#D1B87A" size={20} />
+          : <span style={{ color: "#6B7280", fontSize: "0.65rem" }}>—</span>}
+      </button>
+      {open && (
+        <div style={{
+          position:     "absolute",
+          top:          "calc(100% + 4px)",
+          left:         0,
+          zIndex:       200,
+          background:   "#111827",
+          border:       "1px solid #374151",
+          borderRadius: "8px",
+          padding:      "8px",
+          display:      "grid",
+          gridTemplateColumns: "repeat(4, 1fr)",
+          gap:          "4px",
+          width:        "144px",
+          boxShadow:    "0 8px 24px rgba(0,0,0,0.5)",
+        }}>
+          {DETAIL_ICON_KEYS.map((key) => (
+            <button
+              key={key}
+              type="button"
+              onClick={() => { onChange(key); setOpen(false); }}
+              title={DETAIL_ICON_LABELS[key]}
+              style={{
+                background:   value === key ? "#374151" : "transparent",
+                border:       "none",
+                borderRadius: "4px",
+                cursor:       "pointer",
+                padding:      "5px",
+                display:      "flex",
+                alignItems:   "center",
+                justifyContent: "center",
+              }}
+            >
+              <DetailIcon iconKey={key} stroke={value === key ? "#D1B87A" : "#6B7280"} size={20} />
+            </button>
+          ))}
+        </div>
+      )}
     </div>
   );
 }
@@ -957,7 +1097,7 @@ export function VenueCardEditor({ venues, onChange }: VenueCardEditorProps) {
         title:       "NEW CARD",
         name:        "",
         description: "",
-        mapIcon:     "📍",
+        mapIcon:     "map-pin",
       },
     ]);
 
@@ -1002,13 +1142,10 @@ export function VenueCardEditor({ venues, onChange }: VenueCardEditorProps) {
               ✕
             </button>
           </div>
-          <div style={{ display: "flex", gap: "6px" }}>
-            <input
-              value={v.mapIcon || ""}
-              onChange={(e) => update(idx, "mapIcon", e.target.value)}
-              placeholder="Icon"
-              title="Emoji icon"
-              style={{ ...INPUT_BASE, width: "40px", fontSize: "1rem", textAlign: "center", padding: "4px" }}
+          <div style={{ display: "flex", gap: "6px", alignItems: "center" }}>
+            <IconPicker
+              value={v.mapIcon ?? ""}
+              onChange={(key) => update(idx, "mapIcon", key)}
             />
             <input
               value={v.title}

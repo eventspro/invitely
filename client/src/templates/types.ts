@@ -71,11 +71,15 @@ export interface WeddingConfig {
   timeline: {
     title: string;
     events: Array<{
-      id?: string; // Unique identifier for each event
+      id?: string;
       time: string;
       title: string;
       description?: string;
-      icon?: string; // Custom icon for the event
+      icon?: string;
+      image?: string;
+      address?: string;
+      mapUrl?: string;
+      buttonText?: string;
     }>;
     afterMessage: {
       thankYou: string;

@@ -384,9 +384,10 @@ export function BuilderCanvas() {
             {TemplateComponent ? (
               /* Cast props to any to avoid TypeScript complaining about unknown component shape */
               React.createElement(TemplateComponent as React.ComponentType<any>, {
-                config:      draftConfig,
-                templateId:  templateId,
-                builderMode: !isPreview,
+                config:        draftConfig,
+                templateId:    templateId,
+                builderMode:   !isPreview,
+                devicePreview: isPreview ? undefined : devicePreview,
               })
             ) : (
               <div style={{ display: "flex", alignItems: "center", justifyContent: "center", height: "400px", background: "#111", color: "#EF4444", fontSize: "0.8rem" }}>

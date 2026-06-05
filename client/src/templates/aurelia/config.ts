@@ -44,77 +44,98 @@ export const defaultConfig: WeddingConfig = {
   },
 
   locations: {
-    sectionTitle: "WEDDING DETAILS",
+    sectionTitle: "WEDDING NOTES",
     venues: [
-      {
-        id: "ceremony",
-        title: "CEREMONY",
-        name: "5:00 PM",
-        description: "Villa Cimbrone\nRavello, Amalfi Coast",
-        mapButton: "View on Map",
-        mapIcon: "📍",
-        address: "Villa Cimbrone, Ravello, SA 84010, Italy",
-      },
-      {
-        id: "cocktail",
-        title: "COCKTAIL HOUR",
-        name: "6:30 PM",
-        description: "Garden Terrace\nCanapés & Prosecco",
-        mapButton: "View on Map",
-        mapIcon: "📍",
-        address: "Villa Cimbrone Gardens, Ravello, Italy",
-      },
-      {
-        id: "reception",
-        title: "RECEPTION",
-        name: "8:00 PM",
-        description: "Grand Ballroom\nDinner & Dancing",
-        mapButton: "View on Map",
-        mapIcon: "📍",
-        address: "Villa Cimbrone, Ravello, Italy",
-      },
       {
         id: "dresscode",
         title: "DRESS CODE",
         name: "Black Tie Optional",
-        description: "We look forward to\ncelebrating with you!",
+        description: "We kindly ask guests to dress elegantly.",
         mapButton: "",
-        mapIcon: "👗",
+        mapIcon: "hanger",
+        address: "",
+      },
+      {
+        id: "gifts",
+        title: "GIFTS",
+        name: "Your Presence",
+        description: "Your presence is the greatest gift. A gift table will be available.",
+        mapButton: "",
+        mapIcon: "gift",
+        address: "",
+      },
+      {
+        id: "parking",
+        title: "PARKING",
+        name: "Available On-Site",
+        description: "Complimentary parking is available for all guests.",
+        mapButton: "",
+        mapIcon: "car",
+        address: "",
+      },
+      {
+        id: "rsvpdate",
+        title: "RSVP BY",
+        name: "August 1st, 2026",
+        description: "Kindly confirm your attendance by this date.",
+        mapButton: "",
+        mapIcon: "calendar",
         address: "",
       },
     ],
   },
 
   timeline: {
-    title: "OUR JOURNEY",
+    title: "WEDDING ROUTE",
     events: [
       {
-        id: "2020",
-        time: "2020",
-        title: "First Meeting",
-        description: "A chance encounter in Rome that changed everything",
+        id: "stop-1",
+        time: "11:00 AM",
+        title: "Bride's House",
+        description: "Family gathering and preparation.",
+        address: "",
+        mapUrl: "",
+        buttonText: "Open in Maps",
       },
       {
-        id: "2021",
-        time: "2021",
-        title: "First Trip Together",
-        description: "Wandering the streets of Positano hand in hand",
+        id: "stop-2",
+        time: "12:00 PM",
+        title: "Groom's House",
+        description: "Traditional visit and departure.",
+        address: "",
+        mapUrl: "",
+        buttonText: "Open in Maps",
       },
       {
-        id: "2023",
-        time: "2023",
-        title: "The Proposal",
-        description: "A sunset over the Amalfi Coast — she said yes",
+        id: "stop-3",
+        time: "2:00 PM",
+        title: "Ceremony",
+        description: "Wedding ceremony location.",
+        address: "",
+        mapUrl: "",
+        buttonText: "Open in Maps",
       },
       {
-        id: "2026",
-        time: "2026",
-        title: "Forever Begins",
-        description: "Our greatest adventure starts here",
+        id: "stop-4",
+        time: "4:00 PM",
+        title: "Photo Session",
+        description: "Photoshoot with family and friends.",
+        address: "",
+        mapUrl: "",
+        buttonText: "Open in Maps",
+      },
+      {
+        id: "stop-5",
+        time: "6:00 PM",
+        title: "Restaurant",
+        description: "Reception and dinner.",
+        address: "",
+        mapUrl: "",
+        buttonText: "Open in Maps",
       },
     ],
     afterMessage: {
-      thankYou: "Thank you for being part of our journey",
+      thankYou: "We can't wait to celebrate with you!",
       notes: "",
     },
   },
@@ -168,7 +189,7 @@ export const defaultConfig: WeddingConfig = {
     countdown: "WEDDING",
     calendar: "DETAILS",
     locations: "DETAILS",
-    timeline: "JOURNEY",
+    timeline: "ROUTE",
     rsvp: "RSVP",
     photos: "GALLERY",
   },
@@ -264,12 +285,19 @@ export const defaultConfig: WeddingConfig = {
 export interface AureliaExtendedConfig {
   heroTagline?: string;           // e.g. "A Love Story Written in the Stars"
   heroLocation?: string;          // e.g. "Amalfi Coast, Italy"
+  heroInvitationLine?: string;    // e.g. "WE'RE GETTING MARRIED"
+  heroCta?: string;               // e.g. "RSVP NOW"
   storyHeading?: string;          // e.g. "How It All Began"
   storyHeadingEmphasis?: string;  // e.g. "Began" — rendered in champagne italic
   storyBody?: string;             // Story paragraph
   storyCtaLabel?: string;         // e.g. "OUR FULL STORY"
   storyImage?: string;            // Single editorial image URL
-  roadmapHeading?: string;        // e.g. "The Road That Led Us Here"
+  storySmallTitle?: string;       // e.g. "OUR STORY" — small label above story heading
+  roadmapHeading?: string;        // e.g. "Your Wedding Day Roadmap"
+  roadmapSmallTitle?: string;     // e.g. "WEDDING ROUTE" — small label above roadmap heading
+  roadmapSubtitle?: string;       // e.g. "Follow the route from the first stop to the final celebration."
+  roadmapBgImage?: string;        // Route section background image URL
+  routeInstruction?: string;      // e.g. "Scroll to follow the route"
   venueTitle?: string;            // e.g. "Villa Cimbrone"
   venueSubtitle?: string;         // e.g. "THE VENUE"
   venueDescription?: string;
@@ -277,8 +305,12 @@ export interface AureliaExtendedConfig {
   venueAddress?: string;
   venueMapUrl?: string;
   venueImage?: string;
+  venueLocation?: string;         // deprecated alias for venueAddress
+  detailsSmallTitle?: string;     // e.g. "JOIN US" — small label above details section title
   galleryTitle?: string;
-  gallerySubtitle?: string;
+  gallerySubtitle?: string;       // e.g. "OUR MOMENTS" — small label above gallery title
+  galleryBgImage?: string;        // Gallery section tinted background image URL
+  galleryHint?: string;           // e.g. "DRAG OR SCROLL TO EXPLORE"
   footerTagline?: string;
   nameSeparator?: string;
   rsvpBgImage?: string;
@@ -286,5 +318,5 @@ export interface AureliaExtendedConfig {
   socialInstagram?: string;
   socialFacebook?: string;
   socialEmail?: string;
-  venueLocation?: string;
+  showStopNumbers?: boolean;  // show/hide 01 02 03 labels on route stop cards (default: true)
 }
