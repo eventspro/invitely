@@ -36,7 +36,7 @@ function StepShell({ step, title, subtitle, children }: { step: number; title: s
     <div>
       <div className="mb-6">
         <p className="text-xs font-medium text-stone-400 mb-1">
-          Step {step} of {TOTAL_STEPS} \u2014 {STEP_META[step - 1]?.emoji} {STEP_META[step - 1]?.label}
+          Step {step} of {TOTAL_STEPS} {"\u2014"} {STEP_META[step - 1]?.emoji} {STEP_META[step - 1]?.label}
         </p>
         <h2 className="text-2xl font-bold text-stone-800 mb-1 leading-snug" style={{ fontFamily: "Playfair Display, serif" }}>
           {title}
@@ -586,24 +586,24 @@ function WizardLayout({ editId }: { editId: string }) {
           <div className="shrink-0 bg-white border-t border-stone-100 px-6 py-4 flex items-center gap-3">
             {step > 1 && (
               <button onClick={handleBack} disabled={isSaving} className="flex-1 py-3 rounded-xl border border-stone-200 text-stone-600 text-sm font-medium hover:bg-stone-50 transition-colors disabled:opacity-50">
-                \u2190 Back
+                 {"\u2190"} Հետ
               </button>
             )}
             <button onClick={handleContinue} disabled={isSaving}
               className="flex-[2] py-3 rounded-xl text-white text-sm font-semibold transition-opacity hover:opacity-90 flex items-center justify-center gap-2 disabled:opacity-60"
               style={{ background: "#9f1239" }}>
               {isSaving
-                ? <><Loader2 size={15} className="animate-spin" /> Saving\u2026</>
-                : isLastStep ? "Send My Demo \u2192" : "Continue \u2192"}
+                ? <><Loader2 size={15} className="animate-spin" /> Պահպանվում է...</>
+                : isLastStep ? "Ուղարկել իմ ցուցադրությունը \u2192" : "Շարունակել \u2192"}
             </button>
           </div>
         </div>
 
         <div className="hidden sm:flex flex-1 overflow-auto bg-stone-100 flex-col items-center p-6 gap-3">
           <div className="flex items-center gap-2 text-xs text-amber-700 bg-amber-50 border border-amber-200 rounded-lg px-4 py-2 self-stretch justify-center">
-            <span className="font-semibold">Demo preview</span>
+            <span className="font-semibold">Նախադիտում</span>
             <span className="text-amber-400">\u00B7</span>
-            This is not a live website and cannot be shared publicly
+            Սա իրական կայք չէ և չի կարող հրապարակվել
           </div>
           <div className="w-full">
             <DemoPreview />
@@ -615,8 +615,8 @@ function WizardLayout({ editId }: { editId: string }) {
         <div className="fixed inset-0 z-50 bg-black/60 flex flex-col">
           <div className="flex items-center justify-between px-4 py-3 bg-white shrink-0">
             <div>
-              <span className="font-semibold text-sm text-stone-700">Preview</span>
-              <span className="ml-2 text-xs text-amber-600 bg-amber-50 border border-amber-200 rounded-full px-2 py-0.5">Demo only</span>
+              <span className="font-semibold text-sm text-stone-700">Նախադիտում</span>
+              <span className="ml-2 text-xs text-amber-600 bg-amber-50 border border-amber-200 rounded-full px-2 py-0.5">Միայն ցուցադրություն</span>
             </div>
             <button onClick={() => setShowPreviewModal(false)} className="text-stone-400 p-1"><X size={20} /></button>
           </div>
@@ -641,7 +641,7 @@ function WizardLayout({ editId }: { editId: string }) {
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-base font-bold text-stone-800" style={{ fontFamily: "Playfair Display, serif" }}>4ever.am</p>
-                  <p className="text-xs text-stone-400 mt-0.5">Digital wedding invitations</p>
+                  <p className="text-xs text-stone-400 mt-0.5">Wedding planner</p>
                 </div>
                 <button onClick={() => setShowExitMenu(false)} className="text-stone-300 hover:text-stone-500 transition-colors">
                   <X size={18} />
@@ -650,26 +650,26 @@ function WizardLayout({ editId }: { editId: string }) {
 
               {/* Contact */}
               <div className="space-y-2">
-                <p className="text-[10px] font-bold text-stone-400 uppercase tracking-widest">Contact us</p>
+                <p className="text-[10px] font-bold text-stone-400 uppercase tracking-widest">Կապ</p>
                 <div className="grid grid-cols-3 gap-2">
-                  <a href="https://instagram.com/4ever.am" target="_blank" rel="noopener noreferrer"
+                  <a href="https://instagram.com/4ever.invites" target="_blank" rel="noopener noreferrer"
                     className="flex flex-col items-center gap-1.5 py-3 rounded-2xl border border-stone-200 text-stone-600 hover:border-rose-300 hover:bg-rose-50/40 transition-colors">
                     <svg viewBox="0 0 24 24" fill="currentColor" className="w-5 h-5 text-[#E1306C]">
                       <path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zm0-2.163c-3.259 0-3.667.014-4.947.072-4.358.2-6.78 2.618-6.98 6.98-.059 1.281-.073 1.689-.073 4.948 0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98 1.281.058 1.689.072 4.948.072 3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98-1.281-.059-1.69-.073-4.949-.073zm0 5.838c-3.403 0-6.162 2.759-6.162 6.162s2.759 6.163 6.162 6.163 6.162-2.759 6.162-6.163c0-3.403-2.759-6.162-6.162-6.162zm0 10.162c-2.209 0-4-1.79-4-4 0-2.209 1.791-4 4-4s4 1.791 4 4c0 2.21-1.791 4-4 4zm6.406-11.845c-.796 0-1.441.645-1.441 1.44s.645 1.44 1.441 1.44c.795 0 1.439-.645 1.439-1.44s-.644-1.44-1.439-1.44z"/>
                     </svg>
                     <span className="text-[11px] font-medium">Instagram</span>
                   </a>
-                  <a href="https://t.me/4everam" target="_blank" rel="noopener noreferrer"
+                  <a href="https://t.me/foreverambot" target="_blank" rel="noopener noreferrer"
                     className="flex flex-col items-center gap-1.5 py-3 rounded-2xl border border-stone-200 text-stone-600 hover:border-blue-300 hover:bg-blue-50/40 transition-colors">
                     <svg viewBox="0 0 24 24" fill="currentColor" className="w-5 h-5 text-[#2AABEE]">
                       <path d="M11.944 0A12 12 0 0 0 0 12a12 12 0 0 0 12 12 12 12 0 0 0 12-12A12 12 0 0 0 12 0a12 12 0 0 0-.056 0zm4.962 7.224c.1-.002.321.023.465.14a.506.506 0 0 1 .171.325c.016.093.036.306.02.472-.18 1.898-.962 6.502-1.36 8.627-.168.9-.499 1.201-.82 1.23-.696.065-1.225-.46-1.9-.902-1.056-.693-1.653-1.124-2.678-1.8-1.185-.78-.417-1.21.258-1.91.177-.184 3.247-2.977 3.307-3.23.007-.032.014-.15-.056-.212s-.174-.041-.249-.024c-.106.024-1.793 1.14-5.061 3.345-.48.33-.913.49-1.302.48-.428-.008-1.252-.241-1.865-.44-.752-.245-1.349-.374-1.297-.789.027-.216.325-.437.893-.663 3.498-1.524 5.83-2.529 6.998-3.014 3.332-1.386 4.025-1.627 4.476-1.635z"/>
                     </svg>
                     <span className="text-[11px] font-medium">Telegram</span>
                   </a>
-                  <a href="tel:+37400000000"
+                  <a href="tel:+37493333213"
                     className="flex flex-col items-center gap-1.5 py-3 rounded-2xl border border-stone-200 text-stone-600 hover:border-green-300 hover:bg-green-50/40 transition-colors">
                     <Phone size={18} className="text-green-600" />
-                    <span className="text-[11px] font-medium">Call us</span>
+                    <span className="text-[11px] font-medium">Զանգահարել</span>
                   </a>
                 </div>
               </div>
@@ -681,8 +681,8 @@ function WizardLayout({ editId }: { editId: string }) {
               >
                 <span className="text-2xl">🎡</span>
                 <div>
-                  <p className="text-sm font-semibold text-amber-800">Spin & Win a Discount</p>
-                  <p className="text-xs text-amber-600 mt-0.5">Try your luck — win up to 20% off</p>
+                  <p className="text-sm font-semibold text-amber-800">Պտտիր անիվը և ստացիր երաշխավորված նվեր</p>
+                  <p className="text-xs text-amber-600 mt-0.5">Հնարավոր է շահել նաև անվճար թվային հրավիրատոմս</p>
                 </div>
               </button>
 
@@ -690,16 +690,16 @@ function WizardLayout({ editId }: { editId: string }) {
               <div className="rounded-2xl border border-stone-200 overflow-hidden">
                 <div className="bg-[#0f2d22] px-4 py-3 flex items-center gap-2">
                   <span className="text-lg">📋</span>
-                  <p className="text-sm font-semibold text-white">Wedding Planner</p>
+                <p className="text-sm font-semibold text-white">Wedding Planner</p>
                   <span className="ml-auto text-[10px] font-bold text-[#f0cf82] bg-[#f0cf82]/15 border border-[#f0cf82]/30 rounded-full px-2 py-0.5">NEW</span>
                 </div>
                 <div className="px-4 py-3 bg-white">
                   <p className="text-xs text-stone-500 leading-relaxed">
-                    Manage your entire wedding in one place — guests, budget, tasks, and timeline. Built for Armenian couples.
+                    Պլանավորեք ձեր հարսանիքը մեկ հարթակում — հյուրեր, բյուջե, անելիքներ և ծանուցումներ:
                   </p>
                   <a href="/planner-prototype" target="_blank" rel="noopener noreferrer"
                     className="inline-flex items-center gap-1 mt-2.5 text-xs font-semibold text-[#173c2d] hover:text-[#0f2d22] transition-colors">
-                    Explore the planner →
+                    Փորձել →
                   </a>
                 </div>
               </div>
@@ -707,7 +707,7 @@ function WizardLayout({ editId }: { editId: string }) {
               {/* Go to homepage */}
               <a href="/"
                 className="flex items-center justify-center gap-2 w-full py-3 rounded-2xl border-2 border-stone-200 text-sm font-semibold text-stone-600 hover:bg-stone-50 transition-colors">
-                ← Go to Homepage
+                ← Գլխավոր էջ
               </a>
             </div>
           </div>

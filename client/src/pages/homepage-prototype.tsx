@@ -9,7 +9,7 @@
  * FAQ, Contact, Footer restored from config
  */
 
-import { type ElementType, memo, useEffect, useRef, useState } from "react";
+import { type ElementType, lazy, memo, Suspense, useEffect, useRef, useState } from "react";
 import {
   ArrowRight,
   Bell,
@@ -40,7 +40,8 @@ import {
 } from "lucide-react";
 import { loadHomepageContent, fetchHomepageContentFromServer, saveHomepageContent } from "../content/homepage/homepageContentStorage";
 import type { IconKey } from "../content/homepage/homepageContentTypes";
-import { SaleWheelModal } from "../components/SaleWheelModal";
+
+const LazySaleWheelModal = lazy(() => import("../components/SaleWheelModal").then((m) => ({ default: m.SaleWheelModal })));
 
 // ─── Styles ───────────────────────────────────────────────────────────────────
 const serifStyle: React.CSSProperties = { fontFamily: "var(--armenian-serif, serif)" };
@@ -201,6 +202,9 @@ const PhonePreview = memo(function PhonePreview({ size = "desktop", src = "/davi
             src="/template_previews/img1.webp"
             alt=""
             aria-hidden
+            width={736}
+            height={927}
+            decoding="async"
             style={{
               position: "absolute", inset: 0,
               width: "100%", height: "100%",
@@ -226,6 +230,9 @@ const PhonePreview = memo(function PhonePreview({ size = "desktop", src = "/davi
               ref={iframeRef}
               src={src}
               title="Wedding template preview"
+              width={iframeW}
+              height={iframeH}
+              loading="lazy"
               onLoad={handleLoad}
               style={{
                 width: iframeW, height: iframeH,
@@ -716,6 +723,9 @@ export default function HomepagePrototype() {
           <img
             src={cfg.hero.backgroundImage}
             alt=""
+            width={6016}
+            height={3785}
+            decoding="async"
             className="absolute inset-0 h-full w-full object-cover opacity-80"
             style={{ objectPosition: "58% center" }}
           />
@@ -1068,6 +1078,10 @@ export default function HomepagePrototype() {
                 <img
                   src="/attached_assets/Blog_Banner_Left_Hand_Story_1755890185205.webp"
                   alt=""
+                  width={76}
+                  height={111}
+                  loading="lazy"
+                  decoding="async"
                   className="h-64 w-full object-cover sm:h-80"
                 />
                 <div className="p-4 sm:p-5">
@@ -1227,7 +1241,11 @@ export default function HomepagePrototype() {
         Spin & Win
       </button>
 
-      {showSaleWheel && <SaleWheelModal onClose={() => setShowSaleWheel(false)} />}
+      {showSaleWheel && (
+        <Suspense fallback={null}>
+          <LazySaleWheelModal onClose={() => setShowSaleWheel(false)} />
+        </Suspense>
+      )}
     </div>
   );
 }

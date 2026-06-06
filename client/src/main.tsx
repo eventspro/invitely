@@ -7,7 +7,7 @@ import "./index.css";
 
 // ─── Bootstrap: fetch all startup-critical data before React mounts ───────────
 async function bootstrap(): Promise<BootstrapData> {
-  const [translations, maintenance, templates] = await Promise.all([
+  const [translations, maintenance] = await Promise.all([
     fetch("/api/translations").then(r => {
       if (!r.ok) throw new Error(`translations ${r.status}`);
       return r.json();
@@ -16,9 +16,6 @@ async function bootstrap(): Promise<BootstrapData> {
       if (!r.ok) throw new Error(`maintenance ${r.status}`);
       return r.json();
     }),
-    fetch("/api/templates")
-      .then(r => { if (!r.ok) throw new Error(); return r.json(); })
-      .catch(() => [] as any[]),   // non-fatal
   ]);
 
   if (!translations || typeof translations !== "object" ||
@@ -36,14 +33,13 @@ async function bootstrap(): Promise<BootstrapData> {
 
   if (import.meta.env.DEV) {
     console.log("[BOOT] ✅ translations ready:", Object.keys(translations));
-    console.log("[BOOT] ✅ templates:", Array.isArray(templates) ? templates.length : "n/a");
     console.log("[BOOT] ✅ maintenance:", maintenance?.enabled, "| bypassed:", maintenanceBypassed);
     console.log("[BOOT] ✅ initialLanguage:", initialLanguage);
   }
 
   return {
     translations,
-    templates: Array.isArray(templates) ? templates : [],
+    templates: [],
     maintenanceEnabled: Boolean(maintenance?.enabled),
     maintenanceBypassed,
     initialLanguage,
