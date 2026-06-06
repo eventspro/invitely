@@ -258,6 +258,93 @@ export const rsvps = pgTable("rsvps", {
   createdAt: timestamp("created_at").default(sql`now()`),
 });
 
+export const plannerTables = pgTable("planner_tables", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  userId: varchar("user_id").notNull().references(() => managementUsers.id, { onDelete: "cascade" }),
+  templateId: varchar("template_id").notNull().references(() => templates.id, { onDelete: "cascade" }),
+  name: text("name").notNull(),
+  shape: text("shape").notNull().default("circle"),
+  capacity: integer("capacity").notNull().default(10),
+  x: integer("x"),
+  y: integer("y"),
+  rotation: integer("rotation"),
+  size: integer("size"),
+  locked: boolean("locked").notNull().default(false),
+  color: text("color"),
+  notes: text("notes"),
+  createdAt: timestamp("created_at").default(sql`now()`),
+  updatedAt: timestamp("updated_at").default(sql`now()`),
+});
+
+export const plannerGuests = pgTable("planner_guests", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  userId: varchar("user_id").notNull().references(() => managementUsers.id, { onDelete: "cascade" }),
+  templateId: varchar("template_id").notNull().references(() => templates.id, { onDelete: "cascade" }),
+  rsvpId: varchar("rsvp_id").references(() => rsvps.id, { onDelete: "set null" }),
+  source: text("source").notNull().default("manual"), // manual | rsvp
+  fullName: text("full_name").notNull(),
+  firstName: text("first_name"),
+  lastName: text("last_name"),
+  phone: text("phone"),
+  email: text("email"),
+  rsvpStatus: text("rsvp_status").notNull().default("invited"),
+  guestSide: text("guest_side").notNull().default("both"),
+  guestCount: integer("guest_count").notNull().default(1),
+  groupName: text("group_name"),
+  dietaryNotes: text("dietary_notes"),
+  notes: text("notes"),
+  tableId: varchar("table_id").references(() => plannerTables.id, { onDelete: "set null" }),
+  createdAt: timestamp("created_at").default(sql`now()`),
+  updatedAt: timestamp("updated_at").default(sql`now()`),
+}, (table) => ({
+  rsvpUnique: unique().on(table.userId, table.templateId, table.rsvpId),
+}));
+
+export const plannerSeats = pgTable("planner_seats", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  userId: varchar("user_id").notNull().references(() => managementUsers.id, { onDelete: "cascade" }),
+  templateId: varchar("template_id").notNull().references(() => templates.id, { onDelete: "cascade" }),
+  tableId: varchar("table_id").notNull().references(() => plannerTables.id, { onDelete: "cascade" }),
+  seatNumber: integer("seat_number").notNull(),
+  guestId: varchar("guest_id").references(() => plannerGuests.id, { onDelete: "set null" }),
+  createdAt: timestamp("created_at").default(sql`now()`),
+  updatedAt: timestamp("updated_at").default(sql`now()`),
+}, (table) => ({
+  tableSeatUnique: unique().on(table.tableId, table.seatNumber),
+  guestUnique: unique().on(table.userId, table.templateId, table.guestId),
+}));
+
+export const plannerBudgetItems = pgTable("planner_budget_items", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  userId: varchar("user_id").notNull().references(() => managementUsers.id, { onDelete: "cascade" }),
+  templateId: varchar("template_id").notNull().references(() => templates.id, { onDelete: "cascade" }),
+  category: text("category").notNull().default("other"),
+  customCategoryName: text("custom_category_name"),
+  title: text("title").notNull(),
+  vendorName: text("vendor_name"),
+  plannedCost: decimal("planned_cost", { precision: 12, scale: 2 }).notNull().default("0"),
+  actualCost: decimal("actual_cost", { precision: 12, scale: 2 }).notNull().default("0"),
+  paidAmount: decimal("paid_amount", { precision: 12, scale: 2 }).notNull().default("0"),
+  dueDate: text("due_date"),
+  status: text("status").notNull().default("planned"),
+  notes: text("notes"),
+  receiptDataUrl: text("receipt_data_url"),
+  receiptFileName: text("receipt_file_name"),
+  createdAt: timestamp("created_at").default(sql`now()`),
+  updatedAt: timestamp("updated_at").default(sql`now()`),
+});
+
+export const plannerSettings = pgTable("planner_settings", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  userId: varchar("user_id").notNull().references(() => managementUsers.id, { onDelete: "cascade" }),
+  templateId: varchar("template_id").notNull().references(() => templates.id, { onDelete: "cascade" }),
+  settings: jsonb("settings").notNull().default(sql`'{}'::jsonb`),
+  createdAt: timestamp("created_at").default(sql`now()`),
+  updatedAt: timestamp("updated_at").default(sql`now()`),
+}, (table) => ({
+  userTemplateUnique: unique().on(table.userId, table.templateId),
+}));
+
 export const settings = pgTable("settings", {
   key: text("key").primaryKey(),
   templateId: varchar("template_id").references(() => templates.id, { onDelete: "cascade" }),
@@ -487,6 +574,16 @@ export type InsertTemplate = z.infer<typeof insertTemplateSchema>;
 export type UpdateTemplate = z.infer<typeof updateTemplateSchema>;
 export type InsertRsvp = z.infer<typeof insertRsvpSchema>;
 export type Rsvp = typeof rsvps.$inferSelect;
+export type PlannerGuest = typeof plannerGuests.$inferSelect;
+export type InsertPlannerGuest = typeof plannerGuests.$inferInsert;
+export type PlannerTable = typeof plannerTables.$inferSelect;
+export type InsertPlannerTable = typeof plannerTables.$inferInsert;
+export type PlannerSeat = typeof plannerSeats.$inferSelect;
+export type InsertPlannerSeat = typeof plannerSeats.$inferInsert;
+export type PlannerBudgetItem = typeof plannerBudgetItems.$inferSelect;
+export type InsertPlannerBudgetItem = typeof plannerBudgetItems.$inferInsert;
+export type PlannerSettings = typeof plannerSettings.$inferSelect;
+export type InsertPlannerSettings = typeof plannerSettings.$inferInsert;
 export type Image = typeof images.$inferSelect;
 export type ConfigurablePricingPlan = typeof configurablePricingPlans.$inferSelect;
 export type InsertConfigurablePricingPlan = z.infer<typeof insertConfigurablePricingPlanSchema>;

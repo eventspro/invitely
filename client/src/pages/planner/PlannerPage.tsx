@@ -5,18 +5,19 @@ import { plannerText } from "../planner-prototype/plannerTextConfig";
 import { BLANK_DATA } from "../planner-prototype/defaultData";
 import { usePlannerAuth } from "./usePlannerAuth";
 import PlannerPrototypePage from "../planner-prototype/PlannerPrototypePage";
-import type { PlannerData, Guest, RsvpStatus } from "../planner-prototype/types";
+import { getPlannerData } from "../planner-prototype/api/plannerDataApi";
+import type { PlannerData } from "../planner-prototype/types";
 
 // ─── Design tokens ─────────────────────────────────────────────────────────────
-const BG       = "#FBFAF7";
-const WHITE    = "#FFFFFF";
-const PRIMARY  = "#064E3B";
+const BG = "#FBFAF7";
+const WHITE = "#FFFFFF";
+const PRIMARY = "#064E3B";
 const GRADIENT = "linear-gradient(135deg, #00472F 0%, #006B4A 100%)";
-const SOFT     = "#EAF5EF";
-const GOLD     = "#D7B56D";
-const TEXT     = "#111827";
-const SECONDARY= "#6B7280";
-const MUTED    = "#9CA3AF";
+const SOFT = "#EAF5EF";
+const GOLD = "#D7B56D";
+const TEXT = "#111827";
+const SECONDARY = "#6B7280";
+const MUTED = "#9CA3AF";
 
 function LoadingState() {
   return (
@@ -62,50 +63,24 @@ function NoAccessState({ onLogout }: { onLogout: () => void }) {
   );
 }
 
-function rsvpAttendingToStatus(attending: boolean | null | undefined): RsvpStatus {
-  if (attending === true)  return "coming";
-  if (attending === false) return "not_coming";
-  return "waiting";
-}
-
-async function fetchInitialData(templateId: string, token: string): Promise<PlannerData> {
+function readLegacyPlannerData(storageKey: string): PlannerData | undefined {
   try {
-    const res = await fetch(`/api/admin-panel/${templateId}/rsvps?limit=200`, {
-      headers: { Authorization: `Bearer ${token}` },
-    });
-    if (!res.ok) return { ...BLANK_DATA };
-    const json = await res.json();
-    const rsvps: Array<{
-      id: string;
-      firstName: string;
-      lastName: string;
-      guestPhone?: string | null;
-      guestEmail?: string | null;
-      attending?: boolean | null;
-      guests?: number | null;
-    }> = json.rsvps ?? [];
-
-    const guests: Guest[] = rsvps.map(r => ({
-      id: crypto.randomUUID(),
-      fullName: `${r.firstName} ${r.lastName}`.trim(),
-      phone: r.guestPhone ?? "",
-      email: r.guestEmail ?? "",
-      rsvpStatus: rsvpAttendingToStatus(r.attending),
-      guestCount: r.guests ?? 1,
-      side: "both",
-      groupName: "",
-    }));
-
-    return { ...BLANK_DATA, guests };
+    const raw = localStorage.getItem(storageKey);
+    if (!raw) return undefined;
+    const parsed = JSON.parse(raw) as PlannerData;
+    if (!Array.isArray(parsed.guests) || !Array.isArray(parsed.tables)) return undefined;
+    return { ...structuredClone(BLANK_DATA), ...parsed };
   } catch {
-    return { ...BLANK_DATA };
+    return undefined;
   }
 }
 
 export default function PlannerPage() {
   const [, setLocation] = useLocation();
   const { authState, logout } = usePlannerAuth();
+  const authenticatedSession = authState.status === "authenticated" ? authState.session : undefined;
   const [initialData, setInitialData] = useState<PlannerData | undefined>(undefined);
+  const [legacyData, setLegacyData] = useState<PlannerData | undefined>(undefined);
   const [dataReady, setDataReady] = useState(false);
 
   function handleLogout() {
@@ -113,25 +88,66 @@ export default function PlannerPage() {
     setLocation("/planner/login");
   }
 
-  // Once authenticated with a project, check for existing stored data or fetch RSVPs
-  useEffect(() => {
-    if (authState.status !== "authenticated" || !authState.session.project) return;
+  async function refreshPlannerData(
+    templateId: string,
+    token: string,
+    fallback?: PlannerData,
+    options?: { background?: boolean }
+  ) {
+    const isBackgroundRefresh = options?.background === true;
 
-    const { user, project, token } = authState.session;
-    const storageKey = `wedding_planner_u_${user.id}`;
-
-    // If the user already has planner data stored, use it directly
-    if (localStorage.getItem(storageKey)) {
-      setDataReady(true);
-      return;
+    if (!isBackgroundRefresh) {
+      setDataReady(false);
     }
 
-    // First-time login: fetch RSVPs to pre-populate guests
-    fetchInitialData(project.templateId, token)
-      .then(data => { setInitialData(data); })
-      .catch(() => { setInitialData({ ...BLANK_DATA }); })
-      .finally(() => { setDataReady(true); });
-  }, [authState.status]);
+    try {
+      const freshData = await getPlannerData(templateId, token);
+      setInitialData(freshData);
+    } catch {
+      // During background refresh, keep the current data if the request fails.
+      // Do not replace the UI with blank/fallback data.
+      if (!isBackgroundRefresh) {
+        setInitialData(fallback ?? structuredClone(BLANK_DATA));
+      }
+    } finally {
+      if (!isBackgroundRefresh) {
+        setDataReady(true);
+      }
+    }
+  }
+
+  // Once authenticated with a project, always fetch DB-backed planner data.
+  useEffect(() => {
+    if (authState.status !== "authenticated" || !authenticatedSession?.project) return;
+
+    const { user, project, token } = authenticatedSession;
+    const storageKey = `wedding_planner_u_${user.id}`;
+    const legacy = readLegacyPlannerData(storageKey);
+    setLegacyData(legacy);
+
+    void refreshPlannerData(project.templateId, token, legacy);
+  }, [
+    authState.status,
+    authenticatedSession?.user?.id,
+    authenticatedSession?.project?.templateId,
+    authenticatedSession?.token,
+  ]);
+
+  useEffect(() => {
+    if (authState.status !== "authenticated" || !authenticatedSession?.project) return;
+    const { project, token } = authenticatedSession;
+
+    function handleFocus() {
+      void refreshPlannerData(project.templateId, token, undefined, { background: true });
+    }
+
+    window.addEventListener("focus", handleFocus);
+    return () => window.removeEventListener("focus", handleFocus);
+  }, [
+    authState.status,
+    authenticatedSession?.project?.templateId,
+    authenticatedSession?.token,
+  ]);
 
   if (authState.status === "loading" || authState.status === "unauthenticated") {
     return <LoadingState />;
@@ -159,6 +175,11 @@ export default function PlannerPage() {
       onLogout={handleLogout}
       storageKey={storageKey}
       initialData={initialData}
+      legacyData={legacyData}
+      onLegacyImported={() => {
+        localStorage.removeItem(storageKey);
+        setLegacyData(undefined);
+      }}
     />
   );
 }

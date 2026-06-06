@@ -341,6 +341,9 @@ const en = {
     demoVersion: "DEMO",
     unlockTitle: "Unlock the Full Planner",
     unlockDesc: "Unlimited guests, tables, budget items, seat assignment, export & import — everything for your wedding day.",
+    importLocalData: "Import saved planner data?",
+    importLocalDataDesc: "Older browser-saved data was found. Import it into your planner database.",
+    databaseNote: "Planner data is saved in your 4ever.am account.",
     contactUs: "Contact Us",
   },
   warnings: {
@@ -808,6 +811,9 @@ const hy = {
     demoVersion: "Փորձնական տարբերակ",
     unlockTitle: "Բացեք լիարժեք ծրագիրը",
     unlockDesc: "Անսահմանափակ հյուրեր, սեղաններ, բյուջե, նստատեղ, արտահանում — ամեն ինչ ձեր հարսանիքի համար:",
+    importLocalData: "Import saved planner data?",
+    importLocalDataDesc: "Older browser-saved data was found. Import it into your planner database.",
+    databaseNote: "Planner data is saved in your 4ever.am account.",
     contactUs: "Կապ հաստատել",
   },
   warnings: {

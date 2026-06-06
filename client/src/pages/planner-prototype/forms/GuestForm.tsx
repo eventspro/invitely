@@ -76,6 +76,8 @@ export default function GuestForm({ initial, onSave, onCancel }: GuestFormProps)
     }
     const guest: Guest = {
       id: initial?.id ?? uid(),
+      rsvpId: initial?.rsvpId,
+      source: initial?.source ?? "manual",
       fullName: fullName.trim(),
       phone: phone.trim() || undefined,
       email: email.trim() || undefined,

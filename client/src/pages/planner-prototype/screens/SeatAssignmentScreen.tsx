@@ -1,7 +1,13 @@
 import React, { useState } from "react";
 import { ArrowLeft, UserPlus, Trash2 } from "lucide-react";
 import { usePlannerText } from "../PlannerLocaleContext";
-import { getInitials, RSVP_COLORS, RSVP_BG } from "../plannerUtils";
+import {
+  getGuestSeatCount,
+  getInitials,
+  getTableOccupiedSeats,
+  RSVP_COLORS,
+  RSVP_BG,
+} from "../plannerUtils";
 import VisualTable from "../components/VisualTable";
 import BottomSheet from "../components/BottomSheet";
 import GuestPickerSheet from "../forms/GuestPickerSheet";
@@ -24,6 +30,8 @@ export default function SeatAssignmentScreen({ table, seats, guests, allSeats, o
   const [activeTab, setActiveTab] = useState<"overview" | "seating">("overview");
 
   const tableSeats = seats.filter(s => s.tableId === table.id).sort((a, b) => a.seatNumber - b.seatNumber);
+  const assignedSeatsUsed = getTableOccupiedSeats(table.id, guests);
+  const assignedSeatRows = tableSeats.filter(s => s.guestId);
 
   const seatInfos = tableSeats.map(s => {
     const g = s.guestId ? guests.find(x => x.id === s.guestId) : undefined;
@@ -88,7 +96,7 @@ export default function SeatAssignmentScreen({ table, seats, guests, allSeats, o
         <div style={{ flex: 1 }}>
           <div style={{ fontSize: 16, fontWeight: 800, color: "#111827" }}>{table.name}</div>
           <div style={{ fontSize: 11, color: "#9CA3AF" }}>
-            {tableSeats.filter(s => s.guestId).length}/{table.capacity} {pt.common.seated}
+            {assignedSeatsUsed}/{table.capacity} {pt.common.seated}
           </div>
         </div>
       </div>
@@ -112,17 +120,17 @@ export default function SeatAssignmentScreen({ table, seats, guests, allSeats, o
           <div style={{ display: "flex", flexDirection: "column", alignItems: "center", padding: "28px 16px 12px" }}>
             <VisualTable shape={table.shape} capacity={table.capacity} seats={seatInfos} onSeatClick={handleSeatClick} size={220} />
             <div style={{ fontSize: 13, color: "#6B7280", marginTop: 12, fontWeight: 500 }}>
-              {tableSeats.filter(s => s.guestId).length} / {table.capacity} {pt.common.seated}
+              {assignedSeatsUsed} / {table.capacity} {pt.common.seated}
             </div>
           </div>
           {/* assigned guests list */}
           <div style={{ padding: "0 16px 80px" }}>
             <div style={{ fontSize: 13, fontWeight: 700, color: "#111827", marginBottom: 12 }}>{pt.seats_screen.assignedGuests}</div>
-            {tableSeats.filter(s => s.guestId).length === 0 ? (
+            {assignedSeatRows.length === 0 ? (
               <div style={{ fontSize: 13, color: "#9CA3AF", textAlign: "center", padding: "20px 0" }}>{pt.seats_screen.noGuestsAssigned}</div>
             ) : (
               <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
-                {tableSeats.filter(s => s.guestId).map((seat, idx) => {
+                {assignedSeatRows.map((seat, idx) => {
                   const guest = guests.find(g => g.id === seat.guestId)!;
                   return (
                     <div key={seat.id} style={{ display: "flex", alignItems: "center", gap: 10, background: "#FFFFFF", border: "1px solid #E5E7EB", borderRadius: 12, padding: "10px 14px" }}>
@@ -130,7 +138,10 @@ export default function SeatAssignmentScreen({ table, seats, guests, allSeats, o
                       <div style={{ width: 34, height: 34, borderRadius: "50%", background: "#064E3B", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 11, fontWeight: 700, color: "#FFF", flexShrink: 0 }}>{getInitials(guest.fullName)}</div>
                       <div style={{ flex: 1, minWidth: 0 }}>
                         <div style={{ fontSize: 13, fontWeight: 600, color: "#111827", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{guest.fullName}</div>
-                        <div style={{ fontSize: 10, color: "#9CA3AF" }}>{pt.seats_screen.seatLabel} {seat.seatNumber}</div>
+                        <div style={{ fontSize: 10, color: "#9CA3AF" }}>
+                          {pt.seats_screen.seatLabel} {seat.seatNumber}
+                          {getGuestSeatCount(guest) > 1 ? ` · ${getGuestSeatCount(guest)} ${pt.common.seats}` : ""}
+                        </div>
                       </div>
                     </div>
                   );
@@ -199,6 +210,7 @@ export default function SeatAssignmentScreen({ table, seats, guests, allSeats, o
                           </div>
                           <div style={{ fontSize: 10, color: RSVP_COLORS[guest.rsvpStatus] ?? "#9CA3AF", marginTop: 1 }}>
                             {pt.rsvp[guest.rsvpStatus as keyof typeof pt.rsvp] ?? guest.rsvpStatus}
+                            {getGuestSeatCount(guest) > 1 ? ` · ${getGuestSeatCount(guest)} ${pt.common.seats}` : ""}
                           </div>
                         </div>
                         <button

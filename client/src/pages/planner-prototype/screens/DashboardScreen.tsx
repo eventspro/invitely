@@ -72,7 +72,7 @@ export default function DashboardScreen({ data, onNavigate, onViewTasks, onToggl
     { value: g.total,       label: pt.dashboard.totalGuests, Icon: Users,       tab: "guests"  as TabId, link: pt.dashboard.viewGuests  },
     { value: tables.length, label: pt.dashboard.tables,      Icon: LayoutGrid,  tab: "tables"  as TabId, link: pt.dashboard.viewTables  },
     { value: s.assigned,    label: pt.dashboard.seated,      Icon: CheckSquare, tab: "tables"  as TabId, link: pt.dashboard.viewSeating },
-    { value: formatCurrency(b.planned, settings.currency), label: pt.dashboard.totalBudget, Icon: Wallet, tab: "budget" as TabId, link: pt.dashboard.viewBudget },
+    { value: formatCurrency(b.planned, settings.currency + " "), label: pt.dashboard.totalBudget + " ", Icon: Wallet, tab: "budget" as TabId, link: pt.dashboard.viewBudget },
   ];
 
   const guestCard = (desktop: boolean) => (
@@ -121,17 +121,17 @@ export default function DashboardScreen({ data, onNavigate, onViewTasks, onToggl
       <div style={desktop ? cardPad : mCardPad}>
         <div style={desktop ? cardH : mCardH}>{pt.dashboard.budgetOverview}</div>
         <div style={{ marginBottom: 4 }}>
-          <div style={{ fontSize: 11, color: "#9CA3AF", fontWeight: 500, marginBottom: 3, textTransform: "uppercase", letterSpacing: "0.06em" }}>{pt.dashboard.totalBudget}</div>
-          <div style={{ fontSize: desktop ? 30 : 26, fontWeight: 700, color: "#111827", letterSpacing: "-0.03em", lineHeight: 1.1 }}>{formatCurrency(b.planned, settings.currency)}</div>
+          <div style={{ fontSize: 11, color: "#9CA3AF", fontWeight: 500, marginBottom: 3, textTransform: "uppercase", letterSpacing: "0.06em" }}>{pt.dashboard.totalBudget + " "}</div>
+          <div style={{ fontSize: desktop ? 30 : 26, fontWeight: 700, color: "#111827", letterSpacing: "-0.03em", lineHeight: 1.1 }}>{formatCurrency(b.planned, settings.currency + " ")}</div>
         </div>
         <div style={{ display: "flex", justifyContent: "space-between", margin: "14px 0 10px" }}>
           <div>
             <div style={{ fontSize: 11, color: "#9CA3AF", marginBottom: 3 }}>{pt.dashboard.paid}</div>
-            <div style={{ fontSize: desktop ? 17 : 15, fontWeight: 700, color: "#16864A" }}>{formatCurrency(b.paid, settings.currency)}</div>
+            <div style={{ fontSize: desktop ? 17 : 15, fontWeight: 700, color: "#16864A" }}>{formatCurrency(b.paid, settings.currency + " ")}</div>
           </div>
           <div style={{ textAlign: "right" }}>
             <div style={{ fontSize: 11, color: "#9CA3AF", marginBottom: 3 }}>{pt.dashboard.remaining}</div>
-            <div style={{ fontSize: desktop ? 17 : 15, fontWeight: 700, color: "#D7951E" }}>{formatCurrency(b.remaining, settings.currency)}</div>
+            <div style={{ fontSize: desktop ? 17 : 15, fontWeight: 700, color: "#D7951E" }}>{formatCurrency(b.remaining, settings.currency + " ")}</div>
           </div>
         </div>
         <ProgressBar pct={b.pct} color="#064E3B" height={8} />
@@ -193,7 +193,7 @@ export default function DashboardScreen({ data, onNavigate, onViewTasks, onToggl
                     <div style={{ fontSize: desktop ? 14 : 13, fontWeight: 600, color: "#111827", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{item.title}</div>
                     <div style={{ fontSize: 11, color: "#9CA3AF", marginTop: 1 }}>{catLabel}</div>
                   </div>
-                  <div style={{ fontSize: desktop ? 14 : 13, fontWeight: 700, color: "#111827", flexShrink: 0, marginRight: 8 }}>{formatCurrency(item.plannedCost, settings.currency)}</div>
+                  <div style={{ fontSize: desktop ? 14 : 13, fontWeight: 700, color: "#111827", flexShrink: 0, marginRight: 8 }}>{formatCurrency(item.plannedCost, settings.currency + " ")}</div>
                   <div style={{ fontSize: 11, fontWeight: 600, color: pill.color, background: pill.bg, borderRadius: 6, padding: "3px 8px", flexShrink: 0, whiteSpace: "nowrap" }}>{pillLabel}</div>
                 </div>
               );
@@ -228,7 +228,7 @@ export default function DashboardScreen({ data, onNavigate, onViewTasks, onToggl
                   { val: g.total,       lbl: pt.dashboard.totalGuests },
                   { val: tables.length, lbl: pt.dashboard.tables      },
                   { val: s.assigned,    lbl: pt.dashboard.seated      },
-                  { val: formatCurrency(b.planned, settings.currency), lbl: pt.dashboard.totalBudget },
+                  { val: formatCurrency(b.planned, settings.currency + " "), lbl: pt.dashboard.totalBudget + " " },
                 ].map((item, i) => (
                   <div key={i} style={{ background: "rgba(255,255,255,0.12)", borderRadius: 12, padding: "12px 12px" }}>
                     <div style={{ fontSize: 20, fontWeight: 700, color: "#FFFFFF", lineHeight: 1 }}>{item.val}</div>

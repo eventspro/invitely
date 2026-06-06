@@ -7,6 +7,7 @@ import { authenticateUser, requireAdminPanelAccess } from "../middleware/auth.js
 import { rsvpLimiter, uploadLimiter } from "../middleware/rateLimiter.js";
 import { sendTemplateRsvpNotificationEmails, sendTemplateRsvpConfirmationEmail } from "../email.js";
 import { sendRsvpTelegramNotification } from "../telegram.js";
+import { syncPlannerGuestsForTemplate } from "../plannerData.js";
 import multer from "multer";
 import path from "path";
 import fs from "fs";
@@ -107,6 +108,13 @@ export function registerTemplateRoutes(app: Express) {
       }
 
       const rsvp = await storage.createRsvp(validatedData);
+
+      // Keep DB-backed planner guests in sync for customers who already have planner access.
+      try {
+        await syncPlannerGuestsForTemplate(template.id);
+      } catch (plannerSyncError) {
+        console.error("Planner RSVP sync error:", plannerSyncError);
+      }
       
       // Send email notifications (using template config)
       try {

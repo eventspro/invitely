@@ -19,13 +19,13 @@ interface TablesScreenProps {
 
 export default function TablesScreen({ tables, seats, guests, onAdd, onEdit, onDelete, onManageSeats, onGenerate }: TablesScreenProps) {
   const pt = usePlannerText();
-  const s = getSeatingTotals(tables, seats);
+  const s = getSeatingTotals(tables, seats, guests);
 
   const stats = [
     { label: pt.tables.totalTables, val: tables.length },
-    { label: pt.tables.totalSeats,  val: s.totalCapacity },
-    { label: pt.tables.seated,      val: s.assigned },
-    { label: pt.tables.available,   val: s.free },
+    { label: pt.tables.totalSeats, val: s.totalCapacity },
+    { label: pt.tables.seated, val: s.assigned },
+    { label: pt.tables.available, val: s.free },
   ];
 
   const tableCards = tables.map(t => (

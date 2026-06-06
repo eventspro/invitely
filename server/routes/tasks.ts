@@ -26,6 +26,12 @@ import {
   type AuthenticatedRequest,
 } from "../middleware/auth.js";
 import { scheduleReminder, cancelReminder } from "../reminderScheduler.js";
+import {
+  getPlannerData,
+  importLegacyPlannerData,
+  replacePlannerData,
+  type PlannerDataPayload,
+} from "../plannerData.js";
 
 const router = express.Router();
 
@@ -81,6 +87,144 @@ const taskInputSchema = z.object({
 });
 
 type TaskInput = z.infer<typeof taskInputSchema>;
+
+const plannerGuestSchema = z.object({
+  id: z.string().min(1).optional(),
+  rsvpId: z.string().min(1).optional().nullable(),
+  source: z.enum(["manual", "rsvp"]).optional(),
+  fullName: z.string().min(1).max(500),
+  phone: z.string().max(100).optional().nullable(),
+  email: z.string().max(320).optional().nullable(),
+  rsvpStatus: z.enum(["invited", "coming", "not_coming", "waiting", "maybe"]).default("invited"),
+  guestCount: z.number().int().min(1).max(100).default(1),
+  side: z.enum(["bride", "groom", "both", "other"]).default("both"),
+  groupName: z.string().max(300).optional().nullable(),
+  tableId: z.string().min(1).optional().nullable(),
+  seatId: z.string().min(1).optional().nullable(),
+  dietaryNotes: z.string().max(2000).optional().nullable(),
+  notes: z.string().max(3000).optional().nullable(),
+});
+
+const plannerTableSchema = z.object({
+  id: z.string().min(1).optional(),
+  name: z.string().min(1).max(300),
+  shape: z.string().min(1).max(50).default("circle"),
+  capacity: z.number().int().min(1).max(200).default(10),
+  x: z.number().optional().nullable(),
+  y: z.number().optional().nullable(),
+  rotation: z.number().optional().nullable(),
+  size: z.number().optional().nullable(),
+  locked: z.boolean().optional(),
+  color: z.string().max(80).optional().nullable(),
+  notes: z.string().max(2000).optional().nullable(),
+});
+
+const plannerSeatSchema = z.object({
+  id: z.string().min(1).optional(),
+  tableId: z.string().min(1),
+  seatNumber: z.number().int().min(1).max(500),
+  guestId: z.string().min(1).optional().nullable(),
+});
+
+const plannerBudgetItemSchema = z.object({
+  id: z.string().min(1).optional(),
+  category: z.string().min(1).max(80).default("other"),
+  customCategoryName: z.string().max(200).optional().nullable(),
+  title: z.string().min(1).max(500),
+  vendorName: z.string().max(500).optional().nullable(),
+  plannedCost: z.number().min(0).default(0),
+  actualCost: z.number().min(0).default(0),
+  paidAmount: z.number().min(0).default(0),
+  dueDate: z.string().max(50).optional().nullable(),
+  status: z.string().min(1).max(80).default("planned"),
+  notes: z.string().max(3000).optional().nullable(),
+  receiptDataUrl: z.string().max(10_000_000).optional().nullable(),
+  receiptFileName: z.string().max(500).optional().nullable(),
+});
+
+const plannerSettingsSchema = z.object({
+  weddingDate: z.string().max(50).default(""),
+  coupleName: z.string().max(300).default(""),
+  currency: z.string().max(20).default("AMD"),
+  defaultSeatsPerTable: z.number().int().min(1).max(200).default(10),
+  restaurantPricePerGuest: z.number().min(0).default(150),
+  totalBudget: z.number().min(0).default(0),
+});
+
+const plannerDataInputSchema = z.object({
+  guests: z.array(plannerGuestSchema).default([]),
+  tables: z.array(plannerTableSchema).default([]),
+  seats: z.array(plannerSeatSchema).default([]),
+  budgetItems: z.array(plannerBudgetItemSchema).default([]),
+  tasks: z.array(z.unknown()).optional(),
+  settings: plannerSettingsSchema.default({}),
+});
+
+type PlannerDataInput = z.infer<typeof plannerDataInputSchema>;
+
+function toPlannerDataPayload(data: PlannerDataInput): Partial<PlannerDataPayload> {
+  return data as Partial<PlannerDataPayload>;
+}
+
+router.get(
+  "/data/:templateId",
+  authenticateUser,
+  requireAdminPanelAccess,
+  async (req: AuthenticatedRequest, res: Response) => {
+    try {
+      const { templateId } = req.params;
+      const userId = req.user!.id;
+      return res.json(await getPlannerData(userId, templateId));
+    } catch (err) {
+      console.error("[planner-data] get error:", err);
+      return res.status(500).json({ error: "Server error" });
+    }
+  },
+);
+
+router.put(
+  "/data/:templateId",
+  authenticateUser,
+  requireAdminPanelAccess,
+  async (req: AuthenticatedRequest, res: Response) => {
+    try {
+      const { templateId } = req.params;
+      const userId = req.user!.id;
+
+      const parsed = plannerDataInputSchema.safeParse(req.body);
+      if (!parsed.success) {
+        return res.status(400).json({ error: parsed.error.flatten() });
+      }
+
+      return res.json(await replacePlannerData(userId, templateId, toPlannerDataPayload(parsed.data)));
+    } catch (err) {
+      console.error("[planner-data] save error:", err);
+      return res.status(500).json({ error: "Server error" });
+    }
+  },
+);
+
+router.post(
+  "/data/:templateId/import",
+  authenticateUser,
+  requireAdminPanelAccess,
+  async (req: AuthenticatedRequest, res: Response) => {
+    try {
+      const { templateId } = req.params;
+      const userId = req.user!.id;
+
+      const parsed = plannerDataInputSchema.safeParse(req.body);
+      if (!parsed.success) {
+        return res.status(400).json({ error: parsed.error.flatten() });
+      }
+
+      return res.json(await importLegacyPlannerData(userId, templateId, toPlannerDataPayload(parsed.data)));
+    } catch (err) {
+      console.error("[planner-data] import error:", err);
+      return res.status(500).json({ error: "Server error" });
+    }
+  },
+);
 
 // ─── GET /api/planner/tasks/:templateId ───────────────────────────────────────
 

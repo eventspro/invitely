@@ -3,6 +3,7 @@ import { Pencil, Trash2, Armchair, ChevronRight, MoreHorizontal, X } from "lucid
 import { usePlannerText } from "../PlannerLocaleContext";
 import VisualTable from "./VisualTable";
 import ProgressBar from "./ProgressBar";
+import { getTableOccupiedSeats } from "../plannerUtils";
 import type { WeddingTable, Seat, Guest } from "../types";
 
 interface TableCardProps {
@@ -19,17 +20,18 @@ export default function TableCard({ table, seats, guests, onEdit, onDelete, onMa
   const [menuOpen, setMenuOpen] = useState(false);
 
   const SHAPE_LABELS: Record<string, string> = {
-    circle:    pt.tableShapes.circle,
-    square:    pt.tableShapes.square,
+    circle: pt.tableShapes.circle,
+    square: pt.tableShapes.square,
     rectangle: pt.tableShapes.rectangle,
-    long:      pt.tableShapes.long,
-    oval:      pt.tableShapes.oval,
-    head:      pt.tableShapes.head,
+    long: pt.tableShapes.long,
+    oval: pt.tableShapes.oval,
+    head: pt.tableShapes.head,
   };
-
   const tableSeats = seats.filter(s => s.tableId === table.id);
-  const assigned = tableSeats.filter(s => !!s.guestId).length;
-  const pct = table.capacity > 0 ? Math.round((assigned / table.capacity) * 100) : 0;
+  const assigned = getTableOccupiedSeats(table.id, guests);
+  const pct = table.capacity > 0
+    ? Math.min(100, Math.round((assigned / table.capacity) * 100))
+    : 0;
 
   const seatInfos = tableSeats.map(s => {
     const g = s.guestId ? guests.find(x => x.id === s.guestId) : undefined;

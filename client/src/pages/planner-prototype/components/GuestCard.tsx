@@ -13,11 +13,11 @@ interface GuestCardProps {
 }
 
 const PILL: Record<string, { bg: string; color: string }> = {
-  coming:     { bg: "#EAF5EF", color: "#16864A" },
-  waiting:    { bg: "#FFF4DC", color: "#D7951E" },
+  coming: { bg: "#EAF5EF", color: "#16864A" },
+  waiting: { bg: "#FFF4DC", color: "#D7951E" },
   not_coming: { bg: "#FEECEC", color: "#E85D5D" },
-  maybe:      { bg: "#EEF2FF", color: "#4F46E5" },
-  invited:    { bg: "#F3F4F6", color: "#6B7280" },
+  maybe: { bg: "#EEF2FF", color: "#4F46E5" },
+  invited: { bg: "#F3F4F6", color: "#6B7280" },
 };
 
 export default function GuestCard({ guest, tableName, seatNumber, onEdit, onDelete }: GuestCardProps) {
@@ -25,24 +25,24 @@ export default function GuestCard({ guest, tableName, seatNumber, onEdit, onDele
   const pill = PILL[guest.rsvpStatus] ?? { bg: "#F3F4F6", color: "#6B7280" };
 
   const RSVP_LABEL: Record<string, string> = {
-    coming:     pt.rsvp.coming,
+    coming: pt.rsvp.coming,
     not_coming: pt.rsvp.not_coming,
-    waiting:    pt.rsvp.waiting,
-    maybe:      pt.rsvp.maybe,
-    invited:    pt.rsvp.invited,
+    waiting: pt.rsvp.waiting,
+    maybe: pt.rsvp.maybe,
+    invited: pt.rsvp.invited,
   };
 
   const SIDE_LABEL: Record<string, string> = {
     bride: pt.guestSide.bride,
     groom: pt.guestSide.groom,
-    both:  pt.guestSide.both,
+    both: pt.guestSide.both,
     other: pt.guestSide.other,
   };
 
   const meta: string[] = [];
+
   if (guest.guestCount > 1) meta.push(`${guest.guestCount} ${pt.common.guests}`);
   if (guest.side) meta.push(SIDE_LABEL[guest.side] ?? guest.side);
-  if (guest.groupName) meta.push(guest.groupName);
 
   const tableDisplay = tableName
     ? (seatNumber ? `${tableName} · ${pt.seats_screen.seatLabel} ${seatNumber}` : tableName)
@@ -122,8 +122,22 @@ export default function GuestCard({ guest, tableName, seatNumber, onEdit, onDele
           >
             {meta.join(" · ")}
           </div>
-        )}
 
+        )}
+        {guest.groupName && (
+          <div
+            style={{
+              fontSize: 12,
+              color: "#6B7280",
+              marginTop: 5,
+              lineHeight: 1.45,
+              whiteSpace: "pre-line",
+              wordBreak: "break-word",
+            }}
+          >
+            {guest.groupName}
+          </div>
+        )}
         {tableDisplay && (
           <div
             style={{

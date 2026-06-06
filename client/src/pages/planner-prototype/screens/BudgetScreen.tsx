@@ -107,7 +107,7 @@ export default function BudgetScreen({ budgetItems, currency, settings, onAdd, o
       ) : (
         <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
           {filtered.map(item => (
-            <BudgetItemCard key={item.id} item={item} currency={currency} onEdit={() => onEdit(item)} onDelete={() => onDelete(item.id)} />
+            <BudgetItemCard key={item.id} item={item} currency={currency + " "} onEdit={() => onEdit(item)} onDelete={() => onDelete(item.id)} />
           ))}
         </div>
       )}
@@ -150,7 +150,7 @@ export default function BudgetScreen({ budgetItems, currency, settings, onAdd, o
       {/* Amount or inline edit */}
       {editingCap ? (
         <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 16 }}>
-          <span style={{ fontSize: 22, fontWeight: 800, color: "rgba(255,255,255,0.6)" }}>{currency}</span>
+          <span style={{ fontSize: 22, fontWeight: 800, color: "rgba(255,255,255,0.6)" }}>{currency + " "}</span>
           <input
             ref={capInputRef}
             type="number"
@@ -175,7 +175,7 @@ export default function BudgetScreen({ budgetItems, currency, settings, onAdd, o
           style={{ fontSize: isMobile ? 32 : 36, fontWeight: 800, color: "#FFFFFF", letterSpacing: "-0.025em", lineHeight: 1, marginBottom: 16, cursor: "pointer" }}
           title={pt.budget.editBudgetCap}
         >
-          {formatCurrency(cap, currency)}
+          {formatCurrency(cap, currency + " ")}
         </div>
       )}
 
@@ -183,11 +183,11 @@ export default function BudgetScreen({ budgetItems, currency, settings, onAdd, o
       <div style={{ display: "flex", gap: 0, marginBottom: 14 }}>
         <div style={{ flex: 1, borderRight: "1px solid rgba(255,255,255,0.15)", paddingRight: 16 }}>
           <div style={{ fontSize: 10.5, color: "rgba(255,255,255,0.55)", fontWeight: 500 }}>{pt.budget.paid}</div>
-          <div style={{ fontSize: 18, fontWeight: 700, color: "#FFFFFF", marginTop: 3 }}>{formatCurrency(totals.paid, currency)}</div>
+          <div style={{ fontSize: 18, fontWeight: 700, color: "#FFFFFF", marginTop: 3 }}>{formatCurrency(totals.paid, currency + " ")}</div>
         </div>
         <div style={{ flex: 1, paddingLeft: 16 }}>
           <div style={{ fontSize: 10.5, color: "rgba(255,255,255,0.55)", fontWeight: 500 }}>{pt.budget.remaining}</div>
-          <div style={{ fontSize: 18, fontWeight: 700, color: "#FFFFFF", marginTop: 3 }}>{formatCurrency(capRemaining, currency)}</div>
+          <div style={{ fontSize: 18, fontWeight: 700, color: "#FFFFFF", marginTop: 3 }}>{formatCurrency(capRemaining, currency + " ")}</div>
         </div>
       </div>
 
@@ -235,9 +235,9 @@ export default function BudgetScreen({ budgetItems, currency, settings, onAdd, o
           <div style={{ display: "grid", gridTemplateColumns: "1.6fr 1fr 1fr 1fr", gap: 16, marginBottom: 24 }}>
             <div>{summaryCard(false)}</div>
             {[
-              { label: pt.budget.totalPlanned, value: formatCurrency(totals.planned, currency), sub: `${budgetItems.length} items` },
-              { label: pt.budget.paid,         value: formatCurrency(totals.paid, currency),    sub: `${capPct}% ${pt.budget.used}` },
-              { label: pt.budget.remaining,    value: formatCurrency(capRemaining, currency),   sub: pt.budget.remaining },
+              { label: pt.budget.totalPlanned, value: formatCurrency(totals.planned, currency + " "), sub: `${budgetItems.length} items` },
+              { label: pt.budget.paid,         value: formatCurrency(totals.paid, currency + " "),    sub: `${capPct}% ${pt.budget.used}` },
+              { label: pt.budget.remaining,    value: formatCurrency(capRemaining, currency + " "),   sub: pt.budget.remaining },
             ].map((stat, i) => (
               <div key={i} style={{ background: "#FFFFFF", borderRadius: 18, border: "1px solid #E5E7EB", padding: "20px 18px", boxShadow: "0 4px 16px rgba(17,24,39,0.05)", display: "flex", flexDirection: "column", justifyContent: "space-between" }}>
                 <div style={{ fontSize: 12, color: "#9CA3AF", fontWeight: 500 }}>{stat.label}</div>

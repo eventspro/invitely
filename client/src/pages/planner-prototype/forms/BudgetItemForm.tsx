@@ -12,12 +12,12 @@ interface BudgetItemFormProps {
 }
 
 const STATUS_COLORS: Record<BudgetStatus, string> = {
-  planned:        "#6B7280",
-  deposit_paid:   "#D7951E",
+  planned: "#6B7280",
+  deposit_paid: "#D7951E",
   partially_paid: "#2563EB",
-  paid:           "#16864A",
-  overdue:        "#E85D5D",
-  cancelled:      "#9CA3AF",
+  paid: "#16864A",
+  overdue: "#E85D5D",
+  cancelled: "#9CA3AF",
 };
 
 const inputStyle: React.CSSProperties = {
@@ -40,9 +40,9 @@ export default function BudgetItemForm({ initial, currency, onSave, onCancel }: 
   const [customCategoryName, setCustomCategoryName] = useState(initial?.customCategoryName ?? "");
   const [title, setTitle] = useState(initial?.title ?? "");
   const [vendorName, setVendorName] = useState(initial?.vendorName ?? "");
-  const [plannedCost, setPlannedCost] = useState(initial?.plannedCost ?? 0);
-  const [actualCost, setActualCost] = useState(initial?.actualCost ?? 0);
-  const [paidAmount, setPaidAmount] = useState(initial?.paidAmount ?? 0);
+  const [plannedCost, setPlannedCost] = useState(String(initial?.plannedCost ?? ""));
+  const [actualCost, setActualCost] = useState(String(initial?.actualCost ?? ""));
+  const [paidAmount, setPaidAmount] = useState(String(initial?.paidAmount ?? ""));
   const [dueDate, setDueDate] = useState(initial?.dueDate ?? "");
   const [status, setStatus] = useState<BudgetStatus>(initial?.status ?? "planned");
   const [notes, setNotes] = useState(initial?.notes ?? "");
@@ -51,31 +51,31 @@ export default function BudgetItemForm({ initial, currency, onSave, onCancel }: 
   const [error, setError] = useState("");
 
   const CATEGORY_OPTIONS: { value: BudgetCategory; label: string }[] = [
-    { value: "venue",        label: pt.budget.categories.venue        },
-    { value: "catering",     label: pt.budget.categories.catering     },
-    { value: "decor",        label: pt.budget.categories.decor        },
-    { value: "photo",        label: pt.budget.categories.photo        },
-    { value: "music",        label: pt.budget.categories.music        },
-    { value: "restaurant",   label: pt.budget.categories.restaurant   },
+    { value: "venue", label: pt.budget.categories.venue },
+    { value: "catering", label: pt.budget.categories.catering },
+    { value: "decor", label: pt.budget.categories.decor },
+    { value: "photo", label: pt.budget.categories.photo },
+    { value: "music", label: pt.budget.categories.music },
+    { value: "restaurant", label: pt.budget.categories.restaurant },
     { value: "photographer", label: pt.budget.categories.photographer },
     { value: "videographer", label: pt.budget.categories.videographer },
-    { value: "decorations",  label: pt.budget.categories.decorations  },
-    { value: "flowers",      label: pt.budget.categories.flowers      },
-    { value: "invitations",  label: pt.budget.categories.invitations  },
-    { value: "website",      label: pt.budget.categories.website      },
-    { value: "host",         label: pt.budget.categories.host         },
-    { value: "lighting",     label: pt.budget.categories.lighting     },
-    { value: "other",        label: pt.budget.categories.other        },
-    { value: "custom",       label: pt.budget.categories.custom       },
+    { value: "decorations", label: pt.budget.categories.decorations },
+    { value: "flowers", label: pt.budget.categories.flowers },
+    { value: "invitations", label: pt.budget.categories.invitations },
+    { value: "website", label: pt.budget.categories.website },
+    { value: "host", label: pt.budget.categories.host },
+    { value: "lighting", label: pt.budget.categories.lighting },
+    { value: "other", label: pt.budget.categories.other },
+    { value: "custom", label: pt.budget.categories.custom },
   ];
 
   const STATUS_OPTIONS: { value: BudgetStatus; label: string }[] = [
-    { value: "planned",        label: pt.budgetStatus.planned        },
-    { value: "deposit_paid",   label: pt.budgetStatus.deposit_paid   },
+    { value: "planned", label: pt.budgetStatus.planned },
+    { value: "deposit_paid", label: pt.budgetStatus.deposit_paid },
     { value: "partially_paid", label: pt.budgetStatus.partially_paid },
-    { value: "paid",           label: pt.budgetStatus.paid           },
-    { value: "overdue",        label: pt.budgetStatus.overdue        },
-    { value: "cancelled",      label: pt.budgetStatus.cancelled      },
+    { value: "paid", label: pt.budgetStatus.paid },
+    { value: "overdue", label: pt.budgetStatus.overdue },
+    { value: "cancelled", label: pt.budgetStatus.cancelled },
   ];
 
   function handleFileChange(e: React.ChangeEvent<HTMLInputElement>) {
@@ -90,6 +90,11 @@ export default function BudgetItemForm({ initial, currency, onSave, onCancel }: 
     e.target.value = "";
   }
 
+  function toMoneyValue(value: string): number {
+    const parsed = Number(value);
+    return Number.isFinite(parsed) ? Math.max(0, parsed) : 0;
+  }
+
   function handleSubmit() {
     if (!title.trim()) { setError(pt.warnings.titleRequired); return; }
     const item: BudgetItem = {
@@ -98,10 +103,10 @@ export default function BudgetItemForm({ initial, currency, onSave, onCancel }: 
       customCategoryName: category === "custom" ? customCategoryName.trim() || undefined : undefined,
       title: title.trim(),
       vendorName: vendorName.trim() || undefined,
-      plannedCost: Math.max(0, plannedCost),
-      actualCost:  Math.max(0, actualCost),
-      paidAmount:  Math.max(0, paidAmount),
-      dueDate:     dueDate || undefined,
+      plannedCost: toMoneyValue(plannedCost),
+      actualCost: toMoneyValue(actualCost),
+      paidAmount: toMoneyValue(paidAmount),
+      dueDate: dueDate || undefined,
       status,
       notes: notes.trim() || undefined,
       receiptDataUrl,
@@ -169,12 +174,19 @@ export default function BudgetItemForm({ initial, currency, onSave, onCancel }: 
       <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 10 }}>
         {[
           { label: `${pt.budget.planned} (${currency})`, value: plannedCost, set: setPlannedCost },
-          { label: `${pt.budget.actual} (${currency})`,  value: actualCost,  set: setActualCost  },
-          { label: `${pt.budget.paid} (${currency})`,    value: paidAmount,  set: setPaidAmount  },
+          { label: `${pt.budget.actual} (${currency})`, value: actualCost, set: setActualCost },
+          { label: `${pt.budget.paid} (${currency})`, value: paidAmount, set: setPaidAmount },
         ].map((col, i) => (
           <div key={i} style={fieldStyle}>
             <label style={labelStyle}>{col.label}</label>
-            <input type="number" min={0} style={inputStyle} value={col.value} onChange={e => col.set(Number(e.target.value))} />
+            <input
+              type="number"
+              min={0}
+              inputMode="decimal"
+              style={inputStyle}
+              value={col.value}
+              onChange={e => col.set(e.target.value)}
+            />
           </div>
         ))}
       </div>
