@@ -27,6 +27,7 @@ import telegramBotAdminRoutes from './routes/telegram-bot-admin.js';
 import { saleWheelPublicRouter, saleWheelAdminRouter } from './routes/sale-wheel.js';
 import plannerDemoContactRouter from './routes/planner-demo-contact.js';
 import homepageContentRouter from './routes/homepage-content.js';
+import { platformAdminPartnersContentRouter, publicPartnersContentRouter } from './routes/partners-content.js';
 import { customerDemoPublicRouter, customerDemoAdminRouter } from './routes/customer-demo.js';
 import { registerTemplateRoutes } from './routes/templates.js';
 import { registerTranslationRoutes } from './routes/translations.js';
@@ -128,6 +129,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Register customer demo admin routes BEFORE platform-admin (more specific path)
   app.use('/api/platform-admin/customer-edits', customerDemoAdminRouter);
 
+  // Register partners marketplace content admin route BEFORE platform-admin catch-all
+  app.use('/api/platform-admin/partners-content', platformAdminPartnersContentRouter);
+
   // Register platform admin routes (for platform owner)
   app.use('/api/platform-admin', platformAdminRoutes);
 
@@ -141,6 +145,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.use('/api/sale-wheel', saleWheelPublicRouter);
   app.use('/api/planner-demo', plannerDemoContactRouter);
   app.use('/api/homepage-content', homepageContentRouter);
+  app.use('/api/partners-content', publicPartnersContentRouter);
 
   // Planner tasks CRUD (authenticated, rate-limited)
   app.use('/api/planner', adminLimiter, taskRoutes);

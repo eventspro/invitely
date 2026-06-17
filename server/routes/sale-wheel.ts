@@ -11,11 +11,12 @@
  */
 import express from "express";
 import { db } from "../db.js";
-import { saleWheelSpins, insertSaleWheelSpinSchema } from "../../shared/schema.js";
+import { platformSettings, saleWheelSpins, insertSaleWheelSpinSchema } from "../../shared/schema.js";
 import { eq, or, desc, ilike, sql } from "drizzle-orm";
 import { z } from "zod";
 import jwt from "jsonwebtoken";
 import rateLimit from "express-rate-limit";
+import { sendTelegramMessage } from "../telegram.js";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 interface Prize {
@@ -73,6 +74,184 @@ function isValidPhone(normalized: string): boolean {
 /** Normalise an email: trim + lowercase. */
 function normalizeEmail(raw: string): string {
   return raw.trim().toLowerCase();
+}
+
+type SaleWheelSpinRecord = typeof saleWheelSpins.$inferSelect;
+type WheelTelegramPrivacy = "minimal" | "masked";
+
+interface WheelTelegramSettings {
+  enabled: boolean;
+  chatId: string;
+  privacy: WheelTelegramPrivacy;
+}
+
+const WHEEL_TELEGRAM_SETTINGS_KEY = "sale_wheel_telegram_notifications";
+const DEFAULT_WHEEL_TELEGRAM_SETTINGS: WheelTelegramSettings = {
+  enabled: false,
+  chatId: "",
+  privacy: "masked",
+};
+
+const updateWheelTelegramSettingsSchema = z.object({
+  enabled: z.boolean(),
+  privacy: z.enum(["minimal", "masked"]),
+  chatId: z.string().trim().max(40).optional(),
+  clearChatId: z.boolean().optional(),
+});
+
+const TELEGRAM_CHAT_ID_PATTERN = /^-?\d{5,30}$/;
+
+function readWheelTelegramSettings(value: unknown): WheelTelegramSettings {
+  const raw = value && typeof value === "object" ? value as Record<string, unknown> : {};
+  const privacy = raw.privacy === "minimal" || raw.privacy === "masked" ? raw.privacy : "masked";
+  const chatId = typeof raw.chatId === "string" ? raw.chatId.trim() : "";
+  return {
+    enabled: raw.enabled === true,
+    chatId,
+    privacy,
+  };
+}
+
+async function getWheelTelegramSettings(): Promise<WheelTelegramSettings> {
+  const [row] = await db
+    .select()
+    .from(platformSettings)
+    .where(eq(platformSettings.key, WHEEL_TELEGRAM_SETTINGS_KEY))
+    .limit(1);
+
+  if (!row) return DEFAULT_WHEEL_TELEGRAM_SETTINGS;
+  return readWheelTelegramSettings(row.value);
+}
+
+async function saveWheelTelegramSettings(settings: WheelTelegramSettings): Promise<void> {
+  const value = {
+    enabled: settings.enabled,
+    chatId: settings.chatId,
+    privacy: settings.privacy,
+  };
+
+  const [existing] = await db
+    .select({ key: platformSettings.key })
+    .from(platformSettings)
+    .where(eq(platformSettings.key, WHEEL_TELEGRAM_SETTINGS_KEY))
+    .limit(1);
+
+  if (existing) {
+    await db
+      .update(platformSettings)
+      .set({ value, updatedAt: new Date() })
+      .where(eq(platformSettings.key, WHEEL_TELEGRAM_SETTINGS_KEY));
+    return;
+  }
+
+  await db.insert(platformSettings).values({
+    key: WHEEL_TELEGRAM_SETTINGS_KEY,
+    value,
+    description: "Platform-admin Telegram notifications for new sale wheel spins",
+  });
+}
+
+function maskTelegramChatId(chatId: string): string | null {
+  if (!chatId) return null;
+  const prefix = chatId.startsWith("-") ? "-" : "";
+  const digits = chatId.replace(/^-/, "");
+  if (digits.length <= 4) return `${prefix}****`;
+  const start = digits.slice(0, Math.min(3, digits.length - 2));
+  const end = digits.slice(-4);
+  return `${prefix}${start}****${end}`;
+}
+
+function escapeTelegramHtml(value: unknown): string {
+  return String(value ?? "")
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;");
+}
+
+function maskPhone(phone: string | null): string {
+  if (!phone) return "Not provided";
+  const cleaned = phone.trim();
+  const digits = cleaned.replace(/\D/g, "");
+  const last4 = digits.slice(-4);
+  if (!last4) return "Hidden";
+  const last = last4.length === 4 ? `${last4.slice(0, 2)} ${last4.slice(2)}` : last4;
+  if (cleaned.startsWith("+374")) return `+374 ** ** ${last}`;
+  if (cleaned.startsWith("0")) return `0** ** ${last}`;
+  return `** ** ${last}`;
+}
+
+function firstNameOnly(name: string | null): string {
+  const first = (name ?? "").trim().split(/\s+/).filter(Boolean)[0];
+  return first || "Hidden";
+}
+
+function formatWheelSpinTime(value: Date | string | null): string {
+  const date = value ? new Date(value) : new Date();
+  if (Number.isNaN(date.getTime())) return new Date().toISOString();
+  try {
+    return date.toLocaleString("en-GB", {
+      timeZone: "Asia/Yerevan",
+      year: "numeric",
+      month: "short",
+      day: "2-digit",
+      hour: "2-digit",
+      minute: "2-digit",
+    });
+  } catch {
+    return date.toISOString();
+  }
+}
+
+function getPlatformAdminWheelUrl(req: any): string {
+  const configuredBase =
+    process.env.FRONTEND_URL ||
+    process.env.PUBLIC_APP_URL ||
+    process.env.SITE_URL ||
+    "";
+  const origin = configuredBase
+    ? configuredBase.replace(/\/+$/, "")
+    : `${req.protocol}://${req.get("host")}`;
+  return `${origin}/platform-admin`;
+}
+
+function formatWheelSpinTelegramMessage(
+  spin: SaleWheelSpinRecord,
+  privacy: WheelTelegramPrivacy,
+  adminUrl: string,
+): string {
+  const lines = [
+    "<b>New wheel spin</b>",
+    "",
+    `Prize: ${escapeTelegramHtml(spin.prizeLabel)}`,
+  ];
+
+  if (privacy === "masked") {
+    lines.push(`Name: ${escapeTelegramHtml(firstNameOnly(spin.name))}`);
+    lines.push(`Phone: ${escapeTelegramHtml(maskPhone(spin.phone))}`);
+  }
+
+  lines.push(`Time: ${escapeTelegramHtml(formatWheelSpinTime(spin.createdAt))}`);
+  lines.push("");
+  lines.push(`Open admin: ${escapeTelegramHtml(adminUrl)}`);
+  return lines.join("\n");
+}
+
+async function notifyAdminsAboutWheelSpin(
+  spin: SaleWheelSpinRecord,
+  adminUrl: string,
+): Promise<void> {
+  try {
+    const settings = await getWheelTelegramSettings();
+    if (!settings.enabled || !settings.chatId) return;
+
+    const message = formatWheelSpinTelegramMessage(spin, settings.privacy, adminUrl);
+    const sent = await sendTelegramMessage(settings.chatId, message, "HTML");
+    if (!sent) {
+      console.error("[SaleWheel] Telegram notification was not sent");
+    }
+  } catch {
+    console.error("[SaleWheel] Telegram notification failed");
+  }
 }
 
 // ─── Owner test-mode secret ─────────────────────────────────────────────────
@@ -249,6 +428,9 @@ saleWheelPublicRouter.post(
         })
         .returning();
 
+      const adminUrl = getPlatformAdminWheelUrl(req);
+      void notifyAdminsAboutWheelSpin(saved, adminUrl);
+
       return res.status(201).json({
         alreadyParticipated: false,
         prizeKey: saved.prizeKey,
@@ -265,6 +447,97 @@ saleWheelPublicRouter.post(
 // ─── Platform-admin router ────────────────────────────────────────────────────
 export const saleWheelAdminRouter = express.Router();
 saleWheelAdminRouter.use(authenticatePlatformAdmin);
+
+// GET /api/platform-admin/sale-wheel/notification-settings
+saleWheelAdminRouter.get("/notification-settings", async (_req: any, res: any) => {
+  try {
+    const settings = await getWheelTelegramSettings();
+    return res.json({
+      enabled: settings.enabled,
+      privacy: settings.privacy,
+      hasChatId: !!settings.chatId,
+      chatIdMasked: maskTelegramChatId(settings.chatId),
+    });
+  } catch {
+    console.error("[SaleWheel] notification settings load failed");
+    return res.status(500).json({ error: "Failed to load notification settings" });
+  }
+});
+
+// PUT /api/platform-admin/sale-wheel/notification-settings
+saleWheelAdminRouter.put("/notification-settings", async (req: any, res: any) => {
+  try {
+    const parsed = updateWheelTelegramSettingsSchema.safeParse(req.body);
+    if (!parsed.success) {
+      return res.status(400).json({ error: "Validation failed", details: parsed.error.flatten() });
+    }
+
+    const current = await getWheelTelegramSettings();
+    const nextChatId = parsed.data.clearChatId
+      ? ""
+      : parsed.data.chatId
+      ? parsed.data.chatId.trim()
+      : current.chatId;
+
+    if (nextChatId && !TELEGRAM_CHAT_ID_PATTERN.test(nextChatId)) {
+      return res.status(400).json({ error: "Telegram chat ID format is invalid" });
+    }
+
+    if (parsed.data.enabled && !nextChatId) {
+      return res.status(400).json({ error: "Set a Telegram chat ID before enabling notifications" });
+    }
+
+    const settings: WheelTelegramSettings = {
+      enabled: parsed.data.enabled,
+      privacy: parsed.data.privacy,
+      chatId: nextChatId,
+    };
+
+    await saveWheelTelegramSettings(settings);
+
+    return res.json({
+      success: true,
+      enabled: settings.enabled,
+      privacy: settings.privacy,
+      hasChatId: !!settings.chatId,
+      chatIdMasked: maskTelegramChatId(settings.chatId),
+    });
+  } catch {
+    console.error("[SaleWheel] notification settings save failed");
+    return res.status(500).json({ error: "Failed to save notification settings" });
+  }
+});
+
+// POST /api/platform-admin/sale-wheel/notification-settings/test
+saleWheelAdminRouter.post("/notification-settings/test", async (_req: any, res: any) => {
+  try {
+    const settings = await getWheelTelegramSettings();
+    if (!settings.chatId) {
+      return res.status(400).json({ error: "Set a Telegram chat ID before sending a test" });
+    }
+
+    const sent = await sendTelegramMessage(
+      settings.chatId,
+      [
+        "<b>Wheel spin Telegram notifications</b>",
+        "",
+        "Test notification from platform admin.",
+        `Time: ${escapeTelegramHtml(formatWheelSpinTime(new Date()))}`,
+      ].join("\n"),
+      "HTML",
+    );
+
+    if (!sent) {
+      console.error("[SaleWheel] Telegram test notification was not sent");
+      return res.status(502).json({ error: "Failed to send test notification" });
+    }
+
+    return res.json({ success: true });
+  } catch {
+    console.error("[SaleWheel] Telegram test notification failed");
+    return res.status(500).json({ error: "Failed to send test notification" });
+  }
+});
 
 // GET /api/platform-admin/sale-wheel/spins
 saleWheelAdminRouter.get("/spins", async (req: any, res: any) => {

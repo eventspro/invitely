@@ -1,3 +1,4 @@
+
 /**
  * TelegramBotAdmin
  *
@@ -61,10 +62,13 @@ interface BotUsersResponse {
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 const inputCls =
   "w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent";
+
 const btnPrimary =
   "px-4 py-2 bg-indigo-600 text-white text-sm font-medium rounded-lg hover:bg-indigo-700 active:scale-95 transition-all disabled:opacity-50";
+
 const btnSecondary =
   "px-4 py-2 bg-white text-gray-700 text-sm font-medium rounded-lg border border-gray-200 hover:bg-gray-50 active:scale-95 transition-all";
+
 const btnDanger =
   "px-3 py-1.5 bg-red-50 text-red-600 text-xs font-medium rounded-lg hover:bg-red-100 active:scale-95 transition-all";
 
@@ -73,6 +77,41 @@ function authHeaders(): Record<string, string> {
     "Content-Type": "application/json",
     Authorization: `Bearer ${localStorage.getItem("admin-token") ?? ""}`,
   };
+}
+
+function toBoolean(value: unknown): boolean {
+  return value === true || value === "true" || value === 1 || value === "1";
+}
+
+function normalizeButton(raw: any, fallbackIndex = 0): BotButton {
+  return {
+    id: raw?.id ? String(raw.id) : undefined,
+    label: raw?.label ?? "",
+    type: raw?.type === "command" ? "command" : "url",
+    value: raw?.value ?? "",
+    orderIndex: Number(raw?.orderIndex ?? raw?.order_index ?? fallbackIndex),
+  };
+}
+
+function normalizeCommand(raw: any): BotCommand {
+  return {
+    id: String(raw?.id ?? ""),
+    command: raw?.command ?? "",
+    title: raw?.title ?? "",
+    responseText: raw?.responseText ?? raw?.response_text ?? "",
+    enabled: toBoolean(raw?.enabled ?? raw?.isEnabled ?? raw?.is_enabled),
+    orderIndex: Number(raw?.orderIndex ?? raw?.order_index ?? 0),
+    buttons: Array.isArray(raw?.buttons)
+      ? raw.buttons.map((button: any, index: number) => normalizeButton(button, index))
+      : [],
+  };
+}
+
+function unwrapCommandsResponse(data: any): any[] {
+  if (Array.isArray(data)) return data;
+  if (Array.isArray(data?.commands)) return data.commands;
+  if (Array.isArray(data?.data)) return data.data;
+  return [];
 }
 
 const EMPTY_COMMAND: Omit<BotCommand, "id"> = {
@@ -92,8 +131,11 @@ export const TelegramBotAdmin: React.FC = () => {
   const [error, setError] = useState("");
   const [toast, setToast] = useState("");
 
-  // Edit modal state
-  const [editTarget, setEditTarget] = useState<BotCommand | null>(null);
+  // Edit modal state:
+  // undefined = closed
+  // null = create mode
+  // BotCommand = edit mode
+  const [editTarget, setEditTarget] = useState<BotCommand | null | undefined>(undefined);
   const [editForm, setEditForm] = useState<Omit<BotCommand, "id">>(EMPTY_COMMAND);
   const [saving, setSaving] = useState(false);
   const [formError, setFormError] = useState("");
@@ -106,7 +148,7 @@ export const TelegramBotAdmin: React.FC = () => {
   const [fallbackDraft, setFallbackDraft] = useState("");
   const [savingFallback, setSavingFallback] = useState(false);
 
-  // ─── Bot users state ──────────────────────────────────────────────────────────
+  // Bot users state
   const [usersData, setUsersData] = useState<BotUsersResponse | null>(null);
   const [usersLoading, setUsersLoading] = useState(false);
   const [userSearch, setUserSearch] = useState("");
@@ -118,43 +160,66 @@ export const TelegramBotAdmin: React.FC = () => {
     setTimeout(() => setToast(""), 3500);
   }, []);
 
+  const fetchCommands = useCallback(async (): Promise<BotCommand[]> => {
+    const res = await fetch("/api/platform-admin/telegram-bot/commands", {
+      headers: authHeaders(),
+    });
+
+    if (!res.ok) {
+      throw new Error("Failed to load Telegram bot commands.");
+    }
+
+    const data = await res.json();
+    return unwrapCommandsResponse(data).map(normalizeCommand);
+  }, []);
+
   // ─── Load data ───────────────────────────────────────────────────────────────
   const loadData = useCallback(async () => {
     setLoading(true);
     setError("");
+
     try {
-      const [cRes, sRes] = await Promise.all([
-        fetch("/api/platform-admin/telegram-bot/commands", { headers: authHeaders() }),
-        fetch("/api/platform-admin/telegram-bot/settings", { headers: authHeaders() }),
+      const [normalizedCommands, sRes] = await Promise.all([
+        fetchCommands(),
+        fetch("/api/platform-admin/telegram-bot/settings", {
+          headers: authHeaders(),
+        }),
       ]);
 
-      if (!cRes.ok || !sRes.ok) {
+      if (!sRes.ok) {
         setError("Failed to load Telegram bot configuration.");
         return;
       }
 
-      const [cmds, settings] = await Promise.all([cRes.json(), sRes.json()]);
-      setCommands(cmds ?? []);
-      setFallback(settings?.fallbackMessage ?? "");
+      const settings = await sRes.json();
+
+      setCommands(normalizedCommands);
+      setFallback(settings?.fallbackMessage ?? settings?.fallback_message ?? "");
     } catch {
       setError("Network error. Please refresh.");
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [fetchCommands]);
 
   const loadUsers = useCallback(async (search: string, status: string) => {
     setUsersLoading(true);
+
     try {
       const params = new URLSearchParams({ limit: "100", offset: "0" });
+
       if (search.trim()) params.set("search", search.trim());
       if (status !== "all") params.set("status", status);
-      const res = await fetch(`/api/platform-admin/telegram-bot/users?${params}`, { headers: authHeaders() });
+
+      const res = await fetch(`/api/platform-admin/telegram-bot/users?${params}`, {
+        headers: authHeaders(),
+      });
+
       if (res.ok) {
         setUsersData(await res.json());
       }
     } catch {
-      // Non-fatal
+      // Non-fatal.
     } finally {
       setUsersLoading(false);
     }
@@ -165,7 +230,7 @@ export const TelegramBotAdmin: React.FC = () => {
     loadUsers("", "all");
   }, [loadData, loadUsers]);
 
-  // ─── Open edit modal ──────────────────────────────────────────────────────────
+  // ─── Open edit modal ─────────────────────────────────────────────────────────
   const openCreate = () => {
     setEditTarget(null);
     setEditForm({ ...EMPTY_COMMAND, orderIndex: commands.length });
@@ -178,29 +243,41 @@ export const TelegramBotAdmin: React.FC = () => {
       command: cmd.command,
       title: cmd.title,
       responseText: cmd.responseText,
-      enabled: cmd.enabled,
+      enabled: Boolean(cmd.enabled),
       orderIndex: cmd.orderIndex,
-      buttons: cmd.buttons.map((b) => ({ ...b })),
+      buttons: cmd.buttons.map((button) => ({ ...button })),
     });
     setFormError("");
   };
 
-  // ─── Button helpers ───────────────────────────────────────────────────────────
+  const closeEditModal = () => {
+    setEditTarget(undefined);
+    setEditForm(EMPTY_COMMAND);
+    setFormError("");
+  };
+
+  // ─── Button helpers ──────────────────────────────────────────────────────────
   const addButton = () => {
     setEditForm((prev) => ({
       ...prev,
       buttons: [
         ...prev.buttons,
-        { label: "", type: "url", value: "https://", orderIndex: prev.buttons.length },
+        {
+          label: "",
+          type: "url",
+          value: "https://",
+          orderIndex: prev.buttons.length,
+        },
       ],
     }));
   };
 
   const updateButton = (idx: number, field: keyof BotButton, value: string) => {
     setEditForm((prev) => {
-      const buttons = prev.buttons.map((b, i) =>
-        i === idx ? { ...b, [field]: value } : b,
+      const buttons = prev.buttons.map((button, index) =>
+        index === idx ? { ...button, [field]: value } : button,
       );
+
       return { ...prev, buttons };
     });
   };
@@ -208,11 +285,11 @@ export const TelegramBotAdmin: React.FC = () => {
   const removeButton = (idx: number) => {
     setEditForm((prev) => ({
       ...prev,
-      buttons: prev.buttons.filter((_, i) => i !== idx),
+      buttons: prev.buttons.filter((_, index) => index !== idx),
     }));
   };
 
-  // ─── Save command ─────────────────────────────────────────────────────────────
+  // ─── Save command ────────────────────────────────────────────────────────────
   const handleSave = async (e: React.FormEvent) => {
     e.preventDefault();
     setSaving(true);
@@ -220,59 +297,87 @@ export const TelegramBotAdmin: React.FC = () => {
 
     try {
       const isNew = editTarget === null;
+
       const url = isNew
         ? "/api/platform-admin/telegram-bot/commands"
         : `/api/platform-admin/telegram-bot/commands/${editTarget!.id}`;
+
       const method = isNew ? "POST" : "PUT";
+
+      const commandPayload = {
+        command: editForm.command.trim(),
+        title: editForm.title.trim(),
+        responseText: editForm.responseText.trim(),
+        enabled: Boolean(editForm.enabled),
+        orderIndex: Number(editForm.orderIndex ?? 0),
+      };
 
       const res = await fetch(url, {
         method,
         headers: authHeaders(),
-        body: JSON.stringify({
-          command: editForm.command.trim(),
-          title: editForm.title.trim(),
-          responseText: editForm.responseText.trim(),
-          enabled: editForm.enabled,
-          orderIndex: editForm.orderIndex,
-        }),
+        body: JSON.stringify(commandPayload),
       });
 
-      const data = await res.json();
+      const data = await res.json().catch(() => ({}));
 
       if (!res.ok) {
-        setFormError(data.error ?? "Failed to save command");
+        setFormError(data?.error ?? "Failed to save command");
         return;
       }
 
-      const commandId: string = data.id;
+      const returnedCommand = data?.command ?? data;
+      const commandId = String(returnedCommand?.id ?? editTarget?.id ?? "");
 
-      // Save buttons
+      if (!commandId) {
+        setFormError("Command saved, but API did not return a command id.");
+        await loadData();
+        return;
+      }
+
+      // Save buttons after command is saved.
       const btnsRes = await fetch(
         `/api/platform-admin/telegram-bot/commands/${commandId}/buttons`,
         {
           method: "PUT",
           headers: authHeaders(),
           body: JSON.stringify({
-            buttons: editForm.buttons.map((b, i) => ({
-              label: b.label.trim(),
-              type: b.type,
-              value: b.value.trim(),
-              orderIndex: i,
+            buttons: editForm.buttons.map((button, index) => ({
+              label: button.label.trim(),
+              type: button.type,
+              value: button.value.trim(),
+              orderIndex: index,
             })),
           }),
         },
       );
 
       if (!btnsRes.ok) {
-        const bd = await btnsRes.json().catch(() => ({}));
-        setFormError(bd.error ?? "Command saved but buttons failed to save");
+        const buttonData = await btnsRes.json().catch(() => ({}));
+        setFormError(buttonData?.error ?? "Command saved but buttons failed to save");
         await loadData();
         return;
       }
 
-      setEditTarget(undefined as any);
+      // Refetch the saved data and verify that enabled was actually persisted.
+      const latestCommands = await fetchCommands();
+      setCommands(latestCommands);
+
+      const savedCommand = latestCommands.find((command) => command.id === commandId);
+
+      if (!savedCommand) {
+        setFormError("Command saved, but it was not found after refresh.");
+        return;
+      }
+
+      if (savedCommand.enabled !== Boolean(editForm.enabled)) {
+        setFormError(
+          "Command saved, but enabled status was not persisted. Check backend enabled/isEnabled/is_enabled mapping.",
+        );
+        return;
+      }
+
+      closeEditModal();
       showToast(isNew ? "✅ Command created" : "✅ Command updated");
-      await loadData();
     } catch {
       setFormError("Network error while saving");
     } finally {
@@ -280,57 +385,89 @@ export const TelegramBotAdmin: React.FC = () => {
     }
   };
 
-  // ─── Toggle enabled ───────────────────────────────────────────────────────────
+  // ─── Toggle enabled ──────────────────────────────────────────────────────────
   const toggleEnabled = async (cmd: BotCommand) => {
+    const nextEnabled = !cmd.enabled;
+
     try {
       const res = await fetch(`/api/platform-admin/telegram-bot/commands/${cmd.id}`, {
         method: "PUT",
         headers: authHeaders(),
-        body: JSON.stringify({ enabled: !cmd.enabled }),
+        body: JSON.stringify({
+          command: cmd.command,
+          title: cmd.title,
+          responseText: cmd.responseText,
+          enabled: nextEnabled,
+          orderIndex: cmd.orderIndex,
+        }),
       });
+
+      const data = await res.json().catch(() => ({}));
+
       if (!res.ok) {
-        showToast("❌ Failed to toggle command");
+        showToast(data?.error ?? "❌ Failed to toggle command");
         return;
       }
-      showToast(`✅ Command ${!cmd.enabled ? "enabled" : "disabled"}`);
-      await loadData();
+
+      const latestCommands = await fetchCommands();
+      setCommands(latestCommands);
+
+      const updatedCommand = latestCommands.find((command) => command.id === cmd.id);
+
+      if (!updatedCommand) {
+        showToast("❌ Command updated, but it was not found after refresh");
+        return;
+      }
+
+      if (updatedCommand.enabled !== nextEnabled) {
+        showToast("❌ Status was not saved. Check backend enabled field mapping.");
+        return;
+      }
+
+      showToast(`✅ Command ${updatedCommand.enabled ? "enabled" : "disabled"}`);
     } catch {
       showToast("❌ Network error");
     }
   };
 
-  // ─── Delete command ───────────────────────────────────────────────────────────
+  // ─── Delete command ──────────────────────────────────────────────────────────
   const deleteCommand = async (cmd: BotCommand) => {
     if (!window.confirm(`Delete command "${cmd.command}"? This cannot be undone.`)) return;
+
     try {
       const res = await fetch(`/api/platform-admin/telegram-bot/commands/${cmd.id}`, {
         method: "DELETE",
         headers: authHeaders(),
       });
+
       if (!res.ok) {
         showToast("❌ Failed to delete command");
         return;
       }
-      showToast(`✅ Command deleted`);
+
+      showToast("✅ Command deleted");
       await loadData();
     } catch {
       showToast("❌ Network error");
     }
   };
 
-  // ─── Save fallback ────────────────────────────────────────────────────────────
+  // ─── Save fallback ───────────────────────────────────────────────────────────
   const saveFallback = async () => {
     setSavingFallback(true);
+
     try {
       const res = await fetch("/api/platform-admin/telegram-bot/settings", {
         method: "PUT",
         headers: authHeaders(),
         body: JSON.stringify({ fallbackMessage: fallbackDraft }),
       });
+
       if (!res.ok) {
         showToast("❌ Failed to save fallback message");
         return;
       }
+
       setFallback(fallbackDraft);
       setEditingFallback(false);
       showToast("✅ Fallback message saved");
@@ -341,11 +478,13 @@ export const TelegramBotAdmin: React.FC = () => {
     }
   };
 
-  // ─── Render ───────────────────────────────────────────────────────────────────
+  // ─── Render ──────────────────────────────────────────────────────────────────
   if (loading) {
     return (
       <div className="flex items-center justify-center py-20">
-        <div className="text-gray-400 text-sm">Loading Telegram Bot configuration…</div>
+        <div className="text-gray-400 text-sm">
+          Loading Telegram Bot configuration…
+        </div>
       </div>
     );
   }
@@ -357,10 +496,6 @@ export const TelegramBotAdmin: React.FC = () => {
       </div>
     );
   }
-
-  const isEditing = editTarget !== null || editTarget === null && editForm.command !== "/";
-  const showModal = editTarget !== undefined && editTarget !== null;
-  const showCreateModal = editTarget === null && editForm.command !== EMPTY_COMMAND.command || editForm.title !== EMPTY_COMMAND.title;
 
   return (
     <div className="space-y-8">
@@ -376,9 +511,11 @@ export const TelegramBotAdmin: React.FC = () => {
         <div>
           <h1 className="text-2xl font-bold text-gray-900">Telegram Bot</h1>
           <p className="text-gray-500 text-sm mt-1">
-            Configure bot commands, responses, and inline buttons. CONNECT and RSVP flows are not affected.
+            Configure bot commands, responses, and inline buttons. CONNECT and RSVP
+            flows are not affected.
           </p>
         </div>
+
         <button onClick={openCreate} className={btnPrimary}>
           ＋ New Command
         </button>
@@ -390,19 +527,32 @@ export const TelegramBotAdmin: React.FC = () => {
           <div className="py-16 text-center">
             <p className="text-4xl mb-3">🤖</p>
             <p className="text-gray-500 font-medium">No commands configured yet</p>
-            <p className="text-gray-400 text-sm mt-1">Create your first command to get started</p>
+            <p className="text-gray-400 text-sm mt-1">
+              Create your first command to get started
+            </p>
           </div>
         ) : (
           <table className="min-w-full">
             <thead>
               <tr className="bg-gray-50 text-left">
-                <th className="px-5 py-3 text-xs font-semibold text-gray-400 uppercase tracking-wider">Command</th>
-                <th className="px-5 py-3 text-xs font-semibold text-gray-400 uppercase tracking-wider hidden md:table-cell">Title</th>
-                <th className="px-5 py-3 text-xs font-semibold text-gray-400 uppercase tracking-wider hidden lg:table-cell">Buttons</th>
-                <th className="px-5 py-3 text-xs font-semibold text-gray-400 uppercase tracking-wider">Status</th>
-                <th className="px-5 py-3 text-xs font-semibold text-gray-400 uppercase tracking-wider text-right">Actions</th>
+                <th className="px-5 py-3 text-xs font-semibold text-gray-400 uppercase tracking-wider">
+                  Command
+                </th>
+                <th className="px-5 py-3 text-xs font-semibold text-gray-400 uppercase tracking-wider hidden md:table-cell">
+                  Title
+                </th>
+                <th className="px-5 py-3 text-xs font-semibold text-gray-400 uppercase tracking-wider hidden lg:table-cell">
+                  Buttons
+                </th>
+                <th className="px-5 py-3 text-xs font-semibold text-gray-400 uppercase tracking-wider">
+                  Status
+                </th>
+                <th className="px-5 py-3 text-xs font-semibold text-gray-400 uppercase tracking-wider text-right">
+                  Actions
+                </th>
               </tr>
             </thead>
+
             <tbody className="divide-y divide-gray-50">
               {commands.map((cmd) => (
                 <tr key={cmd.id} className="hover:bg-gray-50/50 transition-colors">
@@ -411,14 +561,20 @@ export const TelegramBotAdmin: React.FC = () => {
                       {cmd.command}
                     </span>
                   </td>
+
                   <td className="px-5 py-4 hidden md:table-cell">
                     <span className="text-sm text-gray-700">{cmd.title}</span>
                   </td>
+
                   <td className="px-5 py-4 hidden lg:table-cell">
-                    <span className="text-sm text-gray-400">{cmd.buttons.length} button{cmd.buttons.length !== 1 ? "s" : ""}</span>
+                    <span className="text-sm text-gray-400">
+                      {cmd.buttons.length} button{cmd.buttons.length !== 1 ? "s" : ""}
+                    </span>
                   </td>
+
                   <td className="px-5 py-4">
                     <button
+                      type="button"
                       onClick={() => toggleEnabled(cmd)}
                       className={`inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-semibold transition-colors ${
                         cmd.enabled
@@ -426,25 +582,35 @@ export const TelegramBotAdmin: React.FC = () => {
                           : "bg-gray-100 text-gray-500 hover:bg-gray-200"
                       }`}
                     >
-                      <span className={`w-1.5 h-1.5 rounded-full ${cmd.enabled ? "bg-emerald-500" : "bg-gray-400"}`} />
+                      <span
+                        className={`w-1.5 h-1.5 rounded-full ${
+                          cmd.enabled ? "bg-emerald-500" : "bg-gray-400"
+                        }`}
+                      />
                       {cmd.enabled ? "Enabled" : "Disabled"}
                     </button>
                   </td>
+
                   <td className="px-5 py-4 text-right">
                     <div className="flex items-center justify-end gap-2">
                       <button
-                        onClick={() => { setPreviewCommand(cmd); }}
+                        type="button"
+                        onClick={() => setPreviewCommand(cmd)}
                         className="text-xs text-gray-400 hover:text-gray-700 px-2 py-1 rounded hover:bg-gray-100 transition-colors"
                       >
                         Preview
                       </button>
+
                       <button
+                        type="button"
                         onClick={() => openEdit(cmd)}
                         className="text-xs text-indigo-600 hover:text-indigo-800 px-2 py-1 rounded hover:bg-indigo-50 transition-colors"
                       >
                         Edit
                       </button>
+
                       <button
+                        type="button"
                         onClick={() => deleteCommand(cmd)}
                         className={btnDanger}
                       >
@@ -463,18 +629,28 @@ export const TelegramBotAdmin: React.FC = () => {
       <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
         <div className="flex items-start justify-between gap-4 mb-4">
           <div>
-            <h2 className="text-base font-semibold text-gray-900">Fallback Message</h2>
-            <p className="text-xs text-gray-400 mt-0.5">Sent when the bot receives an unknown message</p>
+            <h2 className="text-base font-semibold text-gray-900">
+              Fallback Message
+            </h2>
+            <p className="text-xs text-gray-400 mt-0.5">
+              Sent when the bot receives an unknown message
+            </p>
           </div>
+
           {!editingFallback && (
             <button
-              onClick={() => { setFallbackDraft(fallback); setEditingFallback(true); }}
+              type="button"
+              onClick={() => {
+                setFallbackDraft(fallback);
+                setEditingFallback(true);
+              }}
               className={btnSecondary}
             >
               Edit
             </button>
           )}
         </div>
+
         {editingFallback ? (
           <div className="space-y-3">
             <textarea
@@ -485,11 +661,22 @@ export const TelegramBotAdmin: React.FC = () => {
               className={inputCls}
               placeholder="Enter fallback message…"
             />
+
             <div className="flex items-center gap-3">
-              <button onClick={saveFallback} disabled={savingFallback || !fallbackDraft.trim()} className={btnPrimary}>
+              <button
+                type="button"
+                onClick={saveFallback}
+                disabled={savingFallback || !fallbackDraft.trim()}
+                className={btnPrimary}
+              >
                 {savingFallback ? "Saving…" : "Save"}
               </button>
-              <button onClick={() => setEditingFallback(false)} className={btnSecondary}>
+
+              <button
+                type="button"
+                onClick={() => setEditingFallback(false)}
+                className={btnSecondary}
+              >
                 Cancel
               </button>
             </div>
@@ -501,14 +688,18 @@ export const TelegramBotAdmin: React.FC = () => {
         )}
       </div>
 
-      {/* ─── Bot Users Analytics ─────────────────────────────────────────────── */}
+      {/* Bot Users Analytics */}
       <div className="space-y-4">
         <div className="flex items-center justify-between gap-4">
           <div>
             <h2 className="text-lg font-semibold text-gray-900">Bot Users</h2>
-            <p className="text-xs text-gray-400 mt-0.5">Every Telegram user who has interacted with the bot</p>
+            <p className="text-xs text-gray-400 mt-0.5">
+              Every Telegram user who has interacted with the bot
+            </p>
           </div>
+
           <button
+            type="button"
             onClick={() => loadUsers(userSearch, userStatusFilter)}
             className={btnSecondary}
           >
@@ -519,13 +710,30 @@ export const TelegramBotAdmin: React.FC = () => {
         {/* Stats */}
         <div className="grid grid-cols-3 gap-4">
           {[
-            { label: "Total Users", value: usersData?.total ?? 0, color: "text-indigo-600", bg: "bg-indigo-50" },
-            { label: "Connected", value: usersData?.connected ?? 0, color: "text-emerald-600", bg: "bg-emerald-50" },
-            { label: "Not Connected", value: usersData?.unconnected ?? 0, color: "text-gray-500", bg: "bg-gray-50" },
+            {
+              label: "Total Users",
+              value: usersData?.total ?? 0,
+              color: "text-indigo-600",
+              bg: "bg-indigo-50",
+            },
+            {
+              label: "Connected",
+              value: usersData?.connected ?? 0,
+              color: "text-emerald-600",
+              bg: "bg-emerald-50",
+            },
+            {
+              label: "Not Connected",
+              value: usersData?.unconnected ?? 0,
+              color: "text-gray-500",
+              bg: "bg-gray-50",
+            },
           ].map(({ label, value, color, bg }) => (
             <div key={label} className={`${bg} rounded-2xl p-4`}>
               <p className="text-xs text-gray-400 font-medium">{label}</p>
-              <p className={`text-2xl font-bold mt-1 ${color}`}>{usersLoading ? "…" : value}</p>
+              <p className={`text-2xl font-bold mt-1 ${color}`}>
+                {usersLoading ? "…" : value}
+              </p>
             </div>
           ))}
         </div>
@@ -545,18 +753,24 @@ export const TelegramBotAdmin: React.FC = () => {
             placeholder="Search username, name, or ID…"
             className="flex-1 px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
           />
+
           <button
-            onClick={() => { setUserSearch(userSearchInput); loadUsers(userSearchInput, userStatusFilter); }}
+            type="button"
+            onClick={() => {
+              setUserSearch(userSearchInput);
+              loadUsers(userSearchInput, userStatusFilter);
+            }}
             className={btnPrimary}
           >
             Search
           </button>
+
           <select
             value={userStatusFilter}
             onChange={(e) => {
-              const v = e.target.value as "all" | "connected" | "unconnected";
-              setUserStatusFilter(v);
-              loadUsers(userSearch, v);
+              const value = e.target.value as "all" | "connected" | "unconnected";
+              setUserStatusFilter(value);
+              loadUsers(userSearch, value);
             }}
             className="px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 bg-white"
           >
@@ -569,58 +783,104 @@ export const TelegramBotAdmin: React.FC = () => {
         {/* Users table */}
         <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
           {usersLoading ? (
-            <div className="py-12 text-center text-gray-400 text-sm">Loading users…</div>
+            <div className="py-12 text-center text-gray-400 text-sm">
+              Loading users…
+            </div>
           ) : !usersData || usersData.users.length === 0 ? (
             <div className="py-12 text-center">
               <p className="text-3xl mb-2">👥</p>
               <p className="text-gray-500 text-sm">No bot users yet</p>
-              <p className="text-gray-400 text-xs mt-1">Users appear here once they interact with the bot</p>
+              <p className="text-gray-400 text-xs mt-1">
+                Users appear here once they interact with the bot
+              </p>
             </div>
           ) : (
             <div className="overflow-x-auto">
               <table className="min-w-full">
                 <thead>
                   <tr className="bg-gray-50 text-left">
-                    <th className="px-5 py-3 text-xs font-semibold text-gray-400 uppercase">User</th>
-                    <th className="px-5 py-3 text-xs font-semibold text-gray-400 uppercase hidden sm:table-cell">Telegram ID</th>
-                    <th className="px-5 py-3 text-xs font-semibold text-gray-400 uppercase">Status</th>
-                    <th className="px-5 py-3 text-xs font-semibold text-gray-400 uppercase hidden md:table-cell">Connected To</th>
-                    <th className="px-5 py-3 text-xs font-semibold text-gray-400 uppercase hidden lg:table-cell">First Seen</th>
-                    <th className="px-5 py-3 text-xs font-semibold text-gray-400 uppercase hidden lg:table-cell">Last Seen</th>
+                    <th className="px-5 py-3 text-xs font-semibold text-gray-400 uppercase">
+                      User
+                    </th>
+                    <th className="px-5 py-3 text-xs font-semibold text-gray-400 uppercase hidden sm:table-cell">
+                      Telegram ID
+                    </th>
+                    <th className="px-5 py-3 text-xs font-semibold text-gray-400 uppercase">
+                      Status
+                    </th>
+                    <th className="px-5 py-3 text-xs font-semibold text-gray-400 uppercase hidden md:table-cell">
+                      Connected To
+                    </th>
+                    <th className="px-5 py-3 text-xs font-semibold text-gray-400 uppercase hidden lg:table-cell">
+                      First Seen
+                    </th>
+                    <th className="px-5 py-3 text-xs font-semibold text-gray-400 uppercase hidden lg:table-cell">
+                      Last Seen
+                    </th>
                   </tr>
                 </thead>
+
                 <tbody className="divide-y divide-gray-50">
-                  {usersData.users.map((u) => {
-                    // Display name: @username → First Last → telegramUserId
-                    const displayName = u.username
-                      ? `@${u.username}`
-                      : [u.firstName, u.lastName].filter(Boolean).join(" ") || u.telegramUserId;
-                    const isUsername = !!u.username;
-                    const fmt = (d: string | null) =>
-                      d ? new Date(d).toLocaleDateString("en-GB", { day: "2-digit", month: "short", year: "numeric" }) : "—";
+                  {usersData.users.map((user) => {
+                    const displayName = user.username
+                      ? `@${user.username}`
+                      : [user.firstName, user.lastName].filter(Boolean).join(" ") ||
+                        user.telegramUserId;
+
+                    const isUsername = Boolean(user.username);
+
+                    const formatDate = (dateValue: string | null) =>
+                      dateValue
+                        ? new Date(dateValue).toLocaleDateString("en-GB", {
+                            day: "2-digit",
+                            month: "short",
+                            year: "numeric",
+                          })
+                        : "—";
 
                     return (
-                      <tr key={u.id} className="hover:bg-gray-50/50 transition-colors">
+                      <tr
+                        key={user.id}
+                        className="hover:bg-gray-50/50 transition-colors"
+                      >
                         <td className="px-5 py-4">
                           <div className="flex items-center gap-2">
                             <div className="w-8 h-8 rounded-full bg-indigo-100 flex items-center justify-center text-indigo-600 text-sm font-semibold shrink-0">
-                              {(u.firstName?.[0] ?? u.username?.[0] ?? "?").toUpperCase()}
+                              {(
+                                user.firstName?.[0] ??
+                                user.username?.[0] ??
+                                "?"
+                              ).toUpperCase()}
                             </div>
+
                             <div>
-                              <p className={`text-sm font-medium ${isUsername ? "text-indigo-700" : "text-gray-800"}`}>
+                              <p
+                                className={`text-sm font-medium ${
+                                  isUsername ? "text-indigo-700" : "text-gray-800"
+                                }`}
+                              >
                                 {displayName}
                               </p>
-                              {u.firstName && u.username && (
-                                <p className="text-xs text-gray-400">{[u.firstName, u.lastName].filter(Boolean).join(" ")}</p>
+
+                              {user.firstName && user.username && (
+                                <p className="text-xs text-gray-400">
+                                  {[user.firstName, user.lastName]
+                                    .filter(Boolean)
+                                    .join(" ")}
+                                </p>
                               )}
                             </div>
                           </div>
                         </td>
+
                         <td className="px-5 py-4 hidden sm:table-cell">
-                          <span className="font-mono text-xs text-gray-400">{u.telegramUserId}</span>
+                          <span className="font-mono text-xs text-gray-400">
+                            {user.telegramUserId}
+                          </span>
                         </td>
+
                         <td className="px-5 py-4">
-                          {u.isConnectedCustomer ? (
+                          {user.isConnectedCustomer ? (
                             <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-semibold bg-emerald-100 text-emerald-700">
                               <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
                               Connected
@@ -632,29 +892,42 @@ export const TelegramBotAdmin: React.FC = () => {
                             </span>
                           )}
                         </td>
+
                         <td className="px-5 py-4 hidden md:table-cell">
-                          {u.templateName ? (
+                          {user.templateName ? (
                             <div>
-                              <p className="text-xs font-medium text-gray-700">{u.templateName}</p>
-                              {u.customerEmail && (
-                                <p className="text-xs text-gray-400">{u.customerEmail}</p>
+                              <p className="text-xs font-medium text-gray-700">
+                                {user.templateName}
+                              </p>
+
+                              {user.customerEmail && (
+                                <p className="text-xs text-gray-400">
+                                  {user.customerEmail}
+                                </p>
                               )}
                             </div>
                           ) : (
                             <span className="text-gray-300 text-xs">—</span>
                           )}
                         </td>
+
                         <td className="px-5 py-4 hidden lg:table-cell">
-                          <span className="text-xs text-gray-400">{fmt(u.firstSeenAt)}</span>
+                          <span className="text-xs text-gray-400">
+                            {formatDate(user.firstSeenAt)}
+                          </span>
                         </td>
+
                         <td className="px-5 py-4 hidden lg:table-cell">
-                          <span className="text-xs text-gray-400">{fmt(u.lastSeenAt)}</span>
+                          <span className="text-xs text-gray-400">
+                            {formatDate(user.lastSeenAt)}
+                          </span>
                         </td>
                       </tr>
                     );
                   })}
                 </tbody>
               </table>
+
               {usersData.users.length === 100 && (
                 <div className="px-5 py-3 border-t border-gray-50 text-xs text-gray-400 text-center">
                   Showing first 100 users — use search to narrow results
@@ -666,7 +939,7 @@ export const TelegramBotAdmin: React.FC = () => {
       </div>
 
       {/* Edit/Create Modal */}
-      {(editTarget !== undefined) && (editTarget !== null || (editForm.command !== EMPTY_COMMAND.command || editForm.title !== EMPTY_COMMAND.title || editForm.responseText !== EMPTY_COMMAND.responseText)) && (
+      {editTarget !== undefined && (
         <EditModal
           form={editForm}
           isNew={editTarget === null}
@@ -677,13 +950,16 @@ export const TelegramBotAdmin: React.FC = () => {
           onUpdateButton={updateButton}
           onRemoveButton={removeButton}
           onSave={handleSave}
-          onClose={() => { setEditTarget(undefined as any); setEditForm(EMPTY_COMMAND); setFormError(""); }}
+          onClose={closeEditModal}
         />
       )}
 
       {/* Preview Modal */}
       {previewCommand && (
-        <PreviewModal command={previewCommand} onClose={() => setPreviewCommand(null)} />
+        <PreviewModal
+          command={previewCommand}
+          onClose={() => setPreviewCommand(null)}
+        />
       )}
     </div>
   );
@@ -704,16 +980,30 @@ const EditModal: React.FC<{
   onRemoveButton: (idx: number) => void;
   onSave: (e: React.FormEvent) => void;
   onClose: () => void;
-}> = ({ form, isNew, saving, error, onChange, onAddButton, onUpdateButton, onRemoveButton, onSave, onClose }) => (
+}> = ({
+  form,
+  isNew,
+  saving,
+  error,
+  onChange,
+  onAddButton,
+  onUpdateButton,
+  onRemoveButton,
+  onSave,
+  onClose,
+}) => (
   <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm">
     <div className="bg-white rounded-2xl shadow-2xl w-full max-w-2xl max-h-[90vh] overflow-y-auto">
       <div className="flex items-center justify-between px-6 py-4 border-b border-gray-100">
         <h2 className="text-lg font-semibold text-gray-900">
           {isNew ? "New Command" : `Edit ${form.command}`}
         </h2>
+
         <button
+          type="button"
           onClick={onClose}
           className="w-8 h-8 flex items-center justify-center rounded-lg text-gray-400 hover:bg-gray-100 hover:text-gray-600 transition-colors"
+          aria-label="Close modal"
         >
           ✕
         </button>
@@ -731,26 +1021,35 @@ const EditModal: React.FC<{
             <label className="block text-sm font-medium text-gray-700 mb-1">
               Command <span className="text-red-500">*</span>
             </label>
+
             <input
               type="text"
               value={form.command}
-              onChange={(e) => onChange((prev) => ({ ...prev, command: e.target.value }))}
+              onChange={(e) =>
+                onChange((prev) => ({ ...prev, command: e.target.value }))
+              }
               placeholder="/start"
               maxLength={32}
               required
               className={inputClsInModal + " font-mono"}
             />
-            <p className="mt-1 text-xs text-gray-400">Must start with / (e.g. /pricing)</p>
+
+            <p className="mt-1 text-xs text-gray-400">
+              Must start with / (e.g. /pricing)
+            </p>
           </div>
 
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">
               Internal Title <span className="text-red-500">*</span>
             </label>
+
             <input
               type="text"
               value={form.title}
-              onChange={(e) => onChange((prev) => ({ ...prev, title: e.target.value }))}
+              onChange={(e) =>
+                onChange((prev) => ({ ...prev, title: e.target.value }))
+              }
               placeholder="Pricing Info"
               maxLength={100}
               required
@@ -763,28 +1062,38 @@ const EditModal: React.FC<{
           <label className="block text-sm font-medium text-gray-700 mb-1">
             Response Text <span className="text-red-500">*</span>
           </label>
+
           <textarea
             value={form.responseText}
-            onChange={(e) => onChange((prev) => ({ ...prev, responseText: e.target.value }))}
+            onChange={(e) =>
+              onChange((prev) => ({ ...prev, responseText: e.target.value }))
+            }
             rows={6}
             maxLength={4096}
             required
             className={inputClsInModal}
             placeholder="Enter the bot response text (HTML tags like <b>, <i> are supported)"
           />
+
           <p className="mt-1 text-xs text-gray-400">
-            Supports Telegram HTML: &lt;b&gt;bold&lt;/b&gt;, &lt;i&gt;italic&lt;/i&gt;, &lt;a href="…"&gt;link&lt;/a&gt; — {form.responseText.length}/4096
+            Supports Telegram HTML: &lt;b&gt;bold&lt;/b&gt;,
+            &lt;i&gt;italic&lt;/i&gt;, &lt;a href="…" &gt;link&lt;/a&gt; —{" "}
+            {form.responseText.length}/4096
           </p>
         </div>
 
         <div className="flex items-center gap-3">
           <label className="text-sm font-medium text-gray-700">Enabled</label>
+
           <button
             type="button"
-            onClick={() => onChange((prev) => ({ ...prev, enabled: !prev.enabled }))}
+            onClick={() =>
+              onChange((prev) => ({ ...prev, enabled: !prev.enabled }))
+            }
             className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
               form.enabled ? "bg-indigo-600" : "bg-gray-200"
             }`}
+            aria-pressed={form.enabled}
           >
             <span
               className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
@@ -792,12 +1101,23 @@ const EditModal: React.FC<{
               }`}
             />
           </button>
+
+          <span
+            className={`text-xs font-medium ${
+              form.enabled ? "text-emerald-600" : "text-gray-400"
+            }`}
+          >
+            {form.enabled ? "Enabled" : "Disabled"}
+          </span>
         </div>
 
         {/* Buttons section */}
         <div>
           <div className="flex items-center justify-between mb-3">
-            <label className="text-sm font-medium text-gray-700">Inline Buttons</label>
+            <label className="text-sm font-medium text-gray-700">
+              Inline Buttons
+            </label>
+
             {form.buttons.length < 8 && (
               <button
                 type="button"
@@ -810,14 +1130,19 @@ const EditModal: React.FC<{
           </div>
 
           {form.buttons.length === 0 && (
-            <p className="text-xs text-gray-400 italic">No buttons. Click "Add button" to add one.</p>
+            <p className="text-xs text-gray-400 italic">
+              No buttons. Click "Add button" to add one.
+            </p>
           )}
 
           <div className="space-y-3">
-            {form.buttons.map((btn, idx) => (
+            {form.buttons.map((button, idx) => (
               <div key={idx} className="bg-gray-50 rounded-xl p-4 space-y-3">
                 <div className="flex items-center justify-between">
-                  <span className="text-xs font-medium text-gray-500">Button {idx + 1}</span>
+                  <span className="text-xs font-medium text-gray-500">
+                    Button {idx + 1}
+                  </span>
+
                   <button
                     type="button"
                     onClick={() => onRemoveButton(idx)}
@@ -829,11 +1154,16 @@ const EditModal: React.FC<{
 
                 <div className="grid grid-cols-3 gap-3">
                   <div>
-                    <label className="block text-xs text-gray-500 mb-1">Label</label>
+                    <label className="block text-xs text-gray-500 mb-1">
+                      Label
+                    </label>
+
                     <input
                       type="text"
-                      value={btn.label}
-                      onChange={(e) => onUpdateButton(idx, "label", e.target.value)}
+                      value={button.label}
+                      onChange={(e) =>
+                        onUpdateButton(idx, "label", e.target.value)
+                      }
                       placeholder="Button text"
                       maxLength={64}
                       required
@@ -842,12 +1172,20 @@ const EditModal: React.FC<{
                   </div>
 
                   <div>
-                    <label className="block text-xs text-gray-500 mb-1">Type</label>
+                    <label className="block text-xs text-gray-500 mb-1">
+                      Type
+                    </label>
+
                     <select
-                      value={btn.type}
+                      value={button.type}
                       onChange={(e) => {
-                        onUpdateButton(idx, "type", e.target.value as "url" | "command");
-                        onUpdateButton(idx, "value", e.target.value === "url" ? "https://" : "/");
+                        const nextType = e.target.value as "url" | "command";
+                        onUpdateButton(idx, "type", nextType);
+                        onUpdateButton(
+                          idx,
+                          "value",
+                          nextType === "url" ? "https://" : "/",
+                        );
                       }}
                       className={inputClsInModal}
                     >
@@ -858,13 +1196,22 @@ const EditModal: React.FC<{
 
                   <div>
                     <label className="block text-xs text-gray-500 mb-1">
-                      {btn.type === "url" ? "URL (https://…)" : "Command (e.g. /pricing)"}
+                      {button.type === "url"
+                        ? "URL (https://…)"
+                        : "Command (e.g. /pricing)"}
                     </label>
+
                     <input
-                      type={btn.type === "url" ? "url" : "text"}
-                      value={btn.value}
-                      onChange={(e) => onUpdateButton(idx, "value", e.target.value)}
-                      placeholder={btn.type === "url" ? "https://example.com" : "/pricing"}
+                      type={button.type === "url" ? "url" : "text"}
+                      value={button.value}
+                      onChange={(e) =>
+                        onUpdateButton(idx, "value", e.target.value)
+                      }
+                      placeholder={
+                        button.type === "url"
+                          ? "https://example.com"
+                          : "/pricing"
+                      }
                       maxLength={200}
                       required
                       className={inputClsInModal + " font-mono"}
@@ -877,10 +1224,19 @@ const EditModal: React.FC<{
         </div>
 
         <div className="flex items-center gap-3 pt-2 border-t border-gray-100">
-          <button type="submit" disabled={saving} className="px-4 py-2 bg-indigo-600 text-white text-sm font-medium rounded-lg hover:bg-indigo-700 active:scale-95 transition-all disabled:opacity-50">
+          <button
+            type="submit"
+            disabled={saving}
+            className="px-4 py-2 bg-indigo-600 text-white text-sm font-medium rounded-lg hover:bg-indigo-700 active:scale-95 transition-all disabled:opacity-50"
+          >
             {saving ? "Saving…" : isNew ? "Create Command" : "Save Changes"}
           </button>
-          <button type="button" onClick={onClose} className="px-4 py-2 bg-white text-gray-700 text-sm font-medium rounded-lg border border-gray-200 hover:bg-gray-50 active:scale-95 transition-all">
+
+          <button
+            type="button"
+            onClick={onClose}
+            className="px-4 py-2 bg-white text-gray-700 text-sm font-medium rounded-lg border border-gray-200 hover:bg-gray-50 active:scale-95 transition-all"
+          >
             Cancel
           </button>
         </div>
@@ -898,11 +1254,15 @@ const PreviewModal: React.FC<{ command: BotCommand; onClose: () => void }> = ({
     <div className="bg-white rounded-2xl shadow-2xl w-full max-w-sm">
       <div className="flex items-center justify-between px-6 py-4 border-b border-gray-100">
         <h2 className="text-base font-semibold text-gray-900">
-          Preview: <span className="font-mono text-indigo-700">{command.command}</span>
+          Preview:{" "}
+          <span className="font-mono text-indigo-700">{command.command}</span>
         </h2>
+
         <button
+          type="button"
           onClick={onClose}
           className="w-8 h-8 flex items-center justify-center rounded-lg text-gray-400 hover:bg-gray-100 transition-colors"
+          aria-label="Close preview"
         >
           ✕
         </button>
@@ -917,14 +1277,14 @@ const PreviewModal: React.FC<{ command: BotCommand; onClose: () => void }> = ({
         {/* Buttons */}
         {command.buttons.length > 0 && (
           <div className="mt-3 space-y-2">
-            {command.buttons.map((btn, i) => (
+            {command.buttons.map((button, index) => (
               <div
-                key={i}
+                key={index}
                 className="bg-[#e4f2fb] hover:bg-[#d8ecf7] text-[#2c7dba] text-sm font-medium rounded-xl px-4 py-2 text-center cursor-default transition-colors"
               >
-                {btn.label}
+                {button.label}
                 <span className="ml-1 text-[10px] text-[#2c7dba]/60">
-                  {btn.type === "url" ? "↗" : "▶"}
+                  {button.type === "url" ? "↗" : "▶"}
                 </span>
               </div>
             ))}

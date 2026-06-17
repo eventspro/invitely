@@ -25,6 +25,8 @@ const LazyPlannerPrototype = lazy(() => import("@/pages/planner-prototype/Planne
 const LazyPlannerDemo = lazy(() => import("@/pages/planner-demo/PlannerDemoPage"));
 const LazyPlannerLoginPage = lazy(() => import("@/pages/planner/PlannerLoginPage"));
 const LazyPlannerPage = lazy(() => import("@/pages/planner/PlannerPage"));
+const LazyPartnersPage = lazy(() => import("@/pages/partners"));
+const LazyPartnersBuilderPage = lazy(() => import("@/pages/admin/PartnersBuilderPage"));
 const LazyTemplatesPage = lazy(() => import("@/pages/templates"));
 const LazyPlatformDashboard = lazy(() => import("@/pages/platform-dashboard"));
 const LazyPlatformTranslations = lazy(() => import("@/pages/platform-translations"));
@@ -121,6 +123,18 @@ function Router() {
       {/* Legacy homepage (kept for reference) */}
       <Route path="/homepage-prototype" component={HomepagePrototype} />
       
+      {/* Partner marketplace page */}
+      <Route path="/partners" component={() => (
+        <LazyRoute label="Loading partners..." background="#FAF7F2" color="#1F1B18">
+          <LazyPartnersPage />
+        </LazyRoute>
+      )} />
+      <Route path="/vendors" component={() => (
+        <LazyRoute label="Loading partners..." background="#FAF7F2" color="#1F1B18">
+          <LazyPartnersPage />
+        </LazyRoute>
+      )} />
+
       {/* Templates showcase page */}
       <Route path="/templates" component={() => (
         <LazyRoute label="Loading templates...">
@@ -154,6 +168,11 @@ function Router() {
       <Route path="/admin/dashboard" component={() => (
         <LazyRoute label="Loading admin...">
           <LazyAdminDashboardRoute />
+        </LazyRoute>
+      )} />
+      <Route path="/admin/partners-builder" component={() => (
+        <LazyRoute label="Loading partners builder..." background="#F8FAFC" color="#0F172A">
+          <LazyPartnersBuilderPage />
         </LazyRoute>
       )} />
       

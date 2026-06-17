@@ -1,4 +1,4 @@
-/**
+/*
  * Telegram Bot Admin Routes
  *
  * All routes require platform-admin authentication (Bearer token in Authorization header).
@@ -7,16 +7,16 @@
  * The CONNECT token flow and RSVP notification flow are NOT touched here.
  *
  * Routes:
- *   GET    /api/platform-admin/telegram-bot/webhook-info         — get registered webhook status
- *   POST   /api/platform-admin/telegram-bot/webhook-setup        — register/update webhook URL
- *   DELETE /api/platform-admin/telegram-bot/webhook-setup        — remove webhook (switch to polling)
- *   GET    /api/platform-admin/telegram-bot/commands            — list all commands
- *   POST   /api/platform-admin/telegram-bot/commands            — create command
- *   PUT    /api/platform-admin/telegram-bot/commands/:id        — update command
- *   DELETE /api/platform-admin/telegram-bot/commands/:id        — delete command
- *   GET    /api/platform-admin/telegram-bot/settings            — get fallback message
- *   PUT    /api/platform-admin/telegram-bot/settings            — update fallback message
- *   PUT    /api/platform-admin/telegram-bot/commands/:id/buttons — replace buttons for a command
+ *   GET    /api/platform-admin/telegram-bot/webhook-info          — get registered webhook status
+ *   POST   /api/platform-admin/telegram-bot/webhook-setup         — register/update webhook URL
+ *   DELETE /api/platform-admin/telegram-bot/webhook-setup         — remove webhook (switch to polling)
+ *   GET    /api/platform-admin/telegram-bot/commands              — list all commands
+ *   POST   /api/platform-admin/telegram-bot/commands              — create command
+ *   PUT    /api/platform-admin/telegram-bot/commands/:id          — update command
+ *   DELETE /api/platform-admin/telegram-bot/commands/:id          — delete command
+ *   GET    /api/platform-admin/telegram-bot/settings              — get fallback message
+ *   PUT    /api/platform-admin/telegram-bot/settings              — update fallback message
+ *   PUT    /api/platform-admin/telegram-bot/commands/:id/buttons  — replace buttons for a command
  */
 
 import { Router } from "express";
@@ -29,7 +29,6 @@ import {
   managementUsers,
   templates,
   insertTelegramBotCommandSchema,
-  updateTelegramBotCommandSchema,
 } from "../../shared/schema.js";
 import { eq, asc, sql, desc, ilike, or, and } from "drizzle-orm";
 import jwt from "jsonwebtoken";
@@ -40,7 +39,11 @@ const router = Router();
 // ─── Auth middleware (same pattern as platform-admin.ts) ──────────────────────
 const authenticatePlatformAdmin = (req: any, res: any, next: any) => {
   const token = req.headers.authorization?.replace("Bearer ", "");
-  if (!token) return res.status(401).json({ error: "Authentication required" });
+
+  if (!token) {
+    return res.status(401).json({ error: "Authentication required" });
+  }
+
   try {
     jwt.verify(token, process.env.JWT_SECRET || "fallback-secret");
     next();
@@ -54,20 +57,6 @@ router.use(authenticatePlatformAdmin);
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 const FALLBACK_SETTINGS_KEY = "telegram_bot_fallback";
 
-async function getFallbackMessage(): Promise<string> {
-  try {
-    const [row] = await db
-      .select()
-      .from(platformSettings)
-      .where(eq(platformSettings.key, FALLBACK_SETTINGS_KEY))
-      .limit(1);
-    const v = row?.value as any;
-    return typeof v?.message === "string" ? v.message : DEFAULT_FALLBACK;
-  } catch {
-    return DEFAULT_FALLBACK;
-  }
-}
-
 const DEFAULT_FALLBACK =
   "Ողջույն! Ես չճանաչեցի ձեր հարցումը։\n\nՕգտագործեք /help հրամանը հասանելի հրամանների ցուցակը տեսնելու համար։";
 
@@ -77,13 +66,59 @@ function getBotToken(): string | null {
   return process.env.TELEGRAM_BOT_TOKEN ?? null;
 }
 
+/**
+ * Local admin update schema.
+ *
+ * Important:
+ * We intentionally do NOT use the shared updateTelegramBotCommandSchema here,
+ * because the previous behavior was likely stripping or mishandling enabled:false.
+ *
+ * This schema preserves both:
+ * - enabled: true
+ * - enabled: false
+ */
+const updateBotCommandAdminSchema = z
+  .object({
+    command: z.string().min(1, "Command is required").max(32, "Command too long").optional(),
+    title: z.string().min(1, "Title is required").max(100, "Title too long").optional(),
+    responseText: z
+      .string()
+      .min(1, "Response text is required")
+      .max(4096, "Response text too long")
+      .optional(),
+    enabled: z.boolean().optional(),
+    orderIndex: z.number().int().min(0).optional(),
+  })
+  .strict();
+
+async function getFallbackMessage(): Promise<string> {
+  try {
+    const [row] = await db
+      .select()
+      .from(platformSettings)
+      .where(eq(platformSettings.key, FALLBACK_SETTINGS_KEY))
+      .limit(1);
+
+    const value = row?.value as any;
+
+    return typeof value?.message === "string" ? value.message : DEFAULT_FALLBACK;
+  } catch {
+    return DEFAULT_FALLBACK;
+  }
+}
+
 // ─── GET /webhook-info ────────────────────────────────────────────────────────
 router.get("/webhook-info", async (_req, res) => {
   const token = getBotToken();
-  if (!token) return res.status(500).json({ error: "TELEGRAM_BOT_TOKEN not set" });
+
+  if (!token) {
+    return res.status(500).json({ error: "TELEGRAM_BOT_TOKEN not set" });
+  }
+
   try {
-    const r = await fetch(`${TG_API}/bot${token}/getWebhookInfo`);
-    const data = await r.json() as any;
+    const response = await fetch(`${TG_API}/bot${token}/getWebhookInfo`);
+    const data = (await response.json()) as any;
+
     return res.json(data);
   } catch (err) {
     console.error("[TG Bot Admin] getWebhookInfo error:", err);
@@ -92,14 +127,20 @@ router.get("/webhook-info", async (_req, res) => {
 });
 
 // ─── POST /webhook-setup ──────────────────────────────────────────────────────
-// Body: { url: "https://yourapp.vercel.app" }  — we append /api/telegram/webhook
+// Body: { url: "https://yourapp.vercel.app" } — we append /api/telegram/webhook
 router.post("/webhook-setup", async (req, res) => {
   const token = getBotToken();
-  if (!token) return res.status(500).json({ error: "TELEGRAM_BOT_TOKEN not set" });
+
+  if (!token) {
+    return res.status(500).json({ error: "TELEGRAM_BOT_TOKEN not set" });
+  }
 
   const { url } = req.body as { url?: string };
+
   if (!url || typeof url !== "string") {
-    return res.status(400).json({ error: "url is required (e.g. https://yourapp.vercel.app)" });
+    return res.status(400).json({
+      error: "url is required (e.g. https://yourapp.vercel.app)",
+    });
   }
 
   const webhookUrl = url.replace(/\/$/, "") + "/api/telegram/webhook";
@@ -110,16 +151,24 @@ router.post("/webhook-setup", async (req, res) => {
     allowed_updates: ["message", "callback_query"],
     drop_pending_updates: false,
   };
-  if (secret) payload.secret_token = secret;
+
+  if (secret) {
+    payload.secret_token = secret;
+  }
 
   try {
-    const r = await fetch(`${TG_API}/bot${token}/setWebhook`, {
+    const response = await fetch(`${TG_API}/bot${token}/setWebhook`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(payload),
     });
-    const data = await r.json() as any;
-    return res.json({ webhookUrl, telegramResponse: data });
+
+    const data = (await response.json()) as any;
+
+    return res.json({
+      webhookUrl,
+      telegramResponse: data,
+    });
   } catch (err) {
     console.error("[TG Bot Admin] setWebhook error:", err);
     return res.status(500).json({ error: "Failed to set webhook" });
@@ -129,14 +178,20 @@ router.post("/webhook-setup", async (req, res) => {
 // ─── DELETE /webhook-setup ────────────────────────────────────────────────────
 router.delete("/webhook-setup", async (_req, res) => {
   const token = getBotToken();
-  if (!token) return res.status(500).json({ error: "TELEGRAM_BOT_TOKEN not set" });
+
+  if (!token) {
+    return res.status(500).json({ error: "TELEGRAM_BOT_TOKEN not set" });
+  }
+
   try {
-    const r = await fetch(`${TG_API}/bot${token}/deleteWebhook`, {
+    const response = await fetch(`${TG_API}/bot${token}/deleteWebhook`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ drop_pending_updates: false }),
     });
-    const data = await r.json() as any;
+
+    const data = (await response.json()) as any;
+
     return res.json(data);
   } catch (err) {
     console.error("[TG Bot Admin] deleteWebhook error:", err);
@@ -150,16 +205,20 @@ router.get("/commands", async (_req, res) => {
     const commands = await db
       .select()
       .from(telegramBotCommands)
-      .orderBy(asc(telegramBotCommands.orderIndex), asc(telegramBotCommands.createdAt));
+      .orderBy(
+        asc(telegramBotCommands.orderIndex),
+        asc(telegramBotCommands.createdAt),
+      );
 
     const buttons = await db
       .select()
       .from(telegramBotButtons)
       .orderBy(asc(telegramBotButtons.orderIndex));
 
-    const result = commands.map((cmd) => ({
+    const result = commands.map((cmd: any) => ({
       ...cmd,
-      buttons: buttons.filter((b) => b.commandId === cmd.id),
+      enabled: Boolean(cmd.enabled ?? cmd.isEnabled ?? cmd.is_enabled),
+      buttons: buttons.filter((button) => button.commandId === cmd.id),
     }));
 
     return res.json(result);
@@ -173,8 +232,12 @@ router.get("/commands", async (_req, res) => {
 router.post("/commands", async (req, res) => {
   try {
     const parsed = insertTelegramBotCommandSchema.safeParse(req.body);
+
     if (!parsed.success) {
-      return res.status(400).json({ error: "Validation failed", details: parsed.error.flatten() });
+      return res.status(400).json({
+        error: "Validation failed",
+        details: parsed.error.flatten(),
+      });
     }
 
     const [created] = await db
@@ -184,10 +247,12 @@ router.post("/commands", async (req, res) => {
 
     return res.status(201).json(created);
   } catch (err: any) {
-    // Unique constraint on command
     if (err?.code === "23505") {
-      return res.status(409).json({ error: "A command with this name already exists" });
+      return res.status(409).json({
+        error: "A command with this name already exists",
+      });
     }
+
     console.error("[TG Bot Admin] create command error:", err);
     return res.status(500).json({ error: "Failed to create command" });
   }
@@ -196,14 +261,58 @@ router.post("/commands", async (req, res) => {
 // ─── PUT /commands/:id ─────────────────────────────────────────────────────────
 router.put("/commands/:id", async (req, res) => {
   try {
-    const parsed = updateTelegramBotCommandSchema.safeParse(req.body);
+    const parsed = updateBotCommandAdminSchema.safeParse(req.body);
+
     if (!parsed.success) {
-      return res.status(400).json({ error: "Validation failed", details: parsed.error.flatten() });
+      return res.status(400).json({
+        error: "Validation failed",
+        details: parsed.error.flatten(),
+      });
+    }
+
+    const updateData: Record<string, any> = {
+      updatedAt: sql`now()`,
+    };
+
+    if (typeof parsed.data.command === "string") {
+      updateData.command = parsed.data.command.trim();
+    }
+
+    if (typeof parsed.data.title === "string") {
+      updateData.title = parsed.data.title.trim();
+    }
+
+    if (typeof parsed.data.responseText === "string") {
+      updateData.responseText = parsed.data.responseText.trim();
+    }
+
+    /**
+     * Critical fix:
+     * Do not write `if (parsed.data.enabled)`.
+     * That ignores false and makes disabling impossible.
+     */
+    if (typeof parsed.data.enabled === "boolean") {
+      const commandTable = telegramBotCommands as any;
+
+      if ("enabled" in commandTable) {
+        updateData.enabled = parsed.data.enabled;
+      } else if ("isEnabled" in commandTable) {
+        updateData.isEnabled = parsed.data.enabled;
+      } else {
+        return res.status(500).json({
+          error:
+            "Telegram command enabled column was not found in schema. Check telegramBotCommands in shared/schema.ts.",
+        });
+      }
+    }
+
+    if (typeof parsed.data.orderIndex === "number") {
+      updateData.orderIndex = parsed.data.orderIndex;
     }
 
     const [updated] = await db
       .update(telegramBotCommands)
-      .set({ ...parsed.data, updatedAt: sql`now()` })
+      .set(updateData)
       .where(eq(telegramBotCommands.id, req.params.id))
       .returning();
 
@@ -211,11 +320,21 @@ router.put("/commands/:id", async (req, res) => {
       return res.status(404).json({ error: "Command not found" });
     }
 
-    return res.json(updated);
+    return res.json({
+      ...updated,
+      enabled: Boolean(
+        (updated as any).enabled ??
+        (updated as any).isEnabled ??
+        (updated as any).is_enabled,
+      ),
+    });
   } catch (err: any) {
     if (err?.code === "23505") {
-      return res.status(409).json({ error: "A command with this name already exists" });
+      return res.status(409).json({
+        error: "A command with this name already exists",
+      });
     }
+
     console.error("[TG Bot Admin] update command error:", err);
     return res.status(500).json({ error: "Failed to update command" });
   }
@@ -244,41 +363,63 @@ router.delete("/commands/:id", async (req, res) => {
 router.put("/commands/:id/buttons", async (req, res) => {
   try {
     const { buttons } = req.body;
+
     if (!Array.isArray(buttons)) {
       return res.status(400).json({ error: "buttons must be an array" });
     }
 
-    // Validate each button
-    // Note: insertTelegramBotButtonSchema has .superRefine() applied which returns ZodEffects
+    // Validate each button.
+    // Note: insertTelegramBotButtonSchema has .superRefine() applied which returns ZodEffects,
     // and ZodEffects does not support .omit(). Define the per-button schema inline instead.
-    const singleButtonSchema = z.object({
-      label: z.string().min(1, "Label is required").max(64, "Label too long"),
-      type: z.enum(["url", "command"]),
-      value: z.string().min(1, "Value is required").max(200),
-      orderIndex: z.number().int().min(0).default(0),
-    }).superRefine((data, ctx) => {
-      if (data.type === "url") {
-        try {
-          const url = new URL(data.value);
-          if (url.protocol !== "http:" && url.protocol !== "https:") {
-            ctx.addIssue({ code: z.ZodIssueCode.custom, message: "URL must use http or https", path: ["value"] });
+    const singleButtonSchema = z
+      .object({
+        label: z.string().min(1, "Label is required").max(64, "Label too long"),
+        type: z.enum(["url", "command"]),
+        value: z.string().min(1, "Value is required").max(200),
+        orderIndex: z.number().int().min(0).default(0),
+      })
+      .superRefine((data, ctx) => {
+        if (data.type === "url") {
+          try {
+            const url = new URL(data.value);
+
+            if (url.protocol !== "http:" && url.protocol !== "https:") {
+              ctx.addIssue({
+                code: z.ZodIssueCode.custom,
+                message: "URL must use http or https",
+                path: ["value"],
+              });
+            }
+          } catch {
+            ctx.addIssue({
+              code: z.ZodIssueCode.custom,
+              message: "Invalid URL",
+              path: ["value"],
+            });
           }
-        } catch {
-          ctx.addIssue({ code: z.ZodIssueCode.custom, message: "Invalid URL", path: ["value"] });
+        } else if (data.type === "command") {
+          if (!/^\/[a-zA-Z0-9_]+$/.test(data.value)) {
+            ctx.addIssue({
+              code: z.ZodIssueCode.custom,
+              message:
+                "Command value must start with / and contain only letters, digits, or underscores",
+              path: ["value"],
+            });
+          }
         }
-      } else if (data.type === "command") {
-        if (!/^\/[a-zA-Z0-9_]+$/.test(data.value)) {
-          ctx.addIssue({ code: z.ZodIssueCode.custom, message: "Command value must start with / and contain only letters, digits, or underscores", path: ["value"] });
-        }
-      }
-    });
+      });
+
     const buttonSchema = z.array(singleButtonSchema);
     const parsed = buttonSchema.safeParse(buttons);
+
     if (!parsed.success) {
-      return res.status(400).json({ error: "Button validation failed", details: parsed.error.flatten() });
+      return res.status(400).json({
+        error: "Button validation failed",
+        details: parsed.error.flatten(),
+      });
     }
 
-    // Verify command exists
+    // Verify command exists.
     const [cmd] = await db
       .select({ id: telegramBotCommands.id })
       .from(telegramBotCommands)
@@ -289,16 +430,18 @@ router.put("/commands/:id/buttons", async (req, res) => {
       return res.status(404).json({ error: "Command not found" });
     }
 
-    // Replace buttons atomically
+    // Replace buttons atomically.
     await db.transaction(async (tx) => {
-      await tx.delete(telegramBotButtons).where(eq(telegramBotButtons.commandId, req.params.id));
+      await tx
+        .delete(telegramBotButtons)
+        .where(eq(telegramBotButtons.commandId, req.params.id));
 
       if (parsed.data.length > 0) {
         await tx.insert(telegramBotButtons).values(
-          parsed.data.map((b, i) => ({
-            ...b,
+          parsed.data.map((button, index) => ({
+            ...button,
             commandId: req.params.id,
-            orderIndex: b.orderIndex ?? i,
+            orderIndex: button.orderIndex ?? index,
           })),
         );
       }
@@ -321,6 +464,7 @@ router.put("/commands/:id/buttons", async (req, res) => {
 router.get("/settings", async (_req, res) => {
   try {
     const message = await getFallbackMessage();
+
     return res.json({ fallbackMessage: message });
   } catch (err) {
     console.error("[TG Bot Admin] get settings error:", err);
@@ -334,11 +478,19 @@ router.put("/settings", async (req, res) => {
     const { fallbackMessage } = req.body;
 
     const settingsSchema = z.object({
-      fallbackMessage: z.string().min(1, "Fallback message is required").max(4096),
+      fallbackMessage: z
+        .string()
+        .min(1, "Fallback message is required")
+        .max(4096),
     });
+
     const parsed = settingsSchema.safeParse({ fallbackMessage });
+
     if (!parsed.success) {
-      return res.status(400).json({ error: "Validation failed", details: parsed.error.flatten() });
+      return res.status(400).json({
+        error: "Validation failed",
+        details: parsed.error.flatten(),
+      });
     }
 
     const value = { message: parsed.data.fallbackMessage };
@@ -362,7 +514,10 @@ router.put("/settings", async (req, res) => {
       });
     }
 
-    return res.json({ success: true, fallbackMessage: parsed.data.fallbackMessage });
+    return res.json({
+      success: true,
+      fallbackMessage: parsed.data.fallbackMessage,
+    });
   } catch (err) {
     console.error("[TG Bot Admin] update settings error:", err);
     return res.status(500).json({ error: "Failed to update settings" });
@@ -378,26 +533,32 @@ router.put("/settings", async (req, res) => {
 //   offset  — pagination offset (default 0)
 router.get("/users", async (req, res) => {
   try {
-    const { search, status, limit: limitParam, offset: offsetParam } = req.query as Record<string, string>;
+    const {
+      search,
+      status,
+      limit: limitParam,
+      offset: offsetParam,
+    } = req.query as Record<string, string>;
+
     const limit = Math.min(Number(limitParam) || 50, 200);
     const offset = Number(offsetParam) || 0;
 
-    // Build where clause for status filter
+    // Build where clause for status filter.
     const statusFilter =
       status === "connected"
         ? eq(telegramBotUsers.isConnectedCustomer, true)
         : status === "unconnected"
-        ? eq(telegramBotUsers.isConnectedCustomer, false)
-        : undefined;
+          ? eq(telegramBotUsers.isConnectedCustomer, false)
+          : undefined;
 
-    // Build where clause for search
+    // Build where clause for search.
     const searchFilter = search?.trim()
       ? or(
-          ilike(telegramBotUsers.username, `%${search.trim()}%`),
-          ilike(telegramBotUsers.firstName, `%${search.trim()}%`),
-          ilike(telegramBotUsers.lastName, `%${search.trim()}%`),
-          ilike(telegramBotUsers.telegramUserId, `%${search.trim()}%`),
-        )
+        ilike(telegramBotUsers.username, `%${search.trim()}%`),
+        ilike(telegramBotUsers.firstName, `%${search.trim()}%`),
+        ilike(telegramBotUsers.lastName, `%${search.trim()}%`),
+        ilike(telegramBotUsers.telegramUserId, `%${search.trim()}%`),
+      )
       : undefined;
 
     const whereClause =
@@ -405,7 +566,7 @@ router.get("/users", async (req, res) => {
         ? and(statusFilter, searchFilter)
         : statusFilter ?? searchFilter;
 
-    // Fetch counts (unfiltered by search, only by status for the totals)
+    // Fetch counts.
     const [totals] = await db
       .select({
         total: sql<number>`count(*)::int`,
@@ -413,7 +574,7 @@ router.get("/users", async (req, res) => {
       })
       .from(telegramBotUsers);
 
-    // Fetch users with optional joins for customer name and template name
+    // Fetch users with optional joins for customer name and template name.
     const users = await db
       .select({
         id: telegramBotUsers.id,
@@ -435,7 +596,10 @@ router.get("/users", async (req, res) => {
         templateSlug: templates.slug,
       })
       .from(telegramBotUsers)
-      .leftJoin(managementUsers, eq(telegramBotUsers.customerId, managementUsers.id))
+      .leftJoin(
+        managementUsers,
+        eq(telegramBotUsers.customerId, managementUsers.id),
+      )
       .leftJoin(templates, eq(telegramBotUsers.templateId, templates.id))
       .where(whereClause)
       .orderBy(desc(telegramBotUsers.lastSeenAt))

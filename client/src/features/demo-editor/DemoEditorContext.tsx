@@ -69,23 +69,29 @@ export function DemoEditorProvider({ children }: { children: React.ReactNode }) 
 
   // Autosave debounce
   const autoSaveTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
-
+  const shouldAutosaveRef = useRef(false);
   const scheduleAutosave = useCallback((cfg: WeddingConfig) => {
     if (autoSaveTimer.current) clearTimeout(autoSaveTimer.current);
+
     autoSaveTimer.current = setTimeout(() => {
       saveDemoConfig(cfg);
       setIsDirty(false);
     }, 800);
   }, []);
 
+  useEffect(() => {
+    if (!shouldAutosaveRef.current) return;
+
+    shouldAutosaveRef.current = false;
+    scheduleAutosave(config);
+  }, [config, scheduleAutosave]);
+
   const updateConfig = useCallback((patch: DeepPartial<WeddingConfig>) => {
-    setConfig((prev) => {
-      const next = deepMerge(prev, patch) as WeddingConfig;
-      setIsDirty(true);
-      scheduleAutosave(next);
-      return next;
-    });
-  }, [scheduleAutosave]);
+    shouldAutosaveRef.current = true;
+    setIsDirty(true);
+
+    setConfig((prev) => deepMerge(prev, patch) as WeddingConfig);
+  }, []);
 
   /** Apply saved customer edits on top of the freshly-loaded base config.
    *  Called once by DemoEditorPage after it fetches the customerEdits record. */
@@ -94,12 +100,9 @@ export function DemoEditorProvider({ children }: { children: React.ReactNode }) 
   }, []);
 
   const saveConfig = useCallback(() => {
-    setConfig((prev) => {
-      saveDemoConfig(prev);
-      return prev;
-    });
+    saveDemoConfig(config);
     setIsDirty(false);
-  }, []);
+  }, [config]);
 
   const resetConfig = useCallback(() => {
     setConfig(structuredClone(DEMO_DEFAULT_CONFIG));
@@ -116,20 +119,28 @@ export function DemoEditorProvider({ children }: { children: React.ReactNode }) 
   }, []);
 
   const updateConfigByPath = useCallback((path: string, value: string | string[]) => {
-    setConfig(prev => {
+    shouldAutosaveRef.current = true;
+    setIsDirty(true);
+
+    setConfig((prev) => {
       const next = structuredClone(prev) as unknown as Record<string, unknown>;
       const keys = path.split(".");
+
       let cur: Record<string, unknown> = next;
+
       for (let i = 0; i < keys.length - 1; i++) {
-        if (typeof cur[keys[i]] !== "object" || cur[keys[i]] === null) cur[keys[i]] = {};
+        if (typeof cur[keys[i]] !== "object" || cur[keys[i]] === null) {
+          cur[keys[i]] = {};
+        }
+
         cur = cur[keys[i]] as Record<string, unknown>;
       }
+
       cur[keys[keys.length - 1]] = value;
-      setIsDirty(true);
-      scheduleAutosave(next as unknown as WeddingConfig);
+
       return next as unknown as WeddingConfig;
     });
-  }, [scheduleAutosave]);
+  }, []);
 
   useEffect(() => () => {
     if (autoSaveTimer.current) clearTimeout(autoSaveTimer.current);

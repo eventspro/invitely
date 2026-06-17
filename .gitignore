@@ -37,3 +37,49 @@ logs/
 
 # Staging Vercel project link
 .vercel-staging/
+
+
+```gitignore
+# Local dev server logs
+dev-server.log
+dev-server.err
+*.log
+
+# Playwright / screenshot / visual test outputs
+test-results/
+playwright-report/
+blob-report/
+
+# Temporary AI/Codex reports
+DEFAULT_CONTENT_FIX_REPORT.md
+PHASE_A_REPORT.md
+PLANNER_TASKS_TELEGRAM_PLAN.md
+
+# Temporary AI/Codex context docs
+docs/ai-context/
+
+# One-off generated content/fix scripts
+gen-all-content.cjs
+gen-content-v3.cjs
+gen-content-v3b.cjs
+gen-content-v3c.cjs
+gen-content-v3d.cjs
+patch-homepage.cjs
+
+# One-off text/nav/color fixing scripts
+scripts/check-nav.cjs
+scripts/check-unicode.cjs
+scripts/fix-bottomsheet-titles.cjs
+scripts/fix-colors.cjs
+scripts/fix-emojis.cjs
+scripts/fix-english.cjs
+scripts/fix-nav-labels.cjs
+scripts/fix-planner-constants.mjs
+scripts/fix-planner-texts.cjs
+scripts/fix-texts.cjs
+scripts/test-labels.cjs
+
+# One-off seed script, ignore unless you intentionally want to keep it
+scripts/seed-envelope-template.ts
+```
+

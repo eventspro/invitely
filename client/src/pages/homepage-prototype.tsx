@@ -513,9 +513,16 @@ export default function HomepagePrototype() {
   }, []);
 
   // ─── Derived data (always hy locale) ────────────────────────────────────
-  const navItems = cfg.navigation.items
+  const navItemsFromContent = cfg.navigation.items
     .filter(i => i.visible)
     .map(i => ({ label: i.label.hy, href: i.href }));
+  const navItems = navItemsFromContent.some(item => item.href === "/partners" || item.href === "/vendors")
+    ? navItemsFromContent
+    : [
+        ...navItemsFromContent.slice(0, 1),
+        { label: "Գործընկերներ", href: "/partners" },
+        ...navItemsFromContent.slice(1),
+      ];
 
   const heroChips = cfg.hero.chips
     .filter(c => c.visible)

@@ -22,9 +22,9 @@ import { SaleWheelModal } from "@/components/SaleWheelModal";
 const TOTAL_STEPS = 5;
 const STEP_META = [
   { label: "Names & Date", emoji: "\u{1F495}" },
-  { label: "Photos",       emoji: "\u{1F4F8}" },
-  { label: "Colors",       emoji: "\u{1F3A8}" },
-  { label: "Preview",      emoji: "\u{1F441}" },
+  { label: "Photos", emoji: "\u{1F4F8}" },
+  { label: "Colors", emoji: "\u{1F3A8}" },
+  { label: "Preview", emoji: "\u{1F441}" },
   { label: "Email & Send", emoji: "\u{1F48C}" },
 ];
 const inputCls =
@@ -168,17 +168,17 @@ function NamesStep({ groomName, brideName, weddingDate, separator, onChange }: {
   }
 
   return (
-    <StepShell step={1} title="Let's start with your names" subtitle="These will appear on your wedding website.">
-      <Field label="Partner 1 name">
-        <input type="text" className={inputCls} value={groomName} placeholder="e.g. David" onChange={e => handleGroom(e.target.value)} />
+    <StepShell step={1} title="Զույգի անունները" subtitle="">
+      <Field label="Փեսայի անունը" required>
+        <input type="text" className={inputCls} value={groomName} placeholder="օրինակ Դավիթ" onChange={e => handleGroom(e.target.value)} />
       </Field>
-      <Field label="Name separator" hint="shown between names">
-        <input type="text" className={inputCls} value={separator} placeholder="e.g. & or and or ♥" onChange={e => handleSeparator(e.target.value)} />
+      <Field label="Անունների բաժանարար" hint="ցուցադրվում է անունների միջև">
+        <input type="text" className={inputCls} value={separator} placeholder="օրինակ &, և կամ ♥" onChange={e => handleSeparator(e.target.value)} />
       </Field>
-      <Field label="Partner 2 name">
-        <input type="text" className={inputCls} value={brideName} placeholder="e.g. Rose" onChange={e => handleBride(e.target.value)} />
+      <Field label="Հարսնացուի անունը" required>
+        <input type="text" className={inputCls} value={brideName} placeholder="օրինակ Անահիտ" onChange={e => handleBride(e.target.value)} />
       </Field>
-      <Field label="Wedding date">
+      <Field label="Հարսանիքի ամսաթիվը">
         <input type="date" className={inputCls} value={weddingDate} onChange={e => handleDate(e.target.value)} />
       </Field>
     </StepShell>
@@ -209,16 +209,16 @@ function PhotosStep({ previews, galleryPositions, onHeroChange, onGalleryAdd, on
   }
 
   return (
-    <StepShell step={2} title="Add your favorite photos" subtitle="Upload your photos or skip to use the defaults.">
-      <Field label="Main photo" hint="(hero background)">
+    <StepShell step={2} title="Ընտրեք ձեր լուսանկարները" subtitle="Վերբեռնեք ձեր լուսանկարները կամ բաց թողեք՝ օգտագործելու համար մեր օրինակները։">
+      <Field label="Գլխավոր լուսանկար" hint="(հերո ֆոն)">
         <PhotoUploadBox
           preview={previews.heroPrev}
-          placeholder="Upload main photo"
+          placeholder="Վերբեռնեք գլխավոր լուսանկարը"
           onUpload={handleHeroSelect}
           onRemove={previews.heroPrev ? () => onHeroChange(null) : undefined}
         />
       </Field>
-      <Field label="Gallery photos" hint="(optional, up to 10)">
+      <Field label="Gallery photos" hint="(ըստ ցանկության, մինչև 10)">
         {previews.galleryPrevs.length > 0 && (
           <div className="grid grid-cols-3 gap-2 mb-3">
             {previews.galleryPrevs.map((src, i) => (
@@ -233,11 +233,11 @@ function PhotosStep({ previews, galleryPositions, onHeroChange, onGalleryAdd, on
           </div>
         )}
         <label className="flex items-center justify-center gap-2 px-4 py-3 border-2 border-dashed border-stone-200 rounded-xl text-stone-400 text-sm cursor-pointer hover:border-rose-300 hover:text-rose-500 transition-colors">
-          <Upload size={15} /> Add photos
+          <Upload size={15} /> Ավելացնել լուսանկարներ
           <input type="file" accept="image/*" multiple className="hidden" onChange={handleGallerySelect} />
         </label>
         <p className="text-xs text-stone-400 mt-2">
-          Photos will be uploaded when you continue to the next step.
+          Լուսանկարները կվերբեռնվեն, երբ սեղմեք "Շարունակել" կոճակը։
         </p>
       </Field>
     </StepShell>
@@ -263,9 +263,8 @@ function ColorsStep({ paletteId, onChange }: { paletteId: string; onChange: (id:
             <button
               key={palette.id}
               onClick={() => selectPalette(palette.id)}
-              className={`relative p-4 rounded-2xl border-2 text-left transition-all ${
-                active ? "border-rose-400 shadow-sm bg-rose-50/30" : "border-stone-200 hover:border-stone-300 bg-white"
-              }`}
+              className={`relative p-4 rounded-2xl border-2 text-left transition-all ${active ? "border-rose-400 shadow-sm bg-rose-50/30" : "border-stone-200 hover:border-stone-300 bg-white"
+                }`}
             >
               {active && (
                 <span className="absolute top-2.5 right-2.5 bg-rose-500 text-white rounded-full w-5 h-5 flex items-center justify-center">
@@ -287,23 +286,6 @@ function ColorsStep({ paletteId, onChange }: { paletteId: string; onChange: (id:
   );
 }
 
-function PreviewStep() {
-  return (
-    <StepShell step={4} title="Here's your preview" subtitle="Review your wedding website before sending.">
-      <div className="bg-amber-50 border border-amber-200 rounded-xl px-4 py-3">
-        <p className="text-sm text-amber-700 leading-relaxed">
-          <strong>Demo mode:</strong> This preview is not a live wedding website and cannot be shared publicly. The 4ever.am team will set up your real website.
-        </p>
-      </div>
-      <div className="sm:hidden rounded-xl overflow-hidden border border-stone-200" style={{ height: "400px", overflowY: "auto" }}>
-        <DemoPreview mode="mobile" />
-      </div>
-      <p className="text-xs text-stone-400">
-        Happy with how it looks? Send it to the 4ever.am team and they will get your real website ready.
-      </p>
-    </StepShell>
-  );
-}
 
 function EmailStep({ email, phone, instagram, onChange, error }: {
   email: string; phone: string; instagram: string;
@@ -311,22 +293,22 @@ function EmailStep({ email, phone, instagram, onChange, error }: {
   error?: string;
 }) {
   return (
-    <StepShell step={5} title="Almost done! Send your demo" subtitle="Leave your contact details and we will reach out to create your real website.">
+    <StepShell step={5} title="Մոտենում ենք ավարտին! Ուղարկեք ձեր փորձնական տարբերակը" subtitle="Թողեք ձեր կոնտակտային տվյալները, և մենք կապ կհաստատենք ձեզ հետ՝ ձեր իրական կայքը ստեղծելու համար.">
       {error && <ErrorBanner message={error} />}
-      <Field label="Your email" required>
+      <Field label="Ձեր էլ. փոստը" required>
         <input type="email" className={inputCls} value={email} placeholder="you@example.com"
           onChange={e => onChange({ email: e.target.value })} />
       </Field>
-      <Field label="Phone number" hint="(optional)">
+      <Field label="Հեռախոսահամար" hint="(ըստ ցանկության)">
         <input type="tel" className={inputCls} value={phone} placeholder="+374 XX XXX XXX"
           onChange={e => onChange({ phone: e.target.value })} />
       </Field>
-      <Field label="Instagram" hint="(optional)">
+      <Field label="Instagram" hint="(ըստ ցանկության)">
         <input type="text" className={inputCls} value={instagram} placeholder="@yourhandle"
           onChange={e => onChange({ instagram: e.target.value })} />
       </Field>
       <div className="bg-stone-50 border border-stone-100 rounded-xl px-4 py-3 text-xs text-stone-500">
-        By continuing you agree to be contacted by the 4ever.am team about your wedding website. We will not share your details.
+        Շարունակելով դուք համաձայնում եք, որ 4ever.am թիմը կապ կհաստատի ձեզ հետ ձեր հարսանիքի կայքի վերաբերյալ: Ձեր տվայները կպահպանվեն անվտանգ և չեն կիսվի երրորդ կողմերի հետ առանց ձեր համաձայնության:
       </div>
     </StepShell>
   );
@@ -409,18 +391,17 @@ function WizardLayout({ editId }: { editId: string }) {
         if (sep) patch.footer = { separator: sep };
         if (Object.keys(patch).length > 0) applyCustomerPatch(patch);
       })
-      .catch(() => {/* new record — base config already shown */})
+      .catch(() => {/* new record — base config already shown */ })
       .finally(() => setIsLoading(false));
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [editId]);
 
   function handlePositionChange(idx: number, pos: number) {
-    setGalleryPositions(prev => {
-      const next = [...prev];
-      next[idx] = pos;
-      updateConfig({ photos: { imagePositions: next } });
-      return next;
-    });
+    const next = [...galleryPositions];
+    next[idx] = pos;
+
+    setGalleryPositions(next);
+    updateConfig({ photos: { imagePositions: next } });
   }
 
   async function patchRecord(body: Record<string, unknown>) {
@@ -492,6 +473,164 @@ function WizardLayout({ editId }: { editId: string }) {
       setIsSaving(false);
     }
   }
+  function PreviewStep() {
+    return (
+      <StepShell
+        step={4}
+        title="Here's your preview"
+        subtitle="Review your wedding website before sending."
+      >
+        <style>{`
+        @keyframes preview-eye-blink {
+          0%, 88%, 100% { transform: scaleY(1); }
+          92%, 96% { transform: scaleY(0.12); }
+        }
+
+        @keyframes preview-float {
+          0%, 100% { transform: translateY(0); }
+          50% { transform: translateY(-7px); }
+        }
+
+        @keyframes preview-glow {
+          0%, 100% { opacity: 0.45; transform: scale(1); }
+          50% { opacity: 0.9; transform: scale(1.05); }
+        }
+
+        @keyframes preview-shimmer {
+          0% { transform: translateX(-120%) rotate(18deg); }
+          100% { transform: translateX(170%) rotate(18deg); }
+        }
+
+        @keyframes preview-pulse-ring {
+          0% { transform: scale(0.86); opacity: 0.55; }
+          70% { transform: scale(1.55); opacity: 0; }
+          100% { transform: scale(1.55); opacity: 0; }
+        }
+
+        @keyframes preview-arrow {
+          0%, 100% { transform: translateX(0); }
+          50% { transform: translateX(4px); }
+        }
+
+        @keyframes preview-dot {
+          0%, 100% { opacity: 0.35; transform: translateY(0); }
+          50% { opacity: 1; transform: translateY(-3px); }
+        }
+
+        @media (prefers-reduced-motion: reduce) {
+          .preview-animate,
+          .preview-animate * {
+            animation: none !important;
+            transition: none !important;
+          }
+        }
+      `}</style>
+
+        <div className="rounded-2xl border border-[#F1D8A8] bg-gradient-to-br from-[#FFF9EA] to-[#FFF3D6] px-4 py-3 shadow-[0_12px_28px_rgba(180,106,103,0.06)]">
+          <p className="text-sm leading-relaxed text-[#A45A00]">
+            <strong>Փորձնական տարբերակ:</strong> Այս նախադիտումը իրական
+            հարսանիքի կայք չէ և չի կարող հրապարակվել: 4ever.am թիմը կստեղծի ձեր
+            իրական կայքը:
+          </p>
+        </div>
+
+        <div className="sm:hidden">
+          <button
+            type="button"
+            onClick={() => setShowPreviewModal(true)}
+            aria-label="Բացել նախադիտումը"
+            className="preview-animate group relative min-h-[470px] w-full overflow-hidden rounded-[30px] border border-[#E8D8D2] bg-[#FFFDF9] px-5 pb-6 pt-5 text-left shadow-[0_24px_70px_rgba(31,27,24,0.12)] transition-all duration-300 active:scale-[0.985] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#C98F8B]/40"
+          >
+            <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_left,#F8EDEA_0%,transparent_34%),radial-gradient(circle_at_bottom_right,#FFF0E7_0%,transparent_38%)]" />
+
+            <div className="absolute inset-x-0 top-0 h-1.5 bg-gradient-to-r from-[#B46A67] via-[#F3C8C1] to-[#B01246]" />
+
+            <div className="absolute -left-20 top-16 h-40 w-40 rounded-full bg-[#F8D8D2] blur-3xl preview-animate" style={{ animation: "preview-glow 4s ease-in-out infinite" }} />
+            <div className="absolute -right-24 bottom-10 h-52 w-52 rounded-full bg-[#F4E2D8] blur-3xl preview-animate" style={{ animation: "preview-glow 5s ease-in-out infinite" }} />
+
+            <div className="absolute left-[-80px] top-0 h-[130%] w-16 bg-white/35 blur-xl preview-animate" style={{ animation: "preview-shimmer 4.8s ease-in-out infinite" }} />
+
+            <div className="relative flex items-center justify-between">
+              <span className="inline-flex items-center gap-2 rounded-full border border-[#E9DDD6] bg-white/85 px-3.5 py-2 text-xs font-medium text-[#6F6863] shadow-[0_10px_25px_rgba(31,27,24,0.08)] backdrop-blur">
+                <span className="relative flex h-7 w-7 items-center justify-center rounded-full bg-[#F8EDEA] text-[#B46A67]">
+                  <span className="absolute inset-0 rounded-full border border-[#C98F8B]/50 preview-animate" style={{ animation: "preview-pulse-ring 2.2s ease-out infinite" }} />
+                  <Eye
+                    size={14}
+                    strokeWidth={2}
+                    className="preview-animate origin-center"
+                    style={{ animation: "preview-eye-blink 3.2s ease-in-out infinite" }}
+                  />
+                </span>
+                Նախադիտում
+              </span>
+
+              <span className="rounded-full bg-[#1F1B18] px-3.5 py-2 text-[10px] font-bold uppercase tracking-[0.18em] text-white shadow-[0_10px_25px_rgba(31,27,24,0.18)]">
+                Live
+              </span>
+            </div>
+
+            <div className="relative mx-auto mt-8 w-[238px] preview-animate" style={{ animation: "preview-float 4.2s ease-in-out infinite" }}>
+              <div className="absolute -inset-4 rounded-[42px] bg-gradient-to-br from-[#F8EDEA] via-white to-[#FBE7E2] opacity-80 blur-xl" />
+
+              <div className="relative rounded-[38px] border border-[#E9DDD6] bg-white/90 p-2.5 shadow-[0_28px_65px_rgba(31,27,24,0.18)] backdrop-blur">
+                <div className="mx-auto mb-2 h-1.5 w-16 rounded-full bg-[#E4D6CF]" />
+
+                <div className="relative overflow-hidden rounded-[30px] border border-[#EFE3DD] bg-gradient-to-b from-[#FFFDF9] via-[#FAF7F2] to-[#F8EDEA] px-4 py-6 text-center">
+                  <div className="absolute left-4 top-4 h-2 w-2 rounded-full bg-[#C98F8B]/45 preview-animate" style={{ animation: "preview-dot 2s ease-in-out infinite" }} />
+                  <div className="absolute right-5 top-10 h-1.5 w-1.5 rounded-full bg-[#B46A67]/35 preview-animate" style={{ animation: "preview-dot 2.4s ease-in-out infinite" }} />
+                  <div className="absolute bottom-7 left-7 h-1.5 w-1.5 rounded-full bg-[#D8A09C]/40 preview-animate" style={{ animation: "preview-dot 2.8s ease-in-out infinite" }} />
+
+                  <div className="mx-auto mb-5 flex h-16 w-16 items-center justify-center rounded-full bg-white shadow-[0_15px_34px_rgba(180,106,103,0.2)]">
+                    <div className="relative flex h-11 w-11 items-center justify-center rounded-full bg-[#FFF5F3] text-[#B46A67]">
+                      <span className="absolute inset-0 rounded-full border border-[#C98F8B]/40 preview-animate" style={{ animation: "preview-pulse-ring 2s ease-out infinite" }} />
+                      <Eye
+                        size={22}
+                        strokeWidth={2}
+                        className="preview-animate origin-center"
+                        style={{ animation: "preview-eye-blink 2.7s ease-in-out infinite" }}
+                      />
+                    </div>
+                  </div>
+
+                  <p className="text-[15px] font-bold leading-snug text-[#1F1B18]">
+                    Ձեր հրավիրատոմսը պատրաստ է դիտելու
+                  </p>
+
+                  <p className="mx-auto mt-3 max-w-[170px] text-xs leading-relaxed text-[#6F6863]">
+                    Բացեք ամբողջական տեսքը և ստուգեք ինչպես կտեսնեն հյուրերը։
+                  </p>
+
+                  <span className="mt-6 inline-flex items-center gap-2 rounded-full bg-[#B01246] px-5 py-3 text-xs font-bold text-white shadow-[0_16px_34px_rgba(176,18,70,0.28)] transition-all duration-300 group-hover:bg-[#9F103F] group-hover:shadow-[0_18px_40px_rgba(176,18,70,0.34)]">
+                    Բացել նախադիտումը
+                    <span className="preview-animate text-base leading-none" style={{ animation: "preview-arrow 1.2s ease-in-out infinite" }}>
+                      →
+                    </span>
+                  </span>
+                </div>
+              </div>
+            </div>
+
+            <div className="relative mt-7 rounded-2xl border border-[#E9DDD6] bg-white/70 px-4 py-3 text-center shadow-[0_10px_25px_rgba(31,27,24,0.05)] backdrop-blur">
+              <p className="text-xs font-medium leading-relaxed text-[#6F6863]">
+                Սեղմեք քարտի վրա՝ ամբողջական նախադիտումը բացելու համար
+              </p>
+
+              <div className="mt-3 flex justify-center gap-1.5">
+                <span className="h-1.5 w-1.5 rounded-full bg-[#B46A67] preview-animate" style={{ animation: "preview-dot 1.5s ease-in-out infinite" }} />
+                <span className="h-1.5 w-1.5 rounded-full bg-[#C98F8B] preview-animate" style={{ animation: "preview-dot 1.5s ease-in-out infinite 0.15s" }} />
+                <span className="h-1.5 w-1.5 rounded-full bg-[#E4B7B2] preview-animate" style={{ animation: "preview-dot 1.5s ease-in-out infinite 0.3s" }} />
+              </div>
+            </div>
+          </button>
+        </div>
+
+        <p className="text-xs leading-relaxed text-stone-400">
+          Գո՞հ եք տեսքից, կապ հաստատեք 4ever.am թիմի հետ, և մենք կստեղծենք ձեր
+          իրական հրավիրատոմսը:
+        </p>
+      </StepShell>
+    );
+  }
 
   function handleBack() {
     if (step > 1) setStep(s => s - 1);
@@ -516,7 +655,7 @@ function WizardLayout({ editId }: { editId: string }) {
           <span className="hidden sm:inline">Menu</span>
         </button>
         <span className="bg-amber-50 text-amber-700 text-[10px] font-bold px-2.5 py-1 rounded-full uppercase tracking-wider border border-amber-200">
-          Demo mode
+          Փորձնական տարբերակ
         </span>
         <div className="flex-1" />
         <span className="hidden sm:inline text-xs text-stone-400">
@@ -524,7 +663,7 @@ function WizardLayout({ editId }: { editId: string }) {
         </span>
         <span className="sm:hidden text-xs text-stone-400">{step}/{TOTAL_STEPS}</span>
         <button onClick={() => setShowPreviewModal(true)} className="sm:hidden flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-stone-200 text-stone-600 text-xs">
-          <Eye size={12} /> Preview
+          <Eye size={12} /> Նախադիտում
         </button>
       </header>
 
@@ -555,21 +694,38 @@ function WizardLayout({ editId }: { editId: string }) {
                   }
                 }}
                 onGalleryAdd={(files, prevs) => {
-                  setGalleryFiles(prev => [...prev, ...files].slice(0, 10));
-                  setGalleryPositions(prev => [...prev, ...files.map(() => 50)].slice(0, 10));
-                  setGalleryPrevs(prev => {
-                    const next = [...prev, ...prevs].slice(0, 10);
-                    updateConfig({ photos: { images: next } });
-                    return next;
+                  const nextFiles = [...galleryFiles, ...files].slice(0, 10);
+                  const nextPositions = [
+                    ...galleryPositions,
+                    ...files.map(() => 50),
+                  ].slice(0, 10);
+                  const nextPrevs = [...galleryPrevs, ...prevs].slice(0, 10);
+
+                  setGalleryFiles(nextFiles);
+                  setGalleryPositions(nextPositions);
+                  setGalleryPrevs(nextPrevs);
+
+                  updateConfig({
+                    photos: {
+                      images: nextPrevs,
+                      imagePositions: nextPositions,
+                    },
                   });
                 }}
-                onGalleryRemove={idx => {
-                  setGalleryFiles(p => p.filter((_, i) => i !== idx));
-                  setGalleryPositions(p => p.filter((_, i) => i !== idx));
-                  setGalleryPrevs(p => {
-                    const next = p.filter((_, i) => i !== idx);
-                    updateConfig({ photos: { images: next } });
-                    return next;
+                onGalleryRemove={(idx) => {
+                  const nextFiles = galleryFiles.filter((_, i) => i !== idx);
+                  const nextPositions = galleryPositions.filter((_, i) => i !== idx);
+                  const nextPrevs = galleryPrevs.filter((_, i) => i !== idx);
+
+                  setGalleryFiles(nextFiles);
+                  setGalleryPositions(nextPositions);
+                  setGalleryPrevs(nextPrevs);
+
+                  updateConfig({
+                    photos: {
+                      images: nextPrevs,
+                      imagePositions: nextPositions,
+                    },
                   });
                 }}
               />
@@ -586,7 +742,7 @@ function WizardLayout({ editId }: { editId: string }) {
           <div className="shrink-0 bg-white border-t border-stone-100 px-6 py-4 flex items-center gap-3">
             {step > 1 && (
               <button onClick={handleBack} disabled={isSaving} className="flex-1 py-3 rounded-xl border border-stone-200 text-stone-600 text-sm font-medium hover:bg-stone-50 transition-colors disabled:opacity-50">
-                 {"\u2190"} Հետ
+                {"\u2190"} Հետ
               </button>
             )}
             <button onClick={handleContinue} disabled={isSaving}
@@ -594,7 +750,7 @@ function WizardLayout({ editId }: { editId: string }) {
               style={{ background: "#9f1239" }}>
               {isSaving
                 ? <><Loader2 size={15} className="animate-spin" /> Պահպանվում է...</>
-                : isLastStep ? "Ուղարկել իմ ցուցադրությունը \u2192" : "Շարունակել \u2192"}
+                : isLastStep ? "Ուղարկել 4ever.am թիմին \u2192" : "Շարունակել \u2192"}
             </button>
           </div>
         </div>
@@ -655,14 +811,14 @@ function WizardLayout({ editId }: { editId: string }) {
                   <a href="https://instagram.com/4ever.invites" target="_blank" rel="noopener noreferrer"
                     className="flex flex-col items-center gap-1.5 py-3 rounded-2xl border border-stone-200 text-stone-600 hover:border-rose-300 hover:bg-rose-50/40 transition-colors">
                     <svg viewBox="0 0 24 24" fill="currentColor" className="w-5 h-5 text-[#E1306C]">
-                      <path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zm0-2.163c-3.259 0-3.667.014-4.947.072-4.358.2-6.78 2.618-6.98 6.98-.059 1.281-.073 1.689-.073 4.948 0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98 1.281.058 1.689.072 4.948.072 3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98-1.281-.059-1.69-.073-4.949-.073zm0 5.838c-3.403 0-6.162 2.759-6.162 6.162s2.759 6.163 6.162 6.163 6.162-2.759 6.162-6.163c0-3.403-2.759-6.162-6.162-6.162zm0 10.162c-2.209 0-4-1.79-4-4 0-2.209 1.791-4 4-4s4 1.791 4 4c0 2.21-1.791 4-4 4zm6.406-11.845c-.796 0-1.441.645-1.441 1.44s.645 1.44 1.441 1.44c.795 0 1.439-.645 1.439-1.44s-.644-1.44-1.439-1.44z"/>
+                      <path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zm0-2.163c-3.259 0-3.667.014-4.947.072-4.358.2-6.78 2.618-6.98 6.98-.059 1.281-.073 1.689-.073 4.948 0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98 1.281.058 1.689.072 4.948.072 3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98-1.281-.059-1.69-.073-4.949-.073zm0 5.838c-3.403 0-6.162 2.759-6.162 6.162s2.759 6.163 6.162 6.163 6.162-2.759 6.162-6.163c0-3.403-2.759-6.162-6.162-6.162zm0 10.162c-2.209 0-4-1.79-4-4 0-2.209 1.791-4 4-4s4 1.791 4 4c0 2.21-1.791 4-4 4zm6.406-11.845c-.796 0-1.441.645-1.441 1.44s.645 1.44 1.441 1.44c.795 0 1.439-.645 1.439-1.44s-.644-1.44-1.439-1.44z" />
                     </svg>
                     <span className="text-[11px] font-medium">Instagram</span>
                   </a>
                   <a href="https://t.me/foreverambot" target="_blank" rel="noopener noreferrer"
                     className="flex flex-col items-center gap-1.5 py-3 rounded-2xl border border-stone-200 text-stone-600 hover:border-blue-300 hover:bg-blue-50/40 transition-colors">
                     <svg viewBox="0 0 24 24" fill="currentColor" className="w-5 h-5 text-[#2AABEE]">
-                      <path d="M11.944 0A12 12 0 0 0 0 12a12 12 0 0 0 12 12 12 12 0 0 0 12-12A12 12 0 0 0 12 0a12 12 0 0 0-.056 0zm4.962 7.224c.1-.002.321.023.465.14a.506.506 0 0 1 .171.325c.016.093.036.306.02.472-.18 1.898-.962 6.502-1.36 8.627-.168.9-.499 1.201-.82 1.23-.696.065-1.225-.46-1.9-.902-1.056-.693-1.653-1.124-2.678-1.8-1.185-.78-.417-1.21.258-1.91.177-.184 3.247-2.977 3.307-3.23.007-.032.014-.15-.056-.212s-.174-.041-.249-.024c-.106.024-1.793 1.14-5.061 3.345-.48.33-.913.49-1.302.48-.428-.008-1.252-.241-1.865-.44-.752-.245-1.349-.374-1.297-.789.027-.216.325-.437.893-.663 3.498-1.524 5.83-2.529 6.998-3.014 3.332-1.386 4.025-1.627 4.476-1.635z"/>
+                      <path d="M11.944 0A12 12 0 0 0 0 12a12 12 0 0 0 12 12 12 12 0 0 0 12-12A12 12 0 0 0 12 0a12 12 0 0 0-.056 0zm4.962 7.224c.1-.002.321.023.465.14a.506.506 0 0 1 .171.325c.016.093.036.306.02.472-.18 1.898-.962 6.502-1.36 8.627-.168.9-.499 1.201-.82 1.23-.696.065-1.225-.46-1.9-.902-1.056-.693-1.653-1.124-2.678-1.8-1.185-.78-.417-1.21.258-1.91.177-.184 3.247-2.977 3.307-3.23.007-.032.014-.15-.056-.212s-.174-.041-.249-.024c-.106.024-1.793 1.14-5.061 3.345-.48.33-.913.49-1.302.48-.428-.008-1.252-.241-1.865-.44-.752-.245-1.349-.374-1.297-.789.027-.216.325-.437.893-.663 3.498-1.524 5.83-2.529 6.998-3.014 3.332-1.386 4.025-1.627 4.476-1.635z" />
                     </svg>
                     <span className="text-[11px] font-medium">Telegram</span>
                   </a>
@@ -690,7 +846,7 @@ function WizardLayout({ editId }: { editId: string }) {
               <div className="rounded-2xl border border-stone-200 overflow-hidden">
                 <div className="bg-[#0f2d22] px-4 py-3 flex items-center gap-2">
                   <span className="text-lg">📋</span>
-                <p className="text-sm font-semibold text-white">Wedding Planner</p>
+                  <p className="text-sm font-semibold text-white">Wedding Planner</p>
                   <span className="ml-auto text-[10px] font-bold text-[#f0cf82] bg-[#f0cf82]/15 border border-[#f0cf82]/30 rounded-full px-2 py-0.5">NEW</span>
                 </div>
                 <div className="px-4 py-3 bg-white">

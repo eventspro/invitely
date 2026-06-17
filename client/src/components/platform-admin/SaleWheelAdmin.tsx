@@ -28,6 +28,13 @@ interface SpinsResponse {
   spins: Spin[];
 }
 
+interface NotificationSettings {
+  enabled: boolean;
+  privacy: "minimal" | "masked";
+  hasChatId: boolean;
+  chatIdMasked: string | null;
+}
+
 const PRIZE_EMOJIS: Record<string, string> = {
   discount_10:       "🏷️",
   discount_20:       "🎫",
@@ -57,6 +64,10 @@ export const SaleWheelAdmin: React.FC = () => {
   const [claimedFilter, setClaimedFilter] = useState<"" | "true" | "false">("");
   const [togglingId, setTogglingId] = useState<string | null>(null);
   const [toast, setToast] = useState("");
+  const [notificationSettings, setNotificationSettings] = useState<NotificationSettings | null>(null);
+  const [notificationChatId, setNotificationChatId] = useState("");
+  const [savingNotifications, setSavingNotifications] = useState(false);
+  const [testingNotifications, setTestingNotifications] = useState(false);
 
   const authHeaders = useCallback((): Record<string, string> => {
     const token = localStorage.getItem("admin-token") ?? "";
@@ -90,9 +101,101 @@ export const SaleWheelAdmin: React.FC = () => {
     }
   }, [search, claimedFilter, authHeaders]);
 
+  const loadNotificationSettings = useCallback(async () => {
+    try {
+      const res = await fetch("/api/platform-admin/sale-wheel/notification-settings", {
+        headers: authHeaders(),
+      });
+      if (!res.ok) return;
+      const json = await res.json();
+      setNotificationSettings(json);
+    } catch {
+      // Non-fatal: the lead list can still be used.
+    }
+  }, [authHeaders]);
+
   useEffect(() => {
     loadData();
-  }, [loadData]);
+    loadNotificationSettings();
+  }, [loadData, loadNotificationSettings]);
+
+  const saveNotificationSettings = async () => {
+    if (!notificationSettings) return;
+    setSavingNotifications(true);
+    try {
+      const body: Record<string, unknown> = {
+        enabled: notificationSettings.enabled,
+        privacy: notificationSettings.privacy,
+      };
+      if (notificationChatId.trim()) body.chatId = notificationChatId.trim();
+
+      const res = await fetch("/api/platform-admin/sale-wheel/notification-settings", {
+        method: "PUT",
+        headers: authHeaders(),
+        body: JSON.stringify(body),
+      });
+      const json = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        showToast(json.error ?? "Failed to save notification settings");
+        return;
+      }
+      setNotificationSettings(json);
+      setNotificationChatId("");
+      showToast("Notification settings saved");
+    } catch {
+      showToast("Failed to save notification settings");
+    } finally {
+      setSavingNotifications(false);
+    }
+  };
+
+  const clearNotificationChatId = async () => {
+    if (!notificationSettings) return;
+    setSavingNotifications(true);
+    try {
+      const res = await fetch("/api/platform-admin/sale-wheel/notification-settings", {
+        method: "PUT",
+        headers: authHeaders(),
+        body: JSON.stringify({
+          enabled: false,
+          privacy: notificationSettings.privacy,
+          clearChatId: true,
+        }),
+      });
+      const json = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        showToast(json.error ?? "Failed to clear notification recipient");
+        return;
+      }
+      setNotificationSettings(json);
+      setNotificationChatId("");
+      showToast("Notification recipient cleared");
+    } catch {
+      showToast("Failed to clear notification recipient");
+    } finally {
+      setSavingNotifications(false);
+    }
+  };
+
+  const sendTestNotification = async () => {
+    setTestingNotifications(true);
+    try {
+      const res = await fetch("/api/platform-admin/sale-wheel/notification-settings/test", {
+        method: "POST",
+        headers: authHeaders(),
+      });
+      const json = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        showToast(json.error ?? "Failed to send test notification");
+        return;
+      }
+      showToast("Test notification sent");
+    } catch {
+      showToast("Failed to send test notification");
+    } finally {
+      setTestingNotifications(false);
+    }
+  };
 
   const toggleClaimed = async (spin: Spin) => {
     setTogglingId(spin.id);
@@ -138,6 +241,94 @@ export const SaleWheelAdmin: React.FC = () => {
           {loading ? "Բեռնում..." : "Թարմացնել"}
         </button>
       </div>
+
+      {notificationSettings && (
+        <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-5 space-y-4">
+          <div className="flex flex-col gap-3 lg:flex-row lg:items-start lg:justify-between">
+            <div>
+              <h3 className="font-semibold text-gray-900 text-sm">Telegram notifications</h3>
+              <p className="text-xs text-gray-500 mt-1">
+                Send a privacy-conscious admin alert after a new wheel spin is saved.
+              </p>
+            </div>
+            <div className="flex flex-wrap gap-2">
+              <button
+                onClick={sendTestNotification}
+                disabled={testingNotifications || !notificationSettings.hasChatId}
+                className="px-3 py-1.5 text-xs font-medium rounded-lg border border-gray-200 bg-white text-gray-700 hover:bg-gray-50 disabled:opacity-50"
+              >
+                {testingNotifications ? "Sending..." : "Send test"}
+              </button>
+              <button
+                onClick={saveNotificationSettings}
+                disabled={savingNotifications}
+                className="px-3 py-1.5 text-xs font-medium rounded-lg bg-indigo-600 text-white hover:bg-indigo-700 disabled:opacity-50"
+              >
+                {savingNotifications ? "Saving..." : "Save settings"}
+              </button>
+            </div>
+          </div>
+
+          <div className="grid gap-3 lg:grid-cols-[160px_1fr_180px]">
+            <label className="flex items-center gap-2 text-sm text-gray-700">
+              <input
+                type="checkbox"
+                checked={notificationSettings.enabled}
+                onChange={(event) =>
+                  setNotificationSettings((prev) =>
+                    prev ? { ...prev, enabled: event.target.checked } : prev,
+                  )
+                }
+                className="h-4 w-4 rounded border-gray-300 text-indigo-600"
+              />
+              Enabled
+            </label>
+
+            <div>
+              <input
+                type="password"
+                value={notificationChatId}
+                onChange={(event) => setNotificationChatId(event.target.value)}
+                placeholder={
+                  notificationSettings.hasChatId
+                    ? "Paste a new Telegram chat ID to replace current recipient"
+                    : "Paste Telegram chat ID"
+                }
+                autoComplete="off"
+                className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-400"
+              />
+              <p className="mt-1 text-xs text-gray-400">
+                Current recipient: {notificationSettings.chatIdMasked ?? "not set"}
+              </p>
+            </div>
+
+            <select
+              value={notificationSettings.privacy}
+              onChange={(event) =>
+                setNotificationSettings((prev) =>
+                  prev
+                    ? { ...prev, privacy: event.target.value as "minimal" | "masked" }
+                    : prev,
+                )
+              }
+              className="px-3 py-2 border border-gray-200 rounded-lg text-sm bg-white focus:outline-none focus:ring-2 focus:ring-indigo-400"
+            >
+              <option value="masked">Masked</option>
+              <option value="minimal">Minimal</option>
+            </select>
+          </div>
+
+          {notificationSettings.hasChatId && (
+            <button
+              onClick={clearNotificationChatId}
+              disabled={savingNotifications}
+              className="text-xs text-red-500 hover:text-red-700 disabled:opacity-50"
+            >
+              Clear recipient and disable notifications
+            </button>
+          )}
+        </div>
+      )}
 
       {/* Stat cards */}
       {data && (
