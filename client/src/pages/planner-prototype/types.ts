@@ -42,8 +42,6 @@ export interface Task {
 
 export interface Guest {
   id: string;
-  rsvpId?: string;
-  source?: "manual" | "rsvp";
   fullName: string;
   phone?: string;
   email?: string;

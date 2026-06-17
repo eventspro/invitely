@@ -169,30 +169,11 @@ export interface FooterSection {
   trustItems: TrustItem[];
 }
 
-// ─── Planner Showcase ─────────────────────────────────────────────────────────
-export interface PlannerFeatureCard {
-  id: string;
-  icon: string;
-  title: LS;
-  text: LS;
-  visible: boolean;
-}
-
-export interface PlannerShowcaseSection {
-  eyebrow: LS;
-  title: LS;
-  subtitle: LS;
-  primaryCta: CtaButton;
-  secondaryCta: CtaButton;
-  features: PlannerFeatureCard[];
-}
-
 // ─── Root config ─────────────────────────────────────────────────────────────
 export interface HomepageContent {
   navigation: Navigation;
   hero: HeroConfig;
   templates: TemplatesSection;
-  plannerShowcase: PlannerShowcaseSection;
   howItWorks: HowItWorksSection;
   features: FeaturesSection;
   benefits: BenefitItem[];
@@ -214,4 +195,4 @@ export type IconKey =
   | "heart" | "calendar" | "map" | "camera" | "message" | "phone"
   | "instagram" | "facebook" | "telegram" | "gift" | "lock"
   | "star" | "users" | "check" | "smartphone" | "share" | "edit"
-  | "sparkles" | "clock" | "palette" | "send" | "arrow" | "bell" | "wallet";
+  | "sparkles" | "clock" | "palette" | "send" | "arrow";

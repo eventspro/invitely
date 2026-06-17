@@ -3,7 +3,6 @@ import { Download, Upload, Trash2, Users, LayoutGrid, Wallet, CalendarDays, Send
 import { usePlannerText } from "../PlannerLocaleContext";
 import { getGuestTotals, getSeatingTotals, getBudgetTotals, formatCurrency } from "../plannerUtils";
 import { exportData, importData, clearData } from "../storage";
-import { BLANK_DATA } from "../defaultData";
 import type { PlannerData } from "../types";
 
 interface MoreScreenProps {
@@ -159,12 +158,8 @@ export default function MoreScreen({ data, onUpdate, isDemoMode = false, onConta
 
   function handleReset() {
     if (window.confirm(pt.warnings.resetConfirm)) {
-      if (isApiMode) {
-        onUpdate({ ...structuredClone(BLANK_DATA), tasks: data.tasks });
-      } else {
-        clearData(storageKey);
-        window.location.reload();
-      }
+      clearData(storageKey);
+      window.location.reload();
     }
   }
 
@@ -453,7 +448,7 @@ export default function MoreScreen({ data, onUpdate, isDemoMode = false, onConta
       {/* Prototype note */}
       <div style={{ marginTop: 20, padding: "12px 14px", background: "#F9FAFB", borderRadius: 12, border: "1px solid #E5E7EB" }}>
         <div style={{ fontSize: 11, color: "#9CA3AF", lineHeight: 1.5 }}>
-          {isApiMode ? pt.more.databaseNote : pt.more.prototypeNote}
+          {pt.more.prototypeNote}
         </div>
       </div>
     </div>

@@ -57,59 +57,11 @@ export interface SeatingTotals {
   pct: number;
 }
 
-export function getGuestSeatCount(guest?: Guest): number {
-  return Math.max(1, guest?.guestCount ?? 1);
-}
-
-export function getTableOccupiedSeats(
-  tableId: string,
-  guests: Guest[],
-  excludeGuestId?: string,
-): number {
-  return guests
-    .filter(g => g.tableId === tableId && g.id !== excludeGuestId)
-    .reduce((sum, g) => sum + getGuestSeatCount(g), 0);
-}
-
-export function getTableFreeSeats(
-  table: WeddingTable,
-  guests: Guest[],
-  excludeGuestId?: string,
-): number {
-  return Math.max(0, table.capacity - getTableOccupiedSeats(table.id, guests, excludeGuestId));
-}
-
-export function canAssignGuestToTable(
-  table: WeddingTable,
-  guest: Guest,
-  guests: Guest[],
-): boolean {
-  const occupiedWithoutGuest = getTableOccupiedSeats(table.id, guests, guest.id);
-  return occupiedWithoutGuest + getGuestSeatCount(guest) <= table.capacity;
-}
-
-export function getSeatingTotals(
-  tables: WeddingTable[],
-  seats: Seat[],
-  guests: Guest[] = [],
-): SeatingTotals {
+export function getSeatingTotals(tables: WeddingTable[], seats: Seat[]): SeatingTotals {
   const totalCapacity = tables.reduce((s, t) => s + t.capacity, 0);
-
-  const assigned = guests.length > 0
-    ? guests.reduce((sum, guest) => {
-        if (!guest.tableId) return sum;
-        return sum + getGuestSeatCount(guest);
-      }, 0)
-    : seats.filter(s => !!s.guestId).length;
-
-  const free = Math.max(0, totalCapacity - assigned);
-
-  return {
-    totalCapacity,
-    assigned,
-    free,
-    pct: totalCapacity > 0 ? Math.round((assigned / totalCapacity) * 100) : 0,
-  };
+  const assigned = seats.filter(s => !!s.guestId).length;
+  const free = totalCapacity - assigned;
+  return { totalCapacity, assigned, free, pct: totalCapacity > 0 ? Math.round((assigned / totalCapacity) * 100) : 0 };
 }
 
 export interface BudgetTotals {

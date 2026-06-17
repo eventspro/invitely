@@ -22,9 +22,9 @@ export type {
   ContactSection,
   TrustItem,
   FooterSection,
-  PlannerFeatureCard,
-  PlannerShowcaseSection,
   HomepageContent,
   ValidationWarning,
   IconKey,
+  PlannerFeatureCard,
+  PlannerShowcaseSection,
 } from "../../pages/translations-prototype/types";

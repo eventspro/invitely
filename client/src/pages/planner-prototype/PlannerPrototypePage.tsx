@@ -16,16 +16,8 @@ import BudgetItemForm from "./forms/BudgetItemForm";
 import TaskForm from "./forms/TaskForm";
 import GenerateTablesSheet from "./forms/GenerateTablesSheet";
 import { loadData, saveData } from "./storage";
-import { BLANK_DATA } from "./defaultData";
-import {
-  applySuggestion,
-  canAssignGuestToTable,
-  getGuestSeatCount,
-  getTableFreeSeats,
-  uid,
-} from "./plannerUtils";
+import { applySuggestion, uid } from "./plannerUtils";
 import { PlannerLocaleProvider, usePlannerText } from "./PlannerLocaleContext";
-import { importLegacyPlannerData, savePlannerData } from "./api/plannerDataApi";
 import { listTasks, createTask, updateTask, deleteTask } from "./api/tasksApi";
 import type { TabId, Guest, WeddingTable, BudgetItem, Seat, Task, PlannerData } from "./types";
 import type { TableSuggestion } from "./plannerUtils";
@@ -38,8 +30,6 @@ interface PlannerPrototypePageProps {
   onLogout?: () => void;
   storageKey?: string;
   initialData?: PlannerData;
-  legacyData?: PlannerData;
-  onLegacyImported?: () => void;
   token?: string;
   templateId?: string;
 }
@@ -60,8 +50,6 @@ function PlannerPrototypeContent({
   onLogout,
   storageKey,
   initialData,
-  legacyData,
-  onLegacyImported,
   token,
   templateId,
 }: PlannerPrototypePageProps) {
@@ -78,9 +66,7 @@ function PlannerPrototypeContent({
     more: pt.nav.more,
   };
 
-  const [data, setData] = useState<PlannerData>(() => (
-    isApiMode ? structuredClone(initialData ?? BLANK_DATA) : loadData(storageKey, initialData)
-  ));
+  const [data, setData] = useState<PlannerData>(() => loadData(storageKey, initialData));
   const [activeTab, setActiveTab] = useState<TabId>("dashboard");
 
   const [selectedTableId, setSelectedTableId] = useState<string | null>(null);
@@ -100,37 +86,14 @@ function PlannerPrototypeContent({
   const [apiTasks, setApiTasks] = useState<Task[]>([]);
   const [telegramConnected, setTelegramConnected] = useState(false);
   const [showImportPrompt, setShowImportPrompt] = useState(false);
-  const [showLegacyImportPrompt, setShowLegacyImportPrompt] = useState(false);
 
   // Greeting banner — shown once per session when pending tasks exist
   const greetingKey = isApiMode ? `planner_greeting_shown_${templateId}` : null;
   const [showGreeting, setShowGreeting] = useState(false);
 
-  function hasPlannerContent(value?: PlannerData): boolean {
-    if (!value) return false;
-    return (
-      value.guests.length > 0 ||
-      value.tables.length > 0 ||
-      value.seats.length > 0 ||
-      value.budgetItems.length > 0 ||
-      value.tasks.length > 0 ||
-      Boolean(value.settings.coupleName || value.settings.weddingDate)
-    );
-  }
-
   useEffect(() => {
-    if (isApiMode) return;
     saveData(data, storageKey);
-  }, [data, storageKey, isApiMode]);
-
-  useEffect(() => {
-    if (!isApiMode) return;
-    setData(structuredClone(initialData ?? BLANK_DATA));
-  }, [isApiMode, initialData, templateId]);
-
-  useEffect(() => {
-    setShowLegacyImportPrompt(isApiMode && hasPlannerContent(legacyData));
-  }, [isApiMode, legacyData]);
+  }, [data, storageKey]);
 
   // Fetch API tasks + telegram status on mount
   useEffect(() => {
@@ -139,8 +102,7 @@ function PlannerPrototypeContent({
     listTasks(templateId!, token!)
       .then(tasks => {
         setApiTasks(tasks);
-        const legacyTasks = legacyData?.tasks ?? data.tasks;
-        if (tasks.length === 0 && legacyTasks.length > 0) {
+        if (tasks.length === 0 && data.tasks.length > 0) {
           setShowImportPrompt(true);
         }
         // Show greeting if not dismissed this session and there are pending tasks
@@ -156,48 +118,19 @@ function PlannerPrototypeContent({
     })
       .then(r => r.json())
       .then((d: { telegramConnected?: boolean }) => setTelegramConnected(d.telegramConnected ?? false))
-      .catch(() => { });
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+      .catch(() => {});
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isApiMode]);
 
   const effectiveTasks = isApiMode ? apiTasks : data.tasks;
   const effectiveData: PlannerData = isApiMode ? { ...data, tasks: apiTasks } : data;
 
-  const persistData = useCallback((next: PlannerData) => {
-    if (!isApiMode || !templateId || !token) return;
-    savePlannerData(templateId, token, next)
-      .then(saved => setData(saved))
-      .catch(err => console.error("[planner-data] save error:", err));
-  }, [isApiMode, templateId, token]);
-
-  const commitData = useCallback((nextOrUpdater: PlannerData | ((prev: PlannerData) => PlannerData)) => {
-    setData(prev => {
-      const next = typeof nextOrUpdater === "function"
-        ? (nextOrUpdater as (prev: PlannerData) => PlannerData)(prev)
-        : nextOrUpdater;
-      persistData(next);
-      return next;
-    });
-  }, [persistData]);
-
   const updateData = useCallback((next: PlannerData) => {
-    commitData(next);
-  }, [commitData]);
-
-  async function handleImportLegacyPlannerData() {
-    if (!isApiMode || !templateId || !token || !legacyData) return;
-    try {
-      const imported = await importLegacyPlannerData(templateId, token, legacyData);
-      setData(imported);
-      setShowLegacyImportPrompt(false);
-      onLegacyImported?.();
-    } catch (err) {
-      console.error("[planner-data] legacy import error:", err);
-    }
-  }
+    setData(next);
+  }, []);
 
   function handleSaveGuest(g: Guest) {
-    commitData(prev => ({
+    setData(prev => ({
       ...prev,
       guests: editingGuest
         ? prev.guests.map(x => x.id === g.id ? g : x)
@@ -208,7 +141,7 @@ function PlannerPrototypeContent({
   }
 
   function handleDeleteGuest(id: string) {
-    commitData(prev => ({
+    setData(prev => ({
       ...prev,
       guests: prev.guests.filter(g => g.id !== id),
       seats: prev.seats.map(s => s.guestId === id ? { ...s, guestId: undefined } : s),
@@ -217,7 +150,7 @@ function PlannerPrototypeContent({
 
   function handleSaveTable(t: WeddingTable) {
     if (editingTable) {
-      commitData(prev => {
+      setData(prev => {
         let seats = prev.seats.filter(s => s.tableId !== t.id);
         for (let i = 1; i <= t.capacity; i++) {
           const oldSeat = prev.seats.find(s => s.tableId === t.id && s.seatNumber === i);
@@ -235,7 +168,7 @@ function PlannerPrototypeContent({
         tableId: t.id,
         seatNumber: i + 1,
       }));
-      commitData(prev => ({
+      setData(prev => ({
         ...prev,
         tables: [...prev.tables, t],
         seats: [...prev.seats, ...newSeats],
@@ -246,7 +179,7 @@ function PlannerPrototypeContent({
   }
 
   function handleDeleteTable(id: string) {
-    commitData(prev => ({
+    setData(prev => ({
       ...prev,
       tables: prev.tables.filter(t => t.id !== id),
       seats: prev.seats.filter(s => s.tableId !== id),
@@ -255,43 +188,23 @@ function PlannerPrototypeContent({
   }
 
   function handleAssignSeat(seatId: string, guestId: string) {
-    commitData(prev => {
+    setData(prev => {
       const seat = prev.seats.find(s => s.id === seatId);
       if (!seat) return prev;
-
-      const table = prev.tables.find(t => t.id === seat.tableId);
-      if (!table) return prev;
-
-      const guest = prev.guests.find(g => g.id === guestId);
-      if (!guest) return prev;
-
-      if (!canAssignGuestToTable(table, guest, prev.guests)) {
-        const neededSeats = getGuestSeatCount(guest);
-        const freeSeats = getTableFreeSeats(table, prev.guests, guest.id);
-
-        alert(
-          `${guest.fullName} needs ${neededSeats} seats, but ${table.name} has only ${freeSeats} free seats.`
-        );
-
-        return prev;
-      }
-
       const seats = prev.seats.map(s => {
         if (s.id === seatId) return { ...s, guestId };
         if (s.guestId === guestId) return { ...s, guestId: undefined };
         return s;
       });
-
       const guests = prev.guests.map(g =>
         g.id === guestId ? { ...g, tableId: seat.tableId, seatId } : g
       );
-
       return { ...prev, seats, guests };
     });
   }
 
   function handleUnassignSeat(seatId: string) {
-    commitData(prev => {
+    setData(prev => {
       const seat = prev.seats.find(s => s.id === seatId);
       if (!seat || !seat.guestId) return prev;
       const guestId = seat.guestId;
@@ -304,7 +217,7 @@ function PlannerPrototypeContent({
   }
 
   function handleSaveBudget(item: BudgetItem) {
-    commitData(prev => ({
+    setData(prev => ({
       ...prev,
       budgetItems: editingBudget
         ? prev.budgetItems.map(x => x.id === item.id ? item : x)
@@ -315,7 +228,7 @@ function PlannerPrototypeContent({
   }
 
   function handleDeleteBudget(id: string) {
-    commitData(prev => ({ ...prev, budgetItems: prev.budgetItems.filter(i => i.id !== id) }));
+    setData(prev => ({ ...prev, budgetItems: prev.budgetItems.filter(i => i.id !== id) }));
   }
 
   async function handleSaveTask(task: Task) {
@@ -341,7 +254,7 @@ function PlannerPrototypeContent({
         console.error("[tasks] save error:", err);
       }
     } else {
-      commitData(prev => ({
+      setData(prev => ({
         ...prev,
         tasks: editingTask
           ? prev.tasks.map(t => t.id === task.id ? task : t)
@@ -361,7 +274,7 @@ function PlannerPrototypeContent({
         console.error("[tasks] delete error:", err);
       }
     } else {
-      commitData(prev => ({ ...prev, tasks: prev.tasks.filter(t => t.id !== id) }));
+      setData(prev => ({ ...prev, tasks: prev.tasks.filter(t => t.id !== id) }));
     }
   }
 
@@ -378,7 +291,7 @@ function PlannerPrototypeContent({
         console.error("[tasks] toggle error:", err);
       }
     } else {
-      commitData(prev => ({
+      setData(prev => ({
         ...prev,
         tasks: prev.tasks.map(t => t.id === id ? { ...t, done: !t.done } : t),
       }));
@@ -386,8 +299,7 @@ function PlannerPrototypeContent({
   }
 
   async function handleImportTasks() {
-    const sourceTasks = legacyData?.tasks?.length ? legacyData.tasks : data.tasks;
-    for (const task of sourceTasks) {
+    for (const task of data.tasks) {
       try {
         const created = await createTask(templateId!, token!, {
           title: task.title,
@@ -416,7 +328,7 @@ function PlannerPrototypeContent({
   }
 
   function handleApplySuggestion(suggestion: TableSuggestion) {
-    commitData(prev => applySuggestion(prev, suggestion));
+    setData(prev => applySuggestion(prev, suggestion));
   }
 
   const selectedTable = selectedTableId ? data.tables.find(t => t.id === selectedTableId) : undefined;
@@ -490,37 +402,6 @@ function PlannerPrototypeContent({
       >
         {activeTab === "dashboard" && (
           <>
-            {showLegacyImportPrompt && isApiMode && legacyData && (
-              <div style={{
-                background: "#EFF6FF", border: "1px solid #93C5FD", borderRadius: 12,
-                padding: "12px 14px", margin: "12px 16px 0", display: "flex",
-                alignItems: "center", justifyContent: "space-between", gap: 10,
-                flexWrap: "wrap",
-              }}>
-                <div style={{ flex: 1, minWidth: 220 }}>
-                  <div style={{ fontSize: 13, color: "#1D4ED8", fontWeight: 700 }}>
-                    {pt.more.importLocalData}
-                  </div>
-                  <div style={{ fontSize: 11, color: "#3B82F6", marginTop: 2 }}>
-                    {pt.more.importLocalDataDesc}
-                  </div>
-                </div>
-                <div style={{ display: "flex", gap: 8, flexShrink: 0 }}>
-                  <button
-                    onClick={handleImportLegacyPlannerData}
-                    style={{ padding: "6px 12px", borderRadius: 8, border: "none", background: "#2563EB", color: "#FFFFFF", fontSize: 12, fontWeight: 700, cursor: "pointer" }}
-                  >
-                    {pt.tasks.importBtn}
-                  </button>
-                  <button
-                    onClick={() => setShowLegacyImportPrompt(false)}
-                    style={{ padding: "6px 12px", borderRadius: 8, border: "1px solid #93C5FD", background: "transparent", color: "#1D4ED8", fontSize: 12, fontWeight: 600, cursor: "pointer" }}
-                  >
-                    {pt.tasks.importLater}
-                  </button>
-                </div>
-              </div>
-            )}
             {showGreeting && isApiMode && (
               <div style={{ padding: "12px 14px 0" }}>
                 <LoginGreetingBanner
@@ -609,7 +490,7 @@ function PlannerPrototypeContent({
             onAdd={() => { setEditingBudget(undefined); setBudgetSheetOpen(true); }}
             onEdit={item => { setEditingBudget(item); setBudgetSheetOpen(true); }}
             onDelete={handleDeleteBudget}
-            onUpdateSettings={s => commitData(prev => ({ ...prev, settings: s }))}
+            onUpdateSettings={s => setData(prev => ({ ...prev, settings: s }))}
           />
         )}
 

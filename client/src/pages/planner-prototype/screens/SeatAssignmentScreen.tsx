@@ -2,11 +2,8 @@ import React, { useState } from "react";
 import { ArrowLeft, UserPlus, Trash2 } from "lucide-react";
 import { usePlannerText } from "../PlannerLocaleContext";
 import {
-  getGuestSeatCount,
   getInitials,
-  getTableOccupiedSeats,
   RSVP_COLORS,
-  RSVP_BG,
 } from "../plannerUtils";
 import VisualTable from "../components/VisualTable";
 import BottomSheet from "../components/BottomSheet";
@@ -30,7 +27,7 @@ export default function SeatAssignmentScreen({ table, seats, guests, allSeats, o
   const [activeTab, setActiveTab] = useState<"overview" | "seating">("overview");
 
   const tableSeats = seats.filter(s => s.tableId === table.id).sort((a, b) => a.seatNumber - b.seatNumber);
-  const assignedSeatsUsed = getTableOccupiedSeats(table.id, guests);
+  const assignedSeatsUsed = tableSeats.filter(s => s.guestId != null).length;
   const assignedSeatRows = tableSeats.filter(s => s.guestId);
 
   const seatInfos = tableSeats.map(s => {
@@ -140,7 +137,7 @@ export default function SeatAssignmentScreen({ table, seats, guests, allSeats, o
                         <div style={{ fontSize: 13, fontWeight: 600, color: "#111827", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{guest.fullName}</div>
                         <div style={{ fontSize: 10, color: "#9CA3AF" }}>
                           {pt.seats_screen.seatLabel} {seat.seatNumber}
-                          {getGuestSeatCount(guest) > 1 ? ` · ${getGuestSeatCount(guest)} ${pt.common.seats}` : ""}
+                          {guest.guestCount > 1 ? ` · ${guest.guestCount} ${pt.common.seats}` : ""}
                         </div>
                       </div>
                     </div>
@@ -210,7 +207,7 @@ export default function SeatAssignmentScreen({ table, seats, guests, allSeats, o
                           </div>
                           <div style={{ fontSize: 10, color: RSVP_COLORS[guest.rsvpStatus] ?? "#9CA3AF", marginTop: 1 }}>
                             {pt.rsvp[guest.rsvpStatus as keyof typeof pt.rsvp] ?? guest.rsvpStatus}
-                            {getGuestSeatCount(guest) > 1 ? ` · ${getGuestSeatCount(guest)} ${pt.common.seats}` : ""}
+                            {guest.guestCount > 1 ? ` · ${guest.guestCount} ${pt.common.seats}` : ""}
                           </div>
                         </div>
                         <button

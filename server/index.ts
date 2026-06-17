@@ -175,7 +175,7 @@ app.use((req, res, next) => {
   const start = Date.now();
   const reqPath = req.path;
   // Determine sensitivity before capturing anything
-  const isSensitivePath = /\/(rsvp|auth|login|register|password|reset|admin-panel|export|upload|partners-content)/.test(reqPath);
+  const isSensitivePath = /\/(rsvp|auth|login|register|password|reset|admin-panel|export|upload)/.test(reqPath);
   let capturedJsonResponse: Record<string, any> | undefined;
 
   if (!isSensitivePath) {

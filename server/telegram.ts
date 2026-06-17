@@ -26,7 +26,9 @@ export async function sendTelegramMessage(
 ): Promise<boolean> {
   const token = getBotToken();
   if (!token) {
-    console.warn("[telegram] bot token not configured; notification skipped");
+    console.warn(
+      "⚠️ TELEGRAM_BOT_TOKEN not configured — skipping Telegram notification",
+    );
     return false;
   }
   try {
@@ -41,13 +43,16 @@ export async function sendTelegramMessage(
       body: JSON.stringify(body),
     });
     if (!res.ok) {
-      console.error(`[telegram] sendMessage failed with status ${res.status}`);
+      const body = await res.text().catch(() => "");
+      console.error(
+        `Telegram sendMessage failed [${res.status}]: ${body.slice(0, 200)}`,
+      );
       return false;
     }
-    console.log("[telegram] message sent");
+    console.log(`✅ Telegram message sent to chat ${chatId}`);
     return true;
-  } catch {
-    console.error("[telegram] sendMessage error");
+  } catch (err) {
+    console.error("Telegram sendMessage error:", err);
     return false;
   }
 }
@@ -135,9 +140,9 @@ export async function sendRsvpTelegramNotification(
 
     const text = formatRsvpNotification(rsvp, templateName);
     await sendTelegramMessage(String(s.telegramChatId), text);
-  } catch {
+  } catch (err) {
     // Log but never propagate — RSVP is already saved
-    console.error("[telegram] RSVP notification failed");
+    console.error("sendRsvpTelegramNotification error:", err);
   }
 }
 
@@ -191,14 +196,15 @@ export async function sendTaskReminderMessage(params: {
       body: JSON.stringify(body),
     });
     if (!res.ok) {
-      console.error(`[telegram] sendTaskReminderMessage failed with status ${res.status}`);
+      const errText = await res.text().catch(() => "");
+      console.error(`[telegram] sendTaskReminderMessage failed [${res.status}]: ${errText.slice(0, 200)}`);
       return { success: false };
     }
     const data = (await res.json()) as { ok: boolean; result?: { message_id?: number } };
     const messageId = data.result?.message_id != null ? String(data.result.message_id) : undefined;
     return { success: true, messageId };
-  } catch {
-    console.error("[telegram] sendTaskReminderMessage error");
+  } catch (err) {
+    console.error("[telegram] sendTaskReminderMessage error:", err);
     return { success: false };
   }
 }
@@ -217,8 +223,8 @@ export async function answerCallbackQuery(
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ callback_query_id: callbackQueryId, text: text ?? "" }),
     });
-  } catch {
-    console.error("[telegram] answerCallbackQuery error");
+  } catch (err) {
+    console.error("[telegram] answerCallbackQuery error:", err);
   }
 }
 
@@ -244,9 +250,10 @@ export async function editTelegramMessageText(
       }),
     });
     if (!res.ok) {
-      console.error(`[telegram] editMessageText failed with status ${res.status}`);
+      const errText = await res.text().catch(() => "");
+      console.error(`[telegram] editMessageText failed [${res.status}]: ${errText.slice(0, 200)}`);
     }
-  } catch {
-    console.error("[telegram] editTelegramMessageText error");
+  } catch (err) {
+    console.error("[telegram] editTelegramMessageText error:", err);
   }
 }

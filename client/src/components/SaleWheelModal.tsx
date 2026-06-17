@@ -340,7 +340,7 @@ export const SaleWheelModal: React.FC<SaleWheelModalProps> = ({ onClose }) => {
   return (
     <div
       className="fixed inset-0 z-[200] flex items-center justify-center p-3 sm:p-4"
-      style={{ height: "92%", background: "rgba(5,12,8,0.82)", backdropFilter: "blur(4px)", paddingTop: "8rem" }}
+      style={{ background: "rgba(5,12,8,0.82)", backdropFilter: "blur(4px)" }}
       onClick={handleOverlayClick}
     >
       {/* Outer wrapper: relative so close button is positioned against it, not inside the scroll */}
@@ -467,7 +467,7 @@ export const SaleWheelModal: React.FC<SaleWheelModalProps> = ({ onClose }) => {
                 <div>
                   <label className="block text-xs font-semibold mb-1" style={{ color: "#d8b66a", letterSpacing: "0.05em" }}>
                     Էլ․ հասցե{" "}
-                    <span className="font-normal" style={{ color: "rgba(255,255,255,0.45)", letterSpacing: 0 }}>(Ոչ պարտադիր)</span>
+                    <span className="font-normal" style={{ color: "rgba(255,255,255,0.45)", letterSpacing: 0 }}>(կամընտիր)</span>
                   </label>
                   <input
                     name="email"
@@ -491,7 +491,7 @@ export const SaleWheelModal: React.FC<SaleWheelModalProps> = ({ onClose }) => {
                 <div>
                   <label className="block text-xs font-semibold mb-1" style={{ color: "#d8b66a", letterSpacing: "0.05em" }}>
                     Հարսանիքի ամսաթիվ{" "}
-                    <span className="font-normal" style={{ color: "rgba(255,255,255,0.45)", letterSpacing: 0 }}>(Ոչ պարտադիր)</span>
+                    <span className="font-normal" style={{ color: "rgba(255,255,255,0.45)", letterSpacing: 0 }}>(կամընտիր)</span>
                   </label>
                   <input
                     name="weddingDate"

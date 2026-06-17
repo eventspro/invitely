@@ -3,7 +3,6 @@ import { Pencil, Trash2, Armchair, ChevronRight, MoreHorizontal, X } from "lucid
 import { usePlannerText } from "../PlannerLocaleContext";
 import VisualTable from "./VisualTable";
 import ProgressBar from "./ProgressBar";
-import { getTableOccupiedSeats } from "../plannerUtils";
 import type { WeddingTable, Seat, Guest } from "../types";
 
 interface TableCardProps {
@@ -28,7 +27,7 @@ export default function TableCard({ table, seats, guests, onEdit, onDelete, onMa
     head: pt.tableShapes.head,
   };
   const tableSeats = seats.filter(s => s.tableId === table.id);
-  const assigned = getTableOccupiedSeats(table.id, guests);
+  const assigned = tableSeats.filter(s => s.guestId != null).length;
   const pct = table.capacity > 0
     ? Math.min(100, Math.round((assigned / table.capacity) * 100))
     : 0;
