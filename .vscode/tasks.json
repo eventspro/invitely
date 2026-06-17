@@ -1,0 +1,30 @@
+{
+    "version": "2.0.0",
+    "tasks": [
+        {
+            "label": "TypeScript: check whole project",
+            "type": "shell",
+            "command": "npm run typecheck",
+            "problemMatcher": "$tsc",
+            "group": "build",
+            "presentation": {
+                "reveal": "always",
+                "panel": "dedicated",
+                "clear": true
+            }
+        },
+        {
+            "label": "TypeScript: watch whole project",
+            "type": "shell",
+            "command": "npm run typecheck:watch",
+            "isBackground": true,
+            "problemMatcher": "$tsc-watch",
+            "group": "build",
+            "presentation": {
+                "reveal": "always",
+                "panel": "dedicated",
+                "clear": true
+            }
+        }
+    ]
+}

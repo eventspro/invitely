@@ -28,7 +28,9 @@
     "deploy:production": "cross-env NODE_ENV=production npm run build && powershell -ExecutionPolicy Bypass -File deploy.ps1",
     "deploy": "powershell -ExecutionPolicy Bypass -File deploy.ps1",
     "staging:dev": "cross-env NODE_ENV=staging tsx server/index.ts",
-    "staging:build": "cross-env NODE_ENV=staging npm run build"
+    "staging:build": "cross-env NODE_ENV=staging npm run build",
+    "typecheck": "tsc --noEmit --pretty false",
+    "typecheck:watch": "tsc --noEmit --watch --preserveWatchOutput --pretty false"
   },
   "dependencies": {
     "@aws-sdk/client-s3": "^3.895.0",
