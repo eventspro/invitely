@@ -28,7 +28,7 @@ const STEP_META = [
   { label: "Email & Send", emoji: "\u{1F48C}" },
 ];
 const inputCls =
-  "w-full rounded-xl border border-stone-200 bg-stone-50 px-4 py-3 text-sm text-stone-800 " +
+  "w-full rounded-xl border border-stone-200 bg-stone-50 px-4 py-3 text-[16px] sm:text-sm text-stone-800 " +
   "focus:outline-none focus:border-rose-400 focus:bg-white transition-colors placeholder:text-stone-300";
 
 function StepShell({ step, title, subtitle, children }: { step: number; title: string; subtitle: string; children: React.ReactNode }) {

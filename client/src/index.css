@@ -74,6 +74,22 @@
   html {
     scroll-behavior: smooth;
   }
+
+  /* Prevent iOS Safari auto-zoom on focused form fields.
+     iOS zooms when font-size < 16px. Restore smaller size on desktop. */
+  input:not([type="checkbox"]):not([type="radio"]):not([type="range"]):not([type="submit"]):not([type="button"]),
+  textarea,
+  select {
+    font-size: 16px;
+  }
+
+  @media (min-width: 640px) {
+    input:not([type="checkbox"]):not([type="radio"]):not([type="range"]):not([type="submit"]):not([type="button"]),
+    textarea,
+    select {
+      font-size: 0.875rem;
+    }
+  }
 }
 
 @layer components {

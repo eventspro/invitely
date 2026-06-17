@@ -90,7 +90,7 @@ export default function TaskForm({ initial, telegramConnected, isDemoMode, onSav
 
   const inputStyle: React.CSSProperties = {
     width: "100%", padding: "10px 12px", borderRadius: 10,
-    border: "1.5px solid #E5E7EB", fontSize: 14, color: "#111827",
+    border: "1.5px solid #E5E7EB", fontSize: 16, color: "#111827",
     background: "#FFFFFF", outline: "none",
     fontFamily: "Inter, -apple-system, sans-serif",
     boxSizing: "border-box",

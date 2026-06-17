@@ -26,7 +26,7 @@ const inputStyle: React.CSSProperties = {
   padding: "9px 12px",
   border: "1px solid #E5E7EB",
   borderRadius: 10,
-  fontSize: 13,
+  fontSize: 16,
   color: "#111827",
   background: "#FAFAFA",
   outline: "none",

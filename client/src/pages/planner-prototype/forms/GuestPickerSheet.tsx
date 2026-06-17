@@ -42,7 +42,7 @@ export default function GuestPickerSheet({ guests, seats, onSelect, onClose }: G
         <Search size={15} color="#9CA3AF" />
         <input
           autoFocus
-          style={{ flex: 1, border: "none", background: "transparent", outline: "none", fontSize: 14, color: "#111827" }}
+          style={{ flex: 1, border: "none", background: "transparent", outline: "none", fontSize: 16, color: "#111827" }}
           placeholder={pt.guests.searchPlaceholder}
           value={search}
           onChange={e => setSearch(e.target.value)}

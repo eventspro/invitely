@@ -65,7 +65,7 @@ export default function PlannerLoginPage() {
     paddingRight: 16,
     borderRadius: 12,
     border: `1.5px solid ${error ? DANGER : BORDER}`,
-    fontSize: 15,
+    fontSize: 16,
     color: TEXT,
     background: WHITE,
     outline: "none",
