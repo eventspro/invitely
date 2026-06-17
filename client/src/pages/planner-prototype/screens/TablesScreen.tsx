@@ -19,7 +19,7 @@ interface TablesScreenProps {
 
 export default function TablesScreen({ tables, seats, guests, onAdd, onEdit, onDelete, onManageSeats, onGenerate }: TablesScreenProps) {
   const pt = usePlannerText();
-  const s = getSeatingTotals(tables, seats, guests);
+  const s = getSeatingTotals(tables, seats);
 
   const stats = [
     { label: pt.tables.totalTables, val: tables.length },
