@@ -7,7 +7,6 @@ export interface TaskInput {
   dueAtLocal?: string;
   timezone?: string;
   reminderEnabled?: boolean;
-  repeatIntervalMinutes?: number | null;
   status?: "pending" | "done" | "cancelled";
 }
 

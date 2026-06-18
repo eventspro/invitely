@@ -19,6 +19,7 @@ import { loadData, saveData } from "./storage";
 import { applySuggestion, uid } from "./plannerUtils";
 import { PlannerLocaleProvider, usePlannerText } from "./PlannerLocaleContext";
 import { listTasks, createTask, updateTask, deleteTask } from "./api/tasksApi";
+import { getPlannerData, importLegacyPlannerData, savePlannerData } from "./api/plannerDataApi";
 import type { TabId, Guest, WeddingTable, BudgetItem, Seat, Task, PlannerData } from "./types";
 import type { TableSuggestion } from "./plannerUtils";
 
@@ -34,12 +35,90 @@ interface PlannerPrototypePageProps {
   templateId?: string;
 }
 
+const LEGACY_PLANNER_STORAGE_KEYS = [
+  "wedding_planner_prototype_v2",
+  "wedding_planner_prototype_v1",
+];
+
 export default function PlannerPrototypePage(props: PlannerPrototypePageProps = {}) {
   return (
     <PlannerLocaleProvider>
       <PlannerPrototypeContent {...props} />
     </PlannerLocaleProvider>
   );
+}
+
+function hasPlannerContent(data: PlannerData): boolean {
+  return (
+    data.guests.length > 0 ||
+    data.tables.length > 0 ||
+    data.seats.length > 0 ||
+    data.budgetItems.length > 0 ||
+    data.settings.totalBudget > 0 ||
+    !!data.settings.weddingDate ||
+    !!data.settings.coupleName?.trim()
+  );
+}
+
+function plannerDataScore(data: PlannerData): number {
+  let score = 0;
+  score += data.guests.length * 2;
+  score += data.tables.length * 3;
+  score += data.seats.length;
+  score += data.budgetItems.length * 4;
+  if (data.settings.totalBudget > 0) score += 5;
+  if (data.settings.weddingDate) score += 2;
+  if (data.settings.coupleName?.trim()) score += 2;
+  return score;
+}
+
+function shouldImportLocalData(localData: PlannerData, remoteData: PlannerData): boolean {
+  return plannerDataScore(localData) > plannerDataScore(remoteData);
+}
+
+function readStoredPlannerData(storageKey: string): PlannerData | null {
+  try {
+    const raw = localStorage.getItem(storageKey);
+    if (!raw) return null;
+    const parsed = JSON.parse(raw) as Partial<PlannerData>;
+    if (!Array.isArray(parsed.guests) || !Array.isArray(parsed.tables)) {
+      return null;
+    }
+
+    return {
+      guests: parsed.guests,
+      tables: parsed.tables,
+      seats: Array.isArray(parsed.seats) ? parsed.seats : [],
+      budgetItems: Array.isArray(parsed.budgetItems) ? parsed.budgetItems : [],
+      tasks: Array.isArray(parsed.tasks) ? parsed.tasks : [],
+      settings: {
+        weddingDate: parsed.settings?.weddingDate ?? "",
+        coupleName: parsed.settings?.coupleName ?? "",
+        currency: parsed.settings?.currency ?? "AMD",
+        defaultSeatsPerTable: parsed.settings?.defaultSeatsPerTable ?? 10,
+        restaurantPricePerGuest: parsed.settings?.restaurantPricePerGuest ?? 150,
+        totalBudget: parsed.settings?.totalBudget ?? 0,
+      },
+    };
+  } catch {
+    return null;
+  }
+}
+
+function readBestLocalPlannerData(currentStorageKey?: string): PlannerData | null {
+  const candidateKeys = [currentStorageKey, ...LEGACY_PLANNER_STORAGE_KEYS].filter(Boolean) as string[];
+  const uniqueKeys = Array.from(new Set(candidateKeys));
+
+  let best: PlannerData | null = null;
+  for (const key of uniqueKeys) {
+    const candidate = readStoredPlannerData(key);
+    if (!candidate || !hasPlannerContent(candidate)) continue;
+    if (!best || plannerDataScore(candidate) > plannerDataScore(best)) {
+      best = candidate;
+    }
+  }
+
+  return best;
 }
 
 function PlannerPrototypeContent({
@@ -90,10 +169,66 @@ function PlannerPrototypeContent({
   // Greeting banner — shown once per session when pending tasks exist
   const greetingKey = isApiMode ? `planner_greeting_shown_${templateId}` : null;
   const [showGreeting, setShowGreeting] = useState(false);
+  const [plannerHydrated, setPlannerHydrated] = useState(!isApiMode);
 
   useEffect(() => {
     saveData(data, storageKey);
   }, [data, storageKey]);
+
+  // In authenticated planner mode, hydrate non-task data from server so it works across devices.
+  useEffect(() => {
+    if (!isApiMode) {
+      setPlannerHydrated(true);
+      return;
+    }
+
+    let cancelled = false;
+
+    async function hydratePlannerData() {
+      const localData = readBestLocalPlannerData(storageKey) ?? loadData(storageKey, initialData);
+      try {
+        const remoteData = await getPlannerData(templateId!, token!);
+        if (cancelled) return;
+
+        const remoteHasData = hasPlannerContent(remoteData);
+        const localHasData = hasPlannerContent(localData);
+
+        if ((!remoteHasData && localHasData) || shouldImportLocalData(localData, remoteData)) {
+          const imported = await importLegacyPlannerData(templateId!, token!, localData);
+          if (!cancelled) {
+            setData(imported);
+          }
+        } else {
+          setData(remoteData);
+        }
+      } catch (err) {
+        console.error("[planner] hydrate error:", err);
+      } finally {
+        if (!cancelled) setPlannerHydrated(true);
+      }
+    }
+
+    hydratePlannerData();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [initialData, isApiMode, storageKey, templateId, token]);
+
+  // Persist non-task planner data to server in API mode.
+  useEffect(() => {
+    if (!isApiMode || !plannerHydrated) return;
+
+    const timeoutId = window.setTimeout(() => {
+      savePlannerData(templateId!, token!, data).catch(err => {
+        console.error("[planner] save error:", err);
+      });
+    }, 700);
+
+    return () => {
+      window.clearTimeout(timeoutId);
+    };
+  }, [data, isApiMode, plannerHydrated, templateId, token]);
 
   // Fetch API tasks + telegram status on mount
   useEffect(() => {
@@ -241,7 +376,6 @@ function PlannerPrototypeContent({
           dueAtLocal: task.dueAtLocal,
           timezone: task.timezone,
           reminderEnabled: task.reminderEnabled ?? false,
-          repeatIntervalMinutes: task.repeatIntervalMinutes ?? null,
         };
         if (editingTask) {
           const updated = await updateTask(templateId!, editingTask.id, token!, input);

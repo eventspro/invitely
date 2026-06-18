@@ -21,15 +21,6 @@ const TIMEZONES = [
   { value: "UTC",               label: "UTC" },
 ];
 
-const REPEAT_OPTIONS = [
-  { value: null,  labelKey: "noRepeat"  as const },
-  { value: 10,    labelKey: "every10min" as const },
-  { value: 30,    labelKey: "every30min" as const },
-  { value: 60,    labelKey: "every1hour" as const },
-  { value: 120,   labelKey: "every2hours" as const },
-  { value: 1440,  labelKey: "every1day"  as const },
-];
-
 const REMINDER_BADGE: Partial<Record<TelegramReminderState, { icon: string; color: string }>> = {
   scheduled:  { icon: "🔔", color: "#3B82F6" },
   sent:       { icon: "📤", color: "#6B7280" },
@@ -59,7 +50,6 @@ export default function TaskForm({ initial, telegramConnected, isDemoMode, onSav
     priority:               (initial?.priority ?? "medium") as TaskPriority,
     notes:                  initial?.notes ?? initial?.description ?? "",
     reminderEnabled:        initial?.reminderEnabled ?? false,
-    repeatIntervalMinutes:  initial?.repeatIntervalMinutes ?? null as number | null,
   });
 
   const PRIORITIES: { key: TaskPriority; label: string; color: string; bg: string }[] = [
@@ -83,7 +73,6 @@ export default function TaskForm({ initial, telegramConnected, isDemoMode, onSav
       notes:                  form.notes.trim() || undefined,
       description:            form.notes.trim() || undefined,
       reminderEnabled:        form.dueAtLocal ? form.reminderEnabled : false,
-      repeatIntervalMinutes:  form.reminderEnabled && form.dueAtLocal ? form.repeatIntervalMinutes : null,
       telegramReminderState:  initial?.telegramReminderState,
     });
   }
@@ -219,7 +208,7 @@ export default function TaskForm({ initial, telegramConnected, isDemoMode, onSav
                   {pt.tasks.setReminder}
                 </span>
                 <button
-                  onClick={() => setForm(f => ({ ...f, reminderEnabled: !f.reminderEnabled, repeatIntervalMinutes: !f.reminderEnabled ? f.repeatIntervalMinutes : null }))}
+                  onClick={() => setForm(f => ({ ...f, reminderEnabled: !f.reminderEnabled }))}
                   style={{
                     width: 44, height: 24, borderRadius: 999, border: "none", cursor: "pointer",
                     background: form.reminderEnabled ? "#064E3B" : "#D1D5DB",
@@ -236,27 +225,6 @@ export default function TaskForm({ initial, telegramConnected, isDemoMode, onSav
                   }} />
                 </button>
               </div>
-
-              {/* Repeat (shown when reminder is ON) */}
-              {form.reminderEnabled && (
-                <div>
-                  <label style={{ ...labelStyle, marginBottom: 6 }}>{pt.tasks.repeatInterval}</label>
-                  <select
-                    style={{ ...inputStyle, cursor: "pointer" }}
-                    value={form.repeatIntervalMinutes ?? ""}
-                    onChange={e => setForm(f => ({
-                      ...f,
-                      repeatIntervalMinutes: e.target.value === "" ? null : Number(e.target.value),
-                    }))}
-                  >
-                    {REPEAT_OPTIONS.map(opt => (
-                      <option key={String(opt.value)} value={opt.value ?? ""}>
-                        {pt.tasks[opt.labelKey]}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-              )}
             </>
           ) : (
             <div style={{

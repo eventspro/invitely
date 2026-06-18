@@ -748,6 +748,9 @@ export const plannerTasks = pgTable("planner_tasks", {
   timezone:              text("timezone").notNull().default("Asia/Yerevan"),
   reminderEnabled:       boolean("reminder_enabled").notNull().default(false),
   repeatIntervalMinutes: integer("repeat_interval_minutes"),             // null = no repeat
+  reminderToken:         text("reminder_token"),
+  reminderVersion:       integer("reminder_version").notNull().default(0),
+  reminderSentAt:        timestamp("reminder_sent_at", { withTimezone: true }),
   telegramReminderState: text("telegram_reminder_state").notNull().default("not_scheduled"),
   // not_scheduled | scheduled | sent | repeating | stopped | completed | failed
   // 'stopped' = reminders halted by user; task itself stays pending
