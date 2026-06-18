@@ -149,7 +149,7 @@ export function registerQStashTaskReminderCallbackRoute(app: Express): void {
         const message = [
           "🔔 <b>Wedding Planner Reminder</b>",
           "",
-          `Hi ${escapeHtml(greetingName)}, don't forget: <b>${escapeHtml(claimed.title)}</b>`,
+          `Hi ${escapeHtml(greetingName)}, Չմոռանա՛ս: <b>${escapeHtml(claimed.title)}</b>`,
           dueLine,
         ].join("\n");
 

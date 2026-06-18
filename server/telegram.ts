@@ -175,7 +175,7 @@ export async function sendTaskReminderMessage(params: {
   const text = [
     "🔔 <b>Wedding Planner Reminder</b>",
     "",
-    `Hi ${escapeHtml(firstName)}, don't forget: <b>${escapeHtml(taskTitle)}</b>`,
+    `Hi ${escapeHtml(firstName)}, Չմոռանա՛ս: <b>${escapeHtml(taskTitle)}</b>`,
     "",
     dueLine,
   ].join("\n");

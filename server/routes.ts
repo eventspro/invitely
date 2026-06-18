@@ -35,6 +35,7 @@ import { registerConfigurablePricingRoutes } from './routes/configurable-pricing
 import { adminLimiter, authLimiter } from './middleware/rateLimiter.js';
 import { authenticateUser, requireAdminPanelAccess } from './middleware/auth.js';
 import taskRoutes from './routes/tasks.js';
+import plannerDataRoutes from './routes/planner-data.js';
 
 // Configure multer for file uploads
 const uploadsDir = process.env.VERCEL ? '/tmp/uploads' : path.join(process.cwd(), 'uploads');
@@ -148,6 +149,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   // Planner tasks CRUD (authenticated, rate-limited)
   app.use('/api/planner', adminLimiter, taskRoutes);
+  // Planner bulk data sync: guests, tables, seats, budget items, settings
+  app.use('/api/planner', adminLimiter, plannerDataRoutes);
   
   // Register template routes (for template-specific endpoints)
   registerTemplateRoutes(app);
