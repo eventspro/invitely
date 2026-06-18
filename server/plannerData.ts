@@ -111,6 +111,7 @@ export interface PlannerDataPayload {
   budgetItems: PlannerBudgetItemData[];
   tasks: PlannerTaskData[];
   settings: PlannerSettingsData;
+  plannerVersion: string | null;
   rsvpCounts?: {
     total: number;
     coming: number;
@@ -320,6 +321,7 @@ function normalizePlannerData(input: Partial<PlannerDataPayload>): PlannerDataPa
     })),
     tasks: [],
     settings: normalizeSettings(input.settings),
+    plannerVersion: null,
   };
 }
 
@@ -436,8 +438,6 @@ export async function syncPlannerGuestsForTemplate(templateId: string): Promise<
 }
 
 export async function getPlannerData(userId: string, templateId: string): Promise<PlannerDataPayload> {
-  await syncPlannerGuestsFromRsvps(userId, templateId);
-
   const [guestRows, tableRows, seatRows, budgetRows, settingsRows, taskRows, rsvpRows] = await Promise.all([
     db.select().from(plannerGuests).where(and(eq(plannerGuests.userId, userId), eq(plannerGuests.templateId, templateId))).orderBy(desc(plannerGuests.createdAt)),
     db.select().from(plannerTables).where(and(eq(plannerTables.userId, userId), eq(plannerTables.templateId, templateId))).orderBy(plannerTables.createdAt),
@@ -526,6 +526,7 @@ export async function getPlannerData(userId: string, templateId: string): Promis
     budgetItems,
     tasks: taskRows.map(taskToClientTask),
     settings: normalizeSettings(settingsRows[0]?.settings),
+    plannerVersion: settingsRows[0]?.updatedAt?.toISOString() ?? null,
     rsvpCounts,
   };
 }
@@ -534,7 +535,19 @@ export async function replacePlannerData(
   userId: string,
   templateId: string,
   input: Partial<PlannerDataPayload>,
+  opts: { expectedVersion?: string } = {},
 ): Promise<PlannerDataPayload> {
+  if (opts.expectedVersion != null) {
+    const [currentSettings] = await db
+      .select({ updatedAt: plannerSettings.updatedAt })
+      .from(plannerSettings)
+      .where(and(eq(plannerSettings.userId, userId), eq(plannerSettings.templateId, templateId)))
+      .limit(1);
+    const currentVersion = currentSettings?.updatedAt?.toISOString() ?? null;
+    if (currentVersion != null && currentVersion !== opts.expectedVersion) {
+      throw Object.assign(new Error("planner version conflict"), { code: "PLANNER_VERSION_CONFLICT" });
+    }
+  }
   const data = normalizePlannerData(input);
   const existingGuests = await db
     .select()

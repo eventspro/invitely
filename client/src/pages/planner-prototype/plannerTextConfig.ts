@@ -519,7 +519,7 @@ const hy = {
   },
   dashboard: {
     title: "Գլխավոր",
-    weddingOverview: "Հարսանիքի ակնարկ",
+    weddingOverview: "Ամփոփ պատկեր",
     guestOverview: "Հյուրեր",
     seatingOverview: "Նստատեղեր",
     budgetOverview: "Բյուջե",

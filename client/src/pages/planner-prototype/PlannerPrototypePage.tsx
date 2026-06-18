@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from "react";
+import React, { useState, useEffect, useCallback, useRef } from "react";
 import { Plus } from "lucide-react";
 import PlannerShell from "./PlannerShell";
 import DashboardScreen from "./screens/DashboardScreen";
@@ -16,10 +16,11 @@ import BudgetItemForm from "./forms/BudgetItemForm";
 import TaskForm from "./forms/TaskForm";
 import GenerateTablesSheet from "./forms/GenerateTablesSheet";
 import { loadData, saveData } from "./storage";
+import { BLANK_DATA } from "./defaultData";
 import { applySuggestion, uid } from "./plannerUtils";
 import { PlannerLocaleProvider, usePlannerText } from "./PlannerLocaleContext";
 import { listTasks, createTask, updateTask, deleteTask } from "./api/tasksApi";
-import { getPlannerData, importLegacyPlannerData, savePlannerData } from "./api/plannerDataApi";
+import { getPlannerData, importLegacyPlannerData, savePlannerData, PlannerConflictError } from "./api/plannerDataApi";
 import type { TabId, Guest, WeddingTable, BudgetItem, Seat, Task, PlannerData } from "./types";
 import type { TableSuggestion } from "./plannerUtils";
 
@@ -70,10 +71,6 @@ function plannerDataScore(data: PlannerData): number {
   if (data.settings.weddingDate) score += 2;
   if (data.settings.coupleName?.trim()) score += 2;
   return score;
-}
-
-function shouldImportLocalData(localData: PlannerData, remoteData: PlannerData): boolean {
-  return plannerDataScore(localData) > plannerDataScore(remoteData);
 }
 
 function readStoredPlannerData(storageKey: string): PlannerData | null {
@@ -145,8 +142,13 @@ function PlannerPrototypeContent({
     more: pt.nav.more,
   };
 
-  const [data, setData] = useState<PlannerData>(() => loadData(storageKey, initialData));
+  const [data, setData] = useState<PlannerData>(() =>
+    isApiMode ? structuredClone(BLANK_DATA) : loadData(storageKey, initialData)
+  );
   const [activeTab, setActiveTab] = useState<TabId>("dashboard");
+
+  const plannerVersionRef = useRef<string | null>(null);
+  const skipNextSaveRef = useRef(false);
 
   const [selectedTableId, setSelectedTableId] = useState<string | null>(null);
 
@@ -172,8 +174,9 @@ function PlannerPrototypeContent({
   const [plannerHydrated, setPlannerHydrated] = useState(!isApiMode);
 
   useEffect(() => {
+    if (!plannerHydrated) return;
     saveData(data, storageKey);
-  }, [data, storageKey]);
+  }, [data, storageKey, plannerHydrated]);
 
   // In authenticated planner mode, hydrate non-task data from server so it works across devices.
   useEffect(() => {
@@ -185,26 +188,40 @@ function PlannerPrototypeContent({
     let cancelled = false;
 
     async function hydratePlannerData() {
-      const localData = readBestLocalPlannerData(storageKey) ?? loadData(storageKey, initialData);
       try {
+        console.log("[planner] GET started");
         const remoteData = await getPlannerData(templateId!, token!);
         if (cancelled) return;
+        console.log("[planner] GET finished, version:", remoteData.plannerVersion);
 
         const remoteHasData = hasPlannerContent(remoteData);
-        const localHasData = hasPlannerContent(localData);
 
-        if ((!remoteHasData && localHasData) || shouldImportLocalData(localData, remoteData)) {
-          const imported = await importLegacyPlannerData(templateId!, token!, localData);
-          if (!cancelled) {
-            setData(imported);
+        if (!remoteHasData) {
+          const localData = readBestLocalPlannerData(storageKey);
+          const localHasData = localData !== null && hasPlannerContent(localData);
+          if (localHasData && localData) {
+            console.log("[planner] server empty, importing from localStorage");
+            const imported = await importLegacyPlannerData(templateId!, token!, localData);
+            if (!cancelled) {
+              skipNextSaveRef.current = true;
+              plannerVersionRef.current = imported.plannerVersion;
+              setData(imported);
+              setPlannerHydrated(true);
+            }
+            return;
           }
-        } else {
+        }
+
+        console.log("[planner] using server data");
+        if (!cancelled) {
+          skipNextSaveRef.current = true;
+          plannerVersionRef.current = remoteData.plannerVersion;
           setData(remoteData);
+          setPlannerHydrated(true);
         }
       } catch (err) {
         console.error("[planner] hydrate error:", err);
-      } finally {
-        if (!cancelled) setPlannerHydrated(true);
+        // Don't set plannerHydrated — keeps saves blocked, prevents BLANK_DATA wipe
       }
     }
 
@@ -213,19 +230,49 @@ function PlannerPrototypeContent({
     return () => {
       cancelled = true;
     };
-  }, [initialData, isApiMode, storageKey, templateId, token]);
+  }, [isApiMode, storageKey, templateId, token]);
 
   // Persist non-task planner data to server in API mode.
   useEffect(() => {
     if (!isApiMode || !plannerHydrated) return;
 
-    const timeoutId = window.setTimeout(() => {
-      savePlannerData(templateId!, token!, data).catch(err => {
-        console.error("[planner] save error:", err);
-      });
+    let cancelled = false;
+    const timeoutId = window.setTimeout(async () => {
+      if (cancelled) return;
+      if (skipNextSaveRef.current) {
+        skipNextSaveRef.current = false;
+        return;
+      }
+      console.log("[planner] save started, version:", plannerVersionRef.current);
+      try {
+        const result = await savePlannerData(templateId!, token!, data, plannerVersionRef.current);
+        if (!cancelled) {
+          console.log("[planner] save accepted, new version:", result.plannerVersion);
+          plannerVersionRef.current = result.plannerVersion;
+        }
+      } catch (err) {
+        if (cancelled) return;
+        if (err instanceof PlannerConflictError) {
+          console.log("[planner] 409 conflict — refetching from server");
+          try {
+            const fresh = await getPlannerData(templateId!, token!);
+            if (!cancelled) {
+              console.log("[planner] refetch done, new version:", fresh.plannerVersion);
+              skipNextSaveRef.current = true;
+              plannerVersionRef.current = fresh.plannerVersion;
+              setData(fresh);
+            }
+          } catch (fetchErr) {
+            console.error("[planner] refetch failed after conflict:", fetchErr);
+          }
+        } else {
+          console.error("[planner] save error:", err);
+        }
+      }
     }, 700);
 
     return () => {
+      cancelled = true;
       window.clearTimeout(timeoutId);
     };
   }, [data, isApiMode, plannerHydrated, templateId, token]);
