@@ -44,12 +44,13 @@ export function createReminderToken(): string {
   return crypto.randomBytes(16).toString("hex");
 }
 
+/** Enqueues a one-time reminder. Returns the QStash messageId. */
 export async function enqueueOneTimeReminder(
   payload: TaskReminderPayload,
   dueAtUtc: Date,
-): Promise<void> {
+): Promise<string> {
   if (!qstashClient) {
-    throw new Error("QStash token is not configured");
+    throw new Error("QStash token is not configured (QSTASH_TOKEN missing)");
   }
 
   const callbackUrl = resolveQStashCallbackUrl();
@@ -60,9 +61,11 @@ export async function enqueueOneTimeReminder(
   const delayMs = Math.max(0, dueAtUtc.getTime() - Date.now());
   const delaySeconds = Math.ceil(delayMs / 1000);
 
-  await qstashClient.publishJSON({
+  const result = await qstashClient.publishJSON({
     url: callbackUrl,
     body: payload,
     ...(delaySeconds > 0 ? { delay: delaySeconds } : {}),
   });
+
+  return result.messageId;
 }

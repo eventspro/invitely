@@ -45,47 +45,41 @@ function parseDueAtUtc(dueAtLocal: string, timezone: string): Date {
   }
 }
 
-/** Derive telegram_reminder_state for a newly created / rescheduled task. */
-async function deriveTelegramState(
-  userId: string,
-  templateId: string,
-  reminderEnabled: boolean,
-): Promise<string> {
-  if (!reminderEnabled || !isQStashConfigured()) return "not_scheduled";
-
-  const [panel] = await db
-    .select({ settings: userAdminPanels.settings })
-    .from(userAdminPanels)
-    .where(
-      and(
-        eq(userAdminPanels.userId, userId),
-        eq(userAdminPanels.templateId, templateId),
-        eq(userAdminPanels.isActive, true),
-      ),
-    )
-    .limit(1);
-
-  const s = (panel?.settings ?? {}) as Record<string, unknown>;
-  return s.telegramChatId && s.telegramEnabled ? "scheduled" : "not_scheduled";
-}
-
 async function scheduleOneTimeReminder(task: PlannerTask): Promise<PlannerTask> {
   if (!task.dueAtUtc || !task.reminderEnabled || task.status !== "pending") {
+    return task;
+  }
+
+  console.log("[tasks] reminder requested for task %s", task.id);
+
+  if (!isQStashConfigured()) {
+    console.error(
+      "[tasks] QStash is not configured — reminder for task %s will NOT be scheduled. " +
+      "Ensure QSTASH_TOKEN, QSTASH_CALLBACK_URL, QSTASH_CURRENT_SIGNING_KEY, " +
+      "and QSTASH_NEXT_SIGNING_KEY are set in production env vars.",
+      task.id,
+    );
     return task;
   }
 
   const reminderVersion = (task.reminderVersion ?? 0) + 1;
   const reminderToken = createReminderToken();
 
+  console.log("[tasks] token generated for task %s (version %d)", task.id, reminderVersion);
+
   try {
-    await enqueueOneTimeReminder(
-      {
-        taskId: task.id,
-        reminderToken,
-        reminderVersion,
-      },
+    console.log(
+      "[tasks] QStash publish attempted for task %s (due %s)",
+      task.id,
+      task.dueAtUtc.toISOString(),
+    );
+
+    const messageId = await enqueueOneTimeReminder(
+      { taskId: task.id, reminderToken, reminderVersion },
       task.dueAtUtc,
     );
+
+    console.log("[tasks] QStash publish succeeded for task %s, messageId: %s", task.id, messageId);
 
     const [updated] = await db
       .update(plannerTasks)
@@ -105,6 +99,8 @@ async function scheduleOneTimeReminder(task: PlannerTask): Promise<PlannerTask> 
     return updated ?? task;
   } catch (err) {
     const errorMessage = err instanceof Error ? err.message.slice(0, 300) : "QStash enqueue failed";
+    console.error("[tasks] QStash publish failed for task %s: %s", task.id, errorMessage);
+
     const [failed] = await db
       .update(plannerTasks)
       .set({
@@ -187,20 +183,10 @@ router.post(
       const data: TaskInput = parsed.data;
 
       let dueAtUtc: Date | null = null;
-      let nextReminderAtUtc: Date | null = null;
 
-      if (data.dueAtLocal && data.reminderEnabled) {
-        dueAtUtc = parseDueAtUtc(data.dueAtLocal, data.timezone);
-        nextReminderAtUtc = dueAtUtc;
-      } else if (data.dueAtLocal) {
+      if (data.dueAtLocal) {
         dueAtUtc = parseDueAtUtc(data.dueAtLocal, data.timezone);
       }
-
-      const telegramReminderState = await deriveTelegramState(
-        userId,
-        templateId,
-        data.reminderEnabled && !!nextReminderAtUtc,
-      );
 
       const [task] = await db
         .insert(plannerTasks)
@@ -214,15 +200,15 @@ router.post(
           dueAtUtc: dueAtUtc ?? undefined,
           timezone: data.timezone,
           reminderEnabled: data.reminderEnabled,
-          telegramReminderState,
-          nextReminderAtUtc: nextReminderAtUtc ?? undefined,
+          telegramReminderState: "not_scheduled",
+          nextReminderAtUtc: data.reminderEnabled && dueAtUtc ? dueAtUtc : undefined,
           reminderToken: null,
           reminderVersion: 0,
           reminderSentAt: null,
         })
         .returning();
 
-      if (task.telegramReminderState === "scheduled" && task.dueAtUtc) {
+      if (data.reminderEnabled && task.dueAtUtc) {
         const scheduled = await scheduleOneTimeReminder(task);
         return res.status(201).json(scheduled);
       }
@@ -324,12 +310,8 @@ router.put(
             updates.sendLastError = null;
             updates.reminderToken = null;
             updates.reminderSentAt = null;
-            updates.telegramReminderState = await deriveTelegramState(
-              userId,
-              templateId,
-              true,
-            );
-            shouldScheduleAfterUpdate = updates.telegramReminderState === "scheduled";
+            updates.telegramReminderState = "not_scheduled";
+            shouldScheduleAfterUpdate = true;
           }
         } else {
           updates.dueAtUtc = null;
@@ -354,12 +336,8 @@ router.put(
         updates.sendLastError = null;
         updates.reminderToken = null;
         updates.reminderSentAt = null;
-        updates.telegramReminderState = await deriveTelegramState(
-          userId,
-          templateId,
-          true,
-        );
-        shouldScheduleAfterUpdate = updates.telegramReminderState === "scheduled";
+        updates.telegramReminderState = "not_scheduled";
+        shouldScheduleAfterUpdate = true;
       }
 
       // If reminder toggled OFF, clear schedule
