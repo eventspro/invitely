@@ -22,6 +22,8 @@ export type {
   ContactSection,
   TrustItem,
   FooterSection,
+  PlannerFeatureCard,
+  PlannerShowcaseSection,
   HomepageContent,
   ValidationWarning,
   IconKey,

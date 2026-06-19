@@ -54,6 +54,22 @@ export const DEFAULT_HOMEPAGE_CONTENT: HomepageContent = {
     ],
   },
 
+  plannerShowcase: {
+    eyebrow:  { hy: "ՀԱՐՍՆԱԽՆՋՈՒՅՔ ՊԼԱՆՆԵՐ", en: "WEDDING PLANNER",         ru: "СВАДЕБНЫЙ ПЛАНИРОВЩИК"   },
+    title:    { hy: "Պլանավորեք ձեր հարսանիքը մեկ տեղ", en: "Plan your wedding in one place", ru: "Планируйте свадьбу в одном месте" },
+    subtitle: { hy: "Հյուրերի ցուցակ, նստատեղի պլան, բյուջե, անելիքներ — բոլոր պլանավորման գործիքները մեկ հարթակում", en: "Guest list, seating plan, budget, tasks — all the planning tools in one elegant app.", ru: "Список гостей, рассадка, бюджет, задачи — всё под рукой." },
+    primaryCta:   { label: { hy: "Փորձել պլաններ", en: "Try the planner", ru: "Попробовать планировщик" }, href: "/planner-prototype", visible: true },
+    secondaryCta: { label: { hy: "Դիտել դեմո",     en: "View demo",       ru: "Смотреть демо"          }, href: "/demo/david-rose-romantic", visible: true },
+    features: [
+      { id: "pf-1", icon: "users",    title: { hy: "Հյուրերի ցուցակ",      en: "Guest list",    ru: "Список гостей" }, text: { hy: "Կառավարեք հյուրերին, RSVP-ն ու կոնտակտները", en: "Manage guests, RSVPs and contacts",    ru: "Управляйте гостями и RSVP"       }, visible: true },
+      { id: "pf-2", icon: "calendar", title: { hy: "Սեղաններ",              en: "Tables",        ru: "Рассадка"      }, text: { hy: "Ստեղծեք նստատեղի պլան հեշտությամբ",     en: "Create your seating plan with ease",   ru: "Составьте план рассадки"         }, visible: true },
+      { id: "pf-3", icon: "wallet",   title: { hy: "Բյուջե",               en: "Budget",        ru: "Бюджет"        }, text: { hy: "Հետևեք ծախսերի ու վճարումների",         en: "Track expenses and payments",          ru: "Отслеживайте расходы"            }, visible: true },
+      { id: "pf-4", icon: "check",    title: { hy: "Անելիքներ",        en: "Tasks",         ru: "Задачи"        }, text: { hy: "Կատարեք բոլոր պլանավորման քայլերն ժամանակին",   en: "Complete every planning step on time", ru: "Выполняйте все шаги вовремя"     }, visible: true },
+      { id: "pf-5", icon: "bell",     title: { hy: "Ծանուցումներ",         en: "Reminders",     ru: "Напоминания"   }, text: { hy: "Ստացեք ծանուցումներ ճիշտ ժամի",         en: "Get reminders at the right time",      ru: "Получайте напоминания вовремя"        }, visible: true },
+      { id: "pf-6", icon: "send",     title: { hy: "RSVP համաժամացում",    en: "RSVP sync",     ru: "Синхронизация" }, text: { hy: "Բոլոր հաստատումները ավտոմատ ընդունվում են",  en: "Sync confirmations to the planner",    ru: "Все подтверждения в планировщике"}, visible: true },
+    ],
+  },
+
   howItWorks: {
     eyebrow: { hy: "ՊԱՐԲ ԳՈՐԾԸՆԹԱՑ", en: "SIMPLE PROCESS", ru: "ПРОСТОЙ ПРОЦЕСС"  },
     title:   { hy: "ԻՆՉՊԵՍ Է ԱՇԽԱՏՈՒՄ", en: "HOW IT WORKS",   ru: "КАК ЭТО РАБОТАЕТ" },

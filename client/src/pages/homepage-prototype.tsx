@@ -12,6 +12,7 @@
 import { type ElementType, memo, useEffect, useRef, useState } from "react";
 import {
   ArrowRight,
+  Bell,
   Calendar,
   Camera,
   CheckCircle,
@@ -34,6 +35,7 @@ import {
   Sparkles,
   Star,
   Users,
+  Wallet,
   X,
 } from "lucide-react";
 import { loadHomepageContent, fetchHomepageContentFromServer, saveHomepageContent } from "../content/homepage/homepageContentStorage";
@@ -50,7 +52,7 @@ const ICON_MAP: Record<IconKey, ElementType> = {
   message: MessageCircle, phone: Phone, gift: Gift, lock: Lock,
   star: Star, users: Users, check: CheckCircle, smartphone: Smartphone,
   share: Share2, edit: Edit3, sparkles: Sparkles, clock: Clock,
-  palette: Palette, send: Send, arrow: ArrowRight,
+  palette: Palette, send: Send, arrow: ArrowRight, bell: Bell, wallet: Wallet,
   instagram: () => (
     <svg viewBox="0 0 24 24" fill="currentColor" style={{ width: "1em", height: "1em" }}>
       <path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zm0-2.163c-3.259 0-3.667.014-4.947.072-4.358.2-6.78 2.618-6.98 6.98-.059 1.281-.073 1.689-.073 4.948 0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98 1.281.058 1.689.072 4.948.072 3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98-1.281-.059-1.69-.073-4.949-.073zm0 5.838c-3.403 0-6.162 2.759-6.162 6.162s2.759 6.163 6.162 6.163 6.162-2.759 6.162-6.163c0-3.403-2.759-6.162-6.162-6.162zm0 10.162c-2.209 0-4-1.79-4-4 0-2.209 1.791-4 4-4s4 1.791 4 4c0 2.21-1.791 4-4 4zm6.406-11.845c-.796 0-1.441.645-1.441 1.44s.645 1.44 1.441 1.44c.795 0 1.439-.645 1.439-1.44s-.644-1.44-1.439-1.44z" />
@@ -237,6 +239,177 @@ const PhonePreview = memo(function PhonePreview({ size = "desktop", src = "/davi
   );
 });
 
+// ─── PlannerTabletDashboard ───────────────────────────────────────────────────
+// Landscape tablet mockup for desktop, compact portrait card for mobile.
+// Content is static/visual — no interaction needed.
+function PlannerTabletDashboard({ visible }: { visible: boolean }) {
+  const barStyle = (w: string, delay: string): React.CSSProperties => ({
+    height: "100%", borderRadius: 99,
+    "--bar-w": w,
+    animation: visible ? `ppsBarGrow 1.2s ease ${delay} both` : "none",
+  } as React.CSSProperties);
+
+  const badgeAnim = (i: number) =>
+    visible ? `ppsBadgeIn .45s ease ${0.2 + i * 0.08}s both` : "none";
+
+  const stats = [
+    { val: "182", label: "Հյուրեր" },
+    { val: "146", label: "Գալիս է", green: true  },
+    { val: "20",  label: "Սեղաններ" },
+    { val: "֏6.8M", label: "Բյուջե",  gold: true   },
+  ];
+
+  const tasks = [
+    { label: "Զանգել նկարիչներին", due: "Հունիսի 8", done: false },
+    { label: "Վճարել երաժիշտներին",     due: "Հունիսի 10", done: false },
+    { label: "Պայմանավորվել դիզայների հետ",   due: "Հունիսի 5",  done: true  },
+  ];
+
+  const Header = ({ fs14 = false }: { fs14?: boolean }) => (
+    <div style={{ background: "#12231a", padding: fs14 ? "11px 18px 10px" : "10px 14px 9px", borderBottom: "1px solid rgba(255,255,255,0.07)", display: "flex", alignItems: "center", gap: 10 }}>
+      <div style={{ width: fs14 ? 36 : 32, height: fs14 ? 36 : 32, borderRadius: "50%", flexShrink: 0, background: "linear-gradient(135deg,#2d7a55,#1a4d35)", display: "flex", alignItems: "center", justifyContent: "center" }}>
+        <Heart style={{ width: fs14 ? 15 : 13, height: fs14 ? 15 : 13, fill: "#f0cf82", color: "#f0cf82" }} />
+      </div>
+      <div>
+        <div style={{ fontSize: fs14 ? 14 : 13, fontWeight: 700, color: "#fffaf0", lineHeight: 1.2 }}>Aram & Ani</div>
+        <div style={{ fontSize: fs14 ? 10 : 9, color: "rgba(255,255,255,0.45)", lineHeight: 1.2 }}>Wedding Planner · 14 Հունիս 2026</div>
+      </div>
+      <div style={{ marginLeft: "auto" }}>
+        <div style={{ fontSize: fs14 ? 9.5 : 8.5, fontWeight: 600, color: "#34d399", background: "rgba(52,211,153,0.12)", borderRadius: 20, padding: fs14 ? "3px 10px" : "2px 8px", border: "1px solid rgba(52,211,153,0.28)", display: "flex", alignItems: "center", gap: 4, animation: visible ? "ppsTgPulse 2.4s ease-in-out infinite" : "none" }}>
+          <span style={{ width: 5, height: 5, background: "#34d399", borderRadius: "50%", display: "inline-block" }} />
+          Telegram
+        </div>
+      </div>
+    </div>
+  );
+
+  const StatsRow = ({ pad, gap, fs }: { pad: string; gap: number; fs: number }) => (
+    <div style={{ display: "grid", gridTemplateColumns: "repeat(4,1fr)", gap, padding: pad }}>
+      {stats.map(({ val, label, green, gold }, i) => (
+        <div key={label} style={{ background: "rgba(255,255,255,0.05)", borderRadius: 10, padding: "9px 6px", textAlign: "center", border: "1px solid rgba(255,255,255,0.07)", animation: badgeAnim(i) }}>
+          <div style={{ fontSize: fs, fontWeight: 700, color: green ? "#34d399" : gold ? "#f0cf82" : "#fffaf0", lineHeight: 1.2 }}>{val}</div>
+          <div style={{ fontSize: fs - 5, color: "rgba(255,255,255,0.5)", lineHeight: 1.2, marginTop: 2 }}>{label}</div>
+        </div>
+      ))}
+    </div>
+  );
+
+  const RSVPWidget = ({ fs }: { fs: number }) => (
+    <div style={{ background: "rgba(255,255,255,0.04)", borderRadius: 10, padding: "11px 13px", border: "1px solid rgba(255,255,255,0.08)" }}>
+      <div style={{ fontSize: fs - 1, fontWeight: 600, color: "#c9a85a", marginBottom: 7, textTransform: "uppercase" as const, letterSpacing: "0.06em" }}>RSVP</div>
+      <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 5 }}>
+        <span style={{ fontSize: fs - 1, color: "rgba(255,255,255,0.55)" }}>146 / 182 Գալիս են</span>
+        <span style={{ fontSize: fs - 1, fontWeight: 700, color: "#34d399" }}>80%</span>
+      </div>
+      <div style={{ height: 6, background: "rgba(255,255,255,0.1)", borderRadius: 99, overflow: "hidden" }}>
+        <div style={{ ...barStyle("80%", "0.5s"), background: "linear-gradient(90deg,#2d7a55,#34d399)" }} />
+      </div>
+    </div>
+  );
+
+  const BudgetWidget = ({ fs }: { fs: number }) => (
+    <div style={{ background: "rgba(255,255,255,0.04)", borderRadius: 10, padding: "11px 13px", border: "1px solid rgba(255,255,255,0.08)" }}>
+      <div style={{ fontSize: fs - 1, fontWeight: 600, color: "#c9a85a", marginBottom: 7, textTransform: "uppercase" as const, letterSpacing: "0.06em" }}>Բյուջե</div>
+      <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 5 }}>
+        <span style={{ fontSize: fs - 1, color: "rgba(255,255,255,0.55)" }}>֏3.2M վճարված</span>
+        <span style={{ fontSize: fs - 1, fontWeight: 700, color: "#f0cf82" }}>47%</span>
+      </div>
+      <div style={{ height: 6, background: "rgba(255,255,255,0.1)", borderRadius: 99, overflow: "hidden" }}>
+        <div style={{ ...barStyle("47%", "0.7s"), background: "linear-gradient(90deg,#9a7e3d,#f0cf82)" }} />
+      </div>
+      <div style={{ fontSize: fs - 2, color: "rgba(255,255,255,0.32)", marginTop: 5 }}>֏6.8M նախատեսված · ֏3.6M մնացել է</div>
+    </div>
+  );
+
+  const TablesWidget = ({ fs }: { fs: number }) => (
+    <div style={{ background: "rgba(255,255,255,0.04)", borderRadius: 10, padding: "11px 13px", border: "1px solid rgba(255,255,255,0.08)" }}>
+      <div style={{ fontSize: fs - 1, fontWeight: 600, color: "#c9a85a", marginBottom: 8, textTransform: "uppercase" as const, letterSpacing: "0.06em" }}>Սեղաններ</div>
+      <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(5, 9px)", gap: 3 }}>
+          {Array.from({ length: 20 }).map((_, i) => (
+            <div key={i} style={{ width: 9, height: 9, borderRadius: 3, background: i < 16 ? "rgba(52,211,153,0.65)" : "rgba(255,255,255,0.12)", border: "1px solid rgba(255,255,255,0.07)" }} />
+          ))}
+        </div>
+        <div>
+          <div style={{ fontSize: 17, fontWeight: 700, color: "#fffaf0" }}>20</div>
+          <div style={{ fontSize: fs - 2, color: "rgba(255,255,255,0.45)" }}>146 նստած</div>
+        </div>
+      </div>
+    </div>
+  );
+
+  const TasksWidget = ({ fs, flex1 = false }: { fs: number; flex1?: boolean }) => (
+    <div style={{ background: "rgba(255,255,255,0.04)", borderRadius: 10, padding: "11px 13px", border: "1px solid rgba(255,255,255,0.08)", ...(flex1 ? { flex: 1 } : {}) }}>
+      <div style={{ fontSize: fs - 1, fontWeight: 600, color: "#c9a85a", marginBottom: 8, textTransform: "uppercase" as const, letterSpacing: "0.06em" }}>Անելիքներ</div>
+      {tasks.map(({ label, due, done }) => (
+        <div key={label} style={{ display: "flex", alignItems: "center", gap: 7, marginBottom: 5 }}>
+          <div style={{ width: 13, height: 13, borderRadius: "50%", flexShrink: 0, background: done ? "rgba(52,211,153,0.2)" : "rgba(255,255,255,0.07)", border: `1.5px solid ${done ? "#34d399" : "rgba(255,255,255,0.18)"}`, display: "flex", alignItems: "center", justifyContent: "center" }}>
+            {done && <div style={{ width: 5, height: 5, background: "#34d399", borderRadius: "50%" }} />}
+          </div>
+          <span style={{ fontSize: fs, color: done ? "rgba(255,255,255,0.32)" : "rgba(255,255,255,0.78)", flex: 1, textDecoration: done ? "line-through" : "none", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{label}</span>
+          <span style={{ fontSize: fs - 1.5, color: "#c9a85a", flexShrink: 0 }}>{due}</span>
+        </div>
+      ))}
+    </div>
+  );
+
+  const TgChip = () => (
+    <div style={{ padding: "0 18px 14px", display: "flex", justifyContent: "center" }}>
+      <div style={{ display: "inline-flex", alignItems: "center", gap: 7, background: "rgba(52,211,153,0.08)", borderRadius: 20, padding: "5px 14px", border: "1px solid rgba(52,211,153,0.22)", fontSize: 9.5, color: "#34d399", fontWeight: 600, letterSpacing: "0.02em" }}>
+        <span style={{ width: 6, height: 6, background: "#34d399", borderRadius: "50%", display: "inline-block" }} />
+        Telegram ծանուցումները միացված են
+      </div>
+    </div>
+  );
+
+  return (
+    <>
+      {/* ── Desktop: landscape tablet ── */}
+      <div
+        className="relative hidden lg:block"
+        style={{ animation: visible ? "ppsDashFloat 6s ease-in-out 0.4s infinite" : "none" }}
+      >
+        <div aria-hidden style={{ position: "absolute", inset: -32, borderRadius: "2.6rem", background: "rgba(52,211,153,0.09)", filter: "blur(36px)", pointerEvents: "none" }} />
+        <div aria-hidden style={{ position: "absolute", inset: -1, borderRadius: "1.5rem", boxShadow: "0 0 0 1px rgba(201,168,90,0.18)", pointerEvents: "none" }} />
+        <div style={{ width: 560, borderRadius: "1.4rem", border: "12px solid #0e1c13", background: "#0e1c13", boxShadow: "0 36px 90px rgba(0,0,0,0.65), inset 0 0 0 1px rgba(255,255,255,0.04)", overflow: "hidden" }}>
+          <div style={{ background: "#0d1e14" }}>
+            <Header fs14 />
+            <StatsRow pad="12px 18px 10px" gap={8} fs={18} />
+            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10, padding: "0 18px 10px" }}>
+              <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+                <RSVPWidget fs={11} />
+                <BudgetWidget fs={11} />
+              </div>
+              <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+                <TablesWidget fs={11} />
+                <TasksWidget fs={10} flex1 />
+              </div>
+            </div>
+            <TgChip />
+          </div>
+        </div>
+      </div>
+
+      {/* ── Mobile: compact portrait card ── */}
+      <div className="lg:hidden" style={{ width: "100%", maxWidth: 360, margin: "0 auto" }}>
+        <div style={{ width: "100%", borderRadius: "1.3rem", border: "8px solid #0e1c13", background: "#0e1c13", boxShadow: "0 24px 60px rgba(0,0,0,0.6), inset 0 0 0 1px rgba(255,255,255,0.04)", overflow: "hidden" }}>
+          <div style={{ background: "#0d1e14" }}>
+            <Header />
+            <StatsRow pad="10px 14px 8px" gap={6} fs={15} />
+            <div style={{ padding: "0 14px 7px" }}><RSVPWidget fs={10} /></div>
+            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 6, padding: "0 14px 7px" }}>
+              <BudgetWidget fs={10} />
+              <TablesWidget fs={10} />
+            </div>
+            <div style={{ padding: "0 14px 7px" }}><TasksWidget fs={9} /></div>
+            <TgChip />
+          </div>
+        </div>
+      </div>
+    </>
+  );
+}
+
 // ─── TemplateCard ─────────────────────────────────────────────────────────────
 type TCard = {
   title: string; tag: string; price: string;
@@ -300,6 +473,8 @@ export default function HomepagePrototype() {
   const [openFaq, setOpenFaq] = useState<string | null>(null);
   const [showSaleWheel, setShowSaleWheel] = useState(false);
   const carouselRef = useRef<HTMLDivElement>(null);
+  const [plannerVisible, setPlannerVisible] = useState(false);
+  const plannerRef  = useRef<HTMLDivElement>(null);
 
   // Live config from translations-prototype / localStorage, then server
   const [cfg, setCfg] = useState(() => loadHomepageContent());
@@ -381,6 +556,10 @@ export default function HomepagePrototype() {
   const contactBtns   = cfg.contact.buttons.filter(b => b.visible);
   const mobileActions = cfg.mobileExperience.actions.filter(a => a.visible);
 
+  const plannerFeatures = cfg.plannerShowcase.features
+    .filter(f => f.visible)
+    .map(f => ({ id: f.id, icon: f.icon, title: f.title.hy, text: f.text.hy }));
+
   // ─── Carousel: IntersectionObserver drives active dot ───────────────────
   useEffect(() => {
     const track = carouselRef.current;
@@ -403,6 +582,18 @@ export default function HomepagePrototype() {
 
     return () => observers.forEach(o => o.disconnect());
   }, [templateCards.length]);
+
+  // ─── Planner section: trigger animation on scroll into view ─────────────
+  useEffect(() => {
+    const el = plannerRef.current;
+    if (!el) return;
+    const obs = new IntersectionObserver(
+      ([entry]) => { if (entry.isIntersecting) setPlannerVisible(true); },
+      { threshold: 0.15 },
+    );
+    obs.observe(el);
+    return () => obs.disconnect();
+  }, []);
 
   const scrollToCard = (index: number) => {
     const track = carouselRef.current;
@@ -427,6 +618,15 @@ export default function HomepagePrototype() {
     <div className="overflow-x-hidden bg-[#fff8ef] text-[#18241d]" style={sansStyle}>
       <style>{`
         .hp-carousel::-webkit-scrollbar { display: none; }
+        @keyframes ppsDashFloat { 0%,100% { transform:translateY(0); } 50% { transform:translateY(-8px); } }
+        @keyframes ppsBadgeIn { from { opacity:0; transform:scale(0.72); } to { opacity:1; transform:scale(1); } }
+        @keyframes ppsTgPulse { 0%,100% { box-shadow:0 0 0 0 rgba(52,211,153,0.4); } 60% { box-shadow:0 0 0 7px rgba(52,211,153,0); } }
+        @keyframes ppsBarGrow { from { width:0; } to { width:var(--bar-w,60%); } }
+        .pps-fade { opacity:0; transform:translateY(22px); transition:opacity .6s ease,transform .6s ease; }
+        .pps-fade.pps-vis { opacity:1; transform:translateY(0); }
+        @media (prefers-reduced-motion: reduce) {
+          .pps-fade { transition:none; opacity:1; transform:none; }
+        }
       `}</style>
 
       {/* ─── HEADER ────────────────────────────────────────────────────────── */}
@@ -677,6 +877,120 @@ export default function HomepagePrototype() {
                   aria-label={`${card.title} ընտրել`}
                 />
               ))}
+            </div>
+          </div>
+        </section>
+
+        {/* ─── PLANNER SHOWCASE ────────────────────────────────────────── */}
+        <section
+          id="planner-showcase"
+          className="relative overflow-hidden bg-[#0b1d14] px-4 py-14 sm:px-6 sm:py-20 lg:px-8 lg:py-24"
+          ref={plannerRef}
+        >
+          <div className="absolute inset-x-0 top-0 h-px bg-[linear-gradient(90deg,transparent,#d8b66a,transparent)]" />
+          <div className="absolute inset-x-0 bottom-0 h-px bg-[linear-gradient(90deg,transparent,#d8b66a,transparent)]" />
+
+          <div className="mx-auto max-w-7xl">
+            <div className="lg:grid lg:grid-cols-[minmax(0,300px)_1fr] lg:items-center lg:gap-14 xl:gap-20">
+
+              {/* Left: Eyebrow / title / subtitle / CTAs */}
+              <div className={`pps-fade ${plannerVisible ? "pps-vis" : ""}`} style={{ transitionDelay: "0.05s" }}>
+                <div className="mb-3 flex items-center gap-3">
+                  <span className="h-px w-8 bg-[#c9a85a]" />
+                  <Heart className="h-4 w-4 fill-[#c9a85a] text-[#c9a85a]" />
+                  <span className="h-px w-8 bg-[#c9a85a]" />
+                </div>
+                <p className="mb-3 text-[10px] font-semibold uppercase tracking-[0.22em] text-[#c9a85a] sm:text-[11px]">
+                  {cfg.plannerShowcase.eyebrow.hy}
+                </p>
+                <h2
+                  className="mb-5 font-semibold leading-[1.08] text-[clamp(1.75rem,5vw,2.8rem)] text-[#fffaf0]"
+                  style={serifStyle}
+                >
+                  {cfg.plannerShowcase.title.hy}
+                </h2>
+                <p className="mb-8 text-[14px] leading-7 text-white/60">
+                  {cfg.plannerShowcase.subtitle.hy}
+                </p>
+
+                <div className="flex flex-wrap gap-3">
+                  {cfg.plannerShowcase.primaryCta.visible && (
+                    <a
+                      href={cfg.plannerShowcase.primaryCta.href}
+                      className="inline-flex min-h-[48px] items-center gap-2 rounded-full bg-[#f0cf82] px-6 py-2.5 text-sm font-semibold text-[#10241b] shadow-[0_12px_28px_rgba(216,182,106,0.22)] transition hover:-translate-y-0.5 hover:bg-[#f7dda4]"
+                    >
+                      {cfg.plannerShowcase.primaryCta.label.hy}
+                      <ArrowRight className="h-4 w-4 shrink-0" />
+                    </a>
+                  )}
+                  {cfg.plannerShowcase.secondaryCta.visible && (
+                    <a
+                      href={cfg.plannerShowcase.secondaryCta.href}
+                      className="inline-flex min-h-[48px] items-center rounded-full border border-white/25 bg-white/[0.08] px-6 py-2.5 text-sm font-semibold text-white/80 backdrop-blur transition hover:bg-white/[0.14]"
+                    >
+                      {cfg.plannerShowcase.secondaryCta.label.hy}
+                    </a>
+                  )}
+                </div>
+              </div>
+
+              {/* Right: chip columns + tablet mockup */}
+              <div className={`pps-fade ${plannerVisible ? "pps-vis" : ""} mt-12 lg:mt-0`} style={{ transitionDelay: "0.18s" }}>
+
+                {/* Desktop: chip columns flanking the tablet */}
+                <div className="hidden lg:flex lg:items-center lg:justify-center lg:gap-5">
+                  <div className="flex w-[128px] shrink-0 flex-col gap-3">
+                    {plannerFeatures.slice(0, 3).map(({ id, icon, title, text }, i) => (
+                      <div
+                        key={id}
+                        className={`pps-fade ${plannerVisible ? "pps-vis" : ""} flex flex-col gap-2 rounded-2xl border border-white/10 bg-white/[0.05] p-3 backdrop-blur`}
+                        style={{ transitionDelay: `${0.3 + i * 0.1}s` }}
+                      >
+                        <Ic name={icon} className="h-4 w-4 text-[#c9a85a]" />
+                        <p className="text-[11px] font-semibold leading-tight text-white/90">{title}</p>
+                        <p className="text-[10px] leading-snug text-white/45">{text}</p>
+                      </div>
+                    ))}
+                  </div>
+
+                  <div className="shrink-0">
+                    <PlannerTabletDashboard visible={plannerVisible} />
+                  </div>
+
+                  <div className="flex w-[128px] shrink-0 flex-col gap-3">
+                    {plannerFeatures.slice(3, 6).map(({ id, icon, title, text }, i) => (
+                      <div
+                        key={id}
+                        className={`pps-fade ${plannerVisible ? "pps-vis" : ""} flex flex-col gap-2 rounded-2xl border border-white/10 bg-white/[0.05] p-3 backdrop-blur`}
+                        style={{ transitionDelay: `${0.35 + i * 0.1}s` }}
+                      >
+                        <Ic name={icon} className="h-4 w-4 text-[#c9a85a]" />
+                        <p className="text-[11px] font-semibold leading-tight text-white/90">{title}</p>
+                        <p className="text-[10px] leading-snug text-white/45">{text}</p>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Mobile: tablet centered then feature grid */}
+                <div className="lg:hidden">
+                  <PlannerTabletDashboard visible={plannerVisible} />
+
+                  <div className="mt-6 grid grid-cols-2 gap-3 sm:grid-cols-3">
+                    {plannerFeatures.map(({ id, icon, title, text }, i) => (
+                      <div
+                        key={id}
+                        className={`pps-fade ${plannerVisible ? "pps-vis" : ""} flex flex-col gap-1.5 rounded-2xl border border-white/10 bg-white/[0.05] p-3.5`}
+                        style={{ transitionDelay: `${0.15 + i * 0.07}s` }}
+                      >
+                        <Ic name={icon} className="h-5 w-5 text-[#c9a85a]" />
+                        <p className="text-[12px] font-semibold leading-snug text-white/90">{title}</p>
+                        <p className="text-[11px] leading-snug text-white/50">{text}</p>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </div>
             </div>
           </div>
         </section>
