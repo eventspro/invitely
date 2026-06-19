@@ -64,6 +64,75 @@ async function purgeExpiredTokens(): Promise<void> {
 }
 
 // ─── GET /api/telegram/:templateId/status ─────────────────────────────────────
+type TelegramPanel = {
+  id: string;
+  userId: string;
+  settings: unknown;
+};
+
+async function getTelegramPanelForRequest(req: AuthenticatedRequest, templateId: string): Promise<TelegramPanel | null> {
+  const adminPanelId = req.adminPanel?.id;
+
+  if (adminPanelId && adminPanelId !== "platform-admin") {
+    const [panel] = await db
+      .select({
+        id: userAdminPanels.id,
+        userId: userAdminPanels.userId,
+        settings: userAdminPanels.settings,
+      })
+      .from(userAdminPanels)
+      .where(
+        and(
+          eq(userAdminPanels.id, adminPanelId),
+          eq(userAdminPanels.templateId, templateId),
+          eq(userAdminPanels.isActive, true),
+        ),
+      )
+      .limit(1);
+
+    return panel ?? null;
+  }
+
+  if (adminPanelId === "platform-admin") {
+    const [panel] = await db
+      .select({
+        id: userAdminPanels.id,
+        userId: userAdminPanels.userId,
+        settings: userAdminPanels.settings,
+      })
+      .from(userAdminPanels)
+      .where(
+        and(
+          eq(userAdminPanels.templateId, templateId),
+          eq(userAdminPanels.isActive, true),
+        ),
+      )
+      .limit(1);
+
+    return panel ?? null;
+  }
+
+  if (!req.user?.id) return null;
+
+  const [panel] = await db
+    .select({
+      id: userAdminPanels.id,
+      userId: userAdminPanels.userId,
+      settings: userAdminPanels.settings,
+    })
+    .from(userAdminPanels)
+    .where(
+      and(
+        eq(userAdminPanels.templateId, templateId),
+        eq(userAdminPanels.userId, req.user.id),
+        eq(userAdminPanels.isActive, true),
+      ),
+    )
+    .limit(1);
+
+  return panel ?? null;
+}
+
 router.get(
   "/:templateId/status",
   authenticateUser,
@@ -71,26 +140,25 @@ router.get(
   async (req: AuthenticatedRequest, res: Response) => {
     try {
       const { templateId } = req.params;
-      const [panel] = await db
-        .select({ settings: userAdminPanels.settings })
-        .from(userAdminPanels)
-        .where(
-          and(
-            eq(userAdminPanels.templateId, templateId),
-            eq(userAdminPanels.userId, req.user!.id),
-            eq(userAdminPanels.isActive, true),
-          ),
-        )
-        .limit(1);
+      console.log("[telegram-status] route hit", { templateId, userId: req.user?.id, route: req.path });
 
+      const panel = await getTelegramPanelForRequest(req, templateId);
       if (!panel) {
-        return res.status(404).json({ error: "Not found" });
+        return res.json({
+          connected: false,
+          enabled: false,
+          chatIdPresent: false,
+          connectedAt: null,
+          lastTestAt: null,
+        });
       }
 
       const s = (panel.settings ?? {}) as Record<string, unknown>;
+      const chatIdPresent = !!s.telegramChatId;
       return res.json({
-        connected: !!s.telegramChatId,
+        connected: chatIdPresent,
         enabled: !!s.telegramEnabled,
+        chatIdPresent,
         connectedAt: s.telegramConnectedAt ?? null,
         lastTestAt: s.telegramLastTestAt ?? null,
       });
@@ -113,12 +181,17 @@ router.post(
       // Purge stale tokens (fire-and-forget)
       purgeExpiredTokens().catch(() => {});
 
+      const panel = await getTelegramPanelForRequest(req, templateId);
+      if (!panel) {
+        return res.status(404).json({ error: "Admin panel not found for template" });
+      }
+
       const code = generateConnectionCode();
       const expiresAt = new Date(Date.now() + TOKEN_TTL_MS);
 
       await db.insert(telegramConnectionTokens).values({
         templateId,
-        userId: req.user!.id,
+        userId: panel.userId,
         token: code,
         expiresAt,
       });
@@ -148,17 +221,7 @@ router.post(
     try {
       const { templateId } = req.params;
 
-      const [panel] = await db
-        .select({ id: userAdminPanels.id, settings: userAdminPanels.settings })
-        .from(userAdminPanels)
-        .where(
-          and(
-            eq(userAdminPanels.templateId, templateId),
-            eq(userAdminPanels.userId, req.user!.id),
-            eq(userAdminPanels.isActive, true),
-          ),
-        )
-        .limit(1);
+      const panel = await getTelegramPanelForRequest(req, templateId);
 
       if (!panel) {
         return res.status(404).json({ error: "Not found" });
@@ -204,17 +267,7 @@ router.delete(
     try {
       const { templateId } = req.params;
 
-      const [panel] = await db
-        .select({ id: userAdminPanels.id, settings: userAdminPanels.settings })
-        .from(userAdminPanels)
-        .where(
-          and(
-            eq(userAdminPanels.templateId, templateId),
-            eq(userAdminPanels.userId, req.user!.id),
-            eq(userAdminPanels.isActive, true),
-          ),
-        )
-        .limit(1);
+      const panel = await getTelegramPanelForRequest(req, templateId);
 
       if (!panel) {
         return res.status(404).json({ error: "Not found" });
@@ -255,17 +308,7 @@ router.patch(
         return res.status(400).json({ error: "enabled must be a boolean" });
       }
 
-      const [panel] = await db
-        .select({ id: userAdminPanels.id, settings: userAdminPanels.settings })
-        .from(userAdminPanels)
-        .where(
-          and(
-            eq(userAdminPanels.templateId, templateId),
-            eq(userAdminPanels.userId, req.user!.id),
-            eq(userAdminPanels.isActive, true),
-          ),
-        )
-        .limit(1);
+      const panel = await getTelegramPanelForRequest(req, templateId);
 
       if (!panel) {
         return res.status(404).json({ error: "Not found" });

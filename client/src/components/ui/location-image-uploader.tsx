@@ -109,7 +109,10 @@ export default function LocationImageUploader({
       formData.append('image', file);
       formData.append('category', `location-${locationName}`);
 
-      const token = localStorage.getItem('templateAdminToken') || localStorage.getItem('admin-token');
+      const token =
+        localStorage.getItem('admin-token') ||
+        localStorage.getItem('templateAdminToken') ||
+        localStorage.getItem('token');
       const headers: HeadersInit = {};
       if (token) headers['Authorization'] = `Bearer ${token}`;
 

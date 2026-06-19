@@ -10,14 +10,14 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
-import { 
-  ArrowLeft, 
-  Settings, 
-  Users, 
-  Download, 
-  Mail, 
-  Eye, 
-  CheckCircle, 
+import {
+  ArrowLeft,
+  Settings,
+  Users,
+  Download,
+  Mail,
+  Eye,
+  CheckCircle,
   XCircle,
   Save,
   ExternalLink,
@@ -70,10 +70,39 @@ interface Rsvp {
   createdAt: string;
 }
 
+function getMusicFilenameFromUrl(audioUrl?: string): string {
+  if (!audioUrl) return "";
+
+  try {
+    const url = new URL(audioUrl, "http://localhost");
+    const segment = url.pathname.split("/").filter(Boolean).pop() || "";
+    return decodeURIComponent(segment);
+  } catch {
+    const segment = audioUrl.split("?")[0].split("#")[0].split("/").filter(Boolean).pop() || "";
+    try {
+      return decodeURIComponent(segment);
+    } catch {
+      return segment;
+    }
+  }
+}
+
+async function readApiError(response: Response, fallback: string): Promise<string> {
+  const errorBody = await response.json().catch(() => null);
+  return errorBody?.error || errorBody?.message || fallback;
+}
+
+function getTemplateEditorToken(): string | null {
+  const isSuperAdmin = localStorage.getItem('superAdminMode') === 'true';
+  return isSuperAdmin
+    ? localStorage.getItem('templateAdminToken')
+    : (localStorage.getItem('admin-token') || localStorage.getItem('templateAdminToken'));
+}
+
 export default function TemplateAdminPanel() {
   const params = useParams();
   const templateId = params.templateId;
-  
+
   const [template, setTemplate] = useState<Template | null>(null);
   const [rsvps, setRsvps] = useState<Rsvp[]>([]);
   const [loading, setLoading] = useState(true);
@@ -213,22 +242,22 @@ export default function TemplateAdminPanel() {
       }
 
       const token = localStorage.getItem("admin-token");
-      
+
       // Load template info with enriched configuration (includes images)
       const templateResponse = await fetch(`/api/templates/${templateId}/config`);
-      
+
       if (templateResponse.ok) {
         const templateConfig = await templateResponse.json();
-        
+
         // Get additional template metadata from admin endpoint
         const adminResponse = await fetch(`/api/admin/templates`, {
           headers: { Authorization: `Bearer ${token}` },
         });
-        
+
         if (adminResponse.ok) {
           const allTemplates = await adminResponse.json();
           const adminTemplate = allTemplates.find((t: Template) => t.id === templateConfig.templateId);
-          
+
           if (adminTemplate) {
             // Merge enriched config with admin metadata
             const enrichedTemplate = {
@@ -258,38 +287,35 @@ export default function TemplateAdminPanel() {
         toast({ title: "Error", description: errorMessage, variant: "destructive" });
         return;
       }
-      
-      // Load RSVPs for this template.
-      // /api/templates/:id/rsvps requires a management-user JWT (authenticateUser).
-      // Use templateAdminToken when present (set at login for platform-admin users
-      // who also have a managementUsers record), otherwise fall back to admin-token.
-      const rsvpToken = localStorage.getItem("templateAdminToken") || token;
+
+      // Platform editor mode must use admin-token first; customer super-admin mode uses templateAdminToken.
+      const rsvpToken = getTemplateEditorToken() || token;
       const rsvpResponse = await fetch(`/api/templates/${templateId}/rsvps`, {
         headers: { Authorization: `Bearer ${rsvpToken}` },
       });
-      
+
       if (rsvpResponse.ok) {
         const rsvpData = await rsvpResponse.json();
         setRsvps(rsvpData);
       }
-      
+
     } catch (error) {
       console.error("Failed to load template data:", error);
-      
+
       // Check if this is a JSON parsing error
       if (error instanceof SyntaxError && error.message.includes("Unexpected token")) {
-        toast({ 
-          title: "Authentication Error", 
-          description: "Please log in again", 
-          variant: "destructive" 
+        toast({
+          title: "Authentication Error",
+          description: "Please log in again",
+          variant: "destructive"
         });
         localStorage.removeItem("admin-token");
         window.location.href = "/platform";
       } else {
-        toast({ 
-          title: "Error", 
-          description: `Failed to load template data: ${error instanceof Error ? error.message : 'Unknown error'}`, 
-          variant: "destructive" 
+        toast({
+          title: "Error",
+          description: `Failed to load template data: ${error instanceof Error ? error.message : 'Unknown error'}`,
+          variant: "destructive"
         });
       }
     } finally {
@@ -299,7 +325,7 @@ export default function TemplateAdminPanel() {
 
   // ── Telegram helpers ──────────────────────────────────────────────
   const tgAuthHeader = (): Record<string, string> => {
-    const token = localStorage.getItem('templateAdminToken') || localStorage.getItem('admin-token');
+    const token = getTemplateEditorToken();
     return token ? { 'Authorization': `Bearer ${token}` } : {};
   };
 
@@ -385,7 +411,7 @@ export default function TemplateAdminPanel() {
 
   const saveTemplate = async () => {
     if (!template) return;
-    
+
     try {
       setSaving(true);
       const isSuperAdmin = localStorage.getItem('superAdminMode') === 'true';
@@ -411,7 +437,7 @@ export default function TemplateAdminPanel() {
       }
 
       const token = localStorage.getItem("admin-token");
-      
+
       const response = await fetch(`/api/admin/templates/${template.id}`, {
         method: "PUT",
         headers: {
@@ -424,7 +450,7 @@ export default function TemplateAdminPanel() {
           maintenance: template.maintenance,
         }),
       });
-      
+
       if (response.ok) {
         const updatedTemplate = await response.json();
         setTemplate({ ...template, ...updatedTemplate });
@@ -439,13 +465,55 @@ export default function TemplateAdminPanel() {
     }
   };
 
+  const persistTemplateConfig = async (config: WeddingConfig) => {
+    if (!template) throw new Error("Template is not loaded");
+
+    const isSuperAdmin = localStorage.getItem('superAdminMode') === 'true';
+
+    if (isSuperAdmin) {
+      const token = localStorage.getItem('templateAdminToken');
+      if (!token) throw new Error("Authentication required. Please log in again.");
+
+      const response = await fetch(`/api/admin-panel/${template.id}/config`, {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({ config }),
+      });
+
+      if (!response.ok) {
+        throw new Error(await readApiError(response, "Failed to save template config"));
+      }
+
+      return;
+    }
+
+    const token = localStorage.getItem("admin-token");
+    if (!token) throw new Error("Authentication required. Please log in again.");
+
+    const response = await fetch(`/api/admin/templates/${template.id}`, {
+      method: "PUT",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
+      },
+      body: JSON.stringify({ config }),
+    });
+
+    if (!response.ok) {
+      throw new Error(await readApiError(response, "Failed to save template config"));
+    }
+  };
+
   const exportRsvpsToCSV = async () => {
     try {
       const token = localStorage.getItem("admin-token");
       const response = await fetch(`/api/admin/templates/${templateId}/export/csv`, {
         headers: { Authorization: `Bearer ${token}` },
       });
-      
+
       if (response.ok) {
         const blob = await response.blob();
         const url = window.URL.createObjectURL(blob);
@@ -456,7 +524,7 @@ export default function TemplateAdminPanel() {
         document.body.appendChild(a);
         a.click();
         window.URL.revokeObjectURL(url);
-        
+
         toast({ title: "Export successful", description: "RSVPs have been exported to CSV" });
       }
     } catch (error) {
@@ -573,26 +641,36 @@ export default function TemplateAdminPanel() {
                   <Label htmlFor="groomName">Groom's Name</Label>
                   <Input
                     id="groomName"
-                    value={template.config.couple?.groomName || ""}
+                    value={template.config.couple?.groomName ?? ""}
                     onChange={(e) => {
                       const groom = e.target.value;
-                      updateConfig("couple.groomName", groom);
-                      const bride = template.config.couple?.brideName || "";
-                      if (groom && bride) updateConfig("couple.combinedNames", `${groom} & ${bride}`);
+                      const bride = template.config.couple?.brideName ?? "";
+
+                      updateConfig("couple", {
+                        ...(template.config.couple ?? {}),
+                        groomName: groom,
+                        combinedNames: `${groom} & ${bride}`,
+                      });
                     }}
+                    placeholder="Groom's name"
                   />
                 </div>
                 <div>
-                  <Label htmlFor="brideName">Bride's Name</Label>
+                  <Label htmlFor="groomName">Bridge's Name</Label>
                   <Input
                     id="brideName"
-                    value={template.config.couple?.brideName || ""}
+                    value={template.config.couple?.brideName ?? ""}
                     onChange={(e) => {
                       const bride = e.target.value;
-                      updateConfig("couple.brideName", bride);
-                      const groom = template.config.couple?.groomName || "";
-                      if (groom && bride) updateConfig("couple.combinedNames", `${groom} & ${bride}`);
+                      const groom = template.config.couple?.groomName ?? "";
+
+                      updateConfig("couple", {
+                        ...(template.config.couple ?? {}),
+                        brideName: bride,
+                        combinedNames: `${groom} & ${bride}`,
+                      });
                     }}
+                    placeholder="Bride's name"
                   />
                 </div>
                 <div>
@@ -781,7 +859,7 @@ export default function TemplateAdminPanel() {
                     placeholder="Վայրեր"
                   />
                 </div>
-                
+
                 {/* Dynamic Locations */}
                 <div className="space-y-6">
                   <div className="flex items-center justify-between">
@@ -822,7 +900,7 @@ export default function TemplateAdminPanel() {
                           Remove
                         </Button>
                       </div>
-                      
+
                       <LocationImageUploader
                         templateId={template.id}
                         locationName={`venue-${venue.id || index}`}
@@ -844,10 +922,10 @@ export default function TemplateAdminPanel() {
                         }}
                         onCoordinatesUpdate={(lat, lng) => {
                           const currentVenues = [...(template.config.locations?.venues || [])];
-                          currentVenues[index] = { 
-                            ...currentVenues[index], 
-                            latitude: lat, 
-                            longitude: lng 
+                          currentVenues[index] = {
+                            ...currentVenues[index],
+                            latitude: lat,
+                            longitude: lng
                           };
                           updateConfig("locations.venues", currentVenues);
                         }}
@@ -862,7 +940,7 @@ export default function TemplateAdminPanel() {
                           updateConfig("locations.venues", currentVenues);
                         }}
                       />
-                      
+
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                         <div>
                           <Label htmlFor={`location-title-${index}`}>Location Title</Label>
@@ -891,7 +969,7 @@ export default function TemplateAdminPanel() {
                           />
                         </div>
                       </div>
-                      
+
                       <div>
                         <Label htmlFor={`location-description-${index}`}>Description</Label>
                         <Textarea
@@ -906,7 +984,7 @@ export default function TemplateAdminPanel() {
                           rows={2}
                         />
                       </div>
-                      
+
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                         <div>
                           <Label htmlFor={`location-map-button-${index}`}>Map Button Text</Label>
@@ -981,7 +1059,7 @@ export default function TemplateAdminPanel() {
                       </div>
                     </div>
                   ))}
-                  
+
                   {(!template.config.locations?.venues || template.config.locations.venues.length === 0) && (
                     <div className="text-center py-8 text-gray-500">
                       <p>No locations added yet. Click "Add Location" to create your first venue.</p>
@@ -1082,7 +1160,7 @@ export default function TemplateAdminPanel() {
                               <ChevronUp className="w-4 h-4" />
                             </Button>
                           )}
-                          
+
                           {/* Move Down Button */}
                           {index < (template.config.timeline?.events?.length || 0) - 1 && (
                             <Button
@@ -1102,7 +1180,7 @@ export default function TemplateAdminPanel() {
                               <ChevronDown className="w-4 h-4" />
                             </Button>
                           )}
-                          
+
                           {/* Duplicate Button */}
                           <Button
                             type="button"
@@ -1120,7 +1198,7 @@ export default function TemplateAdminPanel() {
                           >
                             <Copy className="w-4 h-4" />
                           </Button>
-                          
+
                           {/* Delete Button */}
                           <Button
                             type="button"
@@ -1138,7 +1216,7 @@ export default function TemplateAdminPanel() {
                           </Button>
                         </div>
                       </div>
-                      
+
                       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
                         <div>
                           <Label htmlFor={`eventTime${index}`}>Time</Label>
@@ -1252,7 +1330,7 @@ export default function TemplateAdminPanel() {
                     rows={2}
                   />
                 </div>
-                
+
                 <div>
                   <h4 className="font-semibold mb-3">Form Field Labels</h4>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -1538,15 +1616,18 @@ export default function TemplateAdminPanel() {
                 </div>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div>
-                    <Label htmlFor="footerGroomName">Groom Name (footer display)</Label>
                     <Input
                       id="footerGroomName"
-                      value={template.config.couple?.groomName || ""}
+                      value={template.config.couple?.groomName ?? ""}
                       onChange={(e) => {
                         const groom = e.target.value;
-                        updateConfig("couple.groomName", groom);
-                        const bride = template.config.couple?.brideName || "";
-                        if (groom && bride) updateConfig("couple.combinedNames", `${groom} & ${bride}`);
+                        const bride = template.config.couple?.brideName ?? "";
+
+                        updateConfig("couple", {
+                          ...(template.config.couple ?? {}),
+                          groomName: groom,
+                          combinedNames: `${groom} & ${bride}`,
+                        });
                       }}
                       placeholder="Groom's name"
                     />
@@ -1555,12 +1636,16 @@ export default function TemplateAdminPanel() {
                     <Label htmlFor="footerBrideName">Bride Name (footer display)</Label>
                     <Input
                       id="footerBrideName"
-                      value={template.config.couple?.brideName || ""}
+                      value={template.config.couple?.brideName ?? ""}
                       onChange={(e) => {
                         const bride = e.target.value;
-                        updateConfig("couple.brideName", bride);
-                        const groom = template.config.couple?.groomName || "";
-                        if (groom && bride) updateConfig("couple.combinedNames", `${groom} & ${bride}`);
+                        const groom = template.config.couple?.groomName ?? "";
+
+                        updateConfig("couple", {
+                          ...(template.config.couple ?? {}),
+                          brideName: bride,
+                          combinedNames: `${groom} & ${bride}`,
+                        });
                       }}
                       placeholder="Bride's name"
                     />
@@ -1610,12 +1695,12 @@ export default function TemplateAdminPanel() {
                           <Input
                             id="primaryColor"
                             type="color"
-                            value={template.config.theme?.colors?.primary }
+                            value={template.config.theme?.colors?.primary}
                             onChange={(e) => updateConfig("theme.colors.primary", e.target.value)}
                             className="w-16 h-10"
                           />
                           <Input
-                            value={template.config.theme?.colors?.primary }
+                            value={template.config.theme?.colors?.primary}
                             onChange={(e) => updateConfig("theme.colors.primary", e.target.value)}
                             placeholder="#1e3a8a"
                             className="flex-1"
@@ -1628,12 +1713,12 @@ export default function TemplateAdminPanel() {
                           <Input
                             id="secondaryColor"
                             type="color"
-                            value={template.config.theme?.colors?.secondary }
+                            value={template.config.theme?.colors?.secondary}
                             onChange={(e) => updateConfig("theme.colors.secondary", e.target.value)}
                             className="w-16 h-10"
                           />
                           <Input
-                            value={template.config.theme?.colors?.secondary }
+                            value={template.config.theme?.colors?.secondary}
                             onChange={(e) => updateConfig("theme.colors.secondary", e.target.value)}
                             placeholder="#ec4899"
                             className="flex-1"
@@ -1646,12 +1731,12 @@ export default function TemplateAdminPanel() {
                           <Input
                             id="accentColor"
                             type="color"
-                            value={template.config.theme?.colors?.accent }
+                            value={template.config.theme?.colors?.accent}
                             onChange={(e) => updateConfig("theme.colors.accent", e.target.value)}
                             className="w-16 h-10"
                           />
                           <Input
-                            value={template.config.theme?.colors?.accent }
+                            value={template.config.theme?.colors?.accent}
                             onChange={(e) => updateConfig("theme.colors.accent", e.target.value)}
                             placeholder="#f59e0b"
                             className="flex-1"
@@ -1664,12 +1749,12 @@ export default function TemplateAdminPanel() {
                           <Input
                             id="backgroundColor"
                             type="color"
-                            value={template.config.theme?.colors?.background }
+                            value={template.config.theme?.colors?.background}
                             onChange={(e) => updateConfig("theme.colors.background", e.target.value)}
                             className="w-16 h-10"
                           />
                           <Input
-                            value={template.config.theme?.colors?.background }
+                            value={template.config.theme?.colors?.background}
                             onChange={(e) => updateConfig("theme.colors.background", e.target.value)}
                             placeholder="#ffffff"
                             className="flex-1"
@@ -1696,7 +1781,7 @@ export default function TemplateAdminPanel() {
                       </div>
                     </div>
                   </div>
-                  
+
                   <div className="space-y-4">
                     <h4 className="font-semibold">Typography</h4>
                     <div className="space-y-3">
@@ -1765,13 +1850,13 @@ export default function TemplateAdminPanel() {
                 <div className="border-t pt-6">
                   <h4 className="font-semibold mb-4">Preview</h4>
                   <div className="p-6 border rounded-lg" style={{
-                    backgroundColor: template.config.theme?.colors?.background ,
+                    backgroundColor: template.config.theme?.colors?.background,
                     fontFamily: `${template.config.theme?.fonts?.body || "Noto Sans Armenian"}, sans-serif`
                   }}>
-                    <h3 
+                    <h3
                       className="text-2xl font-bold mb-2"
-                      style={{ 
-                        color: template.config.theme?.colors?.primary ,
+                      style={{
+                        color: template.config.theme?.colors?.primary,
                         fontFamily: `${template.config.theme?.fonts?.heading || "Noto Serif Armenian"}, serif`
                       }}
                     >
@@ -1783,7 +1868,7 @@ export default function TemplateAdminPanel() {
                     <button
                       className="px-6 py-2 text-white font-medium rounded-lg"
                       style={{
-                        backgroundColor: template.config.theme?.colors?.secondary 
+                        backgroundColor: template.config.theme?.colors?.secondary
                       }}
                     >
                       RSVP Now
@@ -1835,8 +1920,8 @@ export default function TemplateAdminPanel() {
                   const currentMode = !template.config.music?.enabled
                     ? 'disabled'
                     : template.config.music?.autoplay
-                    ? 'autoplay_header_control'
-                    : 'manual_button';
+                      ? 'autoplay_header_control'
+                      : 'manual_button';
 
                   const setMode = (mode: 'disabled' | 'manual_button' | 'autoplay_header_control') => {
                     setTemplate(prev => {
@@ -1918,16 +2003,11 @@ export default function TemplateAdminPanel() {
                           const formData = new FormData();
                           formData.append('music', file);
 
-                          // Use the correct token for the current auth mode.
-                          // stream-upload requires a management-user JWT (authenticateUser).
-                          // - super_admin customers: always use templateAdminToken
-                          // - platform admin: templateAdminToken is set at login when the
-                          //   platform admin also has a managementUsers record; fall back
-                          //   to admin-token only if it's absent.
-                          const isSuperAdmin = localStorage.getItem('superAdminMode') === 'true';
-                          const token = isSuperAdmin
-                            ? localStorage.getItem('templateAdminToken')
-                            : (localStorage.getItem('templateAdminToken') || localStorage.getItem('admin-token'));
+                          // Use the correct token for the current editor mode.
+                          const token = getTemplateEditorToken();
+                          if (!token) {
+                            throw new Error("Authentication required. Please log in again.");
+                          }
 
                           // Stream upload through server to R2 (fast, no CORS issues)
                           const response = await fetch(`/api/templates/${template.id}/music/stream-upload`, {
@@ -1939,11 +2019,14 @@ export default function TemplateAdminPanel() {
                           });
 
                           if (!response.ok) {
-                            throw new Error('Upload failed');
+                            throw new Error(await readApiError(response, "Failed to upload music"));
                           }
 
                           const data = await response.json();
-                          
+                          if (!data?.url) {
+                            throw new Error("Upload response did not include a music URL");
+                          }
+
                           // Update config with new music URL and persist to DB
                           const newConfig = {
                             ...template.config,
@@ -1955,23 +2038,11 @@ export default function TemplateAdminPanel() {
                           };
                           setTemplate(prev => prev ? { ...prev, config: newConfig } : null);
 
-                          // Persist the updated audioUrl to the database immediately,
-                          // using the same route/token as saveTemplate() for each mode.
-                          const isSuperAdminSave = localStorage.getItem('superAdminMode') === 'true';
-                          if (isSuperAdminSave) {
-                            const saveToken = localStorage.getItem('templateAdminToken');
-                            await fetch(`/api/admin-panel/${template.id}/config`, {
-                              method: 'PUT',
-                              headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${saveToken}` },
-                              body: JSON.stringify({ config: newConfig }),
-                            });
-                          } else {
-                            const saveToken = localStorage.getItem('admin-token');
-                            await fetch(`/api/admin/templates/${template.id}`, {
-                              method: 'PUT',
-                              headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${saveToken}` },
-                              body: JSON.stringify({ config: newConfig }),
-                            });
+                          try {
+                            await persistTemplateConfig(newConfig);
+                          } catch (saveError) {
+                            const message = saveError instanceof Error ? saveError.message : "Failed to save template config";
+                            throw new Error(`Music uploaded, but saving it to the template config failed: ${message}`);
                           }
 
                           // Reset the file input so the user can re-select the same file
@@ -1979,7 +2050,11 @@ export default function TemplateAdminPanel() {
                           toast({ title: "Success", description: "Music uploaded successfully!" });
                         } catch (error) {
                           console.error('Music upload error:', error);
-                          toast({ title: "Upload failed", description: "Failed to upload music. Please try again.", variant: "destructive" });
+                          toast({
+                            title: "Upload failed",
+                            description: error instanceof Error ? error.message : "Failed to upload music. Please try again.",
+                            variant: "destructive"
+                          });
                         }
                       }}
                     />
@@ -1993,7 +2068,7 @@ export default function TemplateAdminPanel() {
                         <div className="flex-1">
                           <h5 className="font-medium text-green-900">Music Uploaded</h5>
                           <p className="text-sm text-green-700">
-                            {template.config.music.audioUrl.split('/').pop()}
+                            {getMusicFilenameFromUrl(template.config.music.audioUrl)}
                           </p>
                         </div>
                         {/* key forces the audio element to remount when the URL changes */}
@@ -2005,13 +2080,17 @@ export default function TemplateAdminPanel() {
                           size="sm"
                           onClick={async () => {
                             if (!confirm('Are you sure you want to remove this music?')) return;
-                            
+
                             try {
-                              const filename = template.config.music?.audioUrl?.split('/').pop();
+                              const filename = getMusicFilenameFromUrl(template.config.music?.audioUrl);
                               if (!filename) return;
-                              
-                              const delToken = localStorage.getItem('templateAdminToken') || localStorage.getItem('admin-token');
-                              const response = await fetch(`/api/templates/${template.id}/music/${filename}`, {
+
+                              const delToken = getTemplateEditorToken();
+                              if (!delToken) {
+                                throw new Error("Authentication required. Please log in again.");
+                              }
+
+                              const response = await fetch(`/api/templates/${template.id}/music/${encodeURIComponent(filename)}`, {
                                 method: 'DELETE',
                                 headers: {
                                   Authorization: `Bearer ${delToken}`,
@@ -2019,10 +2098,12 @@ export default function TemplateAdminPanel() {
                               });
 
                               if (!response.ok) {
-                                throw new Error('Delete failed');
+                                throw new Error(await readApiError(response, "Failed to remove music"));
                               }
 
-                              // Update config to remove music URL and persist to DB
+                              await response.json().catch(() => null);
+
+                              // The DELETE endpoint persists this config change server-side.
                               const newConfig = {
                                 ...template.config,
                                 music: {
@@ -2033,29 +2114,14 @@ export default function TemplateAdminPanel() {
                               };
                               setTemplate(prev => prev ? { ...prev, config: newConfig } : null);
 
-                              // Persist the cleared audioUrl to the database immediately,
-                              // using the same route/token as saveTemplate() for each mode.
-                              const isSuperAdminSave = localStorage.getItem('superAdminMode') === 'true';
-                              if (isSuperAdminSave) {
-                                const saveToken = localStorage.getItem('templateAdminToken');
-                                await fetch(`/api/admin-panel/${template.id}/config`, {
-                                  method: 'PUT',
-                                  headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${saveToken}` },
-                                  body: JSON.stringify({ config: newConfig }),
-                                });
-                              } else {
-                                const saveToken = localStorage.getItem('admin-token');
-                                await fetch(`/api/admin/templates/${template.id}`, {
-                                  method: 'PUT',
-                                  headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${saveToken}` },
-                                  body: JSON.stringify({ config: newConfig }),
-                                });
-                              }
-
                               toast({ title: "Success", description: "Music removed successfully!" });
                             } catch (error) {
                               console.error('Music deletion error:', error);
-                              toast({ title: "Delete failed", description: "Failed to remove music. Please try again.", variant: "destructive" });
+                              toast({
+                                title: "Delete failed",
+                                description: error instanceof Error ? error.message : "Failed to remove music. Please try again.",
+                                variant: "destructive"
+                              });
                             }
                           }}
                         >
@@ -2366,7 +2432,7 @@ export default function TemplateAdminPanel() {
 
                 <div className="border-t pt-6">
                   <h4 className="font-semibold mb-4">Email Branding</h4>
-                  
+
                   <div className="space-y-4">
                     <div>
                       <Label htmlFor="senderName">Sender Name</Label>
@@ -2399,7 +2465,7 @@ export default function TemplateAdminPanel() {
 
                 <div className="border-t pt-6">
                   <h4 className="font-semibold mb-4">RSVP Notification Email</h4>
-                  
+
                   <div className="space-y-4">
                     <div>
                       <Label htmlFor="notificationSubject">Email Subject</Label>
@@ -2440,7 +2506,7 @@ export default function TemplateAdminPanel() {
 
                 <div className="border-t pt-6">
                   <h4 className="font-semibold mb-4">Guest Confirmation Email</h4>
-                  
+
                   <div className="space-y-4">
                     <div>
                       <Label htmlFor="confirmationSubject">Email Subject</Label>
@@ -2500,7 +2566,7 @@ export default function TemplateAdminPanel() {
 
                 <div className="border-t pt-6">
                   <h4 className="font-semibold mb-4">Email Theme</h4>
-                  
+
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div>
                       <Label htmlFor="emailPrimaryColor">Primary Email Color</Label>
@@ -2769,7 +2835,7 @@ export default function TemplateAdminPanel() {
                     />
                   </div>
                 </div>
-                
+
                 <div>
                   <Label htmlFor="templateName">Template Name</Label>
                   <Input

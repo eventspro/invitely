@@ -1,16 +1,16 @@
-import { 
-  type User, 
-  type InsertUser, 
-  type Rsvp, 
+import {
+  type User,
+  type InsertUser,
+  type Rsvp,
   type InsertRsvp,
   type Template,
   type InsertTemplate,
   type UpdateTemplate,
   type Image,
   type LegacyUser,
-  users, 
+  users,
   managementUsers,
-  rsvps, 
+  rsvps,
   settings,
   templates,
   images
@@ -24,7 +24,7 @@ export interface IStorage {
   getUser(id: string): Promise<User | undefined>;
   getUserByUsername(username: string): Promise<User | undefined>;
   createUser(user: InsertUser): Promise<User>;
-  
+
   // Template management
   getAllTemplates(): Promise<Template[]>;
   getTemplate(id: string): Promise<Template | undefined>;
@@ -32,12 +32,12 @@ export interface IStorage {
   createTemplate(template: InsertTemplate): Promise<Template>;
   updateTemplate(id: string, updates: UpdateTemplate): Promise<Template | undefined>;
   deleteTemplate(id: string): Promise<boolean>;
-  
+
   // RSVP management (template-scoped)
   createRsvp(rsvp: InsertRsvp): Promise<Rsvp>;
   getAllRsvps(templateId?: string): Promise<Rsvp[]>;
   getRsvpByEmail(email: string, templateId: string): Promise<Rsvp | undefined>;
-  
+
   // Image management
   createImage(image: {
     templateId: string;
@@ -50,7 +50,7 @@ export interface IStorage {
   }): Promise<Image>;
   getImages(templateId: string, category?: string): Promise<Image[]>;
   deleteImage(id: string): Promise<boolean>;
-  
+
   // Settings (template-scoped)
   getMaintenanceStatus(templateId?: string): Promise<boolean>;
   setMaintenanceStatus(enabled: boolean, templateId?: string): Promise<void>;
@@ -84,16 +84,16 @@ export class DatabaseStorage implements IStorage {
   async getTemplate(id: string): Promise<Template | undefined> {
     try {
       console.log(`🔍 Searching for template with ID: ${id}`);
-      
+
       const result = await db.select().from(templates).where(eq(templates.id, id)).limit(1);
-      
+
       console.log(`📊 Query result count: ${result.length}`);
       if (result.length > 0) {
         console.log(`✅ Found template: ${result[0].name} (ID: ${result[0].id})`);
       } else {
         console.log(`❌ No template found with ID: ${id}`);
       }
-      
+
       return result[0];
     } catch (error) {
       console.error(`❌ Database error in getTemplate:`, error);
@@ -105,16 +105,16 @@ export class DatabaseStorage implements IStorage {
     try {
       console.log(`🔍 Searching for template with slug: ${slug}`);
       console.log(`🔗 Database URL available: ${!!process.env.DATABASE_URL}`);
-      
+
       const result = await db.select().from(templates).where(eq(templates.slug, slug)).limit(1);
-      
+
       console.log(`📊 Query result count: ${result.length}`);
       if (result.length > 0) {
         console.log(`✅ Found template: ${result[0].name} (ID: ${result[0].id})`);
       } else {
         console.log(`❌ No template found with slug: ${slug}`);
       }
-      
+
       return result[0];
     } catch (error) {
       console.error(`❌ Database error in getTemplateBySlug:`, error);
@@ -213,10 +213,10 @@ export class DatabaseStorage implements IStorage {
   }
 
   async getImages(templateId: string, category?: string): Promise<Image[]> {
-    const conditions = category 
+    const conditions = category
       ? and(eq(images.templateId, templateId), eq(images.category, category))
       : eq(images.templateId, templateId);
-      
+
     return await db
       .select()
       .from(images)
@@ -237,7 +237,7 @@ export class DatabaseStorage implements IStorage {
         const template = await this.getTemplate(templateId);
         return template?.maintenance || false;
       }
-      
+
       // Global maintenance check (legacy) - simplified to always return false
       return false;
     } catch (error) {

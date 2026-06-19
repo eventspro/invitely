@@ -51,19 +51,21 @@ export const ImageUploader: React.FC<ImageUploaderProps> = ({
   React.useEffect(() => {
     const loadImages = async () => {
       try {
-        const token = localStorage.getItem('templateAdminToken') || localStorage.getItem('admin-token');
-        const headers: HeadersInit = {
-          'Content-Type': 'application/json',
-        };
-        
+        const token =
+          localStorage.getItem('admin-token') ||
+          localStorage.getItem('templateAdminToken') ||
+          localStorage.getItem('token');
+
+        const headers: HeadersInit = {};
+
         if (token) {
           headers['Authorization'] = `Bearer ${token}`;
         }
-        
+
         const response = await fetch(`/api/templates/${templateId}/images?category=${category}`, {
           headers
         });
-        
+
         if (response.ok) {
           const imageData = await response.json();
           setImages(imageData);
@@ -90,8 +92,11 @@ export const ImageUploader: React.FC<ImageUploaderProps> = ({
     setError(null);
 
     try {
-      const token = localStorage.getItem('templateAdminToken') || localStorage.getItem('admin-token');
-      
+      const token =
+        localStorage.getItem('admin-token') ||
+        localStorage.getItem('templateAdminToken') ||
+        localStorage.getItem('token');
+
       const uploadPromises = Array.from(files).map(async (file) => {
         if (!acceptedTypes.includes(file.type)) {
           throw new Error(`Չսպասարկվող ֆայլի տեսակ: ${file.type}`);
@@ -127,11 +132,11 @@ export const ImageUploader: React.FC<ImageUploaderProps> = ({
       const results = await Promise.all(uploadPromises);
       const newImages = [...images, ...results];
       setImages(newImages);
-      
+
       // Notify parent component with image URLs
       const newUrls = results.map(img => img.url);
       onImagesUploaded?.(newUrls);
-      
+
       if (fileInputRef.current) {
         fileInputRef.current.value = '';
       }
@@ -144,31 +149,33 @@ export const ImageUploader: React.FC<ImageUploaderProps> = ({
 
   const removeImage = useCallback(async (imageId: string) => {
     try {
-      const token = localStorage.getItem('templateAdminToken') || localStorage.getItem('admin-token');
-      const headers: HeadersInit = {
-        'Content-Type': 'application/json',
-      };
-      
+      const token =
+        localStorage.getItem('admin-token') ||
+        localStorage.getItem('templateAdminToken') ||
+        localStorage.getItem('token');
+
+      const headers: HeadersInit = {};
+
       if (token) {
         headers['Authorization'] = `Bearer ${token}`;
       }
-      
+
       const response = await fetch(`/api/templates/${templateId}/images/${imageId}`, {
         method: 'DELETE',
         headers,
       });
 
       if (response.ok) {
+        const removedImage = images.find(img => img.id === imageId);
+
         const newImages = images.filter(img => img.id !== imageId);
         setImages(newImages);
-        
-        // Find the removed image and notify parent
-        const removedImage = images.find(img => img.id === imageId);
+
         if (removedImage) {
           onImageRemoved?.(removedImage.url);
         }
       } else {
-        const errorData = await response.json();
+        const errorData = await response.json().catch(() => ({}));
         setError(errorData.error || errorData.message || 'Ջնջման սխալ');
       }
     } catch (err) {
@@ -237,8 +244,8 @@ export const ImageUploader: React.FC<ImageUploaderProps> = ({
       <div
         className={`
           relative border-2 border-dashed rounded-lg p-6 text-center transition-colors
-          ${dragActive 
-            ? 'border-blue-400 bg-blue-50' 
+          ${dragActive
+            ? 'border-blue-400 bg-blue-50'
             : 'border-gray-300 hover:border-gray-400'
           }
           ${uploading ? 'pointer-events-none opacity-50' : 'cursor-pointer'}
@@ -367,42 +374,42 @@ export const ImageUploader: React.FC<ImageUploaderProps> = ({
         const apiImageUrls = new Set(images.map(img => img.url));
         const orphanImages = existingImages.filter(url => !apiImageUrls.has(url));
         return orphanImages.length > 0 && (
-        <div className="mt-4 grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-          {orphanImages.map((imageUrl, index) => {
-            // These images are only in the config, not yet in the DB
-            const imageData = undefined;
-            
-            return (
-              <div key={`existing-${index}`} className="relative group">
-                <div className="aspect-square rounded-lg overflow-hidden bg-gray-100">
-                  <SafeImage
-                    src={imageUrl}
-                    alt={`Image ${index + 1}`}
-                    className="w-full h-full"
-                    showErrorMessage={true}
-                    onError={() => {
-                      console.warn(`Failed to load image: ${imageUrl}`);
-                    }}
-                  />
+          <div className="mt-4 grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+            {orphanImages.map((imageUrl, index) => {
+              // These images are only in the config, not yet in the DB
+              const imageData = undefined;
+
+              return (
+                <div key={`existing-${index}`} className="relative group">
+                  <div className="aspect-square rounded-lg overflow-hidden bg-gray-100">
+                    <SafeImage
+                      src={imageUrl}
+                      alt={`Image ${index + 1}`}
+                      className="w-full h-full"
+                      showErrorMessage={true}
+                      onError={() => {
+                        console.warn(`Failed to load image: ${imageUrl}`);
+                      }}
+                    />
+                  </div>
+                  {allowDeleteWithoutId && (
+                    <Button
+                      variant="destructive"
+                      size="sm"
+                      className="absolute top-2 right-2 h-6 w-6 p-0 opacity-0 group-hover:opacity-100 transition-opacity"
+                      disabled={disabled || uploading}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        removeImageByUrl(imageUrl);
+                      }}
+                    >
+                      <X className="h-3 w-3" />
+                    </Button>
+                  )}
                 </div>
-                {allowDeleteWithoutId && (
-                  <Button
-                    variant="destructive"
-                    size="sm"
-                    className="absolute top-2 right-2 h-6 w-6 p-0 opacity-0 group-hover:opacity-100 transition-opacity"
-                    disabled={disabled || uploading}
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      removeImageByUrl(imageUrl);
-                    }}
-                  >
-                    <X className="h-3 w-3" />
-                  </Button>
-                )}
-              </div>
-            );
-          })}
-        </div>
+              );
+            })}
+          </div>
         );
       })()}
     </div>

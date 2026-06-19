@@ -193,8 +193,9 @@ async function uploadEditedBlob(
   }
 
   const token =
+    localStorage.getItem("admin-token") ||
     localStorage.getItem("templateAdminToken") ||
-    localStorage.getItem("admin-token");
+    localStorage.getItem("token");
   const headers: HeadersInit = {};
   if (token) headers["Authorization"] = `Bearer ${token}`;
 
@@ -230,8 +231,9 @@ async function uploadEditedBlob(
 
 async function deleteOldImage(templateId: string, imageId: string): Promise<void> {
   const token =
+    localStorage.getItem("admin-token") ||
     localStorage.getItem("templateAdminToken") ||
-    localStorage.getItem("admin-token");
+    localStorage.getItem("token");
   const headers: HeadersInit = { "Content-Type": "application/json" };
   if (token) headers["Authorization"] = `Bearer ${token}`;
 
@@ -618,11 +620,10 @@ export default function ImageEditModal({
                       <button
                         key={r.label}
                         onClick={() => setAspect(r.value)}
-                        className={`text-xs py-1.5 px-2 rounded border transition-colors ${
-                          aspect === r.value
-                            ? "bg-primary text-primary-foreground border-primary"
-                            : "border-input hover:bg-muted"
-                        }`}
+                        className={`text-xs py-1.5 px-2 rounded border transition-colors ${aspect === r.value
+                          ? "bg-primary text-primary-foreground border-primary"
+                          : "border-input hover:bg-muted"
+                          }`}
                       >
                         {r.label}
                       </button>

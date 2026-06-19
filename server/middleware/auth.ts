@@ -95,6 +95,43 @@ export const authFailHandler = (res: Response, statusCode: 401 | 403 | 404, mess
   res.status(statusCode).json({ error: message });
 };
 
+const shouldReturnClearAuthErrors = (req: Request): boolean => {
+  return (
+    /^\/api\/templates\/[^/]+\/(?:music|rsvps)(?:\/|$)/.test(req.originalUrl) ||
+    /^\/api\/telegram\/[^/]+\/(?:status|connect-code|test|disconnect|enabled)(?:\/|$)/.test(req.originalUrl)
+  );
+};
+
+const shouldLogTemplateEditorAccess = (req: Request): boolean => {
+  return shouldReturnClearAuthErrors(req);
+};
+
+const logTemplateEditorAccess = (
+  req: AuthenticatedRequest,
+  result: 'granted' | 'denied',
+  reason: string,
+  status?: number,
+) => {
+  if (!shouldLogTemplateEditorAccess(req)) return;
+
+  securityEvent(`template_editor_access_${result}`, {
+    userId: req.user?.id,
+    templateId: req.params.templateId || req.body?.templateId,
+    route: req.path,
+    ip: req.ip,
+    status,
+  });
+
+  console.log("[template-editor-access]", {
+    result,
+    reason,
+    userId: req.user?.id,
+    templateId: req.params.templateId || req.body?.templateId,
+    route: req.path,
+    status,
+  });
+};
+
 // Auth middleware
 export const authenticateUser = async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
   try {
@@ -104,9 +141,9 @@ export const authenticateUser = async (req: AuthenticatedRequest, res: Response,
       : req.cookies?.authToken;
 
     if (!token) {
-      // 404 hides the existence of these endpoints from unauthenticated callers
-      securityEvent('auth_missing_token', { route: req.path, ip: req.ip, status: 404 });
-      return res.status(404).json({ error: 'Not found' });
+      const status = shouldReturnClearAuthErrors(req) ? 401 : 404;
+      securityEvent('auth_missing_token', { route: req.path, ip: req.ip, status });
+      return res.status(status).json({ error: status === 401 ? 'Authentication required' : 'Not found' });
     }
 
     const isAdminRoute = req.originalUrl.includes('/api/admin-panel');
@@ -170,8 +207,9 @@ export const requireAdminPanelAccess = async (req: AuthenticatedRequest, res: Re
   try {
     if (!req.user) {
       // Should not reach here if authenticateUser ran first, but guard defensively
-      securityEvent('admin_no_user_context', { route: req.path, ip: req.ip, status: 404 });
-      return res.status(404).json({ error: 'Not found' });
+      const status = shouldReturnClearAuthErrors(req) ? 401 : 404;
+      securityEvent('admin_no_user_context', { route: req.path, ip: req.ip, status });
+      return res.status(status).json({ error: status === 401 ? 'Authentication required' : 'Not found' });
     }
 
     const templateId = req.params.templateId || req.body.templateId;
@@ -200,6 +238,7 @@ export const requireAdminPanelAccess = async (req: AuthenticatedRequest, res: Re
         templatePlan: 'ultimate',
         role: 'super_admin',
       };
+      logTemplateEditorAccess(req, 'granted', 'legacy_platform_admin');
       return next();
     }
 
@@ -223,14 +262,16 @@ export const requireAdminPanelAccess = async (req: AuthenticatedRequest, res: Re
       ));
 
       if (!ownerPanel) {
+        const status = shouldReturnClearAuthErrors(req) ? 403 : 404;
         securityEvent('admin_access_denied', {
           userId: req.user?.id,
           templateId,
           route: req.path,
           ip: req.ip,
-          status: 404
+          status
         });
-        return res.status(404).json({ error: 'Not found' });
+        logTemplateEditorAccess(req, 'denied', 'owner_panel_missing', status);
+        return res.status(status).json({ error: status === 403 ? 'Forbidden' : 'Not found' });
       }
 
       req.adminPanel = {
@@ -238,6 +279,7 @@ export const requireAdminPanelAccess = async (req: AuthenticatedRequest, res: Re
         templatePlan: 'ultimate',
         role: ownerPanel.role || 'super_admin',
       };
+      logTemplateEditorAccess(req, 'granted', 'owner_panel');
       return next();
     }
 
@@ -265,14 +307,16 @@ export const requireAdminPanelAccess = async (req: AuthenticatedRequest, res: Re
     ));
 
     if (!adminPanel) {
+      const status = shouldReturnClearAuthErrors(req) ? 403 : 404;
       securityEvent('admin_access_denied', {
         userId: req.user?.id,
         templateId,
         route: req.path,
         ip: req.ip,
-        status: 404
+        status
       });
-      return res.status(404).json({ error: 'Not found' });
+      logTemplateEditorAccess(req, 'denied', 'panel_missing', status);
+      return res.status(status).json({ error: status === 403 ? 'Forbidden' : 'Not found' });
     }
 
     req.adminPanel = {
@@ -280,6 +324,7 @@ export const requireAdminPanelAccess = async (req: AuthenticatedRequest, res: Re
       templatePlan: adminPanel.templatePlan || 'basic',
       role: adminPanel.role || 'customer'
     };
+    logTemplateEditorAccess(req, 'granted', 'panel');
     next();
   } catch (error) {
     console.error('Admin panel access check error:', error);

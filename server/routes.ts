@@ -140,6 +140,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   
   // Register Telegram routes (connection codes, webhook, test, disconnect)
   app.use('/api/telegram', telegramRoutes);
+  console.log("[routes] telegram routes mounted at /api/telegram");
 
   // Register public sale-wheel spin endpoint (rate-limited inside the router)
   app.use('/api/sale-wheel', saleWheelPublicRouter);
