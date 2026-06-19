@@ -8,7 +8,6 @@ import { registerRoutes } from "./routes.js";
 import { registerAdminRoutes } from "./routes/admin.js";
 import { registerMusicUploadRoutes } from "./routes/music-upload.js";
 import { registerManifestRoutes } from "./routes/manifest.js";
-import { registerCronBackupRoute } from "./routes/cron-backup.js";
 import { registerQStashTaskReminderCallbackRoute } from "./routes/qstash-task-reminders.js";
 import { apiLimiter, cspReportLimiter } from "./middleware/rateLimiter.js";
 
@@ -214,7 +213,6 @@ app.use((req, res, next) => {
     registerAdminRoutes(app);
     registerMusicUploadRoutes(app);
     registerManifestRoutes(app);
-    registerCronBackupRoute(app);
 
     // Global error handler — must be registered AFTER all routes
     app.use((err: any, _req: Request, res: Response, _next: NextFunction) => {
