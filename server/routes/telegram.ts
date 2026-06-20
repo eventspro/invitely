@@ -21,8 +21,11 @@ import {
   templates,
   managementUsers,
   orders,
+  telegramBotCommands,
+  telegramBotButtons,
+  platformSettings,
 } from "../../shared/schema.js";
-import { eq, and, lt, sql } from "drizzle-orm";
+import { eq, and, lt, sql, asc } from "drizzle-orm";
 import crypto from "crypto";
 import {
   authenticateUser,
@@ -46,7 +49,10 @@ function generateConnectionCode(): string {
 
 /** Expiry window for connection tokens: 15 minutes. */
 const TOKEN_TTL_MS = 15 * 60 * 1000;
+const FALLBACK_SETTINGS_KEY = "telegram_bot_fallback";
 
+const DEFAULT_FALLBACK =
+  "Ողջույն! Ես չճանաչեցի ձեր հարցումը։\n\nՕգտագործեք /help հրամանը հասանելի հրամանների ցուցակը տեսնելու համար։";
 /** Purge expired, unused tokens (best-effort, non-blocking). */
 async function purgeExpiredTokens(): Promise<void> {
   try {
@@ -179,7 +185,7 @@ router.post(
       const { templateId } = req.params;
 
       // Purge stale tokens (fire-and-forget)
-      purgeExpiredTokens().catch(() => {});
+      purgeExpiredTokens().catch(() => { });
 
       const panel = await getTelegramPanelForRequest(req, templateId);
       if (!panel) {
@@ -331,7 +337,122 @@ router.patch(
     }
   },
 );
+async function getTelegramFallbackMessage(): Promise<string> {
+  try {
+    const [row] = await db
+      .select()
+      .from(platformSettings)
+      .where(eq(platformSettings.key, FALLBACK_SETTINGS_KEY))
+      .limit(1);
 
+    const value = row?.value as any;
+    return typeof value?.message === "string" ? value.message : DEFAULT_FALLBACK;
+  } catch (err) {
+    console.error("[TG webhook] fallback lookup failed:", err);
+    return DEFAULT_FALLBACK;
+  }
+}
+
+async function sendTelegramCommandMessage(
+  chatId: string,
+  text: string,
+  replyMarkup?: Record<string, unknown>,
+): Promise<boolean> {
+  const token = process.env.TELEGRAM_BOT_TOKEN;
+
+  if (!token) {
+    console.error("[TG webhook] TELEGRAM_BOT_TOKEN is missing");
+    return false;
+  }
+
+  const response = await fetch(`https://api.telegram.org/bot${token}/sendMessage`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      chat_id: chatId,
+      text,
+      parse_mode: "HTML",
+      ...(replyMarkup ? { reply_markup: replyMarkup } : {}),
+    }),
+  });
+
+  const data = await response.json().catch(() => null);
+
+  if (!response.ok || !data?.ok) {
+    console.error("[TG webhook] command sendMessage failed", {
+      status: response.status,
+      data,
+    });
+    return false;
+  }
+
+  return true;
+}
+
+async function handleNormalBotCommand(chatId: string, rawText: string): Promise<void> {
+  const text = rawText.trim().replace(/\s+/g, " ");
+  const commandText = text.split(" ")[0];
+
+  console.log("[TG webhook] handling normal command", {
+    text,
+    commandText,
+    chatId,
+  });
+
+  const [command] = await db
+    .select()
+    .from(telegramBotCommands)
+    .where(
+      and(
+        eq(telegramBotCommands.command, commandText),
+        eq(telegramBotCommands.isEnabled, true),
+      ),
+    )
+    .limit(1);
+
+  if (command) {
+    const buttons = await db
+      .select()
+      .from(telegramBotButtons)
+      .where(eq(telegramBotButtons.commandId, command.id))
+      .orderBy(asc(telegramBotButtons.orderIndex));
+
+    const replyMarkup =
+      buttons.length > 0
+        ? {
+            inline_keyboard: buttons.map((button) => [
+              button.type === "url"
+                ? {
+                    text: button.label,
+                    url: button.value,
+                  }
+                : {
+                    text: button.label,
+                    callback_data: button.value,
+                  },
+            ]),
+          }
+        : undefined;
+
+    console.log("[TG webhook] command found, sending response", {
+      command: command.command,
+      chatId,
+      buttons: buttons.length,
+    });
+
+    await sendTelegramCommandMessage(chatId, command.responseText, replyMarkup);
+    return;
+  }
+
+  const fallback = await getTelegramFallbackMessage();
+
+  console.log("[TG webhook] command not found, sending fallback", {
+    commandText,
+    chatId,
+  });
+
+  await sendTelegramCommandMessage(chatId, fallback);
+}
 // ─── POST /api/telegram/webhook ───────────────────────────────────────────────
 // Telegram sends updates here. Verified via X-Telegram-Bot-Api-Secret-Token header.
 // IMPORTANT: We do ALL processing first, then send 200.
@@ -382,7 +503,11 @@ router.post("/webhook", async (req: Request, res: Response) => {
     console.log(`[TG webhook] CONNECT match: ${match ? match[1] : "none"} (text="${text}")`);
 
     if (!match) {
-      return res.status(200).end(); // Not a CONNECT command — ignore silently
+      // Not a CONNECT command — handle configurable bot commands/fallback.
+      // This keeps the CONNECT pairing flow intact while allowing normal bot commands
+      // such as /start, /help, and inline command buttons to respond.
+      await handleNormalBotCommand(chatId, text);
+      return res.status(200).end();
     }
 
     const code = match[1].toUpperCase();
@@ -582,6 +707,16 @@ async function handleTaskCallbackQuery(cq: {
   const msgId = cq.message?.message_id;
 
   const callbackData = cq.data ?? "";
+
+  // Configurable bot command buttons use callback_data such as "/help".
+  // Keep task reminder callbacks unchanged, but route command callbacks through
+  // the same normal command handler used for text messages.
+  if (callbackData.startsWith("/")) {
+    await answerCallbackQuery(cq.id);
+    await handleNormalBotCommand(callerChatId, callbackData);
+    return;
+  }
+
   let action: "done" | "stop";
   let token: string;
 
