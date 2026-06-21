@@ -1,6 +1,6 @@
 import express from "express";
 import { db } from "../db.js";
-import { homepageLeads } from "../../shared/schema.js";
+import { homepageLeads, insertHomepageLeadSchema } from "../../shared/schema.js";
 import { sendEmail } from "../email.js";
 import { sendTelegramMessage } from "../telegram.js";
 
@@ -9,21 +9,40 @@ const router = express.Router();
 const ADMIN_EMAIL = "harutavetisyan0@gmail.com";
 const ADMIN_TELEGRAM_CHAT_ID = process.env.HARUT_TELEGRAM_CHAT_ID ?? "1037811604";
 
+/** Escape characters that are special in HTML — prevents XSS in email bodies. */
+function escHtml(str: string): string {
+  return str
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#39;");
+}
+
+/** Escape characters that are special in Telegram HTML parse mode. */
+function escTg(str: string): string {
+  return str.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+}
+
 // POST /api/homepage-leads/submit
 router.post("/submit", async (req, res) => {
-  const { name, email, phone } = req.body as {
-    name?: string;
-    email?: string;
-    phone?: string;
-  };
+  // ── Validate with Zod schema ───────────────────────────────────────────────
+  const parsed = insertHomepageLeadSchema.safeParse({
+    name:   req.body.name,
+    phone:  req.body.phone,
+    email:  req.body.email || undefined,
+    source: "hero",
+  });
 
-  if (!name?.trim() || !phone?.trim()) {
-    return res.status(400).json({ error: "Name and phone are required." });
+  if (!parsed.success) {
+    const firstError = parsed.error.issues[0]?.message ?? "Invalid input.";
+    return res.status(400).json({ error: firstError });
   }
 
+  const { name, phone, email } = parsed.data;
   const safeName  = name.trim();
   const safePhone = phone.trim();
-  const safeEmail = email?.trim() ?? "";
+  const safeEmail = (email ?? "").trim();
 
   // ── Save to DB ─────────────────────────────────────────────────────────────
   await db.insert(homepageLeads).values({
@@ -41,9 +60,9 @@ router.post("/submit", async (req, res) => {
       </div>
       <div style="padding:24px 28px;font-size:14px;color:#374151;line-height:1.7">
         <table style="width:100%;border-collapse:collapse">
-          <tr><td style="padding:6px 0;color:#9ca3af;width:110px">Անուն</td><td style="padding:6px 0;font-weight:600;color:#111827">${safeName}</td></tr>
-          <tr><td style="padding:6px 0;color:#9ca3af">Հեռախոս</td><td style="padding:6px 0;font-weight:600;color:#111827">${safePhone}</td></tr>
-          ${safeEmail ? `<tr><td style="padding:6px 0;color:#9ca3af">Email</td><td style="padding:6px 0;color:#111827">${safeEmail}</td></tr>` : ""}
+          <tr><td style="padding:6px 0;color:#9ca3af;width:110px">Անուն</td><td style="padding:6px 0;font-weight:600;color:#111827">${escHtml(safeName)}</td></tr>
+          <tr><td style="padding:6px 0;color:#9ca3af">Հեռախոս</td><td style="padding:6px 0;font-weight:600;color:#111827">${escHtml(safePhone)}</td></tr>
+          ${safeEmail ? `<tr><td style="padding:6px 0;color:#9ca3af">Email</td><td style="padding:6px 0;color:#111827">${escHtml(safeEmail)}</td></tr>` : ""}
           <tr><td style="padding:6px 0;color:#9ca3af">Աղբյուր</td><td style="padding:6px 0">Hero CTA</td></tr>
         </table>
       </div>
@@ -61,9 +80,9 @@ router.post("/submit", async (req, res) => {
   const tgLines = [
     "📩 <b>4ever.am — Նոր դիմում</b>",
     "",
-    `👤 <b>Անուն:</b> ${safeName}`,
-    `📞 <b>Հեռախոս:</b> ${safePhone}`,
-    ...(safeEmail ? [`📧 <b>Email:</b> ${safeEmail}`] : []),
+    `👤 <b>Անուն:</b> ${escTg(safeName)}`,
+    `📞 <b>Հեռախոս:</b> ${escTg(safePhone)}`,
+    ...(safeEmail ? [`📧 <b>Email:</b> ${escTg(safeEmail)}`] : []),
     `🔗 <b>Աղբյուր:</b> Hero CTA`,
   ];
 
