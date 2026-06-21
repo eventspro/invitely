@@ -1,6 +1,6 @@
 import express from 'express';
 import { db } from '../db.js';
-import { managementUsers, orders, userAdminPanels, templates, platformSettings } from '../../shared/schema.js';
+import { managementUsers, orders, userAdminPanels, templates, platformSettings, homepageLeads } from '../../shared/schema.js';
 import { eq, desc, sql, and } from 'drizzle-orm';
 import { hashPassword } from '../middleware/auth.js';
 import jwt from 'jsonwebtoken';
@@ -445,6 +445,20 @@ router.put('/site-settings', async (req, res) => {
   } catch (error) {
     console.error('Update site settings error:', error);
     res.status(500).json({ error: 'Failed to update site settings' });
+  }
+});
+
+// ─── GET homepage leads (applied users) ──────────────────────────────────────
+router.get('/homepage-leads', async (req, res) => {
+  try {
+    const leads = await db
+      .select()
+      .from(homepageLeads)
+      .orderBy(desc(homepageLeads.createdAt));
+    res.json(leads);
+  } catch (error) {
+    console.error('Get homepage leads error:', error);
+    res.status(500).json({ error: 'Failed to fetch homepage leads' });
   }
 });
 

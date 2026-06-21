@@ -3,6 +3,7 @@ import { useLocation } from 'wouter';
 import { CustomerEditsAdmin } from './CustomerEditsAdmin';
 import { TelegramBotAdmin } from './TelegramBotAdmin';
 import { SaleWheelAdmin } from './SaleWheelAdmin';
+import { AppliedUsersAdmin } from './AppliedUsersAdmin';
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 interface TemplateItem {
@@ -41,7 +42,7 @@ interface CreateForm {
   templateSlug: string;
 }
 
-type Tab = 'overview' | 'customers' | 'templates' | 'demo-leads' | 'telegram-bot' | 'sale-wheel';
+type Tab = 'overview' | 'customers' | 'templates' | 'demo-leads' | 'telegram-bot' | 'sale-wheel' | 'applied-users';
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 const fmtDate = (d: string) =>
@@ -516,7 +517,7 @@ export const PlatformAdminPanel: React.FC = () => {
           </div>
 
           <nav className="hidden sm:flex gap-1 bg-gray-100 rounded-xl p-1">
-            {(['overview', 'customers', 'templates', 'demo-leads', 'telegram-bot', 'sale-wheel'] as Tab[]).map((t) => (
+            {(['overview', 'customers', 'templates', 'demo-leads', 'telegram-bot', 'sale-wheel', 'applied-users'] as Tab[]).map((t) => (
               <button
                 key={t}
                 onClick={() => setTab(t)}
@@ -524,7 +525,7 @@ export const PlatformAdminPanel: React.FC = () => {
                   tab === t ? 'bg-white text-indigo-600 shadow-sm' : 'text-gray-500 hover:text-gray-700'
                 }`}
               >
-                {t === 'overview' ? '📊 Overview' : t === 'customers' ? '👥 Customers' : t === 'templates' ? '🎨 Templates' : t === 'demo-leads' ? '🎯 Demo Leads' : t === 'telegram-bot' ? '🤖 Telegram Bot' : '🎡 Spin & Win'}
+                {t === 'overview' ? '📊 Overview' : t === 'customers' ? '👥 Customers' : t === 'templates' ? '🎨 Templates' : t === 'demo-leads' ? '🎯 Demo Leads' : t === 'telegram-bot' ? '🤖 Telegram Bot' : t === 'applied-users' ? '📩 Applied Users' : '🎡 Spin & Win'}
               </button>
             ))}
           </nav>
@@ -538,7 +539,7 @@ export const PlatformAdminPanel: React.FC = () => {
         </div>
 
         <div className="sm:hidden flex border-t border-gray-100">
-          {(['overview', 'customers', 'templates', 'demo-leads', 'telegram-bot', 'sale-wheel'] as Tab[]).map((t) => (
+          {(['overview', 'customers', 'templates', 'demo-leads', 'telegram-bot', 'sale-wheel', 'applied-users'] as Tab[]).map((t) => (
             <button
               key={t}
               onClick={() => setTab(t)}
@@ -546,7 +547,7 @@ export const PlatformAdminPanel: React.FC = () => {
                 tab === t ? 'text-indigo-600 border-b-2 border-indigo-600 bg-white' : 'text-gray-500'
               }`}
             >
-              {t === 'demo-leads' ? 'Demo' : t === 'telegram-bot' ? 'Bot' : t === 'sale-wheel' ? 'Spin' : t}
+              {t === 'demo-leads' ? 'Demo' : t === 'telegram-bot' ? 'Bot' : t === 'sale-wheel' ? 'Spin' : t === 'applied-users' ? 'Applied' : t}
             </button>
           ))}
         </div>
@@ -867,6 +868,16 @@ export const PlatformAdminPanel: React.FC = () => {
 
         {tab === 'sale-wheel' && (
           <SaleWheelAdmin />
+        )}
+
+        {tab === 'applied-users' && (
+          <div className="space-y-6">
+            <div>
+              <h1 className="text-2xl font-bold text-gray-900">Applied Users</h1>
+              <p className="text-gray-500 text-sm mt-1">Contact submissions from the "Դիմել հիմա" button on the homepage</p>
+            </div>
+            <AppliedUsersAdmin />
+          </div>
         )}
 
         {tab === 'templates' && (
