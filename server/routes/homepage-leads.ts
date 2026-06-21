@@ -1,5 +1,5 @@
 import express from "express";
-import { db } from "../db.js";
+import { db, pool } from "../db.js";
 import { homepageLeads, insertHomepageLeadSchema } from "../../shared/schema.js";
 import { sendEmail } from "../email.js";
 import { sendTelegramMessage } from "../telegram.js";
@@ -45,14 +45,32 @@ router.post("/submit", async (req, res) => {
   const safeEmail = (email ?? "").trim();
 
   // ── Save to DB ─────────────────────────────────────────────────────────────
-  await db.insert(homepageLeads).values({
-    name:   safeName,
-    phone:  safePhone,
-    email:  safeEmail || null,
-    source: "hero",
-  });
+  // Ensure table exists (guards against cold-start migration timeout)
+  try {
+    await pool.query(`
+      CREATE TABLE IF NOT EXISTS homepage_leads (
+        id          VARCHAR PRIMARY KEY DEFAULT gen_random_uuid(),
+        name        TEXT NOT NULL,
+        email       TEXT,
+        phone       TEXT NOT NULL,
+        source      TEXT DEFAULT 'hero',
+        created_at  TIMESTAMP DEFAULT now()
+      )
+    `);
+    await db.insert(homepageLeads).values({
+      name:   safeName,
+      phone:  safePhone,
+      email:  safeEmail || null,
+      source: "hero",
+    });
+  } catch (dbErr) {
+    console.error('[homepage-leads] DB save failed (non-fatal, notifications will still fire):', dbErr);
+  }
 
-  // ── Email notification ─────────────────────────────────────────────────────
+  // ── Respond immediately so the client is never left hanging ──────────────
+  res.json({ ok: true });
+
+  // ── Fire notifications asynchronously (fire-and-forget) ───────────────────
   const html = `
     <div style="font-family:Inter,Arial,sans-serif;max-width:560px;margin:0 auto;background:#ffffff;border-radius:12px;overflow:hidden;border:1px solid #e5e7eb">
       <div style="background:#0e2119;padding:24px 28px">
@@ -68,15 +86,6 @@ router.post("/submit", async (req, res) => {
       </div>
     </div>`;
 
-  await sendEmail({
-    to:         ADMIN_EMAIL,
-    from:       "noreply@4ever.am",
-    senderName: "4ever.am Leads",
-    subject:    `Նոր դիմում — ${safeName}`,
-    html,
-  });
-
-  // ── Telegram notification ──────────────────────────────────────────────────
   const tgLines = [
     "📩 <b>4ever.am — Նոր դիմում</b>",
     "",
@@ -86,9 +95,16 @@ router.post("/submit", async (req, res) => {
     `🔗 <b>Աղբյուր:</b> Hero CTA`,
   ];
 
-  await sendTelegramMessage(ADMIN_TELEGRAM_CHAT_ID, tgLines.join("\n"));
+  sendEmail({
+    to:         ADMIN_EMAIL,
+    from:       "noreply@4ever.am",
+    senderName: "4ever.am Leads",
+    subject:    `Նոր դիմում — ${safeName}`,
+    html,
+  }).catch(err => console.error('[homepage-leads] email failed:', err));
 
-  return res.json({ ok: true });
+  sendTelegramMessage(ADMIN_TELEGRAM_CHAT_ID, tgLines.join("\n"))
+    .catch(err => console.error('[homepage-leads] telegram failed:', err));
 });
 
 export default router;
