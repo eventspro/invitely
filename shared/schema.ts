@@ -817,3 +817,24 @@ export const cronHealth = pgTable("cron_health", {
 });
 
 export type CronHealth = typeof cronHealth.$inferSelect;
+
+// ─── Homepage Leads ───────────────────────────────────────────────────────────
+// Captures contact submissions from the "Դիմել հիմա" CTA on the homepage hero.
+
+export const homepageLeads = pgTable("homepage_leads", {
+  id:        varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  name:      text("name").notNull(),
+  email:     text("email"),
+  phone:     text("phone").notNull(),
+  source:    text("source").default("hero"),
+  createdAt: timestamp("created_at").default(sql`now()`),
+});
+
+export const insertHomepageLeadSchema = createInsertSchema(homepageLeads, {
+  name:  z.string().min(1, "Name is required"),
+  phone: z.string().min(5, "Phone is required"),
+  email: z.string().email("Invalid email").optional().or(z.literal("")),
+});
+
+export type HomepageLead = typeof homepageLeads.$inferSelect;
+export type InsertHomepageLead = typeof homepageLeads.$inferInsert;

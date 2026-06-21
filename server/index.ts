@@ -10,6 +10,7 @@ import { registerMusicUploadRoutes } from "./routes/music-upload.js";
 import { registerManifestRoutes } from "./routes/manifest.js";
 import { registerQStashTaskReminderCallbackRoute } from "./routes/qstash-task-reminders.js";
 import { apiLimiter, cspReportLimiter } from "./middleware/rateLimiter.js";
+import { pool } from "./db.js";
 
 // Structured security event logger — no PII fields
 export const securityLog = (
@@ -208,6 +209,24 @@ app.use((req, res, next) => {
 // manages the HTTP layer so we must NOT call server.listen() there.
 (async () => {
   try {
+    // ── Idempotent schema migrations ──────────────────────────────────────
+    // Each statement is safe to run on every startup (IF NOT EXISTS / ADD COLUMN IF NOT EXISTS).
+    try {
+      await pool.query(`
+        CREATE TABLE IF NOT EXISTS homepage_leads (
+          id          VARCHAR PRIMARY KEY DEFAULT gen_random_uuid(),
+          name        TEXT NOT NULL,
+          email       TEXT,
+          phone       TEXT NOT NULL,
+          source      TEXT DEFAULT 'hero',
+          created_at  TIMESTAMP DEFAULT now()
+        )
+      `);
+      console.log('[startup] homepage_leads table ensured');
+    } catch (migrationErr) {
+      console.error('[startup] schema migration error (non-fatal):', migrationErr);
+    }
+
     const server = await registerRoutes(app);
 
     registerAdminRoutes(app);

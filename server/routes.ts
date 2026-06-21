@@ -26,6 +26,7 @@ import telegramRoutes from './routes/telegram.js';
 import telegramBotAdminRoutes from './routes/telegram-bot-admin.js';
 import { saleWheelPublicRouter, saleWheelAdminRouter } from './routes/sale-wheel.js';
 import plannerDemoContactRouter from './routes/planner-demo-contact.js';
+import homepageLeadsRouter from './routes/homepage-leads.js';
 import homepageContentRouter from './routes/homepage-content.js';
 import { platformAdminPartnersContentRouter, publicPartnersContentRouter } from './routes/partners-content.js';
 import { customerDemoPublicRouter, customerDemoAdminRouter } from './routes/customer-demo.js';
@@ -145,6 +146,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Register public sale-wheel spin endpoint (rate-limited inside the router)
   app.use('/api/sale-wheel', saleWheelPublicRouter);
   app.use('/api/planner-demo', plannerDemoContactRouter);
+  app.use('/api/homepage-leads', homepageLeadsRouter);
   app.use('/api/homepage-content', homepageContentRouter);
   app.use('/api/partners-content', publicPartnersContentRouter);
 

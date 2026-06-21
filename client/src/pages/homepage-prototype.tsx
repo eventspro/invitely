@@ -41,6 +41,7 @@ import {
 import { loadHomepageContent, fetchHomepageContentFromServer, saveHomepageContent } from "../content/homepage/homepageContentStorage";
 import type { IconKey } from "../content/homepage/homepageContentTypes";
 import { SaleWheelModal } from "../components/SaleWheelModal";
+import { HomepageLeadModal } from "../components/HomepageLeadModal";
 
 // ─── Styles ───────────────────────────────────────────────────────────────────
 const serifStyle: React.CSSProperties = { fontFamily: "var(--armenian-serif, serif)" };
@@ -472,6 +473,7 @@ export default function HomepagePrototype() {
   const [activeTemplate, setActiveTemplate] = useState(0);
   const [openFaq, setOpenFaq] = useState<string | null>(null);
   const [showSaleWheel, setShowSaleWheel] = useState(false);
+  const [showLeadModal, setShowLeadModal] = useState(false);
   const carouselRef = useRef<HTMLDivElement>(null);
   const [plannerVisible, setPlannerVisible] = useState(false);
   const plannerRef  = useRef<HTMLDivElement>(null);
@@ -746,6 +748,13 @@ export default function HomepagePrototype() {
                 >
                   {cfg.hero.secondaryCta.label.hy}
                 </a>
+                <button
+                  type="button"
+                  onClick={() => setShowLeadModal(true)}
+                  className="inline-flex min-h-[44px] items-center rounded-full border border-[#f0cf82]/70 bg-transparent px-5 py-2.5 text-sm font-semibold text-[#f0cf82] transition hover:bg-[#f0cf82]/10"
+                >
+                  Դիմել հիմա
+                </button>
               </div>
 
               <div className="mt-4 flex flex-wrap gap-2">
@@ -798,6 +807,13 @@ export default function HomepagePrototype() {
                 >
                   {cfg.hero.secondaryCta.label.hy}
                 </a>
+                <button
+                  type="button"
+                  onClick={() => setShowLeadModal(true)}
+                  className="inline-flex min-h-[52px] items-center rounded-full border border-[#f0cf82]/70 bg-transparent px-6 py-3 text-base font-semibold text-[#f0cf82] backdrop-blur transition hover:bg-[#f0cf82]/10"
+                >
+                  Դիմել հիմա
+                </button>
               </div>
 
               <div className="mt-8 grid max-w-[480px] grid-cols-2 gap-3">
@@ -1217,6 +1233,7 @@ export default function HomepagePrototype() {
       </button>
 
       {showSaleWheel && <SaleWheelModal onClose={() => setShowSaleWheel(false)} />}
+      {showLeadModal && <HomepageLeadModal onClose={() => setShowLeadModal(false)} />}
     </div>
   );
 }
