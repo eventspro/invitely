@@ -204,59 +204,13 @@ app.use((req, res, next) => {
 });
 
 // ─── Async initialization ────────────────────────────────────────────────────
-// Registers all API routes, middleware, and (for local dev only) starts the
-// HTTP listener.  On Vercel the exported `app` below is the handler — Vercel
-// manages the HTTP layer so we must NOT call server.listen() there.
+// IMPORTANT: Routes MUST be registered before any async DB work so that Vercel
+// cold-start requests are never served by an app with no handlers (→ 404).
+// Neon DB can take 5 s+ to wake up; migrations are non-fatal and run in the
+// background AFTER routes are ready.
 (async () => {
   try {
-    // ── Idempotent schema migrations ──────────────────────────────────────
-    // Each statement is safe to run on every startup (IF NOT EXISTS / ADD COLUMN IF NOT EXISTS).
-    try {
-      await pool.query(`
-        CREATE TABLE IF NOT EXISTS homepage_leads (
-          id          VARCHAR PRIMARY KEY DEFAULT gen_random_uuid(),
-          name        TEXT NOT NULL,
-          email       TEXT,
-          phone       TEXT NOT NULL,
-          source      TEXT DEFAULT 'hero',
-          created_at  TIMESTAMP DEFAULT now()
-        )
-      `);
-      console.log('[startup] homepage_leads table ensured');
-    } catch (migrationErr) {
-      console.error('[startup] schema migration error (non-fatal):', migrationErr);
-    }
-
-    try {
-      await pool.query(`
-        CREATE TABLE IF NOT EXISTS customer_edits (
-          id                  VARCHAR PRIMARY KEY DEFAULT gen_random_uuid(),
-          source_template_slug TEXT NOT NULL DEFAULT 'david-rose-romantic',
-          groom_name          TEXT,
-          bride_name          TEXT,
-          wedding_date        TEXT,
-          palette_id          TEXT,
-          customer_email      TEXT,
-          customer_phone      TEXT,
-          customer_instagram  TEXT,
-          hero_image_url      TEXT,
-          gallery_image_urls  JSONB DEFAULT '[]'::jsonb,
-          config              JSONB,
-          status              TEXT NOT NULL DEFAULT 'demo',
-          notes               TEXT,
-          created_at          TIMESTAMP DEFAULT now(),
-          updated_at          TIMESTAMP DEFAULT now()
-        )
-      `);
-      await pool.query(`
-        CREATE INDEX IF NOT EXISTS idx_customer_edits_created_at
-          ON customer_edits (created_at DESC)
-      `);
-      console.log('[startup] customer_edits table ensured');
-    } catch (migrationErr) {
-      console.error('[startup] customer_edits migration error (non-fatal):', migrationErr);
-    }
-
+    // ── Register all routes first — no DB needed for registration ─────────
     const server = await registerRoutes(app);
 
     registerAdminRoutes(app);
@@ -270,6 +224,58 @@ app.use((req, res, next) => {
       console.error("Server error:", err);
       res.status(status).json({ message });
     });
+
+    // ── Idempotent schema migrations — fire-and-forget, never block routes ─
+    // Each statement is safe to run on every startup (IF NOT EXISTS).
+    // Running after route registration ensures cold-start requests are handled
+    // immediately even when Neon DB is waking up (connection timeout ~5 s).
+    (async () => {
+      try {
+        await pool.query(`
+          CREATE TABLE IF NOT EXISTS homepage_leads (
+            id          VARCHAR PRIMARY KEY DEFAULT gen_random_uuid(),
+            name        TEXT NOT NULL,
+            email       TEXT,
+            phone       TEXT NOT NULL,
+            source      TEXT DEFAULT 'hero',
+            created_at  TIMESTAMP DEFAULT now()
+          )
+        `);
+        console.log('[startup] homepage_leads table ensured');
+      } catch (migrationErr) {
+        console.error('[startup] schema migration error (non-fatal):', migrationErr);
+      }
+
+      try {
+        await pool.query(`
+          CREATE TABLE IF NOT EXISTS customer_edits (
+            id                  VARCHAR PRIMARY KEY DEFAULT gen_random_uuid(),
+            source_template_slug TEXT NOT NULL DEFAULT 'david-rose-romantic',
+            groom_name          TEXT,
+            bride_name          TEXT,
+            wedding_date        TEXT,
+            palette_id          TEXT,
+            customer_email      TEXT,
+            customer_phone      TEXT,
+            customer_instagram  TEXT,
+            hero_image_url      TEXT,
+            gallery_image_urls  JSONB DEFAULT '[]'::jsonb,
+            config              JSONB,
+            status              TEXT NOT NULL DEFAULT 'demo',
+            notes               TEXT,
+            created_at          TIMESTAMP DEFAULT now(),
+            updated_at          TIMESTAMP DEFAULT now()
+          )
+        `);
+        await pool.query(`
+          CREATE INDEX IF NOT EXISTS idx_customer_edits_created_at
+            ON customer_edits (created_at DESC)
+        `);
+        console.log('[startup] customer_edits table ensured');
+      } catch (migrationErr) {
+        console.error('[startup] customer_edits migration error (non-fatal):', migrationErr);
+      }
+    })();
 
     // ── Local development: wire up Vite HMR + listen ──────────────────────
     if (!isVercel) {
@@ -300,8 +306,8 @@ app.use((req, res, next) => {
         });
       });
     }
-    // On Vercel: routes are now registered on `app`; Vercel calls app(req, res)
-    // directly — no listen() needed.
+    // On Vercel: routes are registered on `app` before any I/O; Vercel calls
+    // app(req, res) directly — no listen() needed.
   } catch (error) {
     // Never call process.exit() here — on Vercel it kills the entire function
     // instance and causes FUNCTION_INVOCATION_FAILED for every subsequent route.
@@ -311,6 +317,6 @@ app.use((req, res, next) => {
 
 // ─── Vercel handler export ────────────────────────────────────────────────────
 // @vercel/node uses the default export as the HTTP handler.
-// The async IIFE above starts route registration concurrently; by the time
-// the first real request arrives the routes will already be registered.
+// Routes are registered synchronously inside the IIFE before any DB I/O, so
+// they are ready before the first request is served on cold start.
 export default app;
