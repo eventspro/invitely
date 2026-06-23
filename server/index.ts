@@ -227,6 +227,36 @@ app.use((req, res, next) => {
       console.error('[startup] schema migration error (non-fatal):', migrationErr);
     }
 
+    try {
+      await pool.query(`
+        CREATE TABLE IF NOT EXISTS customer_edits (
+          id                  VARCHAR PRIMARY KEY DEFAULT gen_random_uuid(),
+          source_template_slug TEXT NOT NULL DEFAULT 'david-rose-romantic',
+          groom_name          TEXT,
+          bride_name          TEXT,
+          wedding_date        TEXT,
+          palette_id          TEXT,
+          customer_email      TEXT,
+          customer_phone      TEXT,
+          customer_instagram  TEXT,
+          hero_image_url      TEXT,
+          gallery_image_urls  JSONB DEFAULT '[]'::jsonb,
+          config              JSONB,
+          status              TEXT NOT NULL DEFAULT 'demo',
+          notes               TEXT,
+          created_at          TIMESTAMP DEFAULT now(),
+          updated_at          TIMESTAMP DEFAULT now()
+        )
+      `);
+      await pool.query(`
+        CREATE INDEX IF NOT EXISTS idx_customer_edits_created_at
+          ON customer_edits (created_at DESC)
+      `);
+      console.log('[startup] customer_edits table ensured');
+    } catch (migrationErr) {
+      console.error('[startup] customer_edits migration error (non-fatal):', migrationErr);
+    }
+
     const server = await registerRoutes(app);
 
     registerAdminRoutes(app);
