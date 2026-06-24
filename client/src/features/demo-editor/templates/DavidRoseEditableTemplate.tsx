@@ -56,6 +56,9 @@ export default function DavidRoseEditableTemplate({ config }: Props) {
   const accent = colors.accent || "#a855f7";
   const bg = colors.background || "#fdf2f8";
   const text = colors.textColor || "#3c1a3c";
+  // Semantic roles for readability across all palette types
+  const lightText = colors.lightText || "white";
+  const mutedText = colors.mutedText || `${primary}99`;
   const headingFont = fonts.heading || "Playfair Display, serif";
   const bodyFont = fonts.body || "Inter, sans-serif";
   const sections = config.sections ?? {};
@@ -192,8 +195,8 @@ export default function DavidRoseEditableTemplate({ config }: Props) {
             padding: "5rem 1rem",
             background: config.countdown?.backgroundImage
               ? `linear-gradient(rgba(0,0,0,0.55),rgba(0,0,0,0.55)), url(${config.countdown.backgroundImage}) center/cover no-repeat`
-              : `linear-gradient(135deg, ${primary}, ${secondary})`,
-            color: "white",
+              : `linear-gradient(rgba(0,0,0,0.28), rgba(0,0,0,0.28)), linear-gradient(135deg, ${primary}, ${secondary})`,
+            color: lightText,
             textAlign: "center",
             position: "relative",
           }}
@@ -297,7 +300,7 @@ export default function DavidRoseEditableTemplate({ config }: Props) {
                       {evt.icon || "💍"}
                     </div>
                     <div>
-                      <div style={{ fontFamily: bodyFont, fontSize: "0.75rem", color: secondary, fontWeight: 600, marginBottom: "0.2rem" }}>
+                      <div style={{ fontFamily: bodyFont, fontSize: "0.75rem", color: primary, fontWeight: 600, marginBottom: "0.2rem" }}>
                         {evt.time}
                       </div>
                       <div style={{ fontFamily: headingFont, fontSize: "1rem", fontWeight: 600, color: text }}>
@@ -350,7 +353,7 @@ export default function DavidRoseEditableTemplate({ config }: Props) {
 
             {/* Demo form — not functional, just shows editable labels */}
             <div style={{ background: "white", borderRadius: "1.25rem", padding: "2rem", boxShadow: `0 4px 24px ${primary}1a`, textAlign: "left" }}>
-              <p style={{ textAlign: "center", fontSize: "0.75rem", color: secondary, marginBottom: "1.5rem", fontStyle: "italic" }}>
+              <p style={{ textAlign: "center", fontSize: "0.75rem", color: mutedText, marginBottom: "1.5rem", fontStyle: "italic" }}>
                 Form labels are editable — click any label to change it
               </p>
               <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "1rem", marginBottom: "1rem" }}>
@@ -482,7 +485,7 @@ function VenueCard({ venue, idx, primary, secondary, bodyFont, headingFont }: {
       )}
       <div style={{ padding: "1.25rem", textAlign: "left" }}>
         <EditableElement path={`locations.venues.${idx}.title`} label="Venue Tab Label" type="text" block>
-          <div style={{ fontFamily: bodyFont, fontSize: "0.7rem", color: secondary, fontWeight: 700, letterSpacing: "0.12em", textTransform: "uppercase", marginBottom: "0.35rem" }}>
+          <div style={{ fontFamily: bodyFont, fontSize: "0.7rem", color: primary, fontWeight: 700, letterSpacing: "0.12em", textTransform: "uppercase", marginBottom: "0.35rem" }}>
             {venue.title}
           </div>
         </EditableElement>
